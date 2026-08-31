@@ -1,0 +1,90 @@
+# Generated images / filesystems
+*.img
+*.raw
+*.sparse*
+*.ext4
+*.qcow2
+
+# Android / boot artifacts
+boot.img
+recovery.img
+vendor.img
+system.img
+super.img
+userdata.img
+dtbo.img
+*.dtb
+*.dtbo
+
+# Kernel / build outputs
+Image
+Image.gz
+vmlinux
+System.map
+*.ko
+*.o
+*.a
+*.so
+*.so.*
+*.elf
+
+# Packages / downloaded archives
+*.apk
+*.deb
+*.rpm
+*.tar
+*.tar.gz
+*.tar.xz
+*.tar.zst
+*.zip
+*.7z
+
+# Rootfs / build trees / caches
+rootfs/
+rootfs-*/
+build/
+builds/
+output/
+downloads/
+cache/
+caches/
+chroot*/
+pmbootstrap-work/
+local-repo*/
+staging/
+
+# Logs / temporary files
+*.log
+*.tmp
+*.temp
+*.pid
+*.state
+__pycache__/
+*.pyc
+
+# Credentials / secrets
+.env
+.env.*
+id_rsa*
+id_ed25519*
+*.pem
+*.key
+*.p12
+*.pfx
+authorized_keys
+*authorized_keys*
+shadow
+shadow-
+gshadow
+gshadow-
+*credential*
+*secret*
+*token*
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*~
+*.swp

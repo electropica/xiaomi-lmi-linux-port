@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+
+name="D-repro-01 D114-clear Weston DRM control"
+description="Clear continuous splash, then start seatd and Weston kiosk/Pixman"
+command="/usr/local/sbin/weston-post-clear-run"
+command_background="yes"
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/weston-post-clear-service.log"
+error_log="/var/log/weston-post-clear-service.log"
+
+depend() {
+	need dev localmount
+	after udev
+}
+
+stop_post() {
+	if [ -r /run/weston-post-clear/seatd.pid ]; then
+		seat_pid=$(cat /run/weston-post-clear/seatd.pid 2>/dev/null || true)
+		case "$seat_pid" in
+			''|*[!0-9]*) ;;
+			*) kill "$seat_pid" 2>/dev/null || true ;;
+		esac
+	fi
+	rm -f /run/weston-post-clear/seatd.pid /run/weston-post-clear/seatd.sock
+}
