@@ -1,0 +1,35 @@
+#!/bin/sh
+set -eu
+
+runtime=/run/lmi-splash-release
+fifo=$runtime/modetest-input
+modetest_log=/var/log/lmi-splash-release-modetest.log
+postclear_log=/var/log/lmi-splash-release-state.log
+modetest=/usr/bin/modetest
+
+mkdir -p "$runtime"
+chown root:root "$runtime"
+chmod 0700 "$runtime"
+rm -f "$fifo"
+mkfifo "$fifo"
+
+# Exact D114 continuous-splash takeover: hold the atomic state for three
+# seconds, then close the FIFO so modetest exits and releases CRTC 129/plane 58.
+tail -f /dev/null >"$fifo" &
+feeder_pid=$!
+"$modetest" -a -s '29@129:#0@XR24' -P '58@129:1080x2400@XR24' \
+	<"$fifo" >"$modetest_log" 2>&1 &
+modetest_pid=$!
+sleep 3
+kill "$feeder_pid" 2>/dev/null || true
+wait "$feeder_pid" 2>/dev/null || true
+if ! wait "$modetest_pid"; then
+	echo 'post_clear_status=modetest-failed' >>"$modetest_log"
+	exit 1
+fi
+
+"$modetest" -p >"$postclear_log" 2>&1
+grep -Eq '^129[[:space:]]+0[[:space:]]+\(0,0\)[[:space:]]+\(0x0\)' "$postclear_log"
+grep -Eq '^58[[:space:]]+0[[:space:]]+0[[:space:]]' "$postclear_log"
+[ "$(cat /sys/class/drm/card0-DSI-1/status 2>/dev/null)" = connected ]
+echo 'post_clear_status=crtc129-plane58-cleared-dsi-connected' >>"$postclear_log"

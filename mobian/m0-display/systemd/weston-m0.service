@@ -1,0 +1,28 @@
+[Unit]
+Description=Mobian-M0 Weston DRM/Pixman kiosk control
+Requires=lmi-splash-release.service
+Requires=seatd.service
+After=lmi-splash-release.service
+After=seatd.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+Environment=HOME=/root
+Environment=USER=root
+Environment=LOGNAME=root
+Environment=XDG_RUNTIME_DIR=/run/weston-m0
+Environment=XDG_SESSION_TYPE=wayland
+Environment=WAYLAND_DISPLAY=wayland-m0
+Environment=LIBSEAT_BACKEND=seatd
+Environment=SEATD_SOCK=/run/seatd.sock
+RuntimeDirectory=weston-m0
+RuntimeDirectoryMode=0700
+ExecStartPre=/bin/sh -c 'i=0; while [ ! -S /run/seatd.sock ] && [ "$$i" -lt 100 ]; do sleep 0.1; i=$$((i + 1)); done; [ -S /run/seatd.sock ]'
+ExecStart=/usr/bin/weston --socket=wayland-m0 --backend=drm-backend.so --drm-device=card0 --renderer=pixman --shell=kiosk-shell.so --config=/etc/weston-m0/weston.ini --idle-time=0 --logger-scopes=log,drm-backend --log=/var/log/weston-m0.log
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
