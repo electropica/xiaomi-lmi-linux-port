@@ -1,7 +1,6 @@
 [Unit]
 Description=Release the lmi continuous-splash KMS state
-Requires=dev-dri-card0.device
-After=systemd-udevd.service dev-dri-card0.device
+After=systemd-udevd.service
 Before=seatd.service weston-m0.service
 
 [Service]

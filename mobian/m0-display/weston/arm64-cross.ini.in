@@ -1,0 +1,20 @@
+[binaries]
+c = 'aarch64-linux-gnu-gcc'
+cpp = 'aarch64-linux-gnu-g++'
+ar = 'aarch64-linux-gnu-ar'
+strip = 'aarch64-linux-gnu-strip'
+pkg-config = 'pkg-config'
+
+[built-in options]
+c_args = ['--sysroot=@SYSROOT@', '-ffile-prefix-map=@WORKDIR@=.']
+c_link_args = ['--sysroot=@SYSROOT@']
+
+[properties]
+sys_root = '@SYSROOT@'
+pkg_config_libdir = '@SYSROOT@/usr/lib/aarch64-linux-gnu/pkgconfig:@SYSROOT@/usr/share/pkgconfig'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'aarch64'
+cpu = 'aarch64'
+endian = 'little'

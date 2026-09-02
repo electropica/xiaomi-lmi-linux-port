@@ -16,24 +16,21 @@ Confirmed:
 
 The M0 BASE image is intentionally not stored in Git.
 
-## M0 DISPLAY — offline validated
+## M0 DISPLAY — VALIDATED ON HARDWARE
 
-Prepared and validated offline:
+Validated on Xiaomi `lmi` hardware:
 
-- KMS continuous-splash release with Debian `modetest`
-- systemd orchestration
-- seatd with `SEATD_VTBOUND=0`
-- Weston 14.0.2
-- Pixman renderer
-- kiosk shell
-- `DSI-1`
-- `Virtual-1` disabled
-- red background validation target
+- KMS continuous-splash release with Debian `modetest` works
+- seatd with `SEATD_VTBOUND=0` works
+- Weston 14.0.2 DRM/Pixman with kiosk shell works
+- `DSI-1` drives the physical panel
+- a red background is physically visible
+- downstream `msm_drm` requires the tracked Weston workaround that
+  de-duplicates indistinguishable formats in the legacy no-`IN_FORMATS`
+  fallback
 
-The DISPLAY ext4/raw/sparse images were built and sparse round-trip validated
-bit-for-bit.
-
-Hardware display validation is still pending.
+See `notes/mobian-m0-display-hardware-validation-2026-09-02.md` for the exact
+experimental evidence and backend identities.
 
 ## Repository policy
 

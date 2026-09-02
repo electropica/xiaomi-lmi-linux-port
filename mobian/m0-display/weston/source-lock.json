@@ -1,0 +1,57 @@
+{
+  "schema": "mobian-m0-weston-drm-source-lock/v1",
+  "reproduction_inputs": {
+    "weston": {
+      "version": "14.0.2",
+      "historical_local_filename": "weston-14.0.2.tar.xz",
+      "sha256": "b47216b3530da76d02a3a1acbf1846a9cd41d24caa86448f9c46f78f20b6e0ac"
+    },
+    "patch": {
+      "path": "patches/0001-dedupe-legacy-plane-formats.patch",
+      "sha256": "76fea1eded3b8b3252bcf941c778300ce85f7c389c42e8efdfd4df78db7750ff"
+    },
+    "libdisplay_info_dev": {
+      "package": "libdisplay-info-dev",
+      "version": "0.2.0-2",
+      "architecture": "arm64",
+      "sha256": "bc397ec057cc03e4ab8ceab570a28ee1eadd9b269298e0d4e6ab67e95bad0be7"
+    },
+    "libdisplay_info_runtime": {
+      "package": "libdisplay-info2",
+      "version": "0.2.0-2",
+      "architecture": "arm64",
+      "sha256": "9719d01a5eaef520f41ee576af111c8f4c59246a8861178504d066b86d2ba7c9"
+    }
+  },
+  "validated_experimental_artifacts": {
+    "patched_drm_backend": {
+      "sha256": "546664f37bbc85475a089f4e6cc3aa1f9478093c2e2addd95cc225a37e848fd3",
+      "hardware_result": "red screen on Xiaomi lmi",
+      "bit_reproducibility": "not yet established; this is the exact artifact tested on hardware"
+    },
+    "debian_original_drm_backend": {
+      "sha256": "8618f07a6ca560641b8ccab5022c4db6b8e01e4d5d6b353f69ec69d930110709",
+      "observation": "original Debian backend observed on the tested rootfs"
+    }
+  },
+  "validated_abi": {
+    "machine": "AArch64",
+    "libdisplay_info_soname": "libdisplay-info.so.2",
+    "maximum_glibc_symbol_version": "GLIBC_2.38",
+    "target_rootfs_glibc": "2.41"
+  },
+  "development_sysroot": {
+    "manifest": "development-sysroot-manifest.tsv",
+    "status": "incomplete",
+    "policy": "the build must refuse to run until every arm64/all Debian development package is hash-locked and status is complete"
+  },
+  "experimental_build_environment": {
+    "meson": "1.10.1",
+    "aarch64_gcc": "15.2.0",
+    "binutils": "2.46",
+    "libdrm": "2.4.131",
+    "libseat": "0.9.2",
+    "pixman": "0.46.4",
+    "wayland": "1.24.0"
+  }
+}

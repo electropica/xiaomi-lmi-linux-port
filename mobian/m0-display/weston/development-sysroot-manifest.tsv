@@ -1,0 +1,9 @@
+# mobian-m0-weston-development-sysroot/v1
+# status=incomplete
+# Columns: filename<TAB>package<TAB>version<TAB>architecture<TAB>sha256
+#
+# This manifest deliberately refuses the build until the complete Debian
+# trixie arm64 development closure has been measured, added below, reviewed,
+# and the status changed to complete. Do not infer missing rows from the host.
+libdisplay-info-dev_0.2.0-2_arm64.deb	libdisplay-info-dev	0.2.0-2	arm64	bc397ec057cc03e4ab8ceab570a28ee1eadd9b269298e0d4e6ab67e95bad0be7
+libdisplay-info2_0.2.0-2_arm64.deb	libdisplay-info2	0.2.0-2	arm64	9719d01a5eaef520f41ee576af111c8f4c59246a8861178504d066b86d2ba7c9
