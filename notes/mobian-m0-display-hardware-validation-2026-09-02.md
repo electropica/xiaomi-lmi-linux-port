@@ -26,12 +26,22 @@ The source correction de-duplicates formats only in the legacy fallback of
 `drm_plane_populate_formats()` used when no `IN_FORMATS` blob exists. It does
 not alter modifier-aware format handling.
 
-An AArch64 backend built with this patch was linked against
+An initial AArch64 backend built with this patch was linked against
 `libdisplay-info.so.2` and required at most `GLIBC_2.38`. Its SHA-256 was:
 
 ```text
 546664f37bbc85475a089f4e6cc3aa1f9478093c2e2addd95cc225a37e848fd3
 ```
+
+The reproducible locked build was subsequently validated on the same
+hardware. Its SHA-256 was:
+
+```text
+7d3eb69a88e83c636d062e496cc2c3cc8e221dc5de9bd8997ec193dcd010cab8
+```
+
+The locked backend is 611496 bytes and has Build ID
+`35ddb64ff219fffa7cda2df5af1117c5d4105d1f`.
 
 The original Debian backend observed on the phone had SHA-256:
 
