@@ -8,7 +8,7 @@
     },
     "patch": {
       "path": "patches/0001-dedupe-legacy-plane-formats.patch",
-      "sha256": "76fea1eded3b8b3252bcf941c778300ce85f7c389c42e8efdfd4df78db7750ff"
+      "sha256": "132b3f9606b86718b5f326324218b700a190dbcafa0deb1c92ba2ddc67d70517"
     },
     "libdisplay_info_dev": {
       "package": "libdisplay-info-dev",
@@ -21,6 +21,20 @@
       "version": "0.2.0-2",
       "architecture": "arm64",
       "sha256": "9719d01a5eaef520f41ee576af111c8f4c59246a8861178504d066b86d2ba7c9"
+    },
+    "native_tools": {
+      "manifest": "native-tools-manifest.tsv",
+      "manifest_sha256": "f747095752d0962794eddb67a1925eb5de2eb3fc40402db2350183122fa44b20",
+      "status": "complete",
+      "wayland_scanner": {
+        "package": "libwayland-bin",
+        "package_version": "1.23.1-3",
+        "architecture": "amd64",
+        "deb_sha256": "9360776a0e973ae3cfb601aa6baa72b855f69109532ec06d5acb727ccc4e003b",
+        "version": "1.23.1",
+        "sha256": "0f7477063779fe135b34219e38329da40a4a0b0710e139edfc531d1d61792439",
+        "build_id": "e31e0dc84af83be8f47c0bb94a15432e0a20baf6"
+      }
     }
   },
   "validated_experimental_artifacts": {
@@ -42,8 +56,9 @@
   },
   "development_sysroot": {
     "manifest": "development-sysroot-manifest.tsv",
-    "status": "incomplete",
-    "policy": "the build must refuse to run until every arm64/all Debian development package is hash-locked and status is complete"
+    "status": "complete",
+    "package_count": 167,
+    "policy": "every arm64/all Debian development package is hash-locked and verified before extraction"
   },
   "experimental_build_environment": {
     "meson": "1.10.1",

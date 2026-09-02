@@ -1,0 +1,5 @@
+[binaries]
+pkg-config = 'pkg-config'
+
+[properties]
+pkg_config_libdir = '@NATIVE_PKGCONFIG@'

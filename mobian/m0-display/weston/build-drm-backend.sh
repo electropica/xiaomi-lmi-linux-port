@@ -2,23 +2,27 @@
 set -euo pipefail
 
 usage() {
-	echo "usage: $0 WESTON_TARBALL LIBDISPLAY_INFO_DEV_DEB LIBDISPLAY_INFO_RUNTIME_DEB DEVELOPMENT_DEB_DIR DEVELOPMENT_MANIFEST OUTPUT_DIR" >&2
+	echo "usage: $0 WESTON_TARBALL LIBDISPLAY_INFO_DEV_DEB LIBDISPLAY_INFO_RUNTIME_DEB DEVELOPMENT_DEB_DIR DEVELOPMENT_MANIFEST NATIVE_DEB_DIR NATIVE_MANIFEST OUTPUT_DIR" >&2
 	exit 2
 }
 
-[ "$#" -eq 6 ] || usage
+[ "$#" -eq 8 ] || usage
 tarball=$1
 display_dev=$2
 display_runtime=$3
 deb_dir=$4
 manifest=$5
-output=$6
+native_deb_dir=$6
+native_manifest=$7
+output=$8
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 lock=$script_dir/source-lock.json
 patch_file=$script_dir/patches/0001-dedupe-legacy-plane-formats.patch
 
 [ -d "$deb_dir" ]
 [ -f "$manifest" ]
+[ -d "$native_deb_dir" ]
+[ -f "$native_manifest" ]
 [ ! -e "$output" ] || { echo "refusing to overwrite $output" >&2; exit 1; }
 
 locked_hash() {
@@ -47,6 +51,7 @@ check_hash "$tarball" "$(locked_hash weston.sha256)"
 check_hash "$patch_file" "$(locked_hash patch.sha256)"
 check_hash "$display_dev" "$(locked_hash libdisplay_info_dev.sha256)"
 check_hash "$display_runtime" "$(locked_hash libdisplay_info_runtime.sha256)"
+check_hash "$native_manifest" "$(locked_hash native_tools.manifest_sha256)"
 
 check_deb_identity() {
 	deb=$1
@@ -65,16 +70,22 @@ grep -Fx '# status=complete' "$manifest" >/dev/null || {
 	echo 'development sysroot manifest is not marked complete' >&2
 	exit 1
 }
+grep -Fx '# status=complete' "$native_manifest" >/dev/null || {
+	echo 'native tools manifest is not marked complete' >&2
+	exit 1
+}
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/mobian-m0-weston.XXXXXX")
 trap 'rm -rf -- "$work"' EXIT
-mkdir -p "$work/src" "$work/sysroot" "$work/build" "$output"
+mkdir -p "$work/src" "$work/sysroot" "$work/native-root" \
+	"$work/native-bin" "$work/native-pkgconfig" "$work/build" "$output"
 
-while IFS=$'\t' read -r filename package version architecture sha256; do
+while IFS=$'\t' read -r filename package version architecture sha256 provenance; do
 	case "$filename" in
 		''|'#'*) continue ;;
 		*/*) echo "manifest filename must be a basename: $filename" >&2; exit 1 ;;
 	esac
+	[ -n "$provenance" ] || { echo "manifest provenance is missing: $filename" >&2; exit 1; }
 	deb=$deb_dir/$filename
 	[ -f "$deb" ]
 	check_hash "$deb" "$sha256"
@@ -82,6 +93,20 @@ while IFS=$'\t' read -r filename package version architecture sha256; do
 	case "$architecture" in arm64|all) ;; *) echo "non-arm64 package in manifest: $filename" >&2; exit 1 ;; esac
 	dpkg-deb -x "$deb" "$work/sysroot"
 done < "$manifest"
+
+while IFS=$'\t' read -r filename package version architecture sha256 provenance; do
+	case "$filename" in
+		''|'#'*) continue ;;
+		*/*) echo "native manifest filename must be a basename: $filename" >&2; exit 1 ;;
+	esac
+	[ -n "$provenance" ] || { echo "native manifest provenance is missing: $filename" >&2; exit 1; }
+	deb=$native_deb_dir/$filename
+	[ -f "$deb" ]
+	check_hash "$deb" "$sha256"
+	check_deb_identity "$deb" "$package" "$version" "$architecture"
+	[ "$architecture" = amd64 ] || { echo "non-amd64 package in native manifest: $filename" >&2; exit 1; }
+	dpkg-deb -x "$deb" "$work/native-root"
+done < "$native_manifest"
 
 # Re-extract the two independently locked ABI inputs and verify that the
 # manifest includes the exact same packages rather than relying on host data.
@@ -98,17 +123,46 @@ sed \
 	-e "s|@WORKDIR@|$work|g" \
 	"$script_dir/arm64-cross.ini.in" > "$work/arm64-cross.ini"
 
-export PKG_CONFIG_PATH=
-export PKG_CONFIG_SYSROOT_DIR="$work/sysroot"
-export PKG_CONFIG_LIBDIR="$work/sysroot/usr/lib/aarch64-linux-gnu/pkgconfig:$work/sysroot/usr/share/pkgconfig"
-[ "$(pkg-config --modversion libdisplay-info)" = 0.2.0 ]
-case "$(pkg-config --variable=pcfiledir libdisplay-info)" in
+native_loader=$work/native-root/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+native_libdir=$work/native-root/usr/lib/x86_64-linux-gnu
+native_scanner=$work/native-root/usr/bin/wayland-scanner
+scanner_wrapper=$work/native-bin/wayland-scanner
+[ -x "$native_loader" ]
+[ -x "$native_scanner" ]
+file "$native_scanner" | grep -F 'x86-64'
+check_hash "$native_scanner" "$(locked_hash native_tools.wayland_scanner.sha256)"
+readelf -n "$native_scanner" | grep -F "Build ID: $(locked_hash native_tools.wayland_scanner.build_id)"
+printf '#!/bin/sh\nexec "%s" --library-path "%s" "%s" "$@"\n' \
+	"$native_loader" "$native_libdir" "$native_scanner" > "$scanner_wrapper"
+chmod 0755 "$scanner_wrapper"
+[ "$("$scanner_wrapper" --version 2>&1)" = "wayland-scanner $(locked_hash native_tools.wayland_scanner.version)" ]
+
+printf '%s\n' \
+	'prefix=/usr' \
+	"wayland_scanner=$scanner_wrapper" \
+	'Name: Wayland Scanner' \
+	'Description: locked native Wayland scanner' \
+	"Version: $(locked_hash native_tools.wayland_scanner.version)" \
+	> "$work/native-pkgconfig/wayland-scanner.pc"
+sed -e "s|@NATIVE_PKGCONFIG@|$work/native-pkgconfig|g" \
+	"$script_dir/amd64-native.ini.in" > "$work/amd64-native.ini"
+
+target_pc_libdir=$work/sysroot/usr/lib/aarch64-linux-gnu/pkgconfig:$work/sysroot/usr/share/pkgconfig
+[ "$(env PKG_CONFIG_PATH= PKG_CONFIG_SYSROOT_DIR="$work/sysroot" \
+	PKG_CONFIG_LIBDIR="$target_pc_libdir" pkg-config --modversion libdisplay-info)" = 0.2.0 ]
+case "$(env PKG_CONFIG_PATH= PKG_CONFIG_SYSROOT_DIR="$work/sysroot" \
+	PKG_CONFIG_LIBDIR="$target_pc_libdir" pkg-config --variable=pcfiledir libdisplay-info)" in
 	"$work/sysroot"/*) ;;
 	*) echo 'libdisplay-info pkg-config metadata escaped the sysroot' >&2; exit 1 ;;
 esac
 
+unset PKG_CONFIG_LIBDIR PKG_CONFIG_SYSROOT_DIR PKG_CONFIG_LIBDIR_FOR_BUILD PKG_CONFIG_SYSROOT_DIR_FOR_BUILD
+export PKG_CONFIG_PATH=
+export PKG_CONFIG_PATH_FOR_BUILD=
+
 meson setup "$work/build" "$work/src" \
 	--cross-file "$work/arm64-cross.ini" \
+	--native-file "$work/amd64-native.ini" \
 	--wrap-mode=nodownload \
 	-Dbackend-drm-screencast-vaapi=false \
 	-Dbackend-pipewire=false \
@@ -126,7 +180,7 @@ meson setup "$work/build" "$work/src" \
 	-Dsystemd=false \
 	-Dtest-junit-xml=false \
 	-Dxwayland=false
-meson compile -C "$work/build" libweston/backend-drm/drm-backend.so
+meson compile -C "$work/build" drm-backend
 
 backend=$work/build/libweston/backend-drm/drm-backend.so
 file "$backend" | grep -F 'ARM aarch64'

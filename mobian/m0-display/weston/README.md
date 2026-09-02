@@ -8,20 +8,37 @@ patch in `patches/` de-duplicates only that legacy fallback list.
 There are three distinct evidence levels:
 
 1. The Weston archive and source patch are hash-locked and reproducible.
-2. The build recipe is lockable, but refuses to run while
-   `development-sysroot-manifest.tsv` is marked incomplete.
+2. The build recipe has separately locked manifests for the native amd64
+   tools and the target arm64/all development sysroot.
 3. The exact experimental backend validated on Xiaomi `lmi` hardware is an
    evidence artifact. Its hash is not a promised output of a future build.
 
 ## Build contract
 
-`build-drm-backend.sh` requires six explicit inputs: the locked Weston
+`build-drm-backend.sh` requires eight explicit inputs: the locked Weston
 archive, both locked `libdisplay-info` Debian arm64 packages, a directory of
-locked development `.deb` files, its manifest, and a new output directory.
-It constructs a clean sysroot only from verified manifest entries and never
-uses target libraries from the host filesystem. Producing and reviewing the
-complete Weston development closure remains a prerequisite before a fresh
-build can be called fully reproducible.
+locked target development `.deb` files and its manifest, a separate directory
+of locked native amd64 `.deb` files and its manifest, and a new output
+directory. It constructs both roots only from verified manifest entries and
+never uses target libraries from the host filesystem.
+
+The three build layers are deliberately distinct:
+
+1. Meson, Ninja, the cross compiler, and other build-machine programs are
+   native amd64 tools. `wayland-scanner` and its runtime closure are extracted
+   from the packages in `native-tools-manifest.tsv` and run through their
+   extracted loader; `/usr/bin/wayland-scanner` is not used.
+2. Headers, libraries, and target pkg-config metadata come only from the 167
+   arm64/all packages in `development-sysroot-manifest.tsv`.
+3. The Weston archive and downstream-MSM source patch are independently
+   hash-locked inputs.
+
+Weston resolves `dependency('wayland-scanner', native: true)` through native
+pkg-config metadata. The recipe therefore generates a private
+`wayland-scanner.pc` whose tool variable points to a workdir wrapper. Native
+pkg-config sees only that private directory; target pkg-config sees only the
+arm64 sysroot. Architecture-independent `wayland-protocols` XML data remains
+in the target corpus but is consumed by the native scanner.
 
 The script verifies package identity and hashes, isolates `pkg-config`, applies
 the patch non-interactively without reversal or fuzz, disables Meson network
