@@ -1,0 +1,30 @@
+[Unit]
+Description=Mobian M1 Phosh session (Pixman)
+Requires=seatd.service user@1000.service
+After=seatd.service dbus.service systemd-logind.service user@1000.service
+Before=graphical.target
+Conflicts=weston-m0.service
+
+[Service]
+Type=simple
+User=mobian
+Group=mobian
+Environment=LANG=fr_FR.UTF-8
+Environment=LANGUAGE=fr_FR:fr
+Environment=XDG_CURRENT_DESKTOP=Phosh:GNOME
+Environment=XDG_SESSION_DESKTOP=phosh
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=WLR_RENDERER=pixman
+Environment=WLR_BACKENDS=drm,libinput
+Environment=WLR_DRM_DEVICES=/dev/dri/card0
+ExecStart=/usr/bin/phosh-session
+Restart=on-failure
+RestartSec=5
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+WorkingDirectory=/home/mobian
+
+[Install]
+WantedBy=graphical.target
