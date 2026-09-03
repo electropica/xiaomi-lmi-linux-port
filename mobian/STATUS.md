@@ -32,6 +32,19 @@ Validated on Xiaomi `lmi` hardware:
 See `notes/mobian-m0-display-hardware-validation-2026-09-02.md` for the exact
 experimental evidence and backend identities.
 
+## M1 PHOSH — VALIDATED ON HARDWARE
+
+The M1 graphical session and basic Phosh interaction were validated on Xiaomi
+`lmi` hardware. The clear-KMS marker was visible, Phoc acquired `DSI-1` with
+the Pixman renderer, and the Phosh lock screen appeared. Touch input and the
+swipe-up gesture worked, the passcode prompt allowed the session to be
+unlocked, and the Phosh desktop was then displayed with its applications and
+icons.
+
+This milestone validates the graphical bring-up and basic Phosh interaction.
+It does not validate GPU acceleration, every Phosh function, or readiness for
+daily use.
+
 ## M1 WIFI — VALIDATED ON HARDWARE
 
 Manual bring-up on `lmi` with D-v43 completed the QCA6390 CNSS/WLFW sequence,
