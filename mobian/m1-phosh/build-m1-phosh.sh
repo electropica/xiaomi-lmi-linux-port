@@ -96,7 +96,8 @@ apt-get install --no-install-recommends -y \
     gnome-session=48.0-1+deb13u1 \
     locales=2.41-12+deb13u3 \
     network-manager=1.52.1-1 \
-    qrtr-tools=1.1-2+b1
+    qrtr-tools=1.1-2+b1 \
+    unzip=6.0-29+deb13u1
 test -z "$(dpkg --audit)"
 if ! getent passwd 1000 >/dev/null; then
     useradd --uid 1000 --user-group --create-home --shell /bin/bash mobian
@@ -168,7 +169,7 @@ mobian_shadow=$(chroot "$tree" getent shadow mobian | cut -d: -f2)
 [[ -n $mobian_shadow && $mobian_shadow != '!'* && $mobian_shadow != '*'* ]]
 unset mobian_shadow
 chroot "$tree" id mobian
-chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session locales network-manager qrtr-tools
+chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session locales network-manager qrtr-tools unzip
 df -B1 "$tree"
 
 truncate -s $((root_blocks * 4096)) "$rootimg"
