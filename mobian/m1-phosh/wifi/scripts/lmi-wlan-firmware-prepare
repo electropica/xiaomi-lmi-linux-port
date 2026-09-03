@@ -1,0 +1,45 @@
+#!/bin/sh
+set -eu
+
+stock=/mnt/vendor/firmware_mnt/image/qca6390
+
+safe_link() {
+	target=$1
+	link=$2
+	if [ -e "$link" ] && [ ! -L "$link" ]; then
+		echo "Refusing to replace $link" >&2
+		exit 1
+	fi
+	ln -sfn "$target" "$link"
+}
+
+test -d "$stock"
+mkdir -p /lib/firmware/qca6390 /lib/firmware/wlan
+for source in "$stock"/*; do
+	[ -e "$source" ] || continue
+	safe_link "$source" "/lib/firmware/qca6390/${source##*/}"
+done
+
+for name in bdwlan.elf bdwlan.e* bd_*.elf regdb.bin regdb_j11.bin amss20.bin m3.bin; do
+	for source in /lib/firmware/qca6390/$name; do
+		[ -e "$source" ] || continue
+		safe_link "qca6390/${source##*/}" "/lib/firmware/${source##*/}"
+	done
+done
+
+safe_link /vendor/firmware/wlan/qca_cld /lib/firmware/wlan/qca_cld
+
+for path in \
+	/lib/firmware/qca6390/amss20.bin \
+	/lib/firmware/qca6390/m3.bin \
+	/lib/firmware/qca6390/regdb_j11.bin \
+	/lib/firmware/qca6390/bd_j11gl.elf \
+	/lib/firmware/wlan/qca_cld/WCNSS_qcom_cfg.ini \
+	/lib/firmware/wlan/qca_cld/wlan_mac.bin; do
+	test -r "$path"
+done
+
+test "$(readlink -f /lib/firmware/wlan/qca_cld/WCNSS_qcom_cfg.ini)" = \
+	/mnt/android-vendor/etc/wifi/WCNSS_qcom_cfg.ini
+test "$(readlink -f /lib/firmware/wlan/qca_cld/wlan_mac.bin)" = \
+	/mnt/vendor/persist/wlan_mac.bin

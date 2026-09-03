@@ -1,0 +1,14 @@
+[Unit]
+Description=Stock Android CNSS daemon for lmi WLAN
+Requires=lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service
+After=lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service
+Before=lmi-cnss-fs-ready.service
+
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/lmi-cnss-daemon-wrapper
+ExecStartPost=/bin/sh -ec 'for i in $(seq 1 50); do pgrep -f "^/vendor/bin/cnss-daemon$" >/dev/null && exit 0; sleep 0.1; done; exit 1'
+ExecStop=/usr/bin/pkill -f ^/vendor/bin/cnss-daemon$
+TimeoutStartSec=10
+Restart=no
+

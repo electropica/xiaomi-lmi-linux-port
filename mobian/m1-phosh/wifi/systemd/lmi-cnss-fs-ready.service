@@ -1,0 +1,12 @@
+[Unit]
+Description=Signal filesystem readiness to lmi CNSS and observe the validated delay
+Requires=lmi-cnss-daemon.service qrtr-ns.service
+After=lmi-cnss-daemon.service qrtr-ns.service
+Before=lmi-wlan-on.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lmi-cnss-fs-ready
+RemainAfterExit=yes
+Restart=no
+

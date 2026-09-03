@@ -69,3 +69,32 @@ before choosing that userspace integration.
 
 Battery reporting, clock synchronization, Virtual-1 behavior, and GPU
 acceleration are intentionally outside this milestone.
+
+## Wi-Fi integration
+
+Manual QCA6390 bring-up is validated on hardware. The tracked systemd
+automation preserves the exact successful order:
+
+```text
+read-only Android mounts -> stock firmware links -> qrtr-ns
+-> forked stock cnss-daemon -> one fs_ready write -> eight seconds
+-> one ON write -> bounded netdev wait -> NetworkManager
+```
+
+NetworkManager only `Wants` and orders itself after the WLAN attempt: a WLAN
+failure does not prevent NetworkManager from starting. The existing
+`10-m1-usb0-unmanaged.conf` keeps `usb0` under systemd-networkd throughout.
+
+The kernel selects `qca6390/bd_j11gl.elf` dynamically. The automation exposes
+the unchanged stock firmware tree and does not force `bd_j11.elf` or replace
+the stock `bdwlan.elf`. Android system/vendor, the runtime APEX, modem firmware
+and persist are consumed from read-only device mounts at runtime; none is
+included in Git or in the M1 recipe.
+
+The source-only property shim is compiled for AArch64 during the future M1
+build. The proprietary `/vendor/bin/cnss-daemon` remains on the stock vendor
+partition. No Wi-Fi connection profile or credential is part of the recipe.
+
+The manual result is documented in
+`notes/mobian-m1-wifi-hardware-validation-2026-09-03.md`. The systemd
+automation has not yet been tested on hardware.

@@ -1,0 +1,11 @@
+[Unit]
+Description=Expose stock QCA6390 firmware for lmi WLAN
+Requires=lmi-android-wifi-mounts.service
+After=lmi-android-wifi-mounts.service
+Before=qrtr-ns.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lmi-wlan-firmware-prepare
+RemainAfterExit=yes
+

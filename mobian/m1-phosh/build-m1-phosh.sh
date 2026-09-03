@@ -95,7 +95,8 @@ apt-get install --no-install-recommends -y \
     squeekboard=1.43.1-1 \
     gnome-session=48.0-1+deb13u1 \
     locales=2.41-12+deb13u3 \
-    network-manager=1.52.1-1
+    network-manager=1.52.1-1 \
+    qrtr-tools=1.1-2+b1
 test -z "$(dpkg --audit)"
 if ! getent passwd 1000 >/dev/null; then
     useradd --uid 1000 --user-group --create-home --shell /bin/bash mobian
@@ -118,14 +119,32 @@ install -D -o root -g root -m 0644 "$script_dir/lmi-splash-release-m1.conf" "$tr
 install -D -o root -g root -m 0644 "$script_dir/user-runtime-dir-1000-m1.conf" "$tree/etc/systemd/system/user-runtime-dir@1000.service.d/m1-runtime-fix.conf"
 install -D -o root -g root -m 0600 "$script_dir/accountsservice-mobian.ini" "$tree/var/lib/AccountsService/users/mobian"
 install -D -o root -g root -m 0644 "$script_dir/networkmanager-usb0-unmanaged.conf" "$tree/etc/NetworkManager/conf.d/10-m1-usb0-unmanaged.conf"
+install -D -o root -g root -m 0755 "$script_dir/wifi/scripts/lmi-android-wifi-mounts" "$tree/usr/local/sbin/lmi-android-wifi-mounts"
+install -D -o root -g root -m 0755 "$script_dir/wifi/scripts/lmi-wlan-firmware-prepare" "$tree/usr/local/sbin/lmi-wlan-firmware-prepare"
+install -D -o root -g root -m 0755 "$script_dir/wifi/scripts/lmi-cnss-daemon-wrapper" "$tree/usr/local/sbin/lmi-cnss-daemon-wrapper"
+install -D -o root -g root -m 0755 "$script_dir/wifi/scripts/lmi-cnss-fs-ready" "$tree/usr/local/sbin/lmi-cnss-fs-ready"
+install -D -o root -g root -m 0755 "$script_dir/wifi/scripts/lmi-wlan-on" "$tree/usr/local/sbin/lmi-wlan-on"
+install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/lmi-android-wifi-mounts.service" "$tree/etc/systemd/system/lmi-android-wifi-mounts.service"
+install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/lmi-wlan-firmware-prepare.service" "$tree/etc/systemd/system/lmi-wlan-firmware-prepare.service"
+install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/lmi-cnss-daemon.service" "$tree/etc/systemd/system/lmi-cnss-daemon.service"
+install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/lmi-cnss-fs-ready.service" "$tree/etc/systemd/system/lmi-cnss-fs-ready.service"
+install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/lmi-wlan-on.service" "$tree/etc/systemd/system/lmi-wlan-on.service"
+install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/qrtr-ns.service.d/lmi-order.conf" "$tree/etc/systemd/system/qrtr-ns.service.d/lmi-order.conf"
+install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/NetworkManager.service.d/lmi-wlan.conf" "$tree/etc/systemd/system/NetworkManager.service.d/lmi-wlan.conf"
+mkdir -p "$tree/usr/lib/lmi"
+aarch64-linux-gnu-gcc --sysroot="$tree" -shared -fPIC -O2 \
+    -Wl,-z,defs -o "$tree/usr/lib/lmi/liblmi_android_prop_shim.so" \
+    "$script_dir/wifi/src/lmi-android-prop-shim.c"
+file "$tree/usr/lib/lmi/liblmi_android_prop_shim.so" | grep -q 'ARM aarch64'
 install -D -o root -g root -m 0644 /dev/null "$tree/var/lib/systemd/linger/mobian"
 printf '%s\n' PocoF2Pro >"$tree/etc/hostname"
 
 chroot "$tree" systemctl enable seatd.service
 chroot "$tree" systemctl enable NetworkManager.service
+chroot "$tree" systemctl enable qrtr-ns.service
 chroot "$tree" systemctl enable phosh-m0.service
 chroot "$tree" systemctl disable weston-m0.service || true
-systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service
+systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service lmi-cnss-daemon.service lmi-cnss-fs-ready.service lmi-wlan-on.service NetworkManager.service
 
 test "$(stat -c '%u:%g:%a' "$tree/var/lib/systemd/linger/mobian")" = 0:0:644
 ! grep -q '^ExecStartPre=.*run/user/1000' "$tree/etc/systemd/system/phosh-m0.service"
@@ -149,7 +168,7 @@ mobian_shadow=$(chroot "$tree" getent shadow mobian | cut -d: -f2)
 [[ -n $mobian_shadow && $mobian_shadow != '!'* && $mobian_shadow != '*'* ]]
 unset mobian_shadow
 chroot "$tree" id mobian
-chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session locales network-manager
+chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session locales network-manager qrtr-tools
 df -B1 "$tree"
 
 truncate -s $((root_blocks * 4096)) "$rootimg"

@@ -32,6 +32,18 @@ Validated on Xiaomi `lmi` hardware:
 See `notes/mobian-m0-display-hardware-validation-2026-09-02.md` for the exact
 experimental evidence and backend identities.
 
+## M1 WIFI — VALIDATED ON HARDWARE
+
+Manual bring-up on `lmi` with D-v43 completed the QCA6390 CNSS/WLFW sequence,
+created `wlp1s0`, scanned nearby BSS entries, associated with WPA2, obtained a
+DHCP lease and default route, and preserved the independent `usb0` SSH path.
+The kernel dynamically selected `bd_j11gl.elf`; it must not be overridden with
+the older historical `bd_j11.elf` default.
+
+The systemd implementation of the validated ordering is now tracked under
+`mobian/m1-phosh/wifi`, but remains **not yet hardware-validated**. See
+`notes/mobian-m1-wifi-hardware-validation-2026-09-03.md`.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private

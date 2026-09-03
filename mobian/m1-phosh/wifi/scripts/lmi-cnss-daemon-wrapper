@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+test -x /vendor/bin/cnss-daemon
+test -r /usr/lib/lmi/liblmi_android_prop_shim.so
+exec env LD_PRELOAD=/usr/lib/lmi/liblmi_android_prop_shim.so \
+	/vendor/bin/cnss-daemon

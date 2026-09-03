@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+state=/run/lmi-wifi
+attempted=$state/fs-ready-attempted
+ready=$state/fs-ready-delay-complete
+mkdir -p "$state"
+
+set -C
+: >"$attempted"
+set +C
+
+pgrep -f '^/vendor/bin/cnss-daemon$' >/dev/null
+test -w /sys/kernel/cnss/fs_ready
+printf '1' >/sys/kernel/cnss/fs_ready
+
+# This delay starts only after the unique fs_ready write returned successfully.
+sleep 8
+: >"$ready"

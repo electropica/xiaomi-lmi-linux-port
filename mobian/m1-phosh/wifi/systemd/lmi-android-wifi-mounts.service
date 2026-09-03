@@ -1,0 +1,10 @@
+[Unit]
+Description=Mount stock Android filesystems required by lmi WLAN
+After=local-fs.target
+Before=lmi-wlan-firmware-prepare.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lmi-android-wifi-mounts
+RemainAfterExit=yes
+

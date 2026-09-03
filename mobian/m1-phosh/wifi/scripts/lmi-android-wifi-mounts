@@ -1,0 +1,129 @@
+#!/bin/sh
+set -eu
+
+super=/dev/disk/by-partlabel/super
+modem=/dev/disk/by-partlabel/modem
+persist=/dev/disk/by-partlabel/persist
+firmware_mnt=/mnt/vendor/firmware_mnt
+system_mnt=/mnt/android-system
+vendor_mnt=/mnt/android-vendor
+runtime_mnt=/apex/com.android.runtime
+runtime_img=/run/lmi-cnss-daemon/com.android.runtime.apex_payload.img
+
+require_ro() {
+	target=$2
+	findmnt -n -o OPTIONS "$target" | tr ',' '\n' | grep -qx ro
+}
+
+verify_block_mount() {
+	expected=$1
+	target=$2
+	actual=$(findmnt -n -o SOURCE --target "$target")
+	[ "$(readlink -f -- "$actual")" = "$(readlink -f -- "$expected")" ] || {
+		echo "$target is mounted from $actual, expected $expected" >&2
+		return 1
+	}
+	require_ro "$expected" "$target"
+}
+
+verify_loop_mount() {
+	expected=$1
+	target=$2
+	expected_offset=$3
+	expected_sizelimit=$4
+	actual=$(findmnt -n -o SOURCE --target "$target")
+	case "$actual" in
+		/dev/loop[0-9]*) ;;
+		*)
+			echo "$target is mounted from $actual, expected a loop device" >&2
+			return 1
+			;;
+	esac
+	loop=${actual##*/}
+	loop_sys=/sys/block/$loop/loop
+	test -r "$loop_sys/backing_file"
+	backing=$(cat "$loop_sys/backing_file")
+	case "$backing" in /*) ;; *) backing=/$backing ;; esac
+	[ "$(readlink -f -- "$backing")" = "$(readlink -f -- "$expected")" ] || {
+		echo "$target loop backing file is $backing, expected $expected" >&2
+		return 1
+	}
+	[ "$(cat "$loop_sys/offset")" = "$expected_offset" ] || {
+		echo "$target loop offset does not match $expected_offset" >&2
+		return 1
+	}
+	if [ -n "$expected_sizelimit" ]; then
+		[ "$(cat "$loop_sys/sizelimit")" = "$expected_sizelimit" ] || {
+			echo "$target loop sizelimit does not match $expected_sizelimit" >&2
+			return 1
+		}
+	fi
+	require_ro "$expected" "$target"
+}
+
+mount_block_ro() {
+	source=$1
+	target=$2
+	mkdir -p "$target"
+	if mountpoint -q "$target"; then
+		verify_block_mount "$source" "$target"
+		return
+	fi
+	mount -o ro "$source" "$target"
+	verify_block_mount "$source" "$target"
+}
+
+mount_loop_ro() {
+	source=$1
+	target=$2
+	offset=$3
+	sizelimit=$4
+	mkdir -p "$target"
+	if mountpoint -q "$target"; then
+		verify_loop_mount "$source" "$target" "$offset" "$sizelimit"
+		return
+	fi
+	if [ -n "$sizelimit" ]; then
+		mount -o "ro,loop,offset=$offset,sizelimit=$sizelimit" "$source" "$target"
+	else
+		mount -o "ro,loop,offset=$offset" "$source" "$target"
+	fi
+	verify_loop_mount "$source" "$target" "$offset" "$sizelimit"
+}
+
+safe_link() {
+	target=$1
+	link=$2
+	if [ -e "$link" ] && [ ! -L "$link" ]; then
+		echo "Refusing to replace $link" >&2
+		exit 1
+	fi
+	ln -sfn "$target" "$link"
+}
+
+test -b "$super"
+test -b "$modem"
+test -b "$persist"
+mount_block_ro "$modem" "$firmware_mnt"
+mount_loop_ro "$super" "$system_mnt" 1048576 1144766464
+mount_loop_ro "$super" "$vendor_mnt" 1146093568 817250304
+
+mkdir -p "${runtime_img%/*}" "$runtime_mnt" /apex
+if [ ! -s "$runtime_img" ]; then
+	unzip -p "$system_mnt/system/apex/com.android.runtime.apex" \
+		apex_payload.img >"$runtime_img"
+fi
+mount_loop_ro "$runtime_img" "$runtime_mnt" 0 ""
+
+safe_link "$system_mnt/system" /system
+safe_link "$vendor_mnt" /vendor
+
+mkdir -p /mnt/vendor/persist
+mount_block_ro "$persist" /mnt/vendor/persist
+
+mkdir -p /data/vendor/wifi/sockets
+chmod 0770 /data /data/vendor /data/vendor/wifi /data/vendor/wifi/sockets
+: >/data/vendor/wifi/iotap_ps.bin
+
+test -x /vendor/bin/cnss-daemon
+test -e /apex/com.android.runtime/bin/linker64

@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+state=/run/lmi-wifi
+attempted=$state/wlan-on-attempted
+test -e "$state/fs-ready-delay-complete"
+mkdir -p "$state"
+
+set -C
+: >"$attempted"
+set +C
+
+test -w /dev/wlan
+printf 'ON\n' >/dev/wlan
+
+end=$(( $(date +%s) + 45 ))
+while [ "$(date +%s)" -lt "$end" ]; do
+	for interface in /sys/class/net/*; do
+		[ -e "$interface/phy80211" ] && exit 0
+	done
+	sleep 1
+done
+
+echo "No WLAN interface appeared within 45 seconds" >&2
+exit 1

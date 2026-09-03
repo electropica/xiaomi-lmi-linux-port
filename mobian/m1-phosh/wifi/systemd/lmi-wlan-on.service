@@ -1,0 +1,12 @@
+[Unit]
+Description=Perform the single lmi WLAN host-driver activation attempt
+Requires=lmi-cnss-fs-ready.service
+After=lmi-cnss-fs-ready.service
+Before=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lmi-wlan-on
+RemainAfterExit=yes
+Restart=no
+
