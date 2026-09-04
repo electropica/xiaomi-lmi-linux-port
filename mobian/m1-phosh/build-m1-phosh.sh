@@ -166,7 +166,16 @@ systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-
 
 test "$(stat -c '%u:%g:%a' "$tree/var/lib/systemd/linger/mobian")" = 0:0:644
 ! grep -q '^ExecStartPre=.*run/user/1000' "$tree/etc/systemd/system/phosh-m0.service"
-! grep -q '^PAMName=' "$tree/etc/systemd/system/phosh-m0.service"
+grep -qx 'PAMName=login' "$tree/etc/systemd/system/phosh-m0.service"
+grep -qx 'Environment=XDG_SEAT=seat0' "$tree/etc/systemd/system/phosh-m0.service"
+! grep -q '^Environment=XDG_VTNR=' "$tree/etc/systemd/system/phosh-m0.service"
+! grep -q '^TTYPath=' "$tree/etc/systemd/system/phosh-m0.service"
+! grep -q '^StandardInput=tty' "$tree/etc/systemd/system/phosh-m0.service"
+! grep -q 'chvt' "$tree/etc/systemd/system/phosh-m0.service"
+! grep -q 'getty@' "$tree/etc/systemd/system/phosh-m0.service"
+test -f "$tree/etc/pam.d/login"
+grep -Eq '^[[:space:]]*@include[[:space:]]+common-session([[:space:]]|$)' "$tree/etc/pam.d/login"
+grep -Eq '^[[:space:]]*session[[:space:]]+[^#]*pam_systemd\.so([[:space:]]|$)' "$tree/etc/pam.d/common-session"
 grep -qx 'Environment=WLR_RENDERER=pixman' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=LANG=fr_FR.UTF-8' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=LANGUAGE=fr_FR:fr' "$tree/etc/systemd/system/phosh-m0.service"

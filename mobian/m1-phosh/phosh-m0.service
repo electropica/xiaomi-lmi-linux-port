@@ -9,11 +9,13 @@ Conflicts=weston-m0.service
 Type=simple
 User=mobian
 Group=mobian
+PAMName=login
 Environment=LANG=fr_FR.UTF-8
 Environment=LANGUAGE=fr_FR:fr
 Environment=XDG_CURRENT_DESKTOP=Phosh:GNOME
 Environment=XDG_SESSION_DESKTOP=phosh
 Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_SEAT=seat0
 Environment=XDG_RUNTIME_DIR=/run/user/1000
 Environment=WLR_RENDERER=pixman
 Environment=WLR_BACKENDS=drm,libinput

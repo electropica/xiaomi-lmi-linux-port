@@ -75,3 +75,13 @@ the timezone remains `Etc/UTC`; neither issue is fixed by NTP.
 This milestone does not validate GPU acceleration, all Phosh controls,
 battery reporting, the hardware RTC, timezone policy, suspend/resume, physical
 Power-button wake, or daily-use readiness.
+
+## Post-v3 runtime addendum
+
+The image described above did not contain a PAM/seat fix. A subsequent clean,
+single-start runtime experiment on that image validated `PAMName=login` with
+`XDG_SEAT=seat0`, an active Wayland logind session on graphical `seat0` without
+a VT, the Phosh authentication agent, and ordinary NetworkManager permissions
+and UI controls. The recipe was updated only after that separate validation;
+the resulting future image still requires hardware retesting. See
+`notes/mobian-m1-phosh-logind-polkit-validation-2026-09-04.md`.

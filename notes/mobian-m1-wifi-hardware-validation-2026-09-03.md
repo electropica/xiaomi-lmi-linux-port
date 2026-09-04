@@ -52,7 +52,11 @@ CLI WPA2 connection obtained DHCP, DNS, a default route, and Internet access.
 USB networking and SSH remained available. No tested Wi-Fi profile or secret
 is stored in the image recipe or repository.
 
-This does not validate Phosh's Wi-Fi controls. The Phosh process is not in a
-normal interactive logind session, and its NetworkManager actions remain
-blocked by Polkit. A broad permissive test rule demonstrated the distinction
-but is intentionally not part of the implementation.
+The original v3 image did not validate Phosh's Wi-Fi controls: it lacked a
+normal interactive logind session, and its NetworkManager actions were blocked
+by Polkit. A later clean runtime experiment added only `PAMName=login` and
+`XDG_SEAT=seat0`, created an active graphical logind session without a VT, and
+validated ordinary NetworkManager authorization and UI radio/profile control.
+`settings.modify.system` remains an administrative action. No broad permissive
+rule is part of the implementation. See
+`notes/mobian-m1-phosh-logind-polkit-validation-2026-09-04.md`.

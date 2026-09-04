@@ -137,11 +137,12 @@ roughly 29--72 ms was observed in libinput/Phoc logs. Screen blanking after
 idle is intentional: Phoc turns off DSI-1 while remaining alive, and a wake
 through the mobian user D-Bus re-enabled the panel.
 
-Two issues remain deliberately unresolved. The system service plus lingering
-user manager does not create a conventional active logind session for Phosh,
-so Polkit cannot reliably associate its PID with a session. A broad temporary
-NetworkManager Polkit rule proved CLI radio control but is not included.
-Also, UPower fails before exec because its `PrivateUsers=yes` sandbox cannot
+Two issues remained deliberately unresolved in the original M1 REPRO v2/v3
+images. Their system service plus lingering user manager did not create a
+conventional active logind session for Phosh. A broad temporary NetworkManager
+Polkit rule proved CLI radio control but is not included. A later clean runtime
+test resolved the session problem without such a rule; see the post-v3 section
+below. UPower still fails before exec because its `PrivateUsers=yes` sandbox cannot
 create a user namespace on D-v43 (`EINVAL`, status `217/USER`). No UPower
 override is included until a narrow runtime test validates it; the kernel also
 reports an unsupported battery property, so UPower is not assumed to be the
@@ -163,11 +164,12 @@ The lock screen, touch, swipe-up, passcode unlock, and Phosh desktop were
 observed again. This is not a validation of GPU acceleration, every Phosh
 feature, or daily-use readiness.
 
-Open observations are deliberately not corrected in this milestone. Colored
+Open observations were deliberately not corrected in the v3 image. Colored
 rectangles appear briefly before Phosh and may be related to the development
-continuous-splash path. The system-service Phosh launch still lacks a normal
-interactive logind session, so Polkit-backed Wi-Fi UI actions do not work;
-the permissive test rule is not included. The RTC remains wrong, timezone
+continuous-splash path. As built, v3 still lacked a normal interactive logind
+session and its Polkit-backed Wi-Fi UI actions did not work. The later runtime
+validation below resolved that specific issue without a permissive rule. The
+RTC remains wrong, timezone
 control is unresolved, and UPower still fails its user-namespace sandbox while
 the kernel separately reports an unsupported battery property. Idle blanking
 turns off `DSI-1` without killing Phoc, but physical Power-button wake has not
@@ -179,3 +181,33 @@ passcode—it is not selected or stored by the recipe.
 
 The exact v3 artifact identities and hardware evidence are recorded in
 `notes/mobian-m1-repro-v3-hardware-validation-2026-09-04.md`.
+
+## Post-v3 Phosh logind/Polkit runtime validation (2026-09-04)
+
+Starting the unchanged v3 system once from a clean state with a temporary
+runtime drop-in containing `PAMName=login` and `Environment=XDG_SEAT=seat0`
+created an active logind `Class=user`, `Type=wayland` session on `seat0` with
+`VTNr=0` and no TTY. `seat0` has `CanTTY=no` and `CanGraphical=yes`, confirming
+that this path does not reintroduce the Debian `tty7`/`chvt` assumptions.
+Phoc remained in the new `session-N.scope` and continued to use seatd, DRM and
+Pixman successfully.
+
+Phosh and GNOME Settings remained children of the persistent user manager and
+retained its audit session, but this separation did not prevent correct Polkit
+operation. The Phosh agent registered for the graphical session. Checks for
+NetworkManager `wifi.scan`, `enable-disable-wifi`, and `network-control`
+returned authorized for both the real GNOME Settings PID and its system D-Bus
+name. UI radio disable/enable and activation of an existing WPA profile then
+succeeded through association, DHCP and global connectivity.
+
+`settings.modify.system` still correctly requires administrator
+authentication. No permissive Polkit rule or `sudo`/`netdev` group change is
+part of this recipe. A user-requested disconnect reported reason 39, and the
+existing profile remains configured for autoconnect; no autoconnect defect is
+claimed without further evidence.
+
+The recipe now carries the validated PAM/seat configuration. Because the
+original v3 image did not contain it, automatic boot with the persistent
+integration must be revalidated after the next user-run build. Detailed
+runtime evidence is recorded in
+`notes/mobian-m1-phosh-logind-polkit-validation-2026-09-04.md`.

@@ -92,11 +92,22 @@ and Internet access. Integrated `systemd-timesyncd 257.13-1~deb13u1`
 synchronized the system clock after networking became available; this does
 not repair the incorrect hardware RTC.
 
-Still open are the Phosh/logind/Polkit session architecture and Wi-Fi UI,
-timezone control, UPower/battery reporting, colored boot rectangles,
-power-button suspend/wake, screenshot integration, touch/UI latency, observed
-Settings launch instability, and the eventual default application set. See
-`notes/mobian-m1-repro-v3-hardware-validation-2026-09-04.md`.
+After the v3 image validation, a clean runtime experiment additionally
+validated `PAMName=login` with `XDG_SEAT=seat0`: logind created an active
+Wayland `Class=user` session on graphical `seat0` with `VTNr=0`, Phoc remained
+functional through seatd, and the Phosh Polkit agent registered for that
+session. NetworkManager scan, radio and network-control authorization passed
+for the real GNOME Settings PID and D-Bus name, and Wi-Fi controls worked in
+the UI. This setup is now tracked by the M1 recipe but still requires
+post-rebuild hardware validation; it was not present in the original v3
+image. `settings.modify.system` correctly remains an administrative action.
+
+Still open are post-rebuild validation of this session setup, administrative
+system-connection editing, timezone control, UPower/battery reporting,
+colored boot rectangles, power-button suspend/wake, screenshot integration,
+touch/UI latency, observed Settings launch instability, and the eventual
+default application set. See the v3 hardware note and
+`notes/mobian-m1-phosh-logind-polkit-validation-2026-09-04.md`.
 
 ## Repository policy
 
