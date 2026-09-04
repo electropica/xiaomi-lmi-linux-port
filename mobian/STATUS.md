@@ -102,12 +102,39 @@ the UI. This setup is now tracked by the M1 recipe but still requires
 post-rebuild hardware validation; it was not present in the original v3
 image. `settings.modify.system` correctly remains an administrative action.
 
-Still open are post-rebuild validation of this session setup, administrative
-system-connection editing, timezone control, UPower/battery reporting,
-colored boot rectangles, power-button suspend/wake, screenshot integration,
-touch/UI latency, observed Settings launch instability, and the eventual
-default application set. See the v3 hardware note and
+That persistent session setup was subsequently validated in v4. Still open
+are timezone control, UPower/battery reporting, colored boot rectangles,
+power-button suspend/wake, screenshot integration, touch/UI latency, observed
+Settings launch instability, and the eventual default application set.
+Administrative system-connection editing continues to require its expected
+authentication rather than a policy bypass. See the v3 hardware note and
 `notes/mobian-m1-phosh-logind-polkit-validation-2026-09-04.md`.
+
+## M1 REPRO v4 — VALIDATED ON HARDWARE / KEYRING INTEGRATION TO REVALIDATE
+
+M1 REPRO v4 was built from commit `d1469e8`; its Android sparse userdata
+SHA-256 is `84361c4d7a1bced22046e8359d17865a55983ab730a15bd0489ed98d40fa8c92`.
+It booted automatically into the validated clear-KMS, seatd, Phoc/Pixman and
+Phosh path. The persistent PAM/seat configuration created an active Wayland
+logind user session on graphical `seat0` without a VT, and the Phosh Polkit
+agent registered correctly. The lock screen, touch, swipe-up, passcode unlock
+and desktop remained functional.
+
+The remaining Wi-Fi GUI failure was not caused by Phosh's process retaining
+the lingering user manager's audit session. NetworkManager registered the
+Phosh NetworkAgent and sent `SaveSecrets` and `GetSecrets` on the fixed
+SecretAgent D-Bus path. Phosh returned
+`org.freedesktop.NetworkManager.SecretAgent.Failed` because
+`org.freedesktop.secrets` was unavailable: v4 contained `libsecret` but not
+`gnome-keyring`. Installing Debian `gnome-keyring 48.0-1` at runtime supplied
+the activatable Secret Service, and GNOME Settings Wi-Fi connection worked
+immediately without reboot or manual daemon startup.
+
+The recipe now pins `gnome-keyring 48.0-1`. Its presence and automatic Secret
+Service activation remain to be validated in the next rebuilt image. No
+credential, connection profile, permissive Polkit rule or forced daemon start
+is tracked. Detailed evidence is in
+`notes/mobian-m1-repro-v4-hardware-validation-2026-09-04.md`.
 
 ## Repository policy
 

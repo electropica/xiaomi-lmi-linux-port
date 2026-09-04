@@ -26,6 +26,11 @@ experiment. APT still needs the recorded Debian/Mobian repositories to retain
 those versions and resolve their dependencies; the resulting installed package
 manifest must therefore be archived alongside a release build.
 
+`gnome-keyring 48.0-1` is a direct input. Its D-Bus-activatable Secret Service
+is required by the Phosh NetworkAgent to retrieve and prompt for Wi-Fi secrets.
+The recipe does not force-start `gnome-keyring-daemon`; Debian's normal user
+service and D-Bus activation remain authoritative.
+
 The build requires a non-empty `M1_MOBIAN_PASSWORD` environment variable. Its
 value is removed from the exported environment before child processes run,
 passed only to `chpasswd` over standard input, and cleared from the build
@@ -211,3 +216,26 @@ original v3 image did not contain it, automatic boot with the persistent
 integration must be revalidated after the next user-run build. Detailed
 runtime evidence is recorded in
 `notes/mobian-m1-phosh-logind-polkit-validation-2026-09-04.md`.
+
+## M1 REPRO v4 hardware validation (2026-09-04)
+
+M1 REPRO v4, built from commit `d1469e8`, validated the persistent
+`PAMName=login` and `XDG_SEAT=seat0` integration at automatic boot. Clear-KMS,
+seatd, Phoc/Pixman, the lock screen, touch, swipe-up, passcode unlock and the
+Phosh desktop continued to work. Logind created an active Wayland user session
+on graphical `seat0` without a VT, and the Phosh Polkit agent registered for
+that session.
+
+NetworkManager registered and called the Phosh NetworkAgent. Monitoring the
+fixed SecretAgent object path showed `SaveSecrets` and `GetSecrets`; the latter
+failed because `org.freedesktop.secrets` was not activatable. The image had
+`libsecret` but lacked `gnome-keyring`. Installing Debian
+`gnome-keyring 48.0-1` made the Secret Service activatable, after which Wi-Fi
+connection from GNOME Settings worked immediately without rebooting or
+manually starting the keyring daemon. This disproves session filtering as the
+cause of that SecretAgent failure.
+
+The recipe now includes `gnome-keyring`, but an image rebuilt with this new
+direct dependency still requires hardware validation. No Wi-Fi profile,
+credential, permissive Polkit rule or forced keyring startup is included. See
+`notes/mobian-m1-repro-v4-hardware-validation-2026-09-04.md`.

@@ -60,3 +60,14 @@ validated ordinary NetworkManager authorization and UI radio/profile control.
 `settings.modify.system` remains an administrative action. No broad permissive
 rule is part of the implementation. See
 `notes/mobian-m1-phosh-logind-polkit-validation-2026-09-04.md`.
+
+## M1 REPRO v4 SecretAgent addendum
+
+M1 REPRO v4 validated the persistent PAM/logind/seat configuration and showed
+that NetworkManager registered and called the Phosh NetworkAgent. Its
+`GetSecrets` response failed because the image lacked an activatable
+`org.freedesktop.secrets` service. Installing Debian `gnome-keyring 48.0-1`
+provided that service and made GNOME Settings Wi-Fi connection work without a
+reboot or manual daemon start. The recipe now includes the package; a rebuilt
+image still requires hardware validation. See
+`notes/mobian-m1-repro-v4-hardware-validation-2026-09-04.md`.

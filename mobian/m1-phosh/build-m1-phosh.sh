@@ -103,6 +103,7 @@ apt-get install --no-install-recommends -y \
     phoc=0.46.0-1 \
     squeekboard=1.43.1-1 \
     gnome-session=48.0-1+deb13u1 \
+    gnome-keyring=48.0-1 \
     locales=2.41-12+deb13u3 \
     network-manager=1.52.1-1 \
     qrtr-tools=1.1-2+b1 \
@@ -194,11 +195,17 @@ grep -qx 'unmanaged-devices=interface-name:usb0' "$tree/etc/NetworkManager/conf.
 test "$(chroot "$tree" systemctl is-enabled NetworkManager.service)" = enabled
 test "$(chroot "$tree" systemctl is-enabled systemd-timesyncd.service)" = enabled
 test "$(chroot "$tree" systemctl is-enabled wpa_supplicant.service)" = enabled
+test -f "$tree/usr/share/dbus-1/services/org.freedesktop.secrets.service"
+test -f "$tree/usr/lib/systemd/user/gnome-keyring-daemon.service"
+test -f "$tree/usr/lib/systemd/user/gnome-keyring-daemon.socket"
+grep -qx 'Name=org.freedesktop.secrets' "$tree/usr/share/dbus-1/services/org.freedesktop.secrets.service"
+grep -Eq '^Exec=.*/gnome-keyring-daemon([[:space:]]|$)' "$tree/usr/share/dbus-1/services/org.freedesktop.secrets.service"
+test "$(chroot "$tree" dpkg-query -W -f='${Version}' gnome-keyring)" = 48.0-1
 mobian_shadow=$(chroot "$tree" getent shadow mobian | cut -d: -f2)
 [[ -n $mobian_shadow && $mobian_shadow != '!'* && $mobian_shadow != '*'* ]]
 unset mobian_shadow
 chroot "$tree" id mobian
-chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session locales network-manager qrtr-tools systemd-timesyncd wpasupplicant unzip
+chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session gnome-keyring locales network-manager qrtr-tools systemd-timesyncd wpasupplicant unzip
 df -B1 "$tree"
 
 truncate -s $((root_blocks * 4096)) "$rootimg"

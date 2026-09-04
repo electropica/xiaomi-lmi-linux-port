@@ -54,3 +54,13 @@ in `phosh-m0.service`. It does not validate automatic boot from a rebuilt image
 containing that change. The next image must regress boot, display, touch,
 unlock, seatd/DRM/Pixman, logind session properties, Polkit, Wi-Fi, USB SSH,
 session cleanup and absence of duplicate graphical sessions.
+
+## M1 REPRO v4 follow-up
+
+The subsequent v4 image validated this persistent configuration at automatic
+boot. NetworkManager's ordinary Wi-Fi authorization worked, and its SecretAgent
+manager did not reject Phosh because of the user-manager audit session.
+NetworkManager sent `GetSecrets`; Phosh failed only because the image lacked
+the `org.freedesktop.secrets` provider. Runtime installation of
+`gnome-keyring 48.0-1` resolved that distinct dependency. See
+`notes/mobian-m1-repro-v4-hardware-validation-2026-09-04.md`.
