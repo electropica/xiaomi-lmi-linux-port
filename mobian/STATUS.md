@@ -136,6 +136,31 @@ credential, connection profile, permissive Polkit rule or forced daemon start
 is tracked. Detailed evidence is in
 `notes/mobian-m1-repro-v4-hardware-validation-2026-09-04.md`.
 
+## M1 REPRO v5 — RUNTIME STARTUP FIXES VALIDATED / REBUILD REQUIRED
+
+M1 REPRO v5 was built from commit `593676f`; its Android sparse userdata
+SHA-256 is `b4adb244c686dcbbc1c10cce9087c792f69b8410080995893336ddd1f6a3f142`.
+It retained the validated automatic display, PAM/logind/seat, Phosh, touch and
+GUI Wi-Fi paths, including first-time PSK entry through the Secret Service.
+
+The integrated keyring package initially added a roughly 90-second delay:
+three legacy XDG autostarts requested GNOME startup notification after the
+systemd user service had already started the same daemon. Runtime overrides
+adding `X-GNOME-HiddenUnderSystemd=true` to the `secrets`, `pkcs11`, and `ssh`
+entries removed the timeout while preserving `org.freedesktop.secrets` and GUI
+Wi-Fi operation.
+
+UPower separately delayed Phosh by two 25-second D-Bus timeouts because
+systemd 257.13 could not create the `PrivateUsers=yes` user namespace on D-v43
+and exited with `217/USER` before starting `upowerd`. A drop-in changing only
+`PrivateUsers=no` started UPower successfully; all other sandboxing remained.
+With both corrections applied, Phosh reported ready after 1.65 seconds and the
+lock screen appeared at roughly 40 seconds from boot.
+
+Both hardware-tested corrections are now represented in the recipe but still
+require validation from a rebuilt image. Detailed evidence is in
+`notes/mobian-m1-repro-v5-hardware-validation-2026-09-05.md`.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private

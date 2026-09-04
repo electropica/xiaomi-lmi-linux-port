@@ -126,8 +126,18 @@ mobian_password=
 rm -f "$tree/usr/sbin/policy-rc.d"
 unmount_paths
 
+for name in secrets pkcs11 ssh; do
+    desktop="$tree/etc/xdg/autostart/gnome-keyring-$name.desktop"
+    test -f "$desktop"
+    test "$(grep -c '^X-GNOME-Autostart-Notify=true$' "$desktop")" = 1
+    ! grep -q '^X-GNOME-HiddenUnderSystemd=' "$desktop"
+    printf '\nX-GNOME-HiddenUnderSystemd=true\n' >>"$desktop"
+    test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$desktop")" = 1
+done
+
 install -D -o root -g root -m 0644 "$script_dir/phosh-m0.service" "$tree/etc/systemd/system/phosh-m0.service"
 install -D -o root -g root -m 0644 "$script_dir/phoc.ini" "$tree/etc/phosh/phoc.ini"
+install -D -o root -g root -m 0644 "$script_dir/upower-lmi.conf" "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf"
 install -D -o root -g root -m 0644 "$script_dir/../m0-display/systemd/lmi-splash-release.service" "$tree/etc/systemd/system/lmi-splash-release.service"
 install -D -o root -g root -m 0644 "$script_dir/lmi-splash-release-m1.conf" "$tree/etc/systemd/system/lmi-splash-release.service.d/m1-device-wait.conf"
 install -D -o root -g root -m 0644 "$script_dir/user-runtime-dir-1000-m1.conf" "$tree/etc/systemd/system/user-runtime-dir@1000.service.d/m1-runtime-fix.conf"
@@ -160,7 +170,7 @@ chroot "$tree" systemctl enable systemd-timesyncd.service
 chroot "$tree" systemctl enable wpa_supplicant.service
 chroot "$tree" systemctl enable phosh-m0.service
 chroot "$tree" systemctl disable weston-m0.service || true
-systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service lmi-cnss-daemon.service lmi-cnss-fs-ready.service lmi-wlan-on.service NetworkManager.service wpa_supplicant.service systemd-timesyncd.service || {
+systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service lmi-cnss-daemon.service lmi-cnss-fs-ready.service lmi-wlan-on.service NetworkManager.service wpa_supplicant.service systemd-timesyncd.service upower.service || {
     rc=$?
     echo "WARNING: systemd-analyze verify returned $rc; continuing because known host/rootfs diagnostics may be non-fatal" >&2
 }
@@ -201,6 +211,13 @@ test -f "$tree/usr/lib/systemd/user/gnome-keyring-daemon.socket"
 grep -qx 'Name=org.freedesktop.secrets' "$tree/usr/share/dbus-1/services/org.freedesktop.secrets.service"
 grep -Eq '^Exec=.*/gnome-keyring-daemon([[:space:]]|$)' "$tree/usr/share/dbus-1/services/org.freedesktop.secrets.service"
 test "$(chroot "$tree" dpkg-query -W -f='${Version}' gnome-keyring)" = 48.0-1
+for name in secrets pkcs11 ssh; do
+    desktop="$tree/etc/xdg/autostart/gnome-keyring-$name.desktop"
+    test "$(grep -c '^X-GNOME-Autostart-Notify=true$' "$desktop")" = 1
+    test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$desktop")" = 1
+done
+cmp -s "$script_dir/upower-lmi.conf" "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf"
+test "$(grep -c '^PrivateUsers=no$' "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf")" = 1
 mobian_shadow=$(chroot "$tree" getent shadow mobian | cut -d: -f2)
 [[ -n $mobian_shadow && $mobian_shadow != '!'* && $mobian_shadow != '*'* ]]
 unset mobian_shadow

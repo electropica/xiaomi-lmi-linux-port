@@ -67,3 +67,8 @@ activation and user-unit files without force-starting the daemon. The next
 user-built image must validate automatic boot, the graphical session,
 Secret Service activation, first-time WPA secret prompting, association,
 DHCP/DNS/Internet, and preservation of `usb0` SSH.
+
+M1 REPRO v5 subsequently validated the integrated Secret Service and exposed
+a duplicate legacy-autostart timeout plus an independent UPower user-namespace
+failure. Their separate runtime corrections are documented in
+`notes/mobian-m1-repro-v5-hardware-validation-2026-09-05.md`.

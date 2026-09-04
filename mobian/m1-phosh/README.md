@@ -29,7 +29,11 @@ manifest must therefore be archived alongside a release build.
 `gnome-keyring 48.0-1` is a direct input. Its D-Bus-activatable Secret Service
 is required by the Phosh NetworkAgent to retrieve and prompt for Wi-Fi secrets.
 The recipe does not force-start `gnome-keyring-daemon`; Debian's normal user
-service and D-Bus activation remain authoritative.
+service and D-Bus activation remain authoritative. Debian also ships three
+legacy GNOME autostarts for its `secrets`, `pkcs11`, and `ssh` components. The
+recipe marks each `X-GNOME-HiddenUnderSystemd=true`, preserving the files while
+preventing duplicate launches and GNOME Session notification timeouts when the
+daemon is already managed by the systemd user service.
 
 The build requires a non-empty `M1_MOBIAN_PASSWORD` environment variable. Its
 value is removed from the exported environment before child processes run,
@@ -147,11 +151,11 @@ images. Their system service plus lingering user manager did not create a
 conventional active logind session for Phosh. A broad temporary NetworkManager
 Polkit rule proved CLI radio control but is not included. A later clean runtime
 test resolved the session problem without such a rule; see the post-v3 section
-below. UPower still fails before exec because its `PrivateUsers=yes` sandbox cannot
-create a user namespace on D-v43 (`EINVAL`, status `217/USER`). No UPower
-override is included until a narrow runtime test validates it; the kernel also
-reports an unsupported battery property, so UPower is not assumed to be the
-only battery issue.
+below. In the original v2/v3 images, UPower failed before exec because its
+`PrivateUsers=yes` sandbox could not create a user namespace on D-v43 (`EINVAL`,
+status `217/USER`). The narrow runtime relaxation subsequently validated in v5
+is now included, but the kernel also reports an unsupported battery property,
+so service startup is not treated as complete battery validation.
 
 ## M1 REPRO v3 hardware validation (2026-09-04)
 
@@ -174,9 +178,10 @@ rectangles appear briefly before Phosh and may be related to the development
 continuous-splash path. As built, v3 still lacked a normal interactive logind
 session and its Polkit-backed Wi-Fi UI actions did not work. The later runtime
 validation below resolved that specific issue without a permissive rule. The
-RTC remains wrong, timezone
-control is unresolved, and UPower still fails its user-namespace sandbox while
-the kernel separately reports an unsupported battery property. Idle blanking
+RTC remains wrong and timezone control is unresolved. In the original v3
+image, UPower still failed its user-namespace sandbox while the kernel
+separately reported an unsupported battery property; the later v5 runtime
+validation below resolves only the service-start failure. Idle blanking
 turns off `DSI-1` without killing Phoc, but physical Power-button wake has not
 been validated. Touch/input lag of roughly 29--72 ms remains visible in logs.
 Settings showed intermittent launch/UI behavior without a matching confirmed
@@ -239,3 +244,29 @@ The recipe now includes `gnome-keyring`, but an image rebuilt with this new
 direct dependency still requires hardware validation. No Wi-Fi profile,
 credential, permissive Polkit rule or forced keyring startup is included. See
 `notes/mobian-m1-repro-v4-hardware-validation-2026-09-04.md`.
+
+## M1 REPRO v5 hardware validation (2026-09-05)
+
+M1 REPRO v5, built from commit `593676f`, validated integrated
+`gnome-keyring 48.0-1` and the Wi-Fi Secret Service, but exposed two independent
+startup delays. The enabled systemd user service had already started the
+keyring daemon when three legacy `PreDisplayServer` autostarts ran with
+`X-GNOME-Autostart-Notify=true`. Their `--start` processes found the existing
+daemon but did not register with GNOME Session, which waited about 90 seconds.
+Adding `X-GNOME-HiddenUnderSystemd=true` to all three entries removed that
+timeout while retaining the daemon, its socket, `org.freedesktop.secrets`, and
+functional GUI Wi-Fi secret handling.
+
+UPower then accounted for two consecutive 25-second D-Bus activation waits.
+Its Debian unit explicitly requested `PrivateUsers=yes`; systemd 257.13 failed
+to construct that user namespace on D-v43 with `EINVAL` and status `217/USER`,
+before executing `upowerd`. A device-specific drop-in changing only
+`PrivateUsers=no` made UPower active and gave `org.freedesktop.UPower` a real
+D-Bus owner. Every other sandbox directive remained effective. With both
+runtime corrections, Phosh became ready in 1.65 seconds after its own start
+and the lock screen appeared around 40 seconds after boot.
+
+The recipe now carries both hardware-tested settings. A rebuilt image must
+revalidate them before they are considered persistently delivered. Detailed
+evidence and the v5 sparse artifact identity are recorded in
+`notes/mobian-m1-repro-v5-hardware-validation-2026-09-05.md`.
