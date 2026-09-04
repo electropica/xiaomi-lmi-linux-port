@@ -161,6 +161,35 @@ Both hardware-tested corrections are now represented in the recipe but still
 require validation from a rebuilt image. Detailed evidence is in
 `notes/mobian-m1-repro-v5-hardware-validation-2026-09-05.md`.
 
+## M1 REPRO v6 — VALIDATED ON HARDWARE
+
+M1 REPRO v6 was freshly built from commit `d054ba8`; its Android sparse
+userdata is 1,881,808,716 bytes with SHA-256
+`b6e7c3bbb57e4edd1f17c829ded37b7c8ce94b883329d34d983cb05f44a30a00`.
+The build completed with a clean filesystem check, the Windows transfer hash
+matched, and all three sparse userdata segments flashed successfully.
+
+This image reproduces both persistent startup corrections. The three GNOME
+Keyring autostarts no longer cause their roughly 90-second registration
+timeout, while the systemd user daemon and `org.freedesktop.secrets` remain
+available. The UPower drop-in reports `PrivateUsers=no`; `upower.service`
+starts successfully without `217/USER`. GNOME Session started in about 120 ms,
+UPower acquired its D-Bus name in under one second, and Phosh reported ready
+in 1.60 seconds.
+
+The active Wayland logind session remained attached to graphical `seat0` with
+no VT. The lock screen, touch and passcode unlock worked. From a freshly
+flashed image, GNOME Settings displayed the Wi-Fi secret prompt, accepted a
+user-entered credential, connected successfully, and allowed automatic NTP
+synchronization. No SSID, profile or credential is tracked.
+
+The observed lock screen appeared around 50 seconds from boot. The difference
+from the corrected v5 runtime boot occurred before `phosh-m0.service` and is
+not attributed to Keyring or UPower. Dynamic battery tracking remains
+unvalidated despite Phosh displaying 100%; `getty@tty1.service`, colored
+clear-KMS rectangles, French OSK layout, GPU acceleration and modem/SIM remain
+open. See `notes/mobian-m1-repro-v6-hardware-validation-2026-09-05.md`.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private

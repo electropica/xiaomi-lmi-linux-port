@@ -71,3 +71,10 @@ Open work not addressed here includes French OSK layout, detailed battery
 recognition, colored clear-KMS rectangles, GPU acceleration, modem/SIM and
 locked-screen power-off behavior. No Wi-Fi profile or credential is recorded
 in this note or the recipe.
+
+## M1 REPRO v6 follow-up
+
+The subsequent v6 image, freshly built from commit `d054ba8`, reproduced both
+corrections from the tracked recipe. It removed both startup delays while
+preserving UPower, the Secret Service and GUI Wi-Fi secret entry. See
+`notes/mobian-m1-repro-v6-hardware-validation-2026-09-05.md`.

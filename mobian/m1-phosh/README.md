@@ -270,3 +270,27 @@ The recipe now carries both hardware-tested settings. A rebuilt image must
 revalidate them before they are considered persistently delivered. Detailed
 evidence and the v5 sparse artifact identity are recorded in
 `notes/mobian-m1-repro-v5-hardware-validation-2026-09-05.md`.
+
+## M1 REPRO v6 hardware validation (2026-09-05)
+
+M1 REPRO v6 was freshly built from commit `d054ba8` and validated both startup
+fixes as persistent recipe output. GNOME Session no longer waited for the three
+legacy Keyring launchers, while the systemd user daemon and Secret Service
+remained available. UPower ran with the device-specific `PrivateUsers=no`
+drop-in and acquired `org.freedesktop.UPower` without the former `217/USER`
+failure. None of the three old timeout messages appeared.
+
+`gnome-session-manager@phosh.service` started in about 120 ms, UPower acquired
+its D-Bus name in under one second, and Phosh reported ready after 1.60 seconds.
+The active Wayland logind session remained on graphical `seat0`; lock screen,
+touch and passcode unlock passed. On the fresh image, GNOME Settings displayed
+the Wi-Fi password prompt, connected successfully through the Secret Service,
+and NTP synchronized automatically after networking became available. No
+tested profile, SSID or credential is stored by the project.
+
+The visually observed lock screen arrived around 50 seconds. The difference
+from the corrected v5 runtime boot is before `phosh-m0.service` and remains
+unexplained. UPower startup is validated, but dynamic battery tracking is not:
+the UI showed 100% and downstream power-supply recognition warnings remain.
+The exact artifact identity and evidence are in
+`notes/mobian-m1-repro-v6-hardware-validation-2026-09-05.md`.
