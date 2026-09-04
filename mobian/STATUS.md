@@ -1,4 +1,4 @@
-# Mobian M0 status
+# Mobian status
 
 ## M0 BASE — validated on hardware
 
@@ -53,9 +53,50 @@ DHCP lease and default route, and preserved the independent `usb0` SSH path.
 The kernel dynamically selected `bd_j11gl.elf`; it must not be overridden with
 the older historical `bd_j11.elf` default.
 
-The systemd implementation of the validated ordering is now tracked under
-`mobian/m1-phosh/wifi`, but remains **not yet hardware-validated**. See
+The systemd implementation under `mobian/m1-phosh/wifi` and the integrated
+Debian `wpasupplicant` are now validated on hardware in M1 REPRO v3. The image
+completed firmware bring-up, `FW_READY`, qcacld probe, WLAN creation,
+automatic SSID listing, CLI WPA2 association, DHCP, DNS, and Internet access
+while preserving USB SSH. No Wi-Fi profile or credential is tracked. See
 `notes/mobian-m1-wifi-hardware-validation-2026-09-03.md`.
+
+## M1 REPRO v2 IMAGE — HARDWARE-TESTED / CORRECTIONS REQUIRED
+
+The reproducible M1 Phosh/Wi-Fi rootfs and phone images were built and
+validated on the host. The final ext4 has the expected `pmOS_root` label and
+UUID, passes `e2fsck -fn`, and the Android sparse image round-trips bit-for-bit
+to the final raw image. Package installation, service enablement, Phosh/Pixman
+configuration, the AArch64 property shim, and the absence of proprietary
+Android payloads in the image were checked.
+
+This exact image subsequently booted on the phone. Its low-level systemd Wi-Fi
+automation succeeded, and its Phosh/Pixman stack worked when the splash unit
+was started without its stale `dev-dri-card0.device` dependency. Automatic
+display startup was blocked by that inherited dependency; Wi-Fi association
+needed runtime installation of `wpasupplicant`; and time synchronization
+needed runtime installation of `systemd-timesyncd`. Those findings produced
+the recipe corrections subsequently validated in v3. See
+`notes/mobian-m1-repro-v2-hardware-validation-2026-09-04.md`.
+
+## M1 REPRO v3 — VALIDATED ON HARDWARE
+
+The v3 userdata image booted on Xiaomi `lmi` with D-v43 and reached Phosh
+automatically without SSH intervention. The corrected splash unit has no
+`dev-dri-card0.device` dependency; its bounded wait for the real character
+device allowed clear-KMS, seatd, Phoc/Pixman on `DSI-1`, the lock screen, and
+the unlocked Phosh desktop to start normally.
+
+The integrated low-level QCA6390 automation and `wpasupplicant 2:2.10-24`
+provided WLAN discovery, scanning, CLI WPA2 association, DHCP, routing, DNS,
+and Internet access. Integrated `systemd-timesyncd 257.13-1~deb13u1`
+synchronized the system clock after networking became available; this does
+not repair the incorrect hardware RTC.
+
+Still open are the Phosh/logind/Polkit session architecture and Wi-Fi UI,
+timezone control, UPower/battery reporting, colored boot rectangles,
+power-button suspend/wake, screenshot integration, touch/UI latency, observed
+Settings launch instability, and the eventual default application set. See
+`notes/mobian-m1-repro-v3-hardware-validation-2026-09-04.md`.
 
 ## Repository policy
 

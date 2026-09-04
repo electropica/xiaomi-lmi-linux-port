@@ -91,10 +91,91 @@ the stock `bdwlan.elf`. Android system/vendor, the runtime APEX, modem firmware
 and persist are consumed from read-only device mounts at runtime; none is
 included in Git or in the M1 recipe.
 
-The source-only property shim is compiled for AArch64 during the future M1
-build. The proprietary `/vendor/bin/cnss-daemon` remains on the stock vendor
+The source-only property shim is compiled for AArch64 during M1 builds. The
+proprietary `/vendor/bin/cnss-daemon` remains on the stock vendor
 partition. No Wi-Fi connection profile or credential is part of the recipe.
 
 The manual result is documented in
-`notes/mobian-m1-wifi-hardware-validation-2026-09-03.md`. The systemd
-automation has not yet been tested on hardware.
+`notes/mobian-m1-wifi-hardware-validation-2026-09-03.md`. M1 REPRO v2
+validated the systemd automation through WLAN netdev creation. M1 REPRO v3
+then validated the same automation with integrated Debian `wpasupplicant`:
+NetworkManager listed SSIDs and completed CLI WPA2 association, DHCP, DNS,
+and Internet access. No network profile or credential is added to the recipe.
+
+## M1 REPRO v2 host image validation (2026-09-04)
+
+The M1 REPRO v2 image-production stage completed successfully using the
+already-built rootfs. The final ext4, raw userdata, and Android sparse
+identities are recorded in
+`notes/mobian-m1-repro-v2-host-validation-2026-09-04.md`.
+
+An earlier interrupted/manual finalization left a 4 GiB zero-filled file that
+was not an ext4 filesystem (`file` reported `data` and the ext4 magic was
+zero). It was rejected and is not a valid project artifact. The tracked recipe
+uses fail-fast shell semantics and now also verifies ext4 size, type, UUID,
+label, superblock magic, and `e2fsck` before creating or converting userdata.
+
+The image was subsequently tested on hardware. See
+`notes/mobian-m1-repro-v2-hardware-validation-2026-09-04.md` for the separate
+automatic-start defect and the runtime package results.
+
+## Corrections derived from the M1 REPRO v2 phone test
+
+The M0 DISPLAY source unit already omits `dev-dri-card0.device`, but the M1
+build had inherited an older copy from its source tree. An empty `Requires=`
+or `After=` in the M1 drop-in did not remove that dependency. The recipe now
+installs the corrected source unit explicitly and keeps only the bounded
+`/dev/dri/card0` character-device wait in the M1 drop-in.
+
+The recipe also installs the hardware-tested Debian packages
+`wpasupplicant` and `systemd-timesyncd`. The former supplies NetworkManager's
+missing supplicant; the latter synchronized successfully after Wi-Fi became
+available. The hardware RTC remains incorrect before network synchronization.
+
+Phosh itself remains functional with Pixman, but touch processing lag of
+roughly 29--72 ms was observed in libinput/Phoc logs. Screen blanking after
+idle is intentional: Phoc turns off DSI-1 while remaining alive, and a wake
+through the mobian user D-Bus re-enabled the panel.
+
+Two issues remain deliberately unresolved. The system service plus lingering
+user manager does not create a conventional active logind session for Phosh,
+so Polkit cannot reliably associate its PID with a session. A broad temporary
+NetworkManager Polkit rule proved CLI radio control but is not included.
+Also, UPower fails before exec because its `PrivateUsers=yes` sandbox cannot
+create a user namespace on D-v43 (`EINVAL`, status `217/USER`). No UPower
+override is included until a narrow runtime test validates it; the kernel also
+reports an unsupported battery property, so UPower is not assumed to be the
+only battery issue.
+
+## M1 REPRO v3 hardware validation (2026-09-04)
+
+M1 REPRO v3 validated the three next-build corrections above on hardware:
+
+- automatic display startup works with no `dev-dri-card0.device` dependency
+  and only the bounded wait for the real `/dev/dri/card0` character device;
+- integrated `wpasupplicant 2:2.10-24` supports automatic WLAN discovery and
+  CLI WPA2 association through NetworkManager, followed by DHCP, DNS, and
+  Internet access;
+- integrated `systemd-timesyncd 257.13-1~deb13u1` synchronizes the system
+  clock once the network is available.
+
+The lock screen, touch, swipe-up, passcode unlock, and Phosh desktop were
+observed again. This is not a validation of GPU acceleration, every Phosh
+feature, or daily-use readiness.
+
+Open observations are deliberately not corrected in this milestone. Colored
+rectangles appear briefly before Phosh and may be related to the development
+continuous-splash path. The system-service Phosh launch still lacks a normal
+interactive logind session, so Polkit-backed Wi-Fi UI actions do not work;
+the permissive test rule is not included. The RTC remains wrong, timezone
+control is unresolved, and UPower still fails its user-namespace sandbox while
+the kernel separately reports an unsupported battery property. Idle blanking
+turns off `DSI-1` without killing Phoc, but physical Power-button wake has not
+been validated. Touch/input lag of roughly 29--72 ms remains visible in logs.
+Settings showed intermittent launch/UI behavior without a matching confirmed
+segfault or coredump. SSH screenshot work is deferred, the default application
+set is undecided, and `0000` was only discussed as a possible development
+passcode—it is not selected or stored by the recipe.
+
+The exact v3 artifact identities and hardware evidence are recorded in
+`notes/mobian-m1-repro-v3-hardware-validation-2026-09-04.md`.

@@ -47,3 +47,18 @@ not block the workflow or weaken any validation requirement.
 
 Send Qwen only the minimum data necessary. Never transmit private keys,
 secrets, tokens, credentials, or unrelated personal or sensitive data.
+
+## Build and hardware workflow
+
+- Heavy rootfs, kernel, and image builds are run manually by the user. Codex
+  prepares and statically validates the recipe, but does not start those builds.
+- The Linux agent has no ADB or Fastboot role and must not contact the phone.
+  Phone-bound artifacts are transferred through Windows Downloads; ADB and
+  Fastboot operations are performed manually from Windows by the user.
+- Prefer read-only inspection and validation. Never add proprietary Android
+  firmware or binaries, generated images/rootfs trees, credentials, or secrets
+  to Git.
+- After every new hardware milestone, review the complete status surface -- at
+  least `mobian/STATUS.md`, the applicable README, and related notes -- so that
+  manual validation, automated validation, and host-only validation remain
+  clearly distinguished.

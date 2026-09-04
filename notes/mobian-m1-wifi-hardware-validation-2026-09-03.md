@@ -1,7 +1,7 @@
 # Mobian M1 lmi Wi-Fi hardware validation — 2026-09-03
 
 **MANUAL HARDWARE VALIDATION PASSED**  
-**SYSTEMD AUTOMATION NOT YET HARDWARE-VALIDATED**
+**SYSTEMD LOW-LEVEL AUTOMATION HARDWARE-VALIDATED ON 2026-09-04**
 
 The test used the POCO F2 Pro / Redmi K30 Pro (`lmi`), the D-v43 downstream
 4.19.325 kernel, and the Mobian M1 userspace. All stock Android partitions
@@ -26,3 +26,33 @@ Do not force `bd_j11.elf`: the exact kernel selected `bd_j11gl.elf`
 successfully. Modern Debian `rmtfs`, `tqftpserv`, and `pd-mapper` are not part
 of this proven path. A failed activation must not automatically repeat
 `fs_ready` or `ON` within the same boot.
+
+## Automated M1 REPRO v2 result
+
+The tracked systemd sequence subsequently passed on hardware through all
+low-level stages: read-only mounts, firmware preparation, qrtr-ns,
+cnss-daemon, the single `fs_ready` write and delay, the single `ON` write,
+`FW_READY`, qcacld probe, and creation of `wlp1s0`, P2P, and Wi-Fi Aware
+interfaces. All three per-boot attempt markers were present.
+
+The tested image did not contain `wpasupplicant`, so NetworkManager initially
+reported the Wi-Fi device as unavailable and could not D-Bus activate a
+supplicant. Installing `wpasupplicant 2:2.10-24` and its normal Debian
+dependencies at runtime changed the device to disconnected, enabled scanning,
+and allowed WPA2 association, DHCP, DNS, a default route, and successful APT
+access. This runtime result justifies adding the package to the next recipe;
+it does not embed the tested network profile or credential.
+
+## Integrated M1 REPRO v3 result
+
+M1 REPRO v3 validated the complete automated path with Debian
+`wpasupplicant 2:2.10-24` already installed and enabled. The low-level systemd
+sequence completed once, `wlan0` appeared, NetworkManager listed SSIDs, and a
+CLI WPA2 connection obtained DHCP, DNS, a default route, and Internet access.
+USB networking and SSH remained available. No tested Wi-Fi profile or secret
+is stored in the image recipe or repository.
+
+This does not validate Phosh's Wi-Fi controls. The Phosh process is not in a
+normal interactive logind session, and its NetworkManager actions remain
+blocked by Polkit. A broad permissive test rule demonstrated the distinction
+but is intentionally not part of the implementation.

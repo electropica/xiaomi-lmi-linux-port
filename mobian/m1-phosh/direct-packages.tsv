@@ -6,4 +6,6 @@ gnome-session	48.0-1+deb13u1
 locales	2.41-12+deb13u3
 network-manager	1.52.1-1
 qrtr-tools	1.1-2+b1
+systemd-timesyncd	257.13-1~deb13u1
+wpasupplicant	2:2.10-24
 unzip	6.0-29+deb13u1
