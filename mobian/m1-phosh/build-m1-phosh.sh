@@ -28,7 +28,7 @@ validate_rootimg() {
     e2fsck -fn "$rootimg"
 }
 
-: "${M1_MOBIAN_PASSWORD:?M1_MOBIAN_PASSWORD must be set and non-empty}"
+M1_MOBIAN_PASSWORD="${M1_MOBIAN_PASSWORD:-0000}"
 mobian_password=$M1_MOBIAN_PASSWORD
 unset M1_MOBIAN_PASSWORD
 

@@ -35,11 +35,13 @@ recipe marks each `X-GNOME-HiddenUnderSystemd=true`, preserving the files while
 preventing duplicate launches and GNOME Session notification timeouts when the
 daemon is already managed by the systemd user service.
 
-The build requires a non-empty `M1_MOBIAN_PASSWORD` environment variable. Its
-value is removed from the exported environment before child processes run,
-passed only to `chpasswd` over standard input, and cleared from the build
-shell immediately afterwards. Neither the password nor its hash belongs in
-Git or in a temporary file.
+Development images use `0000` as the default `mobian` passcode. A non-empty
+`M1_MOBIAN_PASSWORD` environment variable overrides that default when the
+build is launched. The selected value is removed from the exported environment
+before child processes run, passed only to `chpasswd` over standard input, and
+cleared from the build shell immediately afterwards. The development passcode
+must be changed before any real use; an operator-supplied password and its hash
+must not be stored in Git or in a temporary file.
 
 The session deliberately uses wlroots Pixman rendering. The D-v43 display DRM
 node does not implement the MSM GPU UAPI needed by Freedreno, while Phoc with
@@ -61,8 +63,9 @@ even while the functional `/dev/dri/card0` node exists. The splash unit drops
 that device-unit dependency and instead waits up to ten seconds for the real
 character device before executing the validated clear-KMS script.
 
-The initial credential is supplied externally by the operator and must be
-changed after first login. The hostname is `PocoF2Pro`.
+The default development passcode is `0000`, unless the operator supplies a
+non-empty `M1_MOBIAN_PASSWORD` override. It must be changed before real use.
+The hostname is `PocoF2Pro`.
 
 M1 generates the real `fr_FR.UTF-8` locale, records it as the system locale,
 and sets the same language for the `mobian` AccountsService identity and Phosh
