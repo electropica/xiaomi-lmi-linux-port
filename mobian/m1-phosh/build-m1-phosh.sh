@@ -95,6 +95,9 @@ cat >"$tree/usr/sbin/policy-rc.d" <<'EOF'
 exit 101
 EOF
 chmod 0755 "$tree/usr/sbin/policy-rc.d"
+install -D -o root -g root -m 0644 \
+    "$script_dir/90_lmi-input-sources.gschema.override" \
+    "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override"
 chroot "$tree" /bin/bash -eu <<'EOF'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
@@ -120,6 +123,9 @@ sed -i 's/^# *fr_FR.UTF-8 UTF-8$/fr_FR.UTF-8 UTF-8/' /etc/locale.gen
 grep -qx 'fr_FR.UTF-8 UTF-8' /etc/locale.gen
 locale-gen fr_FR.UTF-8
 update-locale LANG=fr_FR.UTF-8 LANGUAGE=fr_FR:fr
+test -x /usr/bin/glib-compile-schemas
+test -f /usr/share/glib-2.0/schemas/org.gnome.desktop.input-sources.gschema.xml
+glib-compile-schemas --strict /usr/share/glib-2.0/schemas
 EOF
 printf '%s:%s\n' mobian "$mobian_password" | chroot "$tree" chpasswd
 mobian_password=
@@ -201,6 +207,14 @@ grep -qx 'LANG=fr_FR.UTF-8' "$tree/etc/default/locale"
 grep -qx 'LANGUAGE=fr_FR:fr' "$tree/etc/default/locale"
 test -s "$tree/usr/lib/locale/locale-archive"
 grep -qx 'Language=fr_FR.UTF-8' "$tree/var/lib/AccountsService/users/mobian"
+cmp -s "$script_dir/90_lmi-input-sources.gschema.override" \
+    "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override"
+test "$(grep -Fxc "sources=[('xkb', 'fr')]" \
+    "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override")" = 1
+test -s "$tree/usr/share/glib-2.0/schemas/gschemas.compiled"
+test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
+    org.gnome.desktop.input-sources sources)" = "[('xkb', 'fr')]"
+test ! -e "$tree/home/mobian/.config/dconf/user"
 grep -qx 'unmanaged-devices=interface-name:usb0' "$tree/etc/NetworkManager/conf.d/10-m1-usb0-unmanaged.conf"
 test "$(chroot "$tree" systemctl is-enabled NetworkManager.service)" = enabled
 test "$(chroot "$tree" systemctl is-enabled systemd-timesyncd.service)" = enabled

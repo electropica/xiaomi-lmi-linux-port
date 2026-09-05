@@ -66,9 +66,13 @@ changed after first login. The hostname is `PocoF2Pro`.
 
 M1 generates the real `fr_FR.UTF-8` locale, records it as the system locale,
 and sets the same language for the `mobian` AccountsService identity and Phosh
-session. NetworkManager is installed to provide the GNOME Settings network
-integration, but `usb0` is explicitly unmanaged so the validated static USB
-network remains exclusively controlled by systemd-networkd.
+session. The recipe also installs a textual GSettings schema override making
+`[('xkb', 'fr')]` the default input source, then compiles the schema cache in
+the chroot. This requires no user D-Bus session and does not pre-create
+`~/.config/dconf/user`. NetworkManager is installed to provide the GNOME
+Settings network integration, but `usb0` is explicitly unmanaged so the
+validated static USB network remains exclusively controlled by
+systemd-networkd.
 
 The GNOME Bluetooth libraries are present, but BlueZ is not added yet. D-v43
 uses the downstream Qualcomm BTFM SLIM/QCA6390 transport rather than a standard
@@ -294,3 +298,26 @@ unexplained. UPower startup is validated, but dynamic battery tracking is not:
 the UI showed 100% and downstream power-supply recognition warnings remain.
 The exact artifact identity and evidence are in
 `notes/mobian-m1-repro-v6-hardware-validation-2026-09-05.md`.
+
+## M1 REPRO v7 hardware validation (2026-09-05)
+
+M1 REPRO v7, again built from commit `d054ba8`, preserved the v6 graphical,
+session, GUI Wi-Fi, Secret Service, UPower and NTP results. Its measured
+critical chain showed that WLAN initialization was actually on the path to
+Phosh through NetworkManager, `network.target`, `systemd-user-sessions`, and
+the lingering user manager. Clear-KMS finished much earlier on a separate
+branch and was not critical on that boot. No boot dependency is changed here.
+
+Battery capacity and UPower reporting were observed dynamically from 100% to
+95% during about 39 minutes physically unplugged. UPower reported discharging
+and on-battery, although downstream sysfs still inconsistently reported
+`Charging` and USB present/online. Charging and reconnection transitions remain
+untested.
+
+The installed locale alone had left the input source at `[('xkb', 'us')]`.
+Setting it to `[('xkb', 'fr')]` immediately changed Squeekboard to AZERTY and
+persisted across a complete reboot. The recipe now expresses that validated
+default as a compiled textual schema override rather than importing the
+runtime user's dconf database. The fresh-image delivery of this new recipe
+setting remains to be validated. See
+`notes/mobian-m1-repro-v7-hardware-validation-2026-09-05.md`.

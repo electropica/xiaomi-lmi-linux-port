@@ -190,6 +190,41 @@ unvalidated despite Phosh displaying 100%; `getty@tty1.service`, colored
 clear-KMS rectangles, French OSK layout, GPU acceleration and modem/SIM remain
 open. See `notes/mobian-m1-repro-v6-hardware-validation-2026-09-05.md`.
 
+## M1 REPRO v7 — VALIDATED ON HARDWARE / FRENCH OSK DEFAULT TO REVALIDATE
+
+M1 REPRO v7 was built from commit `d054ba8`; its Android sparse userdata
+SHA-256 is `3b514d386b486137d8c730a0c6f1e970f1aa10116720669f9b66d920902d1015`.
+Flash and D-v43 boot passed. The lock screen, touch, unlock, USB SSH, GUI
+Wi-Fi, GNOME Keyring Secret Service, UPower with `PrivateUsers=no`, the active
+Wayland logind session on `seat0`, and network-triggered NTP synchronization
+remained functional. The former Keyring and UPower timeout messages did not
+recur.
+
+The measured critical chain corrects an earlier analytical assumption: WLAN
+bring-up was on the path to Phosh on this boot. The effective chain was
+`lmi-wlan-on.service` -> `NetworkManager.service` -> `network.target` ->
+`systemd-user-sessions.service` -> `user@1000.service` ->
+`phosh-m0.service`. The eight-second `fs_ready` delay and bounded WLAN wait
+therefore contributed directly. Clear-KMS completed on a separate branch at
+about 5.4 seconds and was not critical. This milestone does not change any of
+those dependencies.
+
+Battery data was dynamically validated while physically unplugged: capacity
+fell from 100% to 95%, battery and BMS sysfs values agreed, and UPower exposed
+`discharging`, `on-battery=yes`, an energy rate and a time-to-empty estimate.
+Raw downstream inconsistencies remain: `battery/status` still said `Charging`
+and USB still reported present/online while unplugged. Reconnection, charging,
+return to 100% and low-battery behavior are not yet tested.
+
+The French OSK cause was also validated at runtime. Changing
+`org.gnome.desktop.input-sources sources` from `[('xkb', 'us')]` to
+`[('xkb', 'fr')]` changed Squeekboard immediately from QWERTY to AZERTY and
+survived a complete reboot without reflashing userdata. The recipe now
+provides this as a textual GSettings schema override and compiles it without a
+user D-Bus session or a prebuilt dconf database. Delivery from a fresh rebuilt
+image remains to be validated. Full evidence is in
+`notes/mobian-m1-repro-v7-hardware-validation-2026-09-05.md`.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private
