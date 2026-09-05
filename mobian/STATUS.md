@@ -262,6 +262,36 @@ where GLib child watching through `waitid(..., pidfd=...)` returns `EINVAL`
 remains open for other short-lived processes. See
 `notes/mobian-m1-repro-v9-hardware-validation-2026-09-05.md`.
 
+## M1 BLUETOOTH SLIM/PDR — RUNTIME VALIDATED / BUILD INTEGRATION REQUIRED
+
+A bounded post-v9 runtime experiment validated the previously missing
+Qualcomm process-domain path without changing the M1 image. Before the test,
+the ADSP was not running, QRTR exposed no Service Registry Locator `64/1/1`,
+NGD had never runtime-resumed, and no BTFM SLIM device existed. D-v43's
+service-locator client otherwise waits `3000000` ms (3000 seconds) before its
+late SSR fallback, so booting the ADSP first could not provide NGD with a
+timely `appsngd1` / `avs/audio` domain resolution.
+
+The stock Android `pd-mapper`, given a private read-only view of the existing
+stock `firmware_mnt`, published `64/1/1`. It consumed the stock PDR maps,
+including `adspua.jsn`, and resolved `avs/audio` to
+`msm/adsp/audio_pd`, QMI instance 74. After exactly one ADSP boot, the ADSP
+reached `ONLINE` with `crash_count=0`; QRTR exposed notifier `66/1/74` and
+SLIM control service `769/1/0`; the audio domain notified UP; and NGD recorded
+runtime activity. SLIM then created `btfmslim_slave` and
+`btfmslim_slave_ifd`, with the QCA6390 slave bound to `btfmslim-driver`.
+Phosh, touch, Wi-Fi and general device stability were unchanged after the
+experiment.
+
+This is a runtime validation, not reproducible image delivery. The transient
+pd-mapper unit and its private bind remain experimental, proprietary binaries
+and maps are not stored in Git, and `/sys/class/bluetooth` remains empty. HCI
+creation is a separate later problem. The next objective is to integrate the
+stock-backed pd-mapper/PDR and ordered single ADSP startup into the M1 recipe,
+then validate them from a clean boot without intervention before continuing
+the HCI investigation. See
+`notes/mobian-m1-bluetooth-slim-pdr-runtime-validation-2026-09-05.md`.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private

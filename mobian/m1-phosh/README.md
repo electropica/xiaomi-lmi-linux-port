@@ -79,9 +79,12 @@ systemd-networkd.
 
 The GNOME Bluetooth libraries are present, but BlueZ is not added yet. D-v43
 uses the downstream Qualcomm BTFM SLIM/QCA6390 transport rather than a standard
-HCI UART, and the M1 rootfs currently contains no identified Bluetooth
-firmware or device-specific bring-up service. A hardware inventory is required
-before choosing that userspace integration.
+HCI UART. A post-v9 runtime experiment has validated the upstream part of that
+downstream chain: stock `pd-mapper` supplied the missing process-domain
+mapping, the ADSP and SLIM control services came up, NGD progressed, and the
+QCA6390 BTFM SLIM devices were created and bound. This mechanism is not yet
+part of the recipe, and no `hci0` exists; persistent bring-up and HCI creation
+remain separate milestones.
 
 Battery reporting, clock synchronization, Virtual-1 behavior, and GPU
 acceleration are intentionally outside this milestone.
@@ -359,3 +362,38 @@ and its fresh-image delivery are now hardware-validated. The general
 addresses only `xdg-user-dirs`. The artifact identity and directory evidence
 are recorded in
 `notes/mobian-m1-repro-v9-hardware-validation-2026-09-05.md`.
+
+## Post-v9 Bluetooth SLIM/PDR runtime validation (2026-09-05)
+
+The first missing NGD prerequisite was confirmed to be Qualcomm Service
+Registry Locator `64/1/1`. Without pd-mapper, D-v43's locator client waited its
+`3000000` ms (3000-second) timeout and its SSR fallback occurred far too late
+for a manually booted ADSP. Merely bringing the ADSP online could therefore
+publish SLIM control service `769/1/0` without scheduling the domain-up path
+needed for SLIM enumeration.
+
+The stock Android `/vendor/bin/pd-mapper` was tested through a transient
+systemd unit. A private read-only bind exposed the already mounted stock
+firmware tree at its Android path; no stock file was modified or copied into
+Git. The daemon published locator `64/1/1`, read the stock PDR maps, and
+resolved `appsngd1` / `avs/audio` through `adspua.jsn` to
+`msm/adsp/audio_pd`, instance 74. Only after these guards passed was the ADSP
+booted once.
+
+The ADSP reached `ONLINE` with zero crashes. QRTR then exposed `66/1/74` and
+`769/1/0`, the audio process domain notified UP, NGD accumulated runtime-active
+time, and SLIM created both `btfmslim_slave` and `btfmslim_slave_ifd`.
+`btfmslim_slave` reported the `qcom,btfmslim_slave` DT identity and was bound
+to `btfmslim-driver`. Phosh, touch, Wi-Fi and general stability passed the
+operator's post-test check. The Bluetooth UI did not change spontaneously and
+`/sys/class/bluetooth` remained empty, so HCI is deliberately not claimed.
+
+The validated setup is still runtime-only: pd-mapper is transient and the
+read-only bind exists only in its private mount namespace. The next milestone
+must make the stock-backed PDR path and ordered ADSP startup deterministic in
+the M1 build, then prove them on a clean boot without manual commands. Only
+after that fresh-image validation should diagnosis proceed from the bound BTFM
+slave toward HCI. A boot-time USB/RNDIS observation is also retained: SSH may
+occasionally require physically disconnecting and reconnecting USB; no cause
+or fix is claimed here. Full evidence is in
+`notes/mobian-m1-bluetooth-slim-pdr-runtime-validation-2026-09-05.md`.
