@@ -434,3 +434,33 @@ here. Runtime experiment evidence is in
 `notes/mobian-m1-bluetooth-slim-pdr-runtime-validation-2026-09-05.md`.
 Fresh-image evidence is in
 `notes/mobian-m1-repro-v11-hardware-validation-2026-09-05.md`.
+
+## QCA6390 Hastings HCI design (2026-09-05)
+
+The empty `/sys/class/bluetooth` after successful BTFM SLIM binding is now
+separated from the audio-side transport. Static review of D-v43 and the lmi
+DT establishes that `btfmslim-driver` registers the SLIM codec/DAI path; it
+does not create `hci0`. HCI is expected over QUPv3 SE6 (`0x998000`) using the
+high-speed GENI UART exposed as `/dev/ttyHS0`. Xiaomi provides no Bluetooth
+serdev child, matching the stock QTI HAL's direct UART attach model.
+
+The retained first-bring-up design uses N_HCI (`15`) and the QCA protocol
+(`HCI_UART_QCA=8`). A userspace attach process must open and configure
+`/dev/ttyHS0`, select the line discipline, flags and QCA protocol, and keep the
+file descriptor open. Controller power remains handled separately through
+the existing `qca,qca6390` `bluetooth-power.c` device and `/dev/btpower` path.
+
+D-v43 already has `hci_qca.c`, `btqca.c` and Qualcomm TLV/NVM parsing, but it
+only models AR3002, Rome and WCN3990. The minimum kernel work is to add the
+QCA6390 type, select `qca/htbtfw%02x.tlv` and `qca/htnv%02x.bin` (Hastings
+2.0 maps to `rom_ver=0x20`), make the non-serdev path safe and coherent, and
+enable `BT_QCA`, `BT_HCIUART`, H4 and QCA while retaining MSM GENI serial and
+MSM Bluetooth power. The lmi-specific QCA6390 choice must not change the
+historical Rome fallback for other line-discipline users.
+
+This is a validated design conclusion, not a hardware HCI result:
+`MINIMAL_BACKPORT_FEASIBLE=YES`, but no Bluetooth patch has yet been applied.
+Serdev DT conversion, modern pwrseq, power integration into `hci_qca`, ACPI,
+modern Qualcomm coredump/shutdown support and a wholesale mainline rewrite are
+explicitly outside the first test. Full evidence, A/B/C scope and risks are in
+`notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md`.

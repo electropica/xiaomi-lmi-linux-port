@@ -303,6 +303,34 @@ also remains an open observation. See
 See also `notes/mobian-m1-repro-v11-hardware-validation-2026-09-05.md` for the
 fresh-image evidence.
 
+## M1 BLUETOOTH HCI/HASTINGS — MINIMAL BACKPORT DESIGN VALIDATED
+
+The layer following the validated BTFM SLIM binding has now been identified
+statically. On `lmi`, Bluetooth HCI uses QUPv3 SE6 at `0x998000` through the
+`qcom,msm-geni-serial-hs` device `/dev/ttyHS0`; there is no Bluetooth serdev
+child in the Xiaomi DT. The stock QTI HAL opens that UART directly, uses the
+separate `/dev/btpower` interface and identifies the controller as QCA6390
+`hastings`, revision `HASTINGS_VER_2_0`.
+
+D-v43's `btfmslim-driver` supplies the SLIM audio/FM path and is not expected
+to register an HCI controller. The kernel contains the N_HCI/QCA line-
+discipline implementation and the Qualcomm TLV/NVM engine, but the current
+configuration omits `BT_HCIUART`, H4 and QCA, while its old QCA code has no
+`QCA_QCA6390` type or Hastings firmware selection. Its non-serdev setup path
+also contains unguarded serdev accesses. Therefore a NULL guard alone is not
+a sufficient fix.
+
+`MINIMAL_BACKPORT_FEASIBLE=YES`: the first bring-up design is a deliberately
+small D-v43 backport adding the QCA6390 type, Hastings 2.0 firmware naming,
+a coherent lmi-only non-serdev selection, and the required HCI UART Kconfig
+options. Power remains external to `hci_qca` for this first test. No Bluetooth
+kernel patch has been applied yet, and parser compatibility, baud transition,
+power/attach ordering and IBS remain experimental risks. See
+`notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md`.
+
+The next action is to design the first micro-backport as a separately
+reviewable change, without starting a build at the same time.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private
