@@ -343,3 +343,19 @@ runs the command through a device-specific systemd user oneshot ordered before
 `gnome-session-pre.target`. It does not alter the global GNOME timeout or the
 Squeekboard required component. This integration still requires validation on
 a fresh rebuilt image.
+
+## M1 REPRO v9 hardware validation (2026-09-05)
+
+M1 REPRO v9 was freshly built from commit `e7e63ba` and validated the targeted
+workaround. `xdg-user-dirs-lmi.service` executed successfully with status zero;
+as a oneshot without `RemainAfterExit`, its subsequent inactive/dead state is
+expected. The historical autostart produced no registration-timeout warning,
+and all eight localized XDG directories were created for `mobian`.
+
+Squeekboard appeared immediately after unlock, loaded `Resource: fr`, and was
+directly usable as French AZERTY. Thus both the compiled input-source default
+and its fresh-image delivery are now hardware-validated. The general
+`waitid`/pidfd incompatibility of D-v43 remains; this workaround deliberately
+addresses only `xdg-user-dirs`. The artifact identity and directory evidence
+are recorded in
+`notes/mobian-m1-repro-v9-hardware-validation-2026-09-05.md`.

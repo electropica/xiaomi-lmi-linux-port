@@ -243,6 +243,25 @@ Squeekboard, Keyring, UPower, networking and boot ordering are unchanged. The
 new oneshot and removal of the 90-second barrier require validation from a
 fresh image.
 
+## M1 REPRO v9 — XDG USER DIRS FIX VALIDATED ON HARDWARE
+
+M1 REPRO v9 was freshly built from commit `e7e63ba`; its Android sparse
+userdata SHA-256 is
+`17e5c0427358803beac9f2313caa008fd3303119c0020ebacc42a45a15f9b401`.
+Userdata flash and D-v43 boot passed.
+
+The device-specific `xdg-user-dirs-lmi.service` completed successfully with
+exit status zero. All eight localized user directories were created under the
+`mobian` home. The legacy `xdg-user-dirs.desktop` registration timeout was
+absent, Squeekboard appeared immediately after unlock, loaded `Resource: fr`,
+and provided the integrated French AZERTY layout on the fresh image.
+
+This validates the targeted workaround without changing GNOME's global phase
+timeout or removing `xdg-user-dirs-update`. The broader D-v43 incompatibility
+where GLib child watching through `waitid(..., pidfd=...)` returns `EINVAL`
+remains open for other short-lived processes. See
+`notes/mobian-m1-repro-v9-hardware-validation-2026-09-05.md`.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private
