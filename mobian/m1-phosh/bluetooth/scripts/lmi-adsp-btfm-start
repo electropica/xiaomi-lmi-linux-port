@@ -1,0 +1,62 @@
+#!/bin/sh
+set -eu
+
+state_dir=/run/lmi-adsp
+attempted=$state_dir/boot-attempted
+adsp=/sys/bus/msm_subsys/devices/subsys2
+boot=/sys/kernel/boot_adsp/boot
+
+has_service() {
+	service=$1
+	version=$2
+	instance=$3
+	timeout 2 /usr/bin/qrtr-lookup 2>/dev/null |
+		awk -v s="$service" -v v="$version" -v i="$instance" \
+		'$1 == s && $2 == v && $3 == i { found=1 }
+		 END { exit !found }'
+}
+
+pgrep -f '^/vendor/bin/pd-mapper$' >/dev/null
+has_service 64 1 1
+test -r /lib/firmware/postmarketos/adsp.mdt
+test "$(cat "$adsp/crash_count")" = 0
+test "$(cat "$adsp/state")" != ONLINE
+test -w "$boot"
+
+mkdir -p "$state_dir"
+set -C
+: >"$attempted"
+set +C
+
+printf '1\n' >"$boot"
+
+end=$(( $(date +%s) + 15 ))
+while [ "$(date +%s)" -lt "$end" ]; do
+	test "$(cat "$adsp/crash_count")" = 0 || {
+		echo "ADSP crash_count changed after the unique boot attempt" >&2
+		exit 1
+	}
+	[ "$(cat "$adsp/state")" = ONLINE ] && break
+	sleep 0.1
+done
+
+[ "$(cat "$adsp/state")" = ONLINE ] || {
+	echo "ADSP did not reach ONLINE within 15 seconds" >&2
+	exit 1
+}
+
+end=$(( $(date +%s) + 15 ))
+while [ "$(date +%s)" -lt "$end" ]; do
+	if has_service 66 1 74 &&
+	   has_service 769 1 0 &&
+	   [ -e /sys/bus/slimbus/devices/btfmslim_slave ] &&
+	   [ -e /sys/bus/slimbus/devices/btfmslim_slave_ifd ] &&
+	   [ "$(basename "$(readlink -f /sys/bus/slimbus/devices/btfmslim_slave/driver 2>/dev/null || true)")" = btfmslim-driver ]; then
+		echo "LMI_ADSP_BTFM_PASS adsp=ONLINE notifier=66/1/74 slim=769/1/0 driver=btfmslim-driver"
+		exit 0
+	fi
+	sleep 0.2
+done
+
+echo "ADSP is ONLINE but the bounded BTFM SLIM readiness check failed" >&2
+exit 1

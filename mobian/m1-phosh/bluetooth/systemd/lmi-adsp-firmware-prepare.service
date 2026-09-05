@@ -1,0 +1,11 @@
+[Unit]
+Description=Expose stock ADSP firmware for lmi
+Requires=lmi-android-wifi-mounts.service
+After=lmi-android-wifi-mounts.service
+Before=lmi-pd-mapper.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lmi-adsp-firmware-prepare
+RemainAfterExit=yes
+Restart=no

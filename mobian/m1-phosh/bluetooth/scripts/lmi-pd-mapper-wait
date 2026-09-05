@@ -1,0 +1,65 @@
+#!/bin/sh
+set -eu
+
+has_locator() {
+	timeout 2 /usr/bin/qrtr-lookup 2>/dev/null |
+		awk '$1 == 64 && $2 == 1 && $3 == 1 { found=1 }
+		     END { exit !found }'
+}
+
+test -r /vendor/firmware_mnt/image/adspua.jsn
+grep -Eq '"provider"[[:space:]]*:[[:space:]]*"avs"' \
+	/vendor/firmware_mnt/image/adspua.jsn
+grep -Eq '"service"[[:space:]]*:[[:space:]]*"audio"' \
+	/vendor/firmware_mnt/image/adspua.jsn
+grep -Eq '"subdomain"[[:space:]]*:[[:space:]]*"audio_pd"' \
+	/vendor/firmware_mnt/image/adspua.jsn
+grep -Eq '"qmi_instance_id"[[:space:]]*:[[:space:]]*74' \
+	/vendor/firmware_mnt/image/adspua.jsn
+
+end=$(( $(date +%s) + 10 ))
+while [ "$(date +%s)" -lt "$end" ]; do
+	pgrep -f '^/vendor/bin/pd-mapper$' >/dev/null || {
+		echo "Stock pd-mapper exited before publishing locator 64/1/1" >&2
+		exit 1
+	}
+	if has_locator; then
+		break
+	fi
+	sleep 0.1
+done
+
+has_locator || {
+	echo "Service locator 64/1/1 did not appear within 10 seconds" >&2
+	exit 1
+}
+
+end=$(( $(date +%s) + 5 ))
+while [ "$(date +%s)" -lt "$end" ]; do
+	pgrep -f '^/vendor/bin/pd-mapper$' >/dev/null || {
+		echo "Stock pd-mapper exited during kernel PDR resolution" >&2
+		exit 1
+	}
+	has_locator || {
+		echo "Service locator 64/1/1 disappeared during PDR resolution" >&2
+		exit 1
+	}
+	if dmesg | grep -q 'Connection established with the Service locator' &&
+	   dmesg | grep -q 'Service locator initialized' &&
+	   dmesg | grep -q 'PDR notifier for adsp registered for msm/adsp/audio_pd'; then
+		break
+	fi
+	sleep 0.1
+done
+
+dmesg | grep -q 'Connection established with the Service locator'
+dmesg | grep -q 'Service locator initialized'
+dmesg | grep -q 'PDR notifier for adsp registered for msm/adsp/audio_pd'
+
+if dmesg | grep -Ei \
+	'Service locator not available|No matching domains found|Failed to get process domains|appsngd1.*(fail|error)|avs/audio.*(fail|error)|Service Notifier qmi handle init failed|SSR notif register.*failed'; then
+	echo "Kernel locator/PDR resolution reported an error" >&2
+	exit 1
+fi
+
+echo "LMI_PD_MAPPER_LOCATOR_PASS service=64 version=1 instance=1 domain=msm/adsp/audio_pd notifier=74"

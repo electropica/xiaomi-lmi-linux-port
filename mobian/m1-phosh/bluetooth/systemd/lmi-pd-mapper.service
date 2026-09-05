@@ -1,0 +1,15 @@
+[Unit]
+Description=Stock Android Qualcomm protection-domain mapper for lmi
+Requires=lmi-android-wifi-mounts.service lmi-adsp-firmware-prepare.service qrtr-ns.service
+After=lmi-android-wifi-mounts.service lmi-adsp-firmware-prepare.service qrtr-ns.service
+Before=lmi-adsp-btfm.service
+
+[Service]
+Type=simple
+Environment=LD_PRELOAD=/usr/lib/lmi/liblmi_android_prop_shim.so
+BindReadOnlyPaths=/mnt/vendor/firmware_mnt:/vendor/firmware_mnt
+ExecStart=/vendor/bin/pd-mapper
+ExecStartPost=/usr/local/sbin/lmi-pd-mapper-wait
+TimeoutStartSec=25
+TimeoutStopSec=5
+Restart=no

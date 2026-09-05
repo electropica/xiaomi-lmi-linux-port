@@ -43,6 +43,12 @@ cleared from the build shell immediately afterwards. The development passcode
 must be changed before any real use; an operator-supplied password and its hash
 must not be stored in Git or in a temporary file.
 
+Fresh development images also install the tracked public diagnostic key
+`codex-lmi.pub` in root's `authorized_keys`. Existing authorized keys are
+preserved, duplicate key material is rejected, and the build verifies modes
+`0700` and `0600`. Only the public key is tracked; this diagnostic access must
+be removed or replaced before any real-world deployment.
+
 The session deliberately uses wlroots Pixman rendering. The D-v43 display DRM
 node does not implement the MSM GPU UAPI needed by Freedreno, while Phoc with
 Pixman has reached the DSI-1 modeset in a live hardware experiment.
@@ -82,9 +88,9 @@ uses the downstream Qualcomm BTFM SLIM/QCA6390 transport rather than a standard
 HCI UART. A post-v9 runtime experiment has validated the upstream part of that
 downstream chain: stock `pd-mapper` supplied the missing process-domain
 mapping, the ADSP and SLIM control services came up, NGD progressed, and the
-QCA6390 BTFM SLIM devices were created and bound. This mechanism is not yet
-part of the recipe, and no `hci0` exists; persistent bring-up and HCI creation
-remain separate milestones.
+QCA6390 BTFM SLIM devices were created and bound. M1 REPRO v11 reproduced the
+automatic recipe path on a fresh image without manual intervention. No `hci0`
+exists yet; HCI creation remains a separate milestone.
 
 Battery reporting, clock synchronization, Virtual-1 behavior, and GPU
 acceleration are intentionally outside this milestone.
@@ -388,12 +394,43 @@ to `btfmslim-driver`. Phosh, touch, Wi-Fi and general stability passed the
 operator's post-test check. The Bluetooth UI did not change spontaneously and
 `/sys/class/bluetooth` remained empty, so HCI is deliberately not claimed.
 
-The validated setup is still runtime-only: pd-mapper is transient and the
-read-only bind exists only in its private mount namespace. The next milestone
-must make the stock-backed PDR path and ordered ADSP startup deterministic in
-the M1 build, then prove them on a clean boot without manual commands. Only
-after that fresh-image validation should diagnosis proceed from the bound BTFM
-slave toward HCI. A boot-time USB/RNDIS observation is also retained: SSH may
-occasionally require physically disconnecting and reconnecting USB; no cause
-or fix is claimed here. Full evidence is in
+The recipe installs no proprietary payload: the stock pd-mapper and PDR maps
+are consumed from the existing read-only Android partitions. The implementation
+consists of:
+
+```text
+lmi-android-wifi-mounts.service
+  -> lmi-adsp-firmware-prepare.service
+  -> qrtr-ns.service
+  -> lmi-pd-mapper.service
+       (private read-only firmware_mnt bind; locator/PDR readiness barrier)
+  -> lmi-adsp-btfm.service
+       (one guarded ADSP write; bounded ONLINE/QRTR/BTFM validation)
+```
+
+The pd-mapper unit starts with system-service privileges because it consumes
+the Android executable exactly as in the validated experiment. That stock
+daemon changes to numeric Android system UID/GID 1000, which is also the
+`mobian` account on this rootfs; this identity collision is a known security
+risk to revisit, not evidence of access to a graphical session. A private
+mount namespace limits its stock firmware view to a read-only bind. No retry
+policy is configured. A `/run/lmi-adsp/boot-attempted` no-clobber marker and
+the ADSP state/crash guards prevent a second write by the tracked oneshot in
+the same boot.
+
+M1 REPRO v11 proved this path on a freshly flashed image. The firmware prepare
+oneshot passed at 20.023 seconds; pd-mapper started at 20.089 seconds; the
+locator, PDR mapping, guarded ADSP boot and BTFM binding all completed by
+20.786 seconds. QRTR exposed `64/1/1`, `66/1/74` and `769/1/0`; ADSP was
+`ONLINE` with zero crashes and one boot attempt; NGD accumulated runtime-active
+time; and both BTFM devices appeared with the QCA6390 slave bound. Phosh,
+unlock, French OSK, Wi-Fi and general stability remained functional.
+
+HCI diagnosis may now proceed from this validated bound BTFM state, but
+`/sys/class/bluetooth` remains empty and no HCI behavior is claimed. A
+boot-time USB/RNDIS observation is also retained: SSH may occasionally require
+physically disconnecting and reconnecting USB; no cause or fix is claimed
+here. Runtime experiment evidence is in
 `notes/mobian-m1-bluetooth-slim-pdr-runtime-validation-2026-09-05.md`.
+Fresh-image evidence is in
+`notes/mobian-m1-repro-v11-hardware-validation-2026-09-05.md`.

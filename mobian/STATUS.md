@@ -262,7 +262,7 @@ where GLib child watching through `waitid(..., pidfd=...)` returns `EINVAL`
 remains open for other short-lived processes. See
 `notes/mobian-m1-repro-v9-hardware-validation-2026-09-05.md`.
 
-## M1 BLUETOOTH SLIM/PDR — RUNTIME VALIDATED / BUILD INTEGRATION REQUIRED
+## M1 BLUETOOTH SLIM/PDR — VALIDATED AUTOMATICALLY ON HARDWARE
 
 A bounded post-v9 runtime experiment validated the previously missing
 Qualcomm process-domain path without changing the M1 image. Before the test,
@@ -283,14 +283,25 @@ runtime activity. SLIM then created `btfmslim_slave` and
 Phosh, touch, Wi-Fi and general device stability were unchanged after the
 experiment.
 
-This is a runtime validation, not reproducible image delivery. The transient
-pd-mapper unit and its private bind remain experimental, proprietary binaries
-and maps are not stored in Git, and `/sys/class/bluetooth` remains empty. HCI
-creation is a separate later problem. The next objective is to integrate the
-stock-backed pd-mapper/PDR and ordered single ADSP startup into the M1 recipe,
-then validate them from a clean boot without intervention before continuing
-the HCI investigation. See
+M1 REPRO v11 subsequently validated the persistent implementation from a
+freshly flashed image with no manual radio-domain intervention. The three
+tracked units prepared the stock firmware links, kept the stock pd-mapper
+running behind a private read-only bind, passed the bounded locator/PDR
+barrier, and performed exactly one guarded ADSP boot. ADSP reached `ONLINE`
+with `crash_count=0`; all three QRTR services and both BTFM devices appeared;
+and the QCA6390 slave bound automatically. The integrated `codex-lmi` public
+diagnostic key also provided root SSH with the expected permissions and no
+private key was installed by the recipe. No proprietary binary or map is
+stored in Git.
+
+Phosh, unlock, French OSK, Wi-Fi and general stability remained functional.
+`getty@tty1.service` remains the sole known failed unit and is non-blocking on
+the `CONFIG_VT=n` kernel. `/sys/class/bluetooth` is still empty, so HCI creation
+is the next distinct problem. Occasional USB/RNDIS recovery by cable reconnect
+also remains an open observation. See
 `notes/mobian-m1-bluetooth-slim-pdr-runtime-validation-2026-09-05.md`.
+See also `notes/mobian-m1-repro-v11-hardware-validation-2026-09-05.md` for the
+fresh-image evidence.
 
 ## Repository policy
 

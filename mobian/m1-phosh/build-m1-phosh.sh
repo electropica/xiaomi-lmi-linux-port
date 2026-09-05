@@ -90,6 +90,27 @@ done
 mount -t tmpfs -o mode=0755,nosuid,nodev tmpfs "$tree/run"
 mounted_paths+=("$tree/run")
 
+codex_public_key_file="$script_dir/codex-lmi.pub"
+codex_public_key=$(cat "$codex_public_key_file")
+[[ $codex_public_key == 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINMNlWauNPySl4GTaAOWJwP/dqrpJYflpFQzF58xbUUq codex-lmi' ]]
+[[ ! -L $tree/root/.ssh ]]
+install -d -o root -g root -m 0700 "$tree/root/.ssh"
+[[ ! -L $tree/root/.ssh/authorized_keys ]]
+touch "$tree/root/.ssh/authorized_keys"
+chown root:root "$tree/root/.ssh/authorized_keys"
+chmod 0600 "$tree/root/.ssh/authorized_keys"
+if [[ -s $tree/root/.ssh/authorized_keys &&
+      $(tail -c 1 "$tree/root/.ssh/authorized_keys" | od -An -tx1 | tr -d ' \n') != 0a ]]; then
+    printf '\n' >>"$tree/root/.ssh/authorized_keys"
+fi
+codex_key_matches=$(awk '{ for (i=1; i<NF; i++) if ($i == "ssh-ed25519" && $(i+1) == "AAAAC3NzaC1lZDI1NTE5AAAAINMNlWauNPySl4GTaAOWJwP/dqrpJYflpFQzF58xbUUq") count++ } END { print count+0 }' \
+    "$tree/root/.ssh/authorized_keys")
+[[ $codex_key_matches -le 1 ]]
+if [[ $codex_key_matches == 0 ]]; then
+    printf '%s\n' "$codex_public_key" >>"$tree/root/.ssh/authorized_keys"
+fi
+unset codex_key_matches codex_public_key
+
 cat >"$tree/usr/sbin/policy-rc.d" <<'EOF'
 #!/bin/sh
 exit 101
@@ -170,6 +191,12 @@ install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/lmi-cnss-fs-ready.s
 install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/lmi-wlan-on.service" "$tree/etc/systemd/system/lmi-wlan-on.service"
 install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/qrtr-ns.service.d/lmi-order.conf" "$tree/etc/systemd/system/qrtr-ns.service.d/lmi-order.conf"
 install -D -o root -g root -m 0644 "$script_dir/wifi/systemd/NetworkManager.service.d/lmi-wlan.conf" "$tree/etc/systemd/system/NetworkManager.service.d/lmi-wlan.conf"
+install -D -o root -g root -m 0755 "$script_dir/bluetooth/scripts/lmi-adsp-firmware-prepare" "$tree/usr/local/sbin/lmi-adsp-firmware-prepare"
+install -D -o root -g root -m 0755 "$script_dir/bluetooth/scripts/lmi-pd-mapper-wait" "$tree/usr/local/sbin/lmi-pd-mapper-wait"
+install -D -o root -g root -m 0755 "$script_dir/bluetooth/scripts/lmi-adsp-btfm-start" "$tree/usr/local/sbin/lmi-adsp-btfm-start"
+install -D -o root -g root -m 0644 "$script_dir/bluetooth/systemd/lmi-adsp-firmware-prepare.service" "$tree/etc/systemd/system/lmi-adsp-firmware-prepare.service"
+install -D -o root -g root -m 0644 "$script_dir/bluetooth/systemd/lmi-pd-mapper.service" "$tree/etc/systemd/system/lmi-pd-mapper.service"
+install -D -o root -g root -m 0644 "$script_dir/bluetooth/systemd/lmi-adsp-btfm.service" "$tree/etc/systemd/system/lmi-adsp-btfm.service"
 mkdir -p "$tree/usr/lib/lmi"
 aarch64-linux-gnu-gcc --sysroot="$tree" -shared -fPIC -O2 \
     -Wl,-z,defs -o "$tree/usr/lib/lmi/liblmi_android_prop_shim.so" \
@@ -184,14 +211,21 @@ chroot "$tree" systemctl enable qrtr-ns.service
 chroot "$tree" systemctl enable systemd-timesyncd.service
 chroot "$tree" systemctl enable wpa_supplicant.service
 chroot "$tree" systemctl enable phosh-m0.service
+chroot "$tree" systemctl enable lmi-adsp-btfm.service
 chroot "$tree" systemctl --global enable xdg-user-dirs-lmi.service
 chroot "$tree" systemctl disable weston-m0.service || true
-systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service lmi-cnss-daemon.service lmi-cnss-fs-ready.service lmi-wlan-on.service NetworkManager.service wpa_supplicant.service systemd-timesyncd.service upower.service || {
+systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service lmi-cnss-daemon.service lmi-cnss-fs-ready.service lmi-wlan-on.service NetworkManager.service wpa_supplicant.service systemd-timesyncd.service upower.service lmi-adsp-firmware-prepare.service lmi-pd-mapper.service lmi-adsp-btfm.service || {
     rc=$?
     echo "WARNING: systemd-analyze verify returned $rc; continuing because known host/rootfs diagnostics may be non-fatal" >&2
 }
 
 test "$(stat -c '%u:%g:%a' "$tree/var/lib/systemd/linger/mobian")" = 0:0:644
+test "$(stat -c '%u:%g:%a' "$tree/root/.ssh")" = 0:0:700
+test "$(stat -c '%u:%g:%a' "$tree/root/.ssh/authorized_keys")" = 0:0:600
+test "$(grep -Fxc 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINMNlWauNPySl4GTaAOWJwP/dqrpJYflpFQzF58xbUUq codex-lmi' "$tree/root/.ssh/authorized_keys")" = 1
+test "$(awk '{ for (i=1; i<NF; i++) if ($i == "ssh-ed25519" && $(i+1) == "AAAAC3NzaC1lZDI1NTE5AAAAINMNlWauNPySl4GTaAOWJwP/dqrpJYflpFQzF58xbUUq") count++ } END { print count+0 }' "$tree/root/.ssh/authorized_keys")" = 1
+! grep -RqsE -- '-----BEGIN ([A-Z0-9]+ )?PRIVATE KEY-----' "$tree/root/.ssh"
+! find "$tree/root/.ssh" -maxdepth 1 -type f -name 'id_*' ! -name '*.pub' -print -quit | grep -q .
 ! grep -q '^ExecStartPre=.*run/user/1000' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'PAMName=login' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=XDG_SEAT=seat0' "$tree/etc/systemd/system/phosh-m0.service"
@@ -251,6 +285,25 @@ test -L "$tree/etc/systemd/user/gnome-session-pre.target.wants/xdg-user-dirs-lmi
 test "$(readlink "$tree/etc/systemd/user/gnome-session-pre.target.wants/xdg-user-dirs-lmi.service")" = /etc/systemd/user/xdg-user-dirs-lmi.service
 cmp -s "$script_dir/upower-lmi.conf" "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf"
 test "$(grep -c '^PrivateUsers=no$' "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf")" = 1
+for file in lmi-adsp-firmware-prepare lmi-pd-mapper-wait lmi-adsp-btfm-start; do
+    cmp -s "$script_dir/bluetooth/scripts/$file" "$tree/usr/local/sbin/$file"
+done
+for file in lmi-adsp-firmware-prepare.service lmi-pd-mapper.service lmi-adsp-btfm.service; do
+    cmp -s "$script_dir/bluetooth/systemd/$file" "$tree/etc/systemd/system/$file"
+done
+grep -qx 'BindReadOnlyPaths=/mnt/vendor/firmware_mnt:/vendor/firmware_mnt' "$tree/etc/systemd/system/lmi-pd-mapper.service"
+grep -qx 'Environment=LD_PRELOAD=/usr/lib/lmi/liblmi_android_prop_shim.so' "$tree/etc/systemd/system/lmi-pd-mapper.service"
+grep -qx 'ExecStartPost=/usr/local/sbin/lmi-pd-mapper-wait' "$tree/etc/systemd/system/lmi-pd-mapper.service"
+grep -qx 'TimeoutStartSec=25' "$tree/etc/systemd/system/lmi-pd-mapper.service"
+grep -qx 'Restart=no' "$tree/etc/systemd/system/lmi-pd-mapper.service"
+grep -qx 'Restart=no' "$tree/etc/systemd/system/lmi-adsp-btfm.service"
+test "$(grep -Fxc "printf '1\\n' >\"\$boot\"" "$tree/usr/local/sbin/lmi-adsp-btfm-start")" = 1
+test "$(grep -c '^ExecStart=/usr/local/sbin/lmi-adsp-btfm-start$' "$tree/etc/systemd/system/lmi-adsp-btfm.service")" = 1
+test -L "$tree/etc/systemd/system/multi-user.target.wants/lmi-adsp-btfm.service"
+test "$(readlink "$tree/etc/systemd/system/multi-user.target.wants/lmi-adsp-btfm.service")" = /etc/systemd/system/lmi-adsp-btfm.service
+! grep -Rqs '^Restart=always$\|^Restart=on-failure$' \
+    "$tree/etc/systemd/system/lmi-pd-mapper.service" \
+    "$tree/etc/systemd/system/lmi-adsp-btfm.service"
 mobian_shadow=$(chroot "$tree" getent shadow mobian | cut -d: -f2)
 [[ -n $mobian_shadow && $mobian_shadow != '!'* && $mobian_shadow != '*'* ]]
 unset mobian_shadow
