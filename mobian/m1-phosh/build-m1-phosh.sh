@@ -141,9 +141,18 @@ for name in secrets pkcs11 ssh; do
     test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$desktop")" = 1
 done
 
+xdg_user_dirs_desktop="$tree/etc/xdg/autostart/xdg-user-dirs.desktop"
+test -f "$xdg_user_dirs_desktop"
+grep -qx 'Exec=xdg-user-dirs-update' "$xdg_user_dirs_desktop"
+grep -qx 'X-GNOME-Autostart-Phase=Initialization' "$xdg_user_dirs_desktop"
+! grep -q '^X-GNOME-HiddenUnderSystemd=' "$xdg_user_dirs_desktop"
+printf '\nX-GNOME-HiddenUnderSystemd=true\n' >>"$xdg_user_dirs_desktop"
+test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$xdg_user_dirs_desktop")" = 1
+
 install -D -o root -g root -m 0644 "$script_dir/phosh-m0.service" "$tree/etc/systemd/system/phosh-m0.service"
 install -D -o root -g root -m 0644 "$script_dir/phoc.ini" "$tree/etc/phosh/phoc.ini"
 install -D -o root -g root -m 0644 "$script_dir/upower-lmi.conf" "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf"
+install -D -o root -g root -m 0644 "$script_dir/xdg-user-dirs-lmi.service" "$tree/etc/systemd/user/xdg-user-dirs-lmi.service"
 install -D -o root -g root -m 0644 "$script_dir/../m0-display/systemd/lmi-splash-release.service" "$tree/etc/systemd/system/lmi-splash-release.service"
 install -D -o root -g root -m 0644 "$script_dir/lmi-splash-release-m1.conf" "$tree/etc/systemd/system/lmi-splash-release.service.d/m1-device-wait.conf"
 install -D -o root -g root -m 0644 "$script_dir/user-runtime-dir-1000-m1.conf" "$tree/etc/systemd/system/user-runtime-dir@1000.service.d/m1-runtime-fix.conf"
@@ -175,6 +184,7 @@ chroot "$tree" systemctl enable qrtr-ns.service
 chroot "$tree" systemctl enable systemd-timesyncd.service
 chroot "$tree" systemctl enable wpa_supplicant.service
 chroot "$tree" systemctl enable phosh-m0.service
+chroot "$tree" systemctl --global enable xdg-user-dirs-lmi.service
 chroot "$tree" systemctl disable weston-m0.service || true
 systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service lmi-cnss-daemon.service lmi-cnss-fs-ready.service lmi-wlan-on.service NetworkManager.service wpa_supplicant.service systemd-timesyncd.service upower.service || {
     rc=$?
@@ -230,6 +240,15 @@ for name in secrets pkcs11 ssh; do
     test "$(grep -c '^X-GNOME-Autostart-Notify=true$' "$desktop")" = 1
     test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$desktop")" = 1
 done
+grep -qx 'Exec=xdg-user-dirs-update' "$tree/etc/xdg/autostart/xdg-user-dirs.desktop"
+grep -qx 'X-GNOME-Autostart-Phase=Initialization' "$tree/etc/xdg/autostart/xdg-user-dirs.desktop"
+test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$tree/etc/xdg/autostart/xdg-user-dirs.desktop")" = 1
+cmp -s "$script_dir/xdg-user-dirs-lmi.service" "$tree/etc/systemd/user/xdg-user-dirs-lmi.service"
+grep -qx 'Type=oneshot' "$tree/etc/systemd/user/xdg-user-dirs-lmi.service"
+grep -qx 'ExecStart=/usr/bin/xdg-user-dirs-update' "$tree/etc/systemd/user/xdg-user-dirs-lmi.service"
+grep -qx 'Before=gnome-session-pre.target' "$tree/etc/systemd/user/xdg-user-dirs-lmi.service"
+test -L "$tree/etc/systemd/user/gnome-session-pre.target.wants/xdg-user-dirs-lmi.service"
+test "$(readlink "$tree/etc/systemd/user/gnome-session-pre.target.wants/xdg-user-dirs-lmi.service")" = /etc/systemd/user/xdg-user-dirs-lmi.service
 cmp -s "$script_dir/upower-lmi.conf" "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf"
 test "$(grep -c '^PrivateUsers=no$' "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf")" = 1
 mobian_shadow=$(chroot "$tree" getent shadow mobian | cut -d: -f2)

@@ -1,0 +1,11 @@
+[Unit]
+Description=Initialize XDG user directories for lmi Phosh
+Documentation=man:xdg-user-dirs-update(1)
+Before=gnome-session-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/xdg-user-dirs-update
+
+[Install]
+WantedBy=gnome-session-pre.target

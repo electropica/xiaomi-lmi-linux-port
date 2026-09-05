@@ -324,3 +324,22 @@ default as a compiled textual schema override rather than importing the
 runtime user's dconf database. The fresh-image delivery of this new recipe
 setting remains to be validated. See
 `notes/mobian-m1-repro-v7-hardware-validation-2026-09-05.md`.
+
+## M1 REPRO v8 xdg-user-dirs startup finding
+
+The recipe-provided French input default was reproduced on hardware: the OSK
+loaded its French resource and AZERTY was functional. The launch was delayed
+by a separate D-v43 compatibility problem. GNOME Session started the Debian
+`xdg-user-dirs.desktop` entry in its `Initialization` phase, then GLib failed
+to watch the short-lived process with `waitid(..., pidfd=...)` returning
+`EINVAL`. GNOME Session consequently kept the application pending until its
+roughly 90-second phase timeout; Squeekboard started immediately after that
+barrier expired.
+
+`xdg-user-dirs-update` remains necessary to initialize the standard user
+directories. The recipe therefore preserves the executable and its effect,
+marks only the legacy GNOME autostart `X-GNOME-HiddenUnderSystemd=true`, and
+runs the command through a device-specific systemd user oneshot ordered before
+`gnome-session-pre.target`. It does not alter the global GNOME timeout or the
+Squeekboard required component. This integration still requires validation on
+a fresh rebuilt image.

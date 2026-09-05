@@ -225,6 +225,24 @@ user D-Bus session or a prebuilt dconf database. Delivery from a fresh rebuilt
 image remains to be validated. Full evidence is in
 `notes/mobian-m1-repro-v7-hardware-validation-2026-09-05.md`.
 
+## M1 REPRO v8 — AZERTY VALIDATED / XDG USER DIRS FIX TO REVALIDATE
+
+The recipe-provided `[('xkb', 'fr')]` default reached Squeekboard on hardware;
+the French layout loaded and AZERTY was functional. A distinct startup barrier
+was then isolated: the Debian `xdg-user-dirs.desktop` entry ran in GNOME
+Session's `Initialization` phase, while GLib's child watcher failed with
+`waitid(..., pidfd=...) = EINVAL` on D-v43. Because process exit was not
+observed, GNOME Session waited about 90 seconds before reporting that the
+application had failed to register. Squeekboard started immediately after the
+timeout.
+
+The recipe now hides only that legacy autostart under systemd and preserves
+`xdg-user-dirs-update` as a device-specific user oneshot before
+`gnome-session-pre.target`. The global GNOME timeout, Phosh session definition,
+Squeekboard, Keyring, UPower, networking and boot ordering are unchanged. The
+new oneshot and removal of the 90-second barrier require validation from a
+fresh image.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private
