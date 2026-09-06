@@ -529,7 +529,7 @@ and a wholesale mainline rewrite remain outside the first test. See
 `notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md` and
 `notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`.
 
-## External SDX55 modem SBL/Sahara milestone (DV121)
+## External SDX55 modem ESOC/mission-mode validation (DV121--DV186)
 
 The external modem is an SDX55M described by `qcom,ext-sdx55m` and connected
 over PCIe with link information `0306_02.01.00`. Runtime exposes
@@ -547,12 +547,26 @@ modem to enumerate as PCI `17cb:0306`, bind to MHI, create the BL and Sahara
 devices, expose `/dev/mhi_0306_02.01.00_pipe_2`, and deliver `ESOC_REQ_IMG` to
 the registered userspace request engine.
 
-This validates SDX55 power-on, PCIe enumeration, MHI binding, SBL1 loading and
-arrival in BL/Sahara. It does **not** validate the subsequent Sahara transfer,
-`ESOC_IMG_XFER_DONE`, `ESOC_BOOT_DONE`, AMSS/mission mode or any cellular
-function. The Sahara table contains 17 mappings, including the three modem
-EFS partitions and `mdmddr`. The helper requests `xbl_config.elf`, while the
-Xiaomi container supplies `xbl_cfg.elf`; this unresolved mismatch must not be
-silently hidden by an unvalidated alias. The next technical step is preparation
-of the complete Sahara image transfer. Detailed evidence is recorded in
-`notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md`.
+Later diagnostics found a race in the ESOC run notification. A delayed
+`ESOC_RUN_STATE` could replace `CRASH` with `RUN` before a pending SSR began;
+the forced shutdown then skipped crash teardown and its next power-up blocked.
+DV166 directly captured the single `ssr_wq` worker sleeping in
+`mdm_subsys_powerup()`. Kernel patch B1 preserves `CRASH` and `PEER_CRASH` on
+late run notification while retaining the completions needed to release the
+original power-up and pending SSR.
+
+The B1 kernel RAM-booted without destabilizing Mobian, Phoc, Phosh, USB or
+Wi-Fi. A fresh controlled power-up reached BL/Sahara with `crash_count=0`.
+The Xiaomi `xbl_cfg.elf` and remaining 16 mappings were then transferred once
+with a validation client whose automatic Sahara RESET emission was disabled.
+The transfer returned zero and produced QMI, RMNET, DIAG and IP_HW mission-mode
+channels plus an SSCTL connection. A single nominal `ESOC_BOOT_DONE` released
+`mdm_subsys_powerup()`, set the subsystem `ONLINE` and retained mission mode
+with no new error.
+
+The complete nominal SDX55 path under B1 is therefore hardware-validated. No
+cellular registration, voice, SMS or data is claimed. The specific historical
+`CRASH -> late RUN_STATE -> SSR` race has not yet been reproduced under B1.
+Detailed evidence is in
+`notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md` and
+`notes/mobian-m1-sdx55-esoc-b1-validation-2026-09-06.md`.

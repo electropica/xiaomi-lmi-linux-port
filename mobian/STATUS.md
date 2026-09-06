@@ -399,7 +399,7 @@ stock Android BD_ADDR provisioning mechanism is now statically established.
 The next Bluetooth milestone is BlueZ integration followed by controlled scan
 and pairing validation.
 
-## M1 EXTERNAL MODEM SDX55 — SBL/SAHARA REACHED
+## M1 EXTERNAL MODEM SDX55 — NOMINAL ESOC/MISSION-MODE PATH VALIDATED
 
 DV121 reached the Qualcomm Sahara loader environment on the external SDX55M.
 The validated runtime DT/ESOC identity is `qcom,ext-sdx55m`, `SDX55M`, PCIe,
@@ -422,19 +422,28 @@ It was exposed as `/lib/firmware/sdx55m/sbl1.mbn` and revalidated after the
 current RAM boot. The earlier `Error loading fw, ret:-2` is therefore no
 longer the active blocker.
 
-Starting DV119 produced `ESOC_REQ_IMG` in userspace and caused the SDX55 to
-enumerate as PCI `17cb:0306`, bind to `mhi`, create MHI devices
-`0306_02.01.00`, `0306_02.01.00_BL` and `0306_02.01.00_SAHARA`, and expose
-`/dev/mhi_0306_02.01.00_pipe_2`. This demonstrates that BHI accepted SBL1 far
-enough to reach BL/Sahara. It does not demonstrate a complete Sahara image
-transfer, `ESOC_IMG_XFER_DONE`, `ESOC_BOOT_DONE`, AMSS/mission mode, cellular
-service, voice, SMS or data.
+The historical delayed `ESOC_RUN_STATE` experiment exposed an ESOC state race:
+a late run notification overwrote an already recorded `CRASH`, causing the
+following forced SSR shutdown to skip its crash teardown and leaving the SSR
+worker blocked in a second `mdm_subsys_powerup()`. DV166 captured the sole
+`ssr_wq` worker in that exact stack. The B1 kernel correction preserves
+`CRASH` and `PEER_CRASH` on a late run notification while still completing
+`pon_done` and `ssr_ready`.
 
-The next blocker is the complete 17-entry SDX55 Sahara transfer and its ESOC
-notifications. One unresolved filename mismatch must be handled deliberately:
-the Qualcomm helper requests `xbl_config.elf`, whereas the Xiaomi container
-provides `xbl_cfg.elf`; no alias or inferred substitution has been validated.
-See `notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md`.
+B1 was reviewed adversarially, built, packaged with unchanged ramdisk/DTB and
+RAM-booted. Mobian, Phoc, Phosh, USB and Wi-Fi remained functional. DV179 then
+reached `ESOC_REQ_IMG`, PCI `17cb:0306`, MHI BL and Sahara with zero crashes.
+A one-shot no-reset validation client completed the 17-entry Sahara transfer;
+QMI0/QMI1, RMNET_CTL, DIAG, IP_HW0, `rmnet_mhi0` and the SSCTL service appeared.
+DV186 sent one nominal `ESOC_BOOT_DONE`: the power-up thread returned, the
+subsystem became `ONLINE`, mission mode remained present and `crash_count`
+stayed zero without a new kernel error.
+
+This validates the complete nominal SDX55 ESOC path under B1, not cellular
+service, voice, SMS or data. The precise `CRASH -> late RUN_STATE -> SSR` race
+has not been reproduced on B1 hardware, so it is not claimed as materially
+closed. See `notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md` and
+`notes/mobian-m1-sdx55-esoc-b1-validation-2026-09-06.md`.
 
 ## Repository policy
 
