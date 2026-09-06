@@ -496,3 +496,31 @@ integration into `hci_qca`, ACPI, modern Qualcomm coredump/shutdown support
 and a wholesale mainline rewrite remain outside the first test. See
 `notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md` and
 `notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`.
+
+## External SDX55 modem SBL/Sahara milestone (DV121)
+
+The external modem is an SDX55M described by `qcom,ext-sdx55m` and connected
+over PCIe with link information `0306_02.01.00`. Runtime exposes
+`/dev/esoc-0` and `/dev/subsys_esoc0`. The Qualcomm request engine must be
+registered before the SSR subsystem device is opened: the open blocks inside
+`mdm_subsys_powerup()` while firmware boot requests are serviced. DV119 fixes
+the original single-thread helper by keeping `ESOC_WAIT_FOR_REQ` in the main
+thread and performing the subsystem open in a second thread.
+
+The Xiaomi Android ROM's FAT16 `NON-HLOS.bin` contains 18 SDX55 files under
+`image/sdx55m`. Its `sbl1.mbn` is 548056 bytes, SHA256
+`0fd2fdaf19831c8ff482ca77ca236ee282101c9bdf5ab7b46dc4e24a484e84dc`.
+With that file available at `/lib/firmware/sdx55m/sbl1.mbn`, DV121 caused the
+modem to enumerate as PCI `17cb:0306`, bind to MHI, create the BL and Sahara
+devices, expose `/dev/mhi_0306_02.01.00_pipe_2`, and deliver `ESOC_REQ_IMG` to
+the registered userspace request engine.
+
+This validates SDX55 power-on, PCIe enumeration, MHI binding, SBL1 loading and
+arrival in BL/Sahara. It does **not** validate the subsequent Sahara transfer,
+`ESOC_IMG_XFER_DONE`, `ESOC_BOOT_DONE`, AMSS/mission mode or any cellular
+function. The Sahara table contains 17 mappings, including the three modem
+EFS partitions and `mdmddr`. The helper requests `xbl_config.elf`, while the
+Xiaomi container supplies `xbl_cfg.elf`; this unresolved mismatch must not be
+silently hidden by an unvalidated alias. The next technical step is preparation
+of the complete Sahara image transfer. Detailed evidence is recorded in
+`notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md`.

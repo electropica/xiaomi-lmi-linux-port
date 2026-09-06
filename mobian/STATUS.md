@@ -380,6 +380,43 @@ stock Android BD_ADDR provisioning mechanism is now statically established.
 The next Bluetooth milestone is BlueZ integration followed by controlled scan
 and pairing validation.
 
+## M1 EXTERNAL MODEM SDX55 — SBL/SAHARA REACHED
+
+DV121 reached the Qualcomm Sahara loader environment on the external SDX55M.
+The validated runtime DT/ESOC identity is `qcom,ext-sdx55m`, `SDX55M`, PCIe,
+link information `0306_02.01.00`; `/dev/esoc-0` and `/dev/subsys_esoc0` are
+present. The userspace request engine must register before opening the SSR
+subsystem device because that open remains blocked in `mdm_subsys_powerup()`
+during boot. DV119 implements the required split: its main thread waits for
+ESOC requests while a second thread opens `/dev/subsys_esoc0`. The validated
+ARM64 helper SHA256 is
+`966a1810f7e43fc398e10d91fd7f3c5db25eb9d6485c3ecf67a09cbfec852bbf`.
+
+The Xiaomi
+`lmi_global_images_V14.0.1.0.SJKMIXM_20230317.0000.00_12.0_global` ROM stores
+the SDX55 firmware in the FAT16 `images/NON-HLOS.bin` container under
+`image/sdx55m`. Eighteen files were extracted for analysis. The MHI driver
+maps PCI device `0x0306` to `sdx55m/sbl1.mbn`; the extracted SBL1 is 548056
+bytes with SHA256
+`0fd2fdaf19831c8ff482ca77ca236ee282101c9bdf5ab7b46dc4e24a484e84dc`.
+It was exposed as `/lib/firmware/sdx55m/sbl1.mbn` and revalidated after the
+current RAM boot. The earlier `Error loading fw, ret:-2` is therefore no
+longer the active blocker.
+
+Starting DV119 produced `ESOC_REQ_IMG` in userspace and caused the SDX55 to
+enumerate as PCI `17cb:0306`, bind to `mhi`, create MHI devices
+`0306_02.01.00`, `0306_02.01.00_BL` and `0306_02.01.00_SAHARA`, and expose
+`/dev/mhi_0306_02.01.00_pipe_2`. This demonstrates that BHI accepted SBL1 far
+enough to reach BL/Sahara. It does not demonstrate a complete Sahara image
+transfer, `ESOC_IMG_XFER_DONE`, `ESOC_BOOT_DONE`, AMSS/mission mode, cellular
+service, voice, SMS or data.
+
+The next blocker is the complete 17-entry SDX55 Sahara transfer and its ESOC
+notifications. One unresolved filename mismatch must be handled deliberately:
+the Qualcomm helper requests `xbl_config.elf`, whereas the Xiaomi container
+provides `xbl_cfg.elf`; no alias or inferred substitution has been validated.
+See `notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md`.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private
