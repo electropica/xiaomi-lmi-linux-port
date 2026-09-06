@@ -212,6 +212,38 @@ passcode—it is not selected or stored by the recipe.
 The exact v3 artifact identities and hardware evidence are recorded in
 `notes/mobian-m1-repro-v3-hardware-validation-2026-09-04.md`.
 
+## Spontaneous display wake diagnosis (WAKE7--WAKE17, 2026-09-06)
+
+Session-bus capture identified the recurring spontaneous display wake as a
+userspace idle-policy path. `gsd-power` owned the relevant Mutter
+`org.gnome.Mutter.IdleMonitor` watches. A `WatchFired` signal was immediately
+followed by ScreenSaver, DisplayConfig and Presence changes and Phoc enabling
+`DSI-1`; approximately 15 seconds later the display was disabled again.
+
+The watch durations tracked the configured inactive timeout exactly. At 900
+seconds, `gsd-power` installed 900000 and 450000 ms watches. Temporarily
+changing both AC and battery timeouts to 1200 seconds changed them to 1200000
+and 600000 ms, apart from short reevaluation variants. The separate 30000 ms
+watch was mapped directly to a matching `WatchFired` ID, but was not sufficient
+to reproduce the long-policy wake after the workaround.
+
+Setting these keys in the real user-session dconf context removed the long
+autosuspend watches:
+
+```text
+org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing'
+org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing'
+```
+
+During a passive 700-second observation with both types set to `'nothing'`, no
+spontaneous `DSI-1` enable/disable event or new `gsd-power` error occurred.
+The final state restores both timeout values to 900 seconds and retains the two
+`'nothing'` type values. No service, kernel wakeup source or modem state was
+changed for that validation. This result establishes the causal userspace path
+for this symptom, not a general conclusion about hardware wake sources or all
+suspend/resume behavior. Full evidence is recorded in
+`notes/mobian-m1-gsd-power-spontaneous-wakeup-validation-2026-09-06.md`.
+
 ## Post-v3 Phosh logind/Polkit runtime validation (2026-09-04)
 
 Starting the unchanged v3 system once from a clean state with a temporary

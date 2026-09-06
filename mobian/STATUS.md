@@ -45,6 +45,25 @@ This milestone validates the graphical bring-up and basic Phosh interaction.
 It does not validate GPU acceleration, every Phosh function, or readiness for
 daily use.
 
+## M1 PHOSH SPONTANEOUS DISPLAY WAKE — USERSPACE CAUSE AND WORKAROUND VALIDATED
+
+WAKE7 through WAKE17 traced the spontaneous display-on cycle to the
+`gnome-settings-daemon` power plugin's session-idle policy. A Mutter
+`IdleMonitor` watch owned by `gsd-power` fired immediately before the
+ScreenSaver/DisplayConfig activity that re-enabled `DSI-1`; the display was
+disabled again roughly 15 seconds later. Changing the configured inactive
+timeouts from 900 to 1200 seconds moved the long watches from 900000/450000 ms
+to 1200000/600000 ms, establishing the causal mapping.
+
+Setting both `sleep-inactive-ac-type` and `sleep-inactive-battery-type` to
+`'nothing'` removed those long autosuspend watches. A passive 700-second
+validation then observed no spontaneous `DSI-1` on/off event and no new
+`gsd-power` error. The final validated runtime state restores both timeouts to
+900 seconds while retaining type `'nothing'` for AC and battery. This explains
+the observed symptom through userspace policy; it does not establish a general
+kernel wake-source result or validate every suspend/resume path. See
+`notes/mobian-m1-gsd-power-spontaneous-wakeup-validation-2026-09-06.md`.
+
 ## M1 WIFI — VALIDATED ON HARDWARE
 
 Manual bring-up on `lmi` with D-v43 completed the QCA6390 CNSS/WLFW sequence,
