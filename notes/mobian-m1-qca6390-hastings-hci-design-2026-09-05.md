@@ -4,9 +4,11 @@
 
 This note began as the static design milestone following the
 hardware-validated Qualcomm PDR/ADSP/NGD/BTFM SLIM path. The resulting V2
-micro-backport has since passed a hardware RAM-boot safety matrix, but no HCI
-controller has yet been created: the last observed M1 state still had an empty
-`/sys/class/bluetooth` and no `hci0`.
+micro-backport has since passed both a hardware RAM-boot safety matrix and a
+controlled Phase A N_HCI attach. That attach created `hci0` and completed the
+automatic QCA6390 PATCH/NVM/Reset setup. Controlled Phase B has also brought
+`hci0` UP and validated one real bidirectional HCI command. BlueZ operation,
+scan and pairing remain outside the validated boundary.
 
 ```text
 MINIMAL_BACKPORT_FEASIBLE=YES
@@ -175,19 +177,83 @@ This proves only static integration boot-safety. Detailed evidence and the
 full matrix are in
 `notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`.
 
+## Controlled Phase A validation
+
+The first real attach used `/dev/ttyHS0` at 115200 with RTS/CTS, applied
+`N_HCI=15`, flags `0x2` and `HCI_UART_QCA=8`, and kept the descriptor open.
+It created `hci0` and produced:
+
+```text
+Bluetooth: hci0: setting up qca6390
+Bluetooth: hci0: QCA controller version 0x02000200
+Bluetooth: hci0: QCA Downloading qca/htbtfw20.tlv
+Bluetooth: hci0: QCA Downloading qca/htnv20.bin
+Bluetooth: hci0: QCA setup on UART is completed
+```
+
+The exact stock artifacts used were:
+
+```text
+qca/htbtfw20.tlv  008e83a926ccf9ddb18d788552cbbf0c107faf9c99d206baa39860fc619d1ea0
+qca/htnv20.bin     ad759c2a30d2c7e50a52c4423c29b2b29604e9e31cdfeee72781ca9f35bbccc5
+```
+
+The final message is reached only after successful PATCH and NVM downloads
+and a successful final HCI Reset. Cleanup restored N_TTY and termios, closed
+the descriptor, removed `hci0`, and left the system stable.
+
+`0x02000200` is the composite `get_soc_ver()` value, not the raw Hastings
+`soc_id` expectation `0x400a0200`. With `soc_id=0x400a0200` and
+`rome_ver=0x0200`, 32-bit arithmetic gives
+`(soc_id << 16) | rome_ver = 0x02000200`. The firmware-name calculation then
+gives `rom_ver=0x20`. This is neither an endian conversion nor a fallback.
+
+The code traverses the 3 Mbaud transition before the successful version and
+download exchanges, and enables IBS after `qca_uart_setup()` succeeds. The
+UART rate was not independently measured.
+
+## Controlled Phase B validation
+
+A repeated attach without a hardware reset timed out during PATCH because the
+controller remained powered in its previously initialized state. A controlled
+`bt_power` OFF/ON cycle then toggled reset, SW_CTRL and all five QCA6390 rails.
+From that clean state, one continuous attach completed Hastings setup and
+Phase B. One transient `Frame reassembly failed (-84)` did not block any later
+step.
+
+After auto-off, `hci0` reported DOWN with type `0x03`, features
+`ff:fe:8f:fe:d8:3f:5b:87`, ACL MTU/count `1024/8`, SCO MTU/count `240/4`, and
+BD_ADDR `00:00:00:00:5a:ad`. `HCIDEVUP` passed. A raw socket bound to dev 0
+then sent exactly one Read Local Version command (`0x1001`) after three seconds
+idle and received Command Complete status `0x00`:
+
+```text
+hci_ver=0x0b
+hci_rev=0x0000
+lmp_ver=0x0b
+manufacturer=0x001d
+lmp_subver=0x27ec
+```
+
+`CMD_TX` changed from 883 to 884 and `EVT_RX` from 108 to 109, while both error
+counters remained zero. This proves real bidirectional HCI traffic rather than
+a cached kernel query. IBS debugfs counters were unavailable; success after
+an idle interval longer than the two-second timeout makes IBS functionality an
+inference, not direct sleep/wake proof. `HCIDEVDOWN`, N_TTY/termios restoration
+and detach all passed, leaving no `hci0` or tty owner and preserving Phosh,
+RNDIS and Wi-Fi.
+
 ## Open risks
 
 The following remain untested and must not be presented as working:
 
-- compatibility of D-v43's older TLV/NVM parser with the Hastings images;
-- the exact initial/operational baud-rate transition on QUPv3 SE6;
-- ordering between external QCA6390 power and N_HCI attach;
-- IBS behavior on this downstream UART/kernel combination;
+- direct measurement of the operational UART rate;
+- direct IBS sleep/wake counter evidence;
+- provenance and production provisioning of BD_ADDR `00:00:00:00:5a:ad`;
+- BlueZ, scan, pairing, connections and real Bluetooth data traffic;
 - clean shutdown, detach, suspend and resume.
 
 ## Next action
 
-Prepare a controlled userspace N_HCI attach test on `/dev/ttyHS0`. It must
-separate controller power, UART setup, HCI registration, version detection,
-baud transition, PATCH/NVM download and IBS so the first failing stage is
-observable. BlueZ functional testing follows only after `hci0` exists.
+Determine the provenance and correct production provisioning of the observed
+BD_ADDR before enabling BlueZ or attempting scan and pairing.

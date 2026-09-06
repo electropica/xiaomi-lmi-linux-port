@@ -303,7 +303,7 @@ also remains an open observation. See
 See also `notes/mobian-m1-repro-v11-hardware-validation-2026-09-05.md` for the
 fresh-image evidence.
 
-## M1 BLUETOOTH HCI/HASTINGS — V2 STATIC INTEGRATION BOOT-SAFE
+## M1 BLUETOOTH HCI/HASTINGS — ACTIVE HCI VALIDATED
 
 The layer following the validated BTFM SLIM binding has now been identified
 statically. On `lmi`, Bluetooth HCI uses QUPv3 SE6 at `0x998000` through the
@@ -328,13 +328,48 @@ QCA6390 V2 configuration each RAM-booted through rootfs and userspace. The
 complete candidate behaved normally on hardware, establishing static
 integration boot-safety.
 
-This validates only level A, boot-safety. Level B, controlled userspace N_HCI
-attach on `/dev/ttyHS0`; level C, actual Hastings version/baud/TLV/NVM/IBS
-bring-up; and level D, BlueZ scan, pairing and traffic all remain unvalidated.
+The controlled Phase A attach has now also passed. Userspace opened
+`/dev/ttyHS0` at 115200 with RTS/CTS, selected `N_HCI=15`, flags `0x2` and
+`HCI_UART_QCA=8`, and obtained `hci0`. Automatic `qca_setup()` selected and
+successfully downloaded the stock `qca/htbtfw20.tlv` and `qca/htnv20.bin`,
+then completed its final HCI Reset. Cleanup restored N_TTY and termios,
+removed `hci0` and left the UART, Phosh, RNDIS and Wi-Fi stable.
+
+The reported controller value `0x02000200` is the driver's composite
+`get_soc_ver()`, not the raw Hastings `soc_id` expectation `0x400a0200`:
+the 32-bit calculation combines the shifted low 16 bits of `soc_id` with
+`rome_ver=0x0200`. It yields `rom_ver=0x20`, directly selecting the correct
+Hastings 2.0 files; this is not an endian issue or fallback.
+
+Levels A (boot-safety), B (controlled N_HCI attach), C (version, PATCH, NVM
+and final Reset) and controlled HCI activation are therefore PASS. Phase B
+brought `hci0` UP and bound a raw HCI socket. After three seconds idle, one
+explicit Read Local Version command (`0x1001`) returned status `0x00` with HCI
+and LMP version `0x0b`, Qualcomm manufacturer `0x001d` and LMP subversion
+`0x27ec`. `CMD_TX` and `EVT_RX` each increased by exactly one, proving a real
+bidirectional controller exchange rather than a cached kernel query.
+
+No IBS debugfs counters were available. Successful traffic after an idle
+period longer than the two-second IBS timeout supports only an indirect
+`IBS_FUNCTIONAL=INFERRED` result, not direct sleep/wake proof. The reported
+address `00:00:00:00:5a:ad` is non-zero and allowed activation, but its
+provenance and final provisioning remain unvalidated. `HCIDEVDOWN` and attach
+rollback restored N_TTY and termios, freed the UART and removed `hci0` without
+affecting Phosh, RNDIS or Wi-Fi. BlueZ, scan, pairing and real Bluetooth
+connections remain untested.
+
+One attempted re-attach without resetting the already initialized controller
+timed out during PATCH. A controlled `bt_power` OFF/ON cycle disabled and
+re-enabled reset, SW_CTRL and all five QCA6390 rails; the subsequent continuous
+setup and Phase B passed. This establishes a power-cycle prerequisite for a
+fresh repeated bring-up, not a protocol regression. A transient
+`Frame reassembly failed (-84)` during the successful retry did not prevent
+version, PATCH, NVM, Reset, HCI activation or later traffic.
+
 See `notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md` and
 `notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`. The next
-experiment is a controlled userspace N_HCI attach, not a claim of functional
-Bluetooth.
+step is to establish the provenance and production provisioning path for the
+observed BD_ADDR before any BlueZ scan or pairing test.
 
 ## Repository policy
 

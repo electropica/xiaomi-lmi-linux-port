@@ -3,9 +3,11 @@
 ## Scope
 
 This note records the hardware RAM-boot bisect of the D-v43 QCA6390/Hastings
-V2 kernel integration. It validates that the static integration is boot-safe.
-It does not validate an N_HCI attach, create `hci0`, or claim functional
-Bluetooth.
+V2 kernel integration and the subsequent controlled Phases A and B. Static
+integration is boot-safe; Phase A also validates N_HCI attach, `hci0` creation
+and automatic Hastings PATCH/NVM/Reset setup. Phase B validates active `hci0`
+and one real bidirectional HCI command. It does not claim functional BlueZ,
+scan or pairing operation.
 
 ## Confounding VFS defect
 
@@ -54,25 +56,109 @@ Image SHA256 471aeec72355094754a82d478a9c4f8b4e8edb4b0a94368fb8fd594a776bbbfb
 
 ## Validation boundary
 
-The bring-up is split into four distinct levels:
+The bring-up is split into seven distinct levels:
 
 1. Static kernel integration and boot-safety — **PASS**.
-2. Controlled userspace N_HCI attach on `/dev/ttyHS0` — **not tested**.
-3. QCA6390/Hastings protocol bring-up — **not tested**.
-4. BlueZ scan, pairing and real Bluetooth traffic — **not tested**.
+2. Controlled userspace N_HCI attach on `/dev/ttyHS0` — **PASS**.
+3. QCA6390/Hastings setup through version, PATCH, NVM and Reset — **PASS**.
+4. Controlled `hci0` activation and bidirectional HCI command — **PASS**.
+5. IBS sleep/wake — **indirectly inferred; no counter proof**.
+6. BD_ADDR provenance and production provisioning — **not validated**.
+7. BlueZ scan, pairing and real Bluetooth traffic — **not tested**.
 
-Level 3 includes the real `qca_setup()` path, SoC/version response, baud-rate
-transition, `htbtfw20.tlv` and `htnv20.bin` loading, TLV acknowledgements,
-Command Complete handling and IBS. None should be inferred from the successful
-boot alone.
+## Controlled N_HCI Phase A
+
+Phase A opened `/dev/ttyHS0`, configured 115200 RTS/CTS, selected `N_HCI=15`,
+flags `0x2` and `HCI_UART_QCA=8`, and obtained `hci0`. Automatic setup logged:
+
+```text
+Bluetooth: hci0: setting up qca6390
+Bluetooth: hci0: QCA controller version 0x02000200
+Bluetooth: hci0: QCA Downloading qca/htbtfw20.tlv
+Bluetooth: hci0: QCA Downloading qca/htnv20.bin
+Bluetooth: hci0: QCA setup on UART is completed
+```
+
+The stock blobs were verified before use:
+
+```text
+htbtfw20.tlv  SHA256 008e83a926ccf9ddb18d788552cbbf0c107faf9c99d206baa39860fc619d1ea0
+htnv20.bin     SHA256 ad759c2a30d2c7e50a52c4423c29b2b29604e9e31cdfeee72781ca9f35bbccc5
+```
+
+The final setup message follows successful PATCH and NVM downloads and the
+final HCI Reset. The clean rollback restored N_TTY and termios, removed
+`hci0`, freed the UART and preserved Phosh, RNDIS and Wi-Fi.
+
+The logged `0x02000200` is the composite `get_soc_ver()`, whereas
+`0x400a0200` is the raw `soc_id` expectation. With `rome_ver=0x0200`, the
+32-bit calculation `(soc_id << 16) | rome_ver` yields `0x02000200`; firmware
+selection then derives `rom_ver=0x20`. This is not an endian issue or fallback.
+
+The 3 Mbaud path ran before the successful version/PATCH/NVM/Reset exchanges,
+and the IBS-enable path follows successful setup. Both remain inferences from
+control flow rather than direct UART measurement or validated IBS traffic.
+
+## Controlled HCI Phase B
+
+A first repeated attach, attempted while `bt_power` remained ON after Phase A,
+read the version but timed out at the first PATCH TLV segment. Closing N_HCI
+does not reset the controller. A single controlled `bt_power` OFF/ON cycle
+then disabled and re-enabled reset, SW_CTRL and the five QCA6390 rails. The
+system remained stable and the next attach began from a clean controller.
+
+The continuous retry completed Hastings setup. It logged one transient
+`Frame reassembly failed (-84)`, followed by the expected version, PATCH, NVM
+and final setup success; the transient did not block Reset, HCI activation or
+later traffic.
+
+After the two-second auto-off, `hci0` remained registered and reported DOWN:
+
+```text
+flags=0x00000000 up=0 type=0x03
+bdaddr=00:00:00:00:5a:ad
+features=ff:fe:8f:fe:d8:3f:5b:87
+ACL_MTU=1024 ACL_PKTS=8 SCO_MTU=240 SCO_PKTS=4
+```
+
+`HCIDEVUP` passed and flags became `0x00000005` with `up=1`. A raw HCI socket
+bound to dev 0. After three seconds idle, one explicit Read Local Version
+command produced a matching Command Complete with opcode `0x1001`, status
+`0x00`, and:
+
+```text
+hci_ver=0x0b hci_rev=0x0000
+lmp_ver=0x0b manufacturer=0x001d lmp_subver=0x27ec
+```
+
+Across that explicit command, `CMD_TX` increased from 883 to 884 and `EVT_RX`
+from 108 to 109; `ERR_TX` and `ERR_RX` remained zero. This is a real
+bidirectional controller exchange, not a cached `HCIGETDEVINFO` result.
+
+No IBS debugfs counters were available. A valid response after an idle period
+longer than the two-second IBS timeout supports `IBS_FUNCTIONAL=INFERRED`, but
+does not directly prove individual IBS sleep/wake exchanges. `HCIDEVDOWN`
+passed. Terminating the sole attach restored N_TTY and termios, freed
+`/dev/ttyHS0`, removed `hci0`, and preserved rfkill, Phosh, RNDIS, Wi-Fi and
+normal temperatures. No scan, pairing or BlueZ operation occurred.
+
+The observed BD_ADDR `00:00:00:00:5a:ad` is non-zero and sufficient for HCI
+activation, but its provenance and production provisioning are not validated.
 
 ## Conclusion and next action
 
 ```text
 QCA6390_V2_STATIC_INTEGRATION_BOOT_SAFE=PASS
-HASTINGS_PROTOCOL_BRINGUP_VALIDATED=NO
+N_HCI_ATTACH_VALIDATED=YES
+HASTINGS_PROTOCOL_SETUP_VALIDATED=YES
+HCI_DEVICE_UP_VALIDATED=YES
+HCI_BIDIRECTIONAL_COMMAND_VALIDATED=YES
+READ_LOCAL_VERSION_VALIDATED=YES
+IBS_FUNCTIONAL=INFERRED
+IBS_COUNTER_PROOF=NO
+BD_ADDR_PROVENANCE_VALIDATED=NO
+BLUEZ_FUNCTIONAL_VALIDATION=NO
 ```
 
-The next experiment is a controlled userspace N_HCI attach on `/dev/ttyHS0`,
-with stage-specific observations and no assumption that BlueZ is relevant
-before `hci0` exists.
+The next step is to establish the provenance and production provisioning path
+for BD_ADDR `00:00:00:00:5a:ad` before BlueZ scan or pairing.

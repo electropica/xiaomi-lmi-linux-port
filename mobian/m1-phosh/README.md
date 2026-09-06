@@ -85,10 +85,12 @@ systemd-networkd.
 
 The GNOME Bluetooth libraries are present, but BlueZ is not added yet. The
 validated BTFM SLIM path is the QCA6390 audio/FM side; it is not the HCI
-transport and does not create `hci0`. HCI instead uses QUPv3 SE6 through the
-GENI UART `/dev/ttyHS0` and the N_HCI QCA protocol. The V2 kernel integration
-for that non-serdev path is now hardware-validated as boot-safe, but no N_HCI
-attach or functional Bluetooth result is claimed.
+transport. HCI instead uses QUPv3 SE6 through the GENI UART `/dev/ttyHS0` and
+the N_HCI QCA protocol. The V2 non-serdev kernel path is hardware-validated as
+boot-safe, and a controlled N_HCI Phase A created `hci0` and completed the
+Hastings PATCH/NVM/Reset setup. Phase B then brought `hci0` UP and completed a
+real bidirectional Read Local Version exchange. BlueZ, scan, pairing and the
+provenance of the observed BD_ADDR remain unvalidated.
 
 Battery reporting, clock synchronization, Virtual-1 behavior, and GPU
 acceleration are intentionally outside this milestone.
@@ -462,9 +464,26 @@ fix passed through rootfs and userspace: HCI UART/H4 only, generic QCA without
 the lmi selector, and complete QCA6390 V2. Earlier failures built without that
 VFS fix are non-discriminating for Bluetooth.
 
-This establishes boot-safety only. Controlled N_HCI attach, real QCA6390
-setup, Hastings firmware download, baud transition, IBS, `hci0`, BlueZ, scan
-and pairing remain unvalidated. Serdev DT conversion, modern pwrseq, power
+Phase A has since validated controlled N_HCI attach, `hci0` creation and the
+real QCA6390 setup through stock Hastings PATCH/NVM download and final Reset.
+The controller logged composite `soc_ver=0x02000200`; this is consistent with
+the raw `soc_id=0x400a0200` expectation after the driver's 32-bit
+`get_soc_ver()` calculation, and produces `rom_ver=0x20`. The 3 Mbaud and IBS
+enable paths are inferred from successful control flow, not directly measured
+runtime traffic.
+
+Phase B retained one successful attach, waited for auto-off, brought `hci0`
+UP, and bound a raw HCI socket. A Read Local Version (`0x1001`) after three
+seconds idle returned status `0x00`, HCI/LMP version `0x0b`, Qualcomm
+manufacturer `0x001d` and LMP subversion `0x27ec`; `CMD_TX` and `EVT_RX` each
+advanced by one. This validates real bidirectional HCI traffic. IBS remains
+indirectly inferred because debugfs counters were unavailable. The non-zero
+BD_ADDR `00:00:00:00:5a:ad` enabled HCI operation, but its provenance and final
+provisioning are not validated. `HCIDEVDOWN` and N_HCI rollback passed without
+destabilizing Phosh, RNDIS or Wi-Fi. A fresh repeated setup requires a
+controlled `bt_power` cycle; retrying PATCH on the still-initialized controller
+timed out. BlueZ, scan and pairing remain untested. Serdev DT conversion,
+modern pwrseq, power
 integration into `hci_qca`, ACPI, modern Qualcomm coredump/shutdown support
 and a wholesale mainline rewrite remain outside the first test. See
 `notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md` and
