@@ -89,8 +89,12 @@ transport. HCI instead uses QUPv3 SE6 through the GENI UART `/dev/ttyHS0` and
 the N_HCI QCA protocol. The V2 non-serdev kernel path is hardware-validated as
 boot-safe, and a controlled N_HCI Phase A created `hci0` and completed the
 Hastings PATCH/NVM/Reset setup. Phase B then brought `hci0` UP and completed a
-real bidirectional Read Local Version exchange. BlueZ, scan, pairing and the
-provenance of the observed BD_ADDR remain unvalidated.
+real bidirectional Read Local Version exchange. The stock Android BD_ADDR
+provisioning path has also been statically traced through Xiaomi QMI service
+`0xffe4`, message `0x0002`, Bluetooth NV operation `0x01bf`,
+`/data/vendor/mac_addr/bt.mac` and
+`persist.vendor.service.bdroid.bdaddr`. BlueZ, scan and pairing remain
+unvalidated.
 
 Battery reporting, clock synchronization, Virtual-1 behavior, and GPU
 acceleration are intentionally outside this milestone.
@@ -478,11 +482,15 @@ seconds idle returned status `0x00`, HCI/LMP version `0x0b`, Qualcomm
 manufacturer `0x001d` and LMP subversion `0x27ec`; `CMD_TX` and `EVT_RX` each
 advanced by one. This validates real bidirectional HCI traffic. IBS remains
 indirectly inferred because debugfs counters were unavailable. The non-zero
-BD_ADDR `00:00:00:00:5a:ad` enabled HCI operation, but its provenance and final
-provisioning are not validated. `HCIDEVDOWN` and N_HCI rollback passed without
-destabilizing Phosh, RNDIS or Wi-Fi. A fresh repeated setup requires a
-controlled `bt_power` cycle; retrying PATCH on the still-initialized controller
-timed out. BlueZ, scan and pairing remain untested. Serdev DT conversion,
+BD_ADDR `00:00:00:00:5a:ad` enabled HCI operation. Its stock Android
+provisioning path is now statically established: `/vendor/bin/nv_mac` reads
+Bluetooth NV operation `0x01bf` through Xiaomi QMI service `0xffe4`, message
+`0x0002`, writes the returned six bytes to `/data/vendor/mac_addr/bt.mac`,
+and `init.mi.btmac.sh` publishes the converted address through
+`persist.vendor.service.bdroid.bdaddr`. `HCIDEVDOWN` and N_HCI rollback passed
+without destabilizing Phosh, RNDIS or Wi-Fi. A fresh repeated setup requires
+a controlled `bt_power` cycle; retrying PATCH on the still-initialized
+controller timed out. BlueZ, scan and pairing remain untested. Serdev DT conversion,
 modern pwrseq, power
 integration into `hci_qca`, ACPI, modern Qualcomm coredump/shutdown support
 and a wholesale mainline rewrite remain outside the first test. See

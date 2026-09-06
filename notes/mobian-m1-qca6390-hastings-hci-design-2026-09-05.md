@@ -132,7 +132,8 @@ not infer QCA6390 for every non-serdev QCA UART.
 ### B — after the first controller bring-up
 
 - Provide a persistent, supervised userspace attach process.
-- Establish the production Bluetooth address path.
+- Integrate the now-established stock Bluetooth address provisioning path
+  into the Mobian production design.
 - Add focused diagnostics.
 - Validate suspend/resume and IBS behavior.
 - Make attach, shutdown and power cycling robust.
@@ -249,11 +250,43 @@ The following remain untested and must not be presented as working:
 
 - direct measurement of the operational UART rate;
 - direct IBS sleep/wake counter evidence;
-- provenance and production provisioning of BD_ADDR `00:00:00:00:5a:ad`;
+- Mobian-side integration of the statically established stock BD_ADDR
+  provisioning path;
 - BlueZ, scan, pairing, connections and real Bluetooth data traffic;
 - clean shutdown, detach, suspend and resume.
 
+## Stock Android BD_ADDR provisioning
+
+The provenance mechanism for the observed BD_ADDR has now been reconstructed
+statically from the mounted Android vendor image and the stock `nv_mac`
+binary. `/vendor/bin/nv_mac` is a `late_start` oneshot service. Its mini-debug
+symbols identify `store_bt_mac_to_file()`, `xiaomi_extend_nv_read_item()` and
+the Xiaomi QMI client functions.
+
+The decoded QMI IDL identifies service `0xffe4`. NV reads use message
+`0x0002`; the Bluetooth call uses operation `0x01bf`, while WLAN uses
+`0x1246`. For the Bluetooth operation the caller requests six bytes. The
+response path exposes a returned length and payload, and
+`store_bt_mac_to_file()` writes those six bytes to
+`/data/vendor/mac_addr/bt.mac`.
+
+`/vendor/bin/init.mi.btmac.sh` reads that binary file, converts the six bytes
+to colon-separated form and sets
+`persist.vendor.service.bdroid.bdaddr`. The QTI Bluetooth HAL contains that
+property among its BD_ADDR sources.
+
+The tested Hastings `htnv20.bin` contains `ad 5a 00 00 00 00` at offset
+`0x10`, corresponding to the observed human-readable
+`00:00:00:00:5a:ad`. This confirms the address present in the tested firmware
+input. Separately, the static analysis establishes Xiaomi's stock Android QMI
+provisioning mechanism rather than a file under
+`/mnt/vendor/persist/bluetooth`.
+
+No QMI request was executed during this investigation and no BD_ADDR was
+written. Consequently, the static result does not yet prove which six-byte
+value operation `0x01bf` returns on this individual handset.
+
 ## Next action
 
-Determine the provenance and correct production provisioning of the observed
-BD_ADDR before enabling BlueZ or attempting scan and pairing.
+Integrate the established address source appropriately on Mobian, then add
+BlueZ and perform controlled scan and pairing validation.

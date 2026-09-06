@@ -63,7 +63,7 @@ The bring-up is split into seven distinct levels:
 3. QCA6390/Hastings setup through version, PATCH, NVM and Reset — **PASS**.
 4. Controlled `hci0` activation and bidirectional HCI command — **PASS**.
 5. IBS sleep/wake — **indirectly inferred; no counter proof**.
-6. BD_ADDR provenance and production provisioning — **not validated**.
+6. Stock Android BD_ADDR provenance/provisioning mechanism — **statically validated**.
 7. BlueZ scan, pairing and real Bluetooth traffic — **not tested**.
 
 ## Controlled N_HCI Phase A
@@ -143,7 +143,14 @@ passed. Terminating the sole attach restored N_TTY and termios, freed
 normal temperatures. No scan, pairing or BlueZ operation occurred.
 
 The observed BD_ADDR `00:00:00:00:5a:ad` is non-zero and sufficient for HCI
-activation, but its provenance and production provisioning are not validated.
+activation. Its stock Android provisioning mechanism has since been
+statically reconstructed: Xiaomi's `/vendor/bin/nv_mac` reads Bluetooth NV
+operation `0x01bf` using QMI service `0xffe4`, message `0x0002`, writes the
+six-byte result to `/data/vendor/mac_addr/bt.mac`, and
+`init.mi.btmac.sh` publishes the converted value through
+`persist.vendor.service.bdroid.bdaddr`. No QMI request was executed as part of
+that static investigation, so the value returned by operation `0x01bf` on
+this individual handset remains runtime-unverified.
 
 ## Conclusion and next action
 
@@ -156,9 +163,14 @@ HCI_BIDIRECTIONAL_COMMAND_VALIDATED=YES
 READ_LOCAL_VERSION_VALIDATED=YES
 IBS_FUNCTIONAL=INFERRED
 IBS_COUNTER_PROOF=NO
-BD_ADDR_PROVENANCE_VALIDATED=NO
+BD_ADDR_ANDROID_PROVISIONING_STATICALLY_VALIDATED=YES
+BD_ADDR_QMI_SERVICE=0xffe4
+BD_ADDR_QMI_MESSAGE=0x0002
+BD_ADDR_NV_OPERATION=0x01bf
+BD_ADDR_QMI_EXECUTED=NO
 BLUEZ_FUNCTIONAL_VALIDATION=NO
 ```
 
-The next step is to establish the provenance and production provisioning path
-for BD_ADDR `00:00:00:00:5a:ad` before BlueZ scan or pairing.
+The stock Android provenance/provisioning mechanism is now statically
+established. The next step is to integrate the required address source on
+Mobian before BlueZ scan and pairing validation.

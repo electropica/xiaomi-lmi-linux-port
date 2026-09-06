@@ -351,12 +351,20 @@ bidirectional controller exchange rather than a cached kernel query.
 
 No IBS debugfs counters were available. Successful traffic after an idle
 period longer than the two-second IBS timeout supports only an indirect
-`IBS_FUNCTIONAL=INFERRED` result, not direct sleep/wake proof. The reported
-address `00:00:00:00:5a:ad` is non-zero and allowed activation, but its
-provenance and final provisioning remain unvalidated. `HCIDEVDOWN` and attach
-rollback restored N_TTY and termios, freed the UART and removed `hci0` without
-affecting Phosh, RNDIS or Wi-Fi. BlueZ, scan, pairing and real Bluetooth
-connections remain untested.
+`IBS_FUNCTIONAL=INFERRED` result, not direct sleep/wake proof. The observed
+address `00:00:00:00:5a:ad` has now been traced through the stock Android
+provisioning path. The stock `/vendor/bin/nv_mac` opens Xiaomi's proprietary
+QMI service `0xffe4`, sends message `0x0002` with Bluetooth NV operation
+`0x01bf`, receives the six-byte address payload and writes
+`/data/vendor/mac_addr/bt.mac`. `init.mi.btmac.sh` then converts that binary
+value and sets `persist.vendor.service.bdroid.bdaddr`, which is consumed by
+the QTI Bluetooth HAL. Static decoding also identified WLAN operation
+`0x1246`. The tested `htnv20.bin` contains the same observed address in its BD_ADDR
+field. Separately, static analysis establishes the stock Android QMI
+provisioning mechanism, but because no QMI request was executed it does not
+yet prove what operation `0x01bf` returns on this individual handset. `HCIDEVDOWN` and attach rollback restored N_TTY and
+termios, freed the UART and removed `hci0` without affecting Phosh, RNDIS or
+Wi-Fi. BlueZ, scan, pairing and real Bluetooth connections remain untested.
 
 One attempted re-attach without resetting the already initialized controller
 timed out during PATCH. A controlled `bt_power` OFF/ON cycle disabled and
@@ -367,9 +375,10 @@ fresh repeated bring-up, not a protocol regression. A transient
 version, PATCH, NVM, Reset, HCI activation or later traffic.
 
 See `notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md` and
-`notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`. The next
-step is to establish the provenance and production provisioning path for the
-observed BD_ADDR before any BlueZ scan or pairing test.
+`notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`. The
+stock Android BD_ADDR provisioning mechanism is now statically established.
+The next Bluetooth milestone is BlueZ integration followed by controlled scan
+and pairing validation.
 
 ## Repository policy
 
