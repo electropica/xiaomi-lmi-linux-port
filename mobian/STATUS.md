@@ -303,7 +303,7 @@ also remains an open observation. See
 See also `notes/mobian-m1-repro-v11-hardware-validation-2026-09-05.md` for the
 fresh-image evidence.
 
-## M1 BLUETOOTH HCI/HASTINGS — MINIMAL BACKPORT DESIGN VALIDATED
+## M1 BLUETOOTH HCI/HASTINGS — V2 STATIC INTEGRATION BOOT-SAFE
 
 The layer following the validated BTFM SLIM binding has now been identified
 statically. On `lmi`, Bluetooth HCI uses QUPv3 SE6 at `0x998000` through the
@@ -312,24 +312,29 @@ child in the Xiaomi DT. The stock QTI HAL opens that UART directly, uses the
 separate `/dev/btpower` interface and identifies the controller as QCA6390
 `hastings`, revision `HASTINGS_VER_2_0`.
 
-D-v43's `btfmslim-driver` supplies the SLIM audio/FM path and is not expected
-to register an HCI controller. The kernel contains the N_HCI/QCA line-
-discipline implementation and the Qualcomm TLV/NVM engine, but the current
-configuration omits `BT_HCIUART`, H4 and QCA, while its old QCA code has no
-`QCA_QCA6390` type or Hastings firmware selection. Its non-serdev setup path
-also contains unguarded serdev accesses. Therefore a NULL guard alone is not
-a sufficient fix.
+D-v43's `btfmslim-driver` supplies only the separate SLIM audio/FM path and is
+not expected to register an HCI controller. HCI uses the GENI UART and N_HCI
+line discipline. The V2 micro-backport now adds the QCA6390 type, Hastings
+firmware selection, protocol adaptations and a NULL-safe non-serdev path. It
+enables HCI UART, H4 and QCA while keeping `SERIAL_DEV_BUS=n` and controller
+power external to `hci_qca`.
 
-`MINIMAL_BACKPORT_FEASIBLE=YES`: the first bring-up design is a deliberately
-small D-v43 backport adding the QCA6390 type, Hastings 2.0 firmware naming,
-a coherent lmi-only non-serdev selection, and the required HCI UART Kconfig
-options. Power remains external to `hci_qca` for this first test. No Bluetooth
-kernel patch has been applied yet, and parser compatibility, baud transition,
-power/attach ordering and IBS remain experimental risks. See
-`notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md`.
+The first rebuilt candidates exposed an unrelated historical downstream VFS
+defect: legacy block mounts lost `fc->source` and failed with `ENOENT` before
+the filesystem driver. Those failures are not Bluetooth-discriminating. The
+previously hardware-validated `do_new_mount()` safety net was restored, after
+which HCI UART plus H4, generic QCA without the lmi selector, and the complete
+QCA6390 V2 configuration each RAM-booted through rootfs and userspace. The
+complete candidate behaved normally on hardware, establishing static
+integration boot-safety.
 
-The next action is to design the first micro-backport as a separately
-reviewable change, without starting a build at the same time.
+This validates only level A, boot-safety. Level B, controlled userspace N_HCI
+attach on `/dev/ttyHS0`; level C, actual Hastings version/baud/TLV/NVM/IBS
+bring-up; and level D, BlueZ scan, pairing and traffic all remain unvalidated.
+See `notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md` and
+`notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`. The next
+experiment is a controlled userspace N_HCI attach, not a claim of functional
+Bluetooth.
 
 ## Repository policy
 

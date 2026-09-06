@@ -2,17 +2,19 @@
 
 ## Scope and verdict
 
-This note records the static design milestone following the hardware-validated
-Qualcomm PDR/ADSP/NGD/BTFM SLIM path. It does not claim that an HCI controller
-has been created: M1 REPRO v11 still had an empty `/sys/class/bluetooth` and no
-`hci0`.
+This note began as the static design milestone following the
+hardware-validated Qualcomm PDR/ADSP/NGD/BTFM SLIM path. The resulting V2
+micro-backport has since passed a hardware RAM-boot safety matrix, but no HCI
+controller has yet been created: the last observed M1 state still had an empty
+`/sys/class/bluetooth` and no `hci0`.
 
 ```text
 MINIMAL_BACKPORT_FEASIBLE=YES
 ```
 
-No Bluetooth kernel patch, defconfig change or DT change had been applied when
-this conclusion was recorded.
+At the time of the original design conclusion no Bluetooth kernel patch or
+defconfig change had been applied. The reviewed V2 implementation now exists;
+it deliberately makes no DT change and retains the non-serdev architecture.
 
 ## Hardware and stock architecture
 
@@ -144,6 +146,35 @@ not infer QCA6390 for every non-serdev QCA UART.
 - Support for unrelated newer Qualcomm SoCs.
 - Wholesale replacement of the downstream QCA stack with current mainline.
 
+## V2 implementation and boot-safety validation
+
+The implemented micro-backport adds `QCA_QCA6390`, the Hastings 2.0 firmware
+names, QCA6390 response handling, and a coherent lmi-only non-serdev selector.
+It enables `BT_HCIUART`, H4, QCA and `BT_HCIUART_QCA6390_LMI` while preserving
+`SERIAL_DEV_BUS=n` and external controller power.
+
+The first rebuilt images also revealed that the raw downstream source had
+lost the project's historically validated `fc->source` safety net. Without
+that independent VFS fix, legacy ext2/ext4 block mounts failed before their
+filesystem drivers, making the affected boot failures non-discriminating for
+Bluetooth. After restoring the two-line `do_new_mount()` fix, all three
+increasingly complete variants RAM-booted through rootfs and userspace:
+
+- HCI UART and H4 only;
+- generic QCA with the lmi selector disabled;
+- complete QCA6390 V2 with the lmi selector enabled.
+
+The complete image used kernel SHA-256
+`471aeec72355094754a82d478a9c4f8b4e8edb4b0a94368fb8fd594a776bbbfb`.
+Its boot image, `D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img`,
+had SHA-256
+`0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`.
+The operator reported normal behavior.
+
+This proves only static integration boot-safety. Detailed evidence and the
+full matrix are in
+`notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`.
+
 ## Open risks
 
 The following remain untested and must not be presented as working:
@@ -156,7 +187,7 @@ The following remain untested and must not be presented as working:
 
 ## Next action
 
-Design the first micro-backport as a small, separately reviewable kernel and
-configuration change. Do not start a build simultaneously: first verify the
-selector isolation, NULL-safe non-serdev flow, firmware-name construction and
-Kconfig dependency closure statically.
+Prepare a controlled userspace N_HCI attach test on `/dev/ttyHS0`. It must
+separate controller power, UART setup, HCI registration, version detection,
+baud transition, PATCH/NVM download and IBS so the first failing stage is
+observable. BlueZ functional testing follows only after `hci0` exists.

@@ -83,14 +83,12 @@ Settings network integration, but `usb0` is explicitly unmanaged so the
 validated static USB network remains exclusively controlled by
 systemd-networkd.
 
-The GNOME Bluetooth libraries are present, but BlueZ is not added yet. D-v43
-uses the downstream Qualcomm BTFM SLIM/QCA6390 transport rather than a standard
-HCI UART. A post-v9 runtime experiment has validated the upstream part of that
-downstream chain: stock `pd-mapper` supplied the missing process-domain
-mapping, the ADSP and SLIM control services came up, NGD progressed, and the
-QCA6390 BTFM SLIM devices were created and bound. M1 REPRO v11 reproduced the
-automatic recipe path on a fresh image without manual intervention. No `hci0`
-exists yet; HCI creation remains a separate milestone.
+The GNOME Bluetooth libraries are present, but BlueZ is not added yet. The
+validated BTFM SLIM path is the QCA6390 audio/FM side; it is not the HCI
+transport and does not create `hci0`. HCI instead uses QUPv3 SE6 through the
+GENI UART `/dev/ttyHS0` and the N_HCI QCA protocol. The V2 kernel integration
+for that non-serdev path is now hardware-validated as boot-safe, but no N_HCI
+attach or functional Bluetooth result is claimed.
 
 Battery reporting, clock synchronization, Virtual-1 behavior, and GPU
 acceleration are intentionally outside this milestone.
@@ -458,9 +456,16 @@ enable `BT_QCA`, `BT_HCIUART`, H4 and QCA while retaining MSM GENI serial and
 MSM Bluetooth power. The lmi-specific QCA6390 choice must not change the
 historical Rome fallback for other line-discipline users.
 
-This is a validated design conclusion, not a hardware HCI result:
-`MINIMAL_BACKPORT_FEASIBLE=YES`, but no Bluetooth patch has yet been applied.
-Serdev DT conversion, modern pwrseq, power integration into `hci_qca`, ACPI,
-modern Qualcomm coredump/shutdown support and a wholesale mainline rewrite are
-explicitly outside the first test. Full evidence, A/B/C scope and risks are in
-`notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md`.
+The V2 micro-backport and required HCI UART configuration are now present.
+Three RAM-boot variants containing the restored historical `fc->source` VFS
+fix passed through rootfs and userspace: HCI UART/H4 only, generic QCA without
+the lmi selector, and complete QCA6390 V2. Earlier failures built without that
+VFS fix are non-discriminating for Bluetooth.
+
+This establishes boot-safety only. Controlled N_HCI attach, real QCA6390
+setup, Hastings firmware download, baud transition, IBS, `hci0`, BlueZ, scan
+and pairing remain unvalidated. Serdev DT conversion, modern pwrseq, power
+integration into `hci_qca`, ACPI, modern Qualcomm coredump/shutdown support
+and a wholesale mainline rewrite remain outside the first test. See
+`notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md` and
+`notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`.
