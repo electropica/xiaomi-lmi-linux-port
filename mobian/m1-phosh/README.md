@@ -529,7 +529,7 @@ and a wholesale mainline rewrite remain outside the first test. See
 `notes/mobian-m1-qca6390-hastings-hci-design-2026-09-05.md` and
 `notes/mobian-m1-qca6390-v2-boot-safety-validation-2026-09-06.md`.
 
-## External SDX55 modem ESOC/mission-mode validation (DV121--DV186)
+## External SDX55 modem ESOC/mission-mode validation (DV121--DV207)
 
 The external modem is an SDX55M described by `qcom,ext-sdx55m` and connected
 over PCIe with link information `0306_02.01.00`. Runtime exposes
@@ -567,6 +567,21 @@ with no new error.
 The complete nominal SDX55 path under B1 is therefore hardware-validated. No
 cellular registration, voice, SMS or data is claimed. The specific historical
 `CRASH -> late RUN_STATE -> SSR` race has not yet been reproduced under B1.
+
+DV191--DV207 subsequently audited the Qualcomm `remotefs_sahara` EFS path
+offline. The exact Xiaomi `/vendor/bin/ks` was shown to write received EFS
+regions to persistent `mdm1m9kefs*` destinations, so the historical EFS-sync
+invocation was not executed. Static tracing also found no demonstrated clean
+Sahara termination from simply closing the host MHI endpoint.
+
+DV207 instead extends the isolated DV196 consume-all/write-none model with the
+normal `RESET -> RESET_RESP` terminal sequence. RESET is permitted only after
+exact consumption of every declared region, and protocol completion requires
+a strict RESET_RESP. The 32-bit and 64-bit synthetic paths pass 290 tests with
+zero failures in normal and ASan/UBSan builds. This remains offline validation:
+no real EFS MHI probe is authorized and `REAL_PROBE=NOT_SAFE`.
+
 Detailed evidence is in
-`notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md` and
-`notes/mobian-m1-sdx55-esoc-b1-validation-2026-09-06.md`.
+`notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md`,
+`notes/mobian-m1-sdx55-esoc-b1-validation-2026-09-06.md` and
+`notes/mobian-m1-sdx55-dv207-remotefs-reset-offline-validation-2026-09-07.md`.

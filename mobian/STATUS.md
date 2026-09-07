@@ -445,6 +445,25 @@ has not been reproduced on B1 hardware, so it is not claimed as materially
 closed. See `notes/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md` and
 `notes/mobian-m1-sdx55-esoc-b1-validation-2026-09-06.md`.
 
+DV191 through DV207 then audited the post-crash `remotefs_sahara` path and the
+runtime EFS synchronization design entirely offline. The exact Xiaomi
+`/vendor/bin/ks` was recovered and shown to write received EFS regions directly
+to persistent `mdm1m9kefs*` destinations with the historical Qualcomm
+invocation, so that invocation is not treated as read-only and was not
+executed. Static tracing also rejected host-side close as a demonstrated
+Sahara termination mechanism.
+
+DV207 therefore extends the validated DV196 in-memory consume-all/write-none
+model with the normal Sahara terminal sequence
+`TRANSFER_COMPLETE -> RESET -> RESET_RESP -> PROTOCOL_COMPLETE`. RESET cannot
+be constructed before exact coverage of all declared regions, RESET_RESP is
+strictly validated, and the extension does not add filesystem, device or MHI
+transport capability. Both 32-bit and 64-bit synthetic paths pass 290 tests
+with zero failures in normal and ASan/UBSan builds. This is an offline protocol
+model only: no real EFS MHI probe is authorized and `REAL_PROBE=NOT_SAFE`.
+See
+`notes/mobian-m1-sdx55-dv207-remotefs-reset-offline-validation-2026-09-07.md`.
+
 ## Repository policy
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private
