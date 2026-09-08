@@ -98,11 +98,11 @@ downstream kernel
 ```
 
 That path is now reproducible and has progressed to Phosh. Separately, an
-isolated Mesa 25.0.7 Turnip build has enumerated the real Adreno 650 through
-`/dev/kgsl-3d0` using the KGSL backend. This proves Vulkan physical-device
-enumeration, not rendered acceleration: EGL surfaceless through Zink is the
-next GPU validation, while Wayland/dma-buf, GBM, KMS scanout and accelerated
-Phoc remain open.
+isolated Mesa 25.0.7 runtime has rendered and read back a verified pixel
+through EGL surfaceless, Gallium Zink, Vulkan Turnip and `/dev/kgsl-3d0` on
+the real Adreno 650. This validates offscreen OpenGL ES rendering. The
+Wayland/dma-buf presentation path, GBM, KMS scanout and accelerated Phoc
+remain open and require a separate interoperability review.
 
 ## Repository layout
 

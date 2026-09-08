@@ -159,6 +159,7 @@ This milestone does **not** yet validate:
 - suspend/resume;
 - GPU reset handling.
 
-The next experiment must remain narrower than compositor integration: create
-the first isolated EGL surfaceless context through Zink and Turnip/KGSL,
-without stopping Phoc, replacing system libraries, or touching KMS output.
+That next experiment was subsequently completed as GPU-55: an isolated EGL
+surfaceless context rendered and read back a verified pixel through Zink and
+Turnip/KGSL without involving KMS output. See
+`mobian-m1-a650-zink-turnip-kgsl-offscreen-hardware-validation-2026-09-08.md`.

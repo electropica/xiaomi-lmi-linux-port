@@ -60,6 +60,21 @@ output, EGL, OpenGL/OpenGL ES through Zink, Wayland/dma-buf interoperability,
 GBM, KMS scanout and accelerated Phoc remain unvalidated. See
 `notes/mobian-m1-a650-turnip-kgsl-hardware-validation-2026-09-08.md`.
 
+## M1 GPU — ZINK/TURNIP/KGSL OFFSCREEN RENDER VALIDATED ON HARDWARE
+
+The isolated native Debian Trixie arm64 Mesa 25.0.7 runtime has now completed
+a real OpenGL ES 3.2 offscreen render through EGL surfaceless, Gallium Zink,
+Vulkan Turnip and KGSL on Adreno 650. A dedicated 16x16 pbuffer test submitted
+`glClear`, synchronized with `glFinish`, read a pixel back and obtained
+`PIXEL_RGBA=64,128,191,255` for the requested `(0.25, 0.50, 0.75, 1.0)`
+colour. `PIXEL_CHECK=PASS` and the process returned zero.
+
+This supersedes enumeration as the strongest validated GPU milestone, but it
+remains offscreen. Wayland presentation, dma-buf interoperability with
+downstream `msm_drm`, modifiers, GBM, KMS scanout and accelerated Phoc remain
+unvalidated. See
+`notes/mobian-m1-a650-zink-turnip-kgsl-offscreen-hardware-validation-2026-09-08.md`.
+
 ## M1 PHOSH SPONTANEOUS DISPLAY WAKE — USERSPACE CAUSE AND WORKAROUND VALIDATED
 
 WAKE7 through WAKE17 traced the spontaneous display-on cycle to the
@@ -221,8 +236,8 @@ The observed lock screen appeared around 50 seconds from boot. The difference
 from the corrected v5 runtime boot occurred before `phosh-m0.service` and is
 not attributed to Keyring or UPower. Dynamic battery tracking remains
 unvalidated despite Phosh displaying 100%; `getty@tty1.service`, colored
-clear-KMS rectangles, French OSK layout, rendered GPU acceleration beyond the
-validated Turnip/KGSL Vulkan enumeration, and modem/SIM remain open. See
+clear-KMS rectangles, onscreen GPU presentation beyond the subsequently
+validated Zink/Turnip/KGSL offscreen render, and modem/SIM remain open. See
 `notes/mobian-m1-repro-v6-hardware-validation-2026-09-05.md`.
 
 ## M1 REPRO v7 — VALIDATED ON HARDWARE / FRENCH OSK DEFAULT TO REVALIDATE
