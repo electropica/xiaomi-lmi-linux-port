@@ -159,7 +159,8 @@ This is a real offscreen rendering milestone, not merely driver enumeration.
 This milestone does **not** validate:
 
 - Wayland presentation;
-- dma-buf interoperability between KGSL and downstream `msm_drm`;
+- dma-buf interoperability between KGSL and downstream `msm_drm` (GPU-58
+  subsequently validated Turnip/KGSL export and same-driver re-import only);
 - common buffer formats or modifiers;
 - GBM;
 - KMS scanout of buffers produced by KGSL;
@@ -170,5 +171,7 @@ This milestone does **not** validate:
 - GPU suspend/resume;
 - recovery after a GPU hang or reset.
 
-The next action must be a static audit of the Wayland/dma-buf presentation
-path before any attempt to use this renderer with Phoc.
+GPU-56 subsequently completed the static Wayland/dma-buf audit, and GPU-58
+validated Turnip/KGSL dma-buf export/re-import without involving the display
+driver. PRIME import by downstream `msm_drm` remains the next isolated link;
+Phoc must not be attempted yet.

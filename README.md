@@ -100,9 +100,11 @@ downstream kernel
 That path is now reproducible and has progressed to Phosh. Separately, an
 isolated Mesa 25.0.7 runtime has rendered and read back a verified pixel
 through EGL surfaceless, Gallium Zink, Vulkan Turnip and `/dev/kgsl-3d0` on
-the real Adreno 650. This validates offscreen OpenGL ES rendering. The
-Wayland/dma-buf presentation path, GBM, KMS scanout and accelerated Phoc
-remain open and require a separate interoperability review.
+the real Adreno 650. A subsequent headless Vulkan test also exported a
+Turnip/KGSL allocation as a dma-buf, re-imported it into Turnip, accessed it
+from the GPU and verified its deterministic content. PRIME import into
+downstream `msm_drm`, Wayland presentation, GBM, KMS scanout and accelerated
+Phoc remain open as distinct interoperability stages.
 
 ## Repository layout
 

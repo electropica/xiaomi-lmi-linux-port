@@ -151,7 +151,8 @@ This milestone does **not** yet validate:
 - OpenGL or OpenGL ES;
 - Zink at runtime;
 - Wayland presentation;
-- dma-buf import/export interoperability;
+- dma-buf import/export interoperability (subsequently validated within
+  Turnip/KGSL by GPU-58, but not yet with downstream `msm_drm`);
 - GBM;
 - accelerated Phoc;
 - KMS scanout using KGSL-produced buffers;
@@ -163,3 +164,5 @@ That next experiment was subsequently completed as GPU-55: an isolated EGL
 surfaceless context rendered and read back a verified pixel through Zink and
 Turnip/KGSL without involving KMS output. See
 `mobian-m1-a650-zink-turnip-kgsl-offscreen-hardware-validation-2026-09-08.md`.
+GPU-58 later validated Turnip/KGSL dma-buf export and same-driver re-import;
+see `mobian-m1-a650-turnip-kgsl-dmabuf-hardware-validation-2026-09-08.md`.

@@ -70,10 +70,25 @@ Vulkan Turnip and KGSL on Adreno 650. A dedicated 16x16 pbuffer test submitted
 colour. `PIXEL_CHECK=PASS` and the process returned zero.
 
 This supersedes enumeration as the strongest validated GPU milestone, but it
-remains offscreen. Wayland presentation, dma-buf interoperability with
-downstream `msm_drm`, modifiers, GBM, KMS scanout and accelerated Phoc remain
-unvalidated. See
+remains offscreen. A subsequent GPU-58 test validated process-local dma-buf
+export/re-import through Turnip/KGSL; Wayland presentation and interoperability
+with downstream `msm_drm` remain separate. See
 `notes/mobian-m1-a650-zink-turnip-kgsl-offscreen-hardware-validation-2026-09-08.md`.
+
+## M1 GPU — TURNIP/KGSL DMA-BUF EXPORT/REIMPORT VALIDATED ON HARDWARE
+
+The isolated ARM64 GPU-57 self-test created a 4096-byte exportable Vulkan
+buffer through Turnip/KGSL, wrote a deterministic pattern with the GPU,
+exported its allocation as a dma-buf, imported the same dma-buf into a second
+Vulkan allocation, accessed it through the imported buffer and verified every
+word through an independent readback buffer. All capability, ownership,
+submission, content and cleanup checks passed; `GPU58_SELFTEST_RC=0`.
+
+This validates Turnip/KGSL dma-buf export and same-driver re-import on real
+hardware. It does not validate PRIME import by downstream `msm_drm`, KMS
+framebuffer creation or scanout, display formats/modifiers, UBWC, cross-driver
+synchronization, Wayland or accelerated Phoc. See
+`notes/mobian-m1-a650-turnip-kgsl-dmabuf-hardware-validation-2026-09-08.md`.
 
 ## M1 PHOSH SPONTANEOUS DISPLAY WAKE — USERSPACE CAUSE AND WORKAROUND VALIDATED
 
