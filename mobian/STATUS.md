@@ -45,6 +45,21 @@ This milestone validates the graphical bring-up and basic Phosh interaction.
 It does not validate GPU acceleration, every Phosh function, or readiness for
 daily use.
 
+## M1 GPU — TURNIP/KGSL VULKAN ENUMERATION VALIDATED ON HARDWARE
+
+An isolated native Debian Trixie arm64 build of Mesa 25.0.7, configured with
+Gallium Zink, Vulkan Freedreno and `freedreno-kmds=msm,kgsl`, successfully
+loaded Turnip's KGSL backend on Xiaomi `lmi`. Turnip opened
+`/dev/kgsl-3d0`, identified `Turnip Adreno (TM) 650`, and completed
+`vulkaninfo` physical-device enumeration with exit status zero. The validated
+`libvulkan_freedreno.so` SHA-256 is
+`dc46ac80f2322142e5ba17235e7cfd019f13c41157a34965cc5494622b84324d`.
+
+This validates Vulkan enumeration only. GPU command submission, rendered
+output, EGL, OpenGL/OpenGL ES through Zink, Wayland/dma-buf interoperability,
+GBM, KMS scanout and accelerated Phoc remain unvalidated. See
+`notes/mobian-m1-a650-turnip-kgsl-hardware-validation-2026-09-08.md`.
+
 ## M1 PHOSH SPONTANEOUS DISPLAY WAKE — USERSPACE CAUSE AND WORKAROUND VALIDATED
 
 WAKE7 through WAKE17 traced the spontaneous display-on cycle to the
@@ -206,8 +221,9 @@ The observed lock screen appeared around 50 seconds from boot. The difference
 from the corrected v5 runtime boot occurred before `phosh-m0.service` and is
 not attributed to Keyring or UPower. Dynamic battery tracking remains
 unvalidated despite Phosh displaying 100%; `getty@tty1.service`, colored
-clear-KMS rectangles, French OSK layout, GPU acceleration and modem/SIM remain
-open. See `notes/mobian-m1-repro-v6-hardware-validation-2026-09-05.md`.
+clear-KMS rectangles, French OSK layout, rendered GPU acceleration beyond the
+validated Turnip/KGSL Vulkan enumeration, and modem/SIM remain open. See
+`notes/mobian-m1-repro-v6-hardware-validation-2026-09-05.md`.
 
 ## M1 REPRO v7 — VALIDATED ON HARDWARE / FRENCH OSK DEFAULT TO REVALIDATE
 

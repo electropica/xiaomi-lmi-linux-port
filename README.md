@@ -80,9 +80,12 @@ The gadget has been observed to survive `switch_root`.
 
 ### Mobian / Debian
 
-A minimal Debian trixie arm64 userspace is currently being prepared as the first Mobian-oriented milestone.
+Debian trixie arm64 now boots into a functional Phosh session on Xiaomi
+`lmi`. The validated foundation includes systemd, USB networking and SSH,
+DRM/KMS display takeover, seat management, touch input, Wi-Fi and the Phosh
+lock screen and desktop.
 
-The initial goal is deliberately smaller than a complete mobile desktop:
+The original minimal bring-up path was:
 
 ```text
 downstream kernel
@@ -94,7 +97,12 @@ downstream kernel
     -> visible DSI output
 ```
 
-Phosh and a complete Mobian environment will be investigated only after this minimal userspace milestone is reproducible.
+That path is now reproducible and has progressed to Phosh. Separately, an
+isolated Mesa 25.0.7 Turnip build has enumerated the real Adreno 650 through
+`/dev/kgsl-3d0` using the KGSL backend. This proves Vulkan physical-device
+enumeration, not rendered acceleration: EGL surfaceless through Zink is the
+next GPU validation, while Wayland/dma-buf, GBM, KMS scanout and accelerated
+Phoc remain open.
 
 ## Repository layout
 
