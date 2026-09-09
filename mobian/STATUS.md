@@ -75,6 +75,25 @@ export/re-import through Turnip/KGSL; Wayland presentation and interoperability
 with downstream `msm_drm` remain separate. See
 `notes/mobian-m1-a650-zink-turnip-kgsl-offscreen-hardware-validation-2026-09-08.md`.
 
+## M1 GPU — GPU-66 PATCHED CROSS-DEVICE ZINK RENDER VALIDATED ON HARDWARE
+
+GPU-66 separately validated the corrected cross-compiled Mesa 25.0.7 path.
+Its opt-in Zink change selected the isolated GPU-53 Turnip/KGSL device when
+the surfaceless EGL display could not be matched through the normal DRM
+display-device path. The isolated stack created an OpenGL ES context, cleared
+a 1x1 RGBA8 pbuffer to green, completed the work and read back the exact value
+`0,255,0,255` with exit status zero.
+
+This path directly links the matching `libEGL.so.1` and `libGLESv2.so.2`
+frontends to `libgallium-25.0.7.so`, where Zink is built in. It does not use
+`zink_dri.so`, `libdril_dri.so`, GBM, GLX, Wayland or X11. The system Vulkan
+loader remained in use, while EGL, GLES, Gallium and the GPU-53 Turnip ICD
+were selected from an isolated bundle. System Mesa was not replaced. Phoc and
+Phosh stayed running and `DSI-1` stayed connected; no GPU fault or kernel
+crash occurred. This validates one tiny offscreen GLES operation only, not
+desktop acceleration or presentation. See
+`notes/mobian-m1-gpu66-patched-zink-turnip-kgsl-hardware-validation-2026-09-09.md`.
+
 ## M1 GPU — TURNIP/KGSL DMA-BUF EXPORT/REIMPORT VALIDATED ON HARDWARE
 
 The isolated ARM64 GPU-57 self-test created a 4096-byte exportable Vulkan
