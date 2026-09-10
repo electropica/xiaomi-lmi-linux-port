@@ -94,6 +94,24 @@ crash occurred. This validates one tiny offscreen GLES operation only, not
 desktop acceleration or presentation. See
 `notes/mobian-m1-gpu66-patched-zink-turnip-kgsl-hardware-validation-2026-09-09.md`.
 
+## M1 GPU — GPU-67 PROGRAMMABLE GLES2 SHADER DRAW VALIDATED ON HARDWARE
+
+Building on GPU-66's isolated clear/readback boundary, GPU-67 compiled a GLES2
+vertex shader and fragment shader, linked them, and submitted exactly one
+full-screen triangle through the same patched Mesa 25.0.7 Zink, system Vulkan
+loader, isolated Turnip, KGSL and Adreno 650 path. The draw rasterized into a
+4x4 RGBA8 pbuffer and all 16 read-back pixels matched the shader-selected
+green value `0,255,0,255`; the process returned zero.
+
+This validates one bounded shader execution, triangle rasterization,
+framebuffer-write and readback path only. It does not validate general GLES2
+or GLES3 correctness, textures, uniforms, VBOs/VAOs, FBOs, large targets,
+performance, sustained rendering, Wayland or Phoc acceleration, dma-buf
+interoperability, GBM, KMS/DSI presentation, desktop OpenGL or production
+readiness. System Mesa remained unchanged, Phoc and Phosh stayed running,
+`DSI-1` stayed connected, and no relevant GPU or kernel fault occurred. See
+`notes/mobian-m1-gpu67-shader-draw-hardware-validation-2026-09-10.md`.
+
 ## M1 GPU — TURNIP/KGSL DMA-BUF EXPORT/REIMPORT VALIDATED ON HARDWARE
 
 The isolated ARM64 GPU-57 self-test created a 4096-byte exportable Vulkan
