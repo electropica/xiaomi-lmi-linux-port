@@ -179,6 +179,15 @@ install -o root -g root -m 0755 "$script_dir/gpu68/lib/libvulkan_freedreno.so" "
 install -o root -g root -m 0644 "$script_dir/gpu68/icd.d/freedreno_icd.aarch64.json" "$tree/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json"
 ln -s libEGL.so.1.0.0 "$tree/opt/mobian-gpu/lib/libEGL.so.1"
 ln -s libGLESv2.so.2.0.0 "$tree/opt/mobian-gpu/lib/libGLESv2.so.2"
+
+mkdir -p "$tree/lib/firmware/postmarketos"
+install -o root -g root -m 0644 "$script_dir/firmware/a650/a650_gmu.bin" "$tree/lib/firmware/postmarketos/a650_gmu.bin"
+install -o root -g root -m 0644 "$script_dir/firmware/a650/a650_sqe.fw" "$tree/lib/firmware/postmarketos/a650_sqe.fw"
+install -o root -g root -m 0644 "$script_dir/firmware/a650/a650_zap.b00" "$tree/lib/firmware/postmarketos/a650_zap.b00"
+install -o root -g root -m 0644 "$script_dir/firmware/a650/a650_zap.b01" "$tree/lib/firmware/postmarketos/a650_zap.b01"
+install -o root -g root -m 0644 "$script_dir/firmware/a650/a650_zap.b02" "$tree/lib/firmware/postmarketos/a650_zap.b02"
+install -o root -g root -m 0644 "$script_dir/firmware/a650/a650_zap.elf" "$tree/lib/firmware/postmarketos/a650_zap.elf"
+install -o root -g root -m 0644 "$script_dir/firmware/a650/a650_zap.mdt" "$tree/lib/firmware/postmarketos/a650_zap.mdt"
 install -D -o root -g root -m 0644 "$script_dir/phoc.ini" "$tree/etc/phosh/phoc.ini"
 install -D -o root -g root -m 0644 "$script_dir/upower-lmi.conf" "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf"
 install -D -o root -g root -m 0644 "$script_dir/xdg-user-dirs-lmi.service" "$tree/etc/systemd/user/xdg-user-dirs-lmi.service"
@@ -187,6 +196,7 @@ install -D -o root -g root -m 0644 "$script_dir/lmi-splash-release-m1.conf" "$tr
 install -D -o root -g root -m 0644 "$script_dir/user-runtime-dir-1000-m1.conf" "$tree/etc/systemd/system/user-runtime-dir@1000.service.d/m1-runtime-fix.conf"
 install -D -o root -g root -m 0600 "$script_dir/accountsservice-mobian.ini" "$tree/var/lib/AccountsService/users/mobian"
 install -D -o root -g root -m 0644 "$script_dir/networkmanager-usb0-unmanaged.conf" "$tree/etc/NetworkManager/conf.d/10-m1-usb0-unmanaged.conf"
+install -D -o root -g root -m 0644 "$script_dir/udev/70-lmi-gpu-access.rules" "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
 install -D -o root -g root -m 0755 "$script_dir/wifi/scripts/lmi-android-wifi-mounts" "$tree/usr/local/sbin/lmi-android-wifi-mounts"
 install -D -o root -g root -m 0755 "$script_dir/wifi/scripts/lmi-wlan-firmware-prepare" "$tree/usr/local/sbin/lmi-wlan-firmware-prepare"
 install -D -o root -g root -m 0755 "$script_dir/wifi/scripts/lmi-cnss-daemon-wrapper" "$tree/usr/local/sbin/lmi-cnss-daemon-wrapper"
@@ -327,6 +337,14 @@ test "$(readlink "$tree/etc/systemd/system/multi-user.target.wants/lmi-adsp-btfm
 mobian_shadow=$(chroot "$tree" getent shadow mobian | cut -d: -f2)
 [[ -n $mobian_shadow && $mobian_shadow != '!'* && $mobian_shadow != '*'* ]]
 unset mobian_shadow
+for file in a650_gmu.bin a650_sqe.fw a650_zap.b00 a650_zap.b01 a650_zap.b02 a650_zap.elf a650_zap.mdt; do
+    cmp -s "$script_dir/firmware/a650/$file" "$tree/lib/firmware/postmarketos/$file"
+    test "$(stat -c %a "$tree/lib/firmware/postmarketos/$file")" = 644
+done
+cmp -s "$script_dir/udev/70-lmi-gpu-access.rules" "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
+test "$(stat -c %a "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules")" = 644
+grep -Fqx 'KERNEL=="kgsl-3d0", GROUP="render", MODE="0660"' "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
+grep -Fqx 'KERNEL=="ion", GROUP="render", MODE="0660"' "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
 chroot "$tree" id mobian
 chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session gnome-keyring locales network-manager qrtr-tools systemd-timesyncd wpasupplicant unzip
 df -B1 "$tree"

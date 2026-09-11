@@ -89,3 +89,8 @@ Thumbs.db
 *~
 *.swp
 .aider*
+!mobian/m1-phosh/gpu68/lib/libEGL.so.1.0.0
+!mobian/m1-phosh/gpu68/lib/libGLESv2.so.2.0.0
+!mobian/m1-phosh/gpu68/lib/libgallium-25.0.7.so
+!mobian/m1-phosh/gpu68/lib/libvulkan_freedreno.so
+!mobian/m1-phosh/firmware/a650/a650_zap.elf

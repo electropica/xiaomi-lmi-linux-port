@@ -1,0 +1,2 @@
+KERNEL=="kgsl-3d0", GROUP="render", MODE="0660"
+KERNEL=="ion", GROUP="render", MODE="0660"
