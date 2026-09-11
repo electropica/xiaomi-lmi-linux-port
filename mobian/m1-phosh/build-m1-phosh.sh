@@ -171,6 +171,14 @@ printf '\nX-GNOME-HiddenUnderSystemd=true\n' >>"$xdg_user_dirs_desktop"
 test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$xdg_user_dirs_desktop")" = 1
 
 install -D -o root -g root -m 0644 "$script_dir/phosh-m0.service" "$tree/etc/systemd/system/phosh-m0.service"
+mkdir -p "$tree/opt/mobian-gpu/lib" "$tree/opt/mobian-gpu/icd.d"
+install -o root -g root -m 0755 "$script_dir/gpu68/lib/libEGL.so.1.0.0" "$tree/opt/mobian-gpu/lib/libEGL.so.1.0.0"
+install -o root -g root -m 0755 "$script_dir/gpu68/lib/libGLESv2.so.2.0.0" "$tree/opt/mobian-gpu/lib/libGLESv2.so.2.0.0"
+install -o root -g root -m 0755 "$script_dir/gpu68/lib/libgallium-25.0.7.so" "$tree/opt/mobian-gpu/lib/libgallium-25.0.7.so"
+install -o root -g root -m 0755 "$script_dir/gpu68/lib/libvulkan_freedreno.so" "$tree/opt/mobian-gpu/lib/libvulkan_freedreno.so"
+install -o root -g root -m 0644 "$script_dir/gpu68/icd.d/freedreno_icd.aarch64.json" "$tree/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json"
+ln -s libEGL.so.1.0.0 "$tree/opt/mobian-gpu/lib/libEGL.so.1"
+ln -s libGLESv2.so.2.0.0 "$tree/opt/mobian-gpu/lib/libGLESv2.so.2"
 install -D -o root -g root -m 0644 "$script_dir/phoc.ini" "$tree/etc/phosh/phoc.ini"
 install -D -o root -g root -m 0644 "$script_dir/upower-lmi.conf" "$tree/etc/systemd/system/upower.service.d/lmi-private-users.conf"
 install -D -o root -g root -m 0644 "$script_dir/xdg-user-dirs-lmi.service" "$tree/etc/systemd/user/xdg-user-dirs-lmi.service"
@@ -237,11 +245,23 @@ grep -qx 'Environment=XDG_SEAT=seat0' "$tree/etc/systemd/system/phosh-m0.service
 test -f "$tree/etc/pam.d/login"
 grep -Eq '^[[:space:]]*@include[[:space:]]+common-session([[:space:]]|$)' "$tree/etc/pam.d/login"
 grep -Eq '^[[:space:]]*session[[:space:]]+[^#]*pam_systemd\.so([[:space:]]|$)' "$tree/etc/pam.d/common-session"
-grep -qx 'Environment=WLR_RENDERER=pixman' "$tree/etc/systemd/system/phosh-m0.service"
+grep -qx 'Environment=WLR_RENDERER=gles2' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=LANG=fr_FR.UTF-8' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=LANGUAGE=fr_FR:fr' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=WLR_BACKENDS=drm,libinput' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=WLR_DRM_DEVICES=/dev/dri/card0' "$tree/etc/systemd/system/phosh-m0.service"
+grep -qx 'Environment=LD_LIBRARY_PATH=/opt/mobian-gpu/lib' "$tree/etc/systemd/system/phosh-m0.service"
+grep -qx 'Environment=VK_ICD_FILENAMES=/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json' "$tree/etc/systemd/system/phosh-m0.service"
+grep -qx 'Environment=MESA_LOADER_DRIVER_OVERRIDE=msm' "$tree/etc/systemd/system/phosh-m0.service"
+grep -qx 'Environment=ZINK_ALLOW_KGSL_DISPLAY_DEVICE=1' "$tree/etc/systemd/system/phosh-m0.service"
+test "$(sha256sum "$tree/opt/mobian-gpu/lib/libEGL.so.1.0.0" | awk '{print $1}')" = f43ee37931c8cb6b94d8c6a8e936c6ce38a01feaa7bb7f47ad2cb599e3968611
+test "$(sha256sum "$tree/opt/mobian-gpu/lib/libGLESv2.so.2.0.0" | awk '{print $1}')" = d981fcec76e341a6a4cf898d605c789e09343e7aa1510bc3de283a57f4929782
+test "$(sha256sum "$tree/opt/mobian-gpu/lib/libgallium-25.0.7.so" | awk '{print $1}')" = 89226734f7708199589972c28489be4cb2672bcbcb0773ea86cc6e0a07f9df94
+test "$(sha256sum "$tree/opt/mobian-gpu/lib/libvulkan_freedreno.so" | awk '{print $1}')" = 2ecba2b09be49ff1d2bf202cf66678a7dedd5977ec49d14fb149547dc02206cc
+test "$(sha256sum "$tree/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json" | awk '{print $1}')" = 636bd4b12e5e9bffa2599aca7cf9792e37103ff7469d0b3174da6e838dd68da7
+test -L "$tree/opt/mobian-gpu/lib/libEGL.so.1"
+test -L "$tree/opt/mobian-gpu/lib/libGLESv2.so.2"
+
 grep -qx 'enable = false' "$tree/etc/phosh/phoc.ini"
 grep -qx 'ExecStartPost=/bin/sh -ec '\''chown 1000:1000 /run/user/1000; chmod 0700 /run/user/1000; \[ "$(/usr/bin/stat -c %%u:%%g:%%a /run/user/1000)" = 1000:1000:700 \]'\''' "$tree/etc/systemd/system/user-runtime-dir@1000.service.d/m1-runtime-fix.conf"
 grep -qx "ExecStartPre=/usr/bin/timeout 10 /bin/sh -ec 'until \[ -c /dev/dri/card0 \]; do sleep 0.1; done'" "$tree/etc/systemd/system/lmi-splash-release.service.d/m1-device-wait.conf"
