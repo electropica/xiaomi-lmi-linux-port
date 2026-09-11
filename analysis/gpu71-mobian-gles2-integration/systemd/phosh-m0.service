@@ -1,0 +1,36 @@
+[Unit]
+Description=Mobian M1 Phosh session GLES2 Zink Turnip KGSL
+Requires=seatd.service user@1000.service
+After=seatd.service dbus.service systemd-logind.service user@1000.service
+Before=graphical.target
+Conflicts=weston-m0.service
+
+[Service]
+Type=simple
+User=mobian
+Group=mobian
+PAMName=login
+Environment=LANG=fr_FR.UTF-8
+Environment=LANGUAGE=fr_FR:fr
+Environment=XDG_CURRENT_DESKTOP=Phosh:GNOME
+Environment=XDG_SESSION_DESKTOP=phosh
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_SEAT=seat0
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=WLR_RENDERER=gles2
+Environment=WLR_BACKENDS=drm,libinput
+Environment=WLR_DRM_DEVICES=/dev/dri/card0
+Environment=LD_LIBRARY_PATH=/opt/mobian-gpu/lib
+Environment=VK_ICD_FILENAMES=/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json
+Environment=MESA_LOADER_DRIVER_OVERRIDE=msm
+Environment=ZINK_ALLOW_KGSL_DISPLAY_DEVICE=1
+ExecStart=/usr/bin/phosh-session
+Restart=on-failure
+RestartSec=5
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+WorkingDirectory=/home/mobian
+
+[Install]
+WantedBy=graphical.target

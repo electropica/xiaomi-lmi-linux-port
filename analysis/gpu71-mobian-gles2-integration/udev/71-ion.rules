@@ -1,0 +1,1 @@
+KERNEL=="ion", GROUP="render", MODE="0660"

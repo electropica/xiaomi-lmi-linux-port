@@ -1,0 +1,14 @@
+diff --git a/src/freedreno/drm/freedreno_device.c b/src/freedreno/drm/freedreno_device.c
+--- a/src/freedreno/drm/freedreno_device.c
++++ b/src/freedreno/drm/freedreno_device.c
+@@ -42,7 +42,9 @@ fd_device_new(int fd)
+       return NULL;
+    }
+ 
+-   if (!strcmp(version->name, "msm")) {
++   /* GPU69 experimental lmi msm_drm alias */
++   if (!strcmp(version->name, "msm") ||
++       !strcmp(version->name, "msm_drm")) {
+       DEBUG_MSG("msm DRM device");
+       if (version->version_major != 1) {
+          ERROR_MSG("unsupported version: %u.%u.%u", version->version_major,
