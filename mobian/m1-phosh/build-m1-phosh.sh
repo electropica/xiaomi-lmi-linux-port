@@ -128,7 +128,7 @@ apt-get install --no-install-recommends -y \
     squeekboard=1.43.1-1 \
     gnome-session=48.0-1+deb13u1 \
     gnome-keyring=48.0-1 \
-    locales=2.41-12+deb13u3 \
+    locales=2.41-12+deb13u4 \
     network-manager=1.52.1-1 \
     qrtr-tools=1.1-2+b1 \
     systemd-timesyncd=257.13-1~deb13u1 \
@@ -172,13 +172,15 @@ test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$xdg_user_dirs_desktop")" =
 
 install -D -o root -g root -m 0644 "$script_dir/phosh-m0.service" "$tree/etc/systemd/system/phosh-m0.service"
 mkdir -p "$tree/opt/mobian-gpu/lib" "$tree/opt/mobian-gpu/icd.d"
-install -o root -g root -m 0755 "$script_dir/gpu68/lib/libEGL.so.1.0.0" "$tree/opt/mobian-gpu/lib/libEGL.so.1.0.0"
-install -o root -g root -m 0755 "$script_dir/gpu68/lib/libGLESv2.so.2.0.0" "$tree/opt/mobian-gpu/lib/libGLESv2.so.2.0.0"
-install -o root -g root -m 0755 "$script_dir/gpu68/lib/libgallium-25.0.7.so" "$tree/opt/mobian-gpu/lib/libgallium-25.0.7.so"
-install -o root -g root -m 0755 "$script_dir/gpu68/lib/libvulkan_freedreno.so" "$tree/opt/mobian-gpu/lib/libvulkan_freedreno.so"
-install -o root -g root -m 0644 "$script_dir/gpu68/icd.d/freedreno_icd.aarch64.json" "$tree/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json"
+install -o root -g root -m 0755 "$script_dir/gpu72/lib/libEGL.so.1.0.0" "$tree/opt/mobian-gpu/lib/libEGL.so.1.0.0"
+install -o root -g root -m 0755 "$script_dir/gpu72/lib/libGLESv2.so.2.0.0" "$tree/opt/mobian-gpu/lib/libGLESv2.so.2.0.0"
+install -o root -g root -m 0755 "$script_dir/gpu72/lib/libgallium-25.0.7.so" "$tree/opt/mobian-gpu/lib/libgallium-25.0.7.so"
+install -o root -g root -m 0755 "$script_dir/gpu72/lib/libvulkan_freedreno.so" "$tree/opt/mobian-gpu/lib/libvulkan_freedreno.so"
+install -o root -g root -m 0644 "$script_dir/gpu72/icd.d/freedreno_icd.aarch64.json" "$tree/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json"
 ln -s libEGL.so.1.0.0 "$tree/opt/mobian-gpu/lib/libEGL.so.1"
+ln -s libEGL.so.1 "$tree/opt/mobian-gpu/lib/libEGL.so"
 ln -s libGLESv2.so.2.0.0 "$tree/opt/mobian-gpu/lib/libGLESv2.so.2"
+ln -s libGLESv2.so.2 "$tree/opt/mobian-gpu/lib/libGLESv2.so"
 
 mkdir -p "$tree/lib/firmware/postmarketos"
 install -o root -g root -m 0644 "$script_dir/firmware/a650/a650_gmu.bin" "$tree/lib/firmware/postmarketos/a650_gmu.bin"
@@ -264,13 +266,15 @@ grep -qx 'Environment=LD_LIBRARY_PATH=/opt/mobian-gpu/lib' "$tree/etc/systemd/sy
 grep -qx 'Environment=VK_ICD_FILENAMES=/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=MESA_LOADER_DRIVER_OVERRIDE=msm' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=ZINK_ALLOW_KGSL_DISPLAY_DEVICE=1' "$tree/etc/systemd/system/phosh-m0.service"
-test "$(sha256sum "$tree/opt/mobian-gpu/lib/libEGL.so.1.0.0" | awk '{print $1}')" = f43ee37931c8cb6b94d8c6a8e936c6ce38a01feaa7bb7f47ad2cb599e3968611
+test "$(sha256sum "$tree/opt/mobian-gpu/lib/libEGL.so.1.0.0" | awk '{print $1}')" = 1242ffe38422de262707efa2f45b735b34baddab994680690db685eb069ddf5e
 test "$(sha256sum "$tree/opt/mobian-gpu/lib/libGLESv2.so.2.0.0" | awk '{print $1}')" = d981fcec76e341a6a4cf898d605c789e09343e7aa1510bc3de283a57f4929782
-test "$(sha256sum "$tree/opt/mobian-gpu/lib/libgallium-25.0.7.so" | awk '{print $1}')" = 89226734f7708199589972c28489be4cb2672bcbcb0773ea86cc6e0a07f9df94
-test "$(sha256sum "$tree/opt/mobian-gpu/lib/libvulkan_freedreno.so" | awk '{print $1}')" = 2ecba2b09be49ff1d2bf202cf66678a7dedd5977ec49d14fb149547dc02206cc
-test "$(sha256sum "$tree/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json" | awk '{print $1}')" = 636bd4b12e5e9bffa2599aca7cf9792e37103ff7469d0b3174da6e838dd68da7
+test "$(sha256sum "$tree/opt/mobian-gpu/lib/libgallium-25.0.7.so" | awk '{print $1}')" = 6d06feb371beef2e39b4d386e1ded3b6c17babfac580894f5f779cf84344211e
+test "$(sha256sum "$tree/opt/mobian-gpu/lib/libvulkan_freedreno.so" | awk '{print $1}')" = eeb4a6e4ad78e381e717679a823882b7ff588074e4d396b460891bbc705e2110
+test "$(sha256sum "$tree/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json" | awk '{print $1}')" = 28f48a2db55d1ea440f3430cc73b50a1efca4f4e0ebeb98218d6e4bc12f94f23
 test -L "$tree/opt/mobian-gpu/lib/libEGL.so.1"
+test -L "$tree/opt/mobian-gpu/lib/libEGL.so"
 test -L "$tree/opt/mobian-gpu/lib/libGLESv2.so.2"
+test -L "$tree/opt/mobian-gpu/lib/libGLESv2.so"
 
 grep -qx 'enable = false' "$tree/etc/phosh/phoc.ini"
 grep -qx 'ExecStartPost=/bin/sh -ec '\''chown 1000:1000 /run/user/1000; chmod 0700 /run/user/1000; \[ "$(/usr/bin/stat -c %%u:%%g:%%a /run/user/1000)" = 1000:1000:700 \]'\''' "$tree/etc/systemd/system/user-runtime-dir@1000.service.d/m1-runtime-fix.conf"
