@@ -4,8 +4,8 @@ set -euo pipefail
 base=/home/linuxagent/pmos-d-repro-01/Mobian-M0
 closure="$base/manifests/m0-minimal-closure.tsv"
 repo="$base/local-repo-330"
-target="$base/rootfs-final-330"
-log="$base/logs/mmdebstrap-unshare-330.log"
+target="$base/rootfs-final-gpu72"
+log="$base/logs/mmdebstrap-unshare-gpu72.log"
 
 test "$(id -u)" -eq 0
 test -e /proc/sys/fs/binfmt_misc/qemu-aarch64
@@ -62,9 +62,14 @@ EOF
     > "$log" 2>&1
 
 
-gpu71="/home/linuxagent/pmos-d-repro-01/analysis/gpu71-mobian-gles2-integration"
-test -x "$gpu71/INSTALL-IN-ROOTFS.sh"
-( cd "$gpu71" && ./INSTALL-IN-ROOTFS.sh "$target" )
-printf "gpu71_integration_completed target=%s GPU71_ROOTFS_INTEGRATION=PASS\n" "$target"
+chroot "$target" /usr/sbin/groupadd -g 1000 mobian
+chroot "$target" /usr/sbin/useradd -m -u 1000 -g 1000 -s /bin/bash mobian
+chroot "$target" /usr/sbin/usermod -a -G audio,video,plugdev,input,render mobian
+echo "mobian_user_created uid=1000 gid=1000 groups=audio,video,plugdev,input,render"
+
+gpu72="/home/linuxagent/pmos-d-repro-01/analysis/gpu71-mobian-gles2-integration"
+test -x "$gpu72/INSTALL-IN-ROOTFS.sh"
+( cd "$gpu72" && ./INSTALL-IN-ROOTFS.sh "$target" )
+printf "gpu72_integration_completed target=%s GPU72_ROOTFS_INTEGRATION=PASS\n" "$target"
 
 printf 'mmdebstrap_completed target=%s\n' "$target"
