@@ -238,8 +238,15 @@ org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing'
 During a passive 700-second observation with both types set to `'nothing'`, no
 spontaneous `DSI-1` enable/disable event or new `gsd-power` error occurred.
 The final state restores both timeout values to 900 seconds and retains the two
-`'nothing'` type values. No service, kernel wakeup source or modem state was
-changed for that validation. This result establishes the causal userspace path
+`'nothing'` type values. The WAKE17 fix was revalidated on hardware on
+2026-09-12 after a reconstructed M1 image had reverted both type values to
+`'suspend'`: `gsd-power` again preceded the spontaneous `DSI-1` remodeset, and
+restoring only the AC and battery inactive types to `'nothing'` corrected the
+behavior. The M1 recipe now installs `91_lmi-power.gschema.override` before
+`glib-compile-schemas`, making these two values persistent across reconstruction.
+The AC and battery inactive timeouts remain 900 seconds and are not overridden.
+No service, kernel wakeup source or modem state was changed for that validation.
+This result establishes the causal userspace path
 for this symptom, not a general conclusion about hardware wake sources or all
 suspend/resume behavior. Full evidence is recorded in
 `notes/mobian-m1-gsd-power-spontaneous-wakeup-validation-2026-09-06.md`.

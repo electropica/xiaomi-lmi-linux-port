@@ -119,6 +119,9 @@ chmod 0755 "$tree/usr/sbin/policy-rc.d"
 install -D -o root -g root -m 0644 \
     "$script_dir/90_lmi-input-sources.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override"
+install -D -o root -g root -m 0644 \
+    "$script_dir/91_lmi-power.gschema.override" \
+    "$tree/usr/share/glib-2.0/schemas/91_lmi-power.gschema.override"
 chroot "$tree" /bin/bash -eu <<'EOF'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
@@ -289,9 +292,19 @@ cmp -s "$script_dir/90_lmi-input-sources.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override"
 test "$(grep -Fxc "sources=[('xkb', 'fr')]" \
     "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override")" = 1
+cmp -s "$script_dir/91_lmi-power.gschema.override" \
+    "$tree/usr/share/glib-2.0/schemas/91_lmi-power.gschema.override"
+test "$(grep -Fxc "sleep-inactive-ac-type='nothing'" \
+    "$tree/usr/share/glib-2.0/schemas/91_lmi-power.gschema.override")" = 1
+test "$(grep -Fxc "sleep-inactive-battery-type='nothing'" \
+    "$tree/usr/share/glib-2.0/schemas/91_lmi-power.gschema.override")" = 1
 test -s "$tree/usr/share/glib-2.0/schemas/gschemas.compiled"
 test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
     org.gnome.desktop.input-sources sources)" = "[('xkb', 'fr')]"
+test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
+    org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type)" = "'nothing'"
+test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
+    org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type)" = "'nothing'"
 test ! -e "$tree/home/mobian/.config/dconf/user"
 grep -qx 'unmanaged-devices=interface-name:usb0' "$tree/etc/NetworkManager/conf.d/10-m1-usb0-unmanaged.conf"
 test "$(chroot "$tree" systemctl is-enabled NetworkManager.service)" = enabled
