@@ -1,0 +1,33 @@
+# SHA-256 snapshot of the GPU72 active inputs and outputs.
+# Paths are relative to /home/linuxagent/pmos-d-repro-01.
+# Check from that directory with: sha256sum -c github-export/docs/status/ACTIVE-GPU72-SHA256SUMS
+0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad  output/D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img
+40cc3ad30780bc93a3234a8069dc4ea082e00223685961cbf13eefebd8ee1676  Mobian-M0/Mobian-M0-GPU_root.ext4
+f7971e19bc4a19c17950da58bff3c2043ba3ef66dfa3d5d028c84a5269ce78fa  github-export/Mobian-M0/build-unshare-330-inner.sh
+960417275d574d0d223289f6e029763a2313dd4031a93f9a641e9778dde12bbb  analysis/gpu71-mobian-gles2-integration/INSTALL-IN-ROOTFS.sh
+9f142af6b18fd09b31074165af740a05c1f9e0c6cc3131209414f67a8a09f165  analysis/gpu71-mobian-gles2-integration/README.md
+fc9dc395f962f1ccf2bcfc8385742594f87ee8d7458f78f9489ec7497d817fac  analysis/gpu71-mobian-gles2-integration/SHA256SUMS
+2bb5a8ee267f6c851f05ba9438279a113912e182052b3f3626bdfd02144c221b  analysis/gpu71-mobian-gles2-integration/phoc/phoc.ini
+78885a021c0d373911697c9d21829b3a5a14d7098d2c4904cd189c86502e8f4a  analysis/gpu71-mobian-gles2-integration/systemd/phosh-m0.service
+3290901cf723ee3747a14ba9b476d90bc025dab9650f53a59b3fa51216bd030b  analysis/gpu71-mobian-gles2-integration/udev/70-kgsl.rules
+72fe0d73611ed1ffb9d73ae809c59cfd60284c56bca87c654b3d3432f8f963ef  analysis/gpu71-mobian-gles2-integration/udev/71-ion.rules
+28f48a2db55d1ea440f3430cc73b50a1efca4f4e0ebeb98218d6e4bc12f94f23  analysis/gpu71-mobian-gles2-integration/runtime/icd.d/freedreno_icd.aarch64.json
+1242ffe38422de262707efa2f45b735b34baddab994680690db685eb069ddf5e  analysis/gpu71-mobian-gles2-integration/runtime/lib/libEGL.so.1.0.0
+d981fcec76e341a6a4cf898d605c789e09343e7aa1510bc3de283a57f4929782  analysis/gpu71-mobian-gles2-integration/runtime/lib/libGLESv2.so.2.0.0
+6d06feb371beef2e39b4d386e1ded3b6c17babfac580894f5f779cf84344211e  analysis/gpu71-mobian-gles2-integration/runtime/lib/libgallium-25.0.7.so
+eeb4a6e4ad78e381e717679a823882b7ff588074e4d396b460891bbc705e2110  analysis/gpu71-mobian-gles2-integration/runtime/lib/libvulkan_freedreno.so
+e28510d7860bae3894219c807a2b39d144ce044c45fd65b22e39a2423c4191c1  analysis/gpu71-mobian-gles2-integration/mesa/msm-drm-alias.patch
+b4c27420fd6a5c6b511b254cc0fad8cdd40eea38ceb3418f895a1084f4460487  analysis/gpu71-mobian-gles2-integration/firmware/a650_sqe.fw
+df79fa8482fcc7587bb239b9c9e2b24bce4729893b990fe3f82b30da8175b01c  analysis/gpu71-mobian-gles2-integration/firmware/a650_gmu.bin
+85a5b5e0634f2d4ef2eb144288ba0dc90938624db406118d7b7ad95f1182c1c4  analysis/gpu71-mobian-gles2-integration/firmware/a650_zap.mdt
+ec9b9d5a67456384809624b14a00d15d36297e5f2e75728504cd872bc95e0947  analysis/gpu71-mobian-gles2-integration/firmware/a650_zap.b00
+8f4f6a71479cec27555ff42c9422de11cb250c642d568f75c3edc1b84e56fcf2  analysis/gpu71-mobian-gles2-integration/firmware/a650_zap.b01
+a415e5452fa8f597670a6e51010e97bfabca7d20fbce8044caed64d9d5873113  analysis/gpu71-mobian-gles2-integration/firmware/a650_zap.b02
+154daa6ee57c96c2aa6c0ecd7dc95aa8852fe1f60b69e83ca4a9c31d250bf7d0  analysis/gpu71-mobian-gles2-integration/firmware/a650_zap.elf
+bca640aeb3d6205cd5e324f1d48856e581964ce4fd2b57bde53633299b3a10dd  analysis/gpu72-zink-dmabuf-fd-leak/gpu69-cross.ini
+d856ebc6f8ff2673eaad19ab3c907df7030a60d00eab9c181ec1263eda6bc40f  analysis/gpu68-wayland-egl-init/gpu68-aarch64-gcc
+02efc7ad1b898c5bad680061fe6756ec081310047e253d9748fead31228f512d  analysis/gpu72-zink-dmabuf-fd-leak/build-gpu69-msm-drm-alias.sh
+5a3089b6698ada919b527dc19b058499a8ac7c316eb053b9719f333d52f67e28  analysis/gpu69-msm-drm-alias/mesa-25.0.7/src/gallium/drivers/zink/zink_screen.c
+d21418b518e077681d13b3bd467d4a31af85272a3e4a781dab89475b7368ee92  analysis/gpu72-zink-dmabuf-fd-leak/mesa-25.0.7/src/gallium/drivers/zink/zink_screen.c
+6d06feb371beef2e39b4d386e1ded3b6c17babfac580894f5f779cf84344211e  analysis/gpu72-zink-dmabuf-fd-leak/build/src/gallium/targets/dri/libgallium-25.0.7.so
+eeb4a6e4ad78e381e717679a823882b7ff588074e4d396b460891bbc705e2110  analysis/gpu72-zink-dmabuf-fd-leak/build/src/freedreno/vulkan/libvulkan_freedreno.so
