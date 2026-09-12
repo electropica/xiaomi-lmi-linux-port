@@ -1,4 +1,4 @@
-# GPU71 Mobian lmi GLES2 integration
+# GPU72 Mobian lmi GLES2 integration
 
 Validated architecture:
 

@@ -41,13 +41,13 @@ if ! grep -q '^render:' "$ROOTFS/etc/group"; then
     exit 1
 fi
 
-awk -F: 'BEGIN { OFS=":" } $1=="render" { if ($4=="") $4="mobian"; else if (("," $4 ",") !~ ",mobian,") $4=$4 ",mobian" } { print }' "$ROOTFS/etc/group" > "$ROOTFS/etc/group.gpu71"
-mv "$ROOTFS/etc/group.gpu71" "$ROOTFS/etc/group"
+awk -F: 'BEGIN { OFS=":" } $1=="render" { if ($4=="") $4="mobian"; else if (("," $4 ",") !~ ",mobian,") $4=$4 ",mobian" } { print }' "$ROOTFS/etc/group" > "$ROOTFS/etc/group.gpu72"
+mv "$ROOTFS/etc/group.gpu72" "$ROOTFS/etc/group"
 
 ln -sf ../phosh-m0.service "$ROOTFS/etc/systemd/system/graphical.target.wants/phosh-m0.service"
 
-echo "GPU71_ROOTFS_INTEGRATION=PASS"
-echo "GPU71_RUNTIME=/opt/mobian-gpu"
-echo "GPU71_FIRMWARE=/lib/firmware/postmarketos"
-echo "GPU71_MOBIAN_RENDER_GROUP=CONFIGURED"
-echo "GPU71_PHOSH_SERVICE=ENABLED"
+echo "GPU72_ROOTFS_INTEGRATION=PASS"
+echo "GPU72_RUNTIME=/opt/mobian-gpu"
+echo "GPU72_FIRMWARE=/lib/firmware/postmarketos"
+echo "GPU72_MOBIAN_RENDER_GROUP=CONFIGURED"
+echo "GPU72_PHOSH_SERVICE=ENABLED"
