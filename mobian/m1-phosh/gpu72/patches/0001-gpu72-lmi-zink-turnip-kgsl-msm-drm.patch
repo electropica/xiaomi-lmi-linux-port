@@ -1,0 +1,646 @@
+--- a/src/egl/drivers/dri2/platform_wayland.c
++++ b/src/egl/drivers/dri2/platform_wayland.c
+@@ -42,6 +42,7 @@
+ #include <vulkan/vulkan_wayland.h>
+ 
+ #include "util/anon_file.h"
++#include "util/log.h"
+ #include "util/u_vector.h"
+ #include "util/format/u_formats.h"
+ #include "main/glconfig.h"
+@@ -1848,12 +1849,20 @@
+    struct dri2_egl_display *dri2_dpy = data;
+    drm_magic_t magic;
+ 
++   mesa_logi("GPU68_DIAG initial_zink wl_drm device path=%s", device);
++
+    dri2_dpy->device_name = strdup(device);
+-   if (!dri2_dpy->device_name)
++   if (!dri2_dpy->device_name) {
++      mesa_logi("GPU68_DIAG initial_zink wl_drm failure reason=device_name_allocation_failed");
+       return;
++   }
+ 
+    dri2_dpy->fd_render_gpu = loader_open_device(dri2_dpy->device_name);
++   int open_errno = dri2_dpy->fd_render_gpu == -1 ? errno : 0;
++   mesa_logi("GPU68_DIAG initial_zink wl_drm loader_open_device path=%s fd=%d errno=%d",
++             dri2_dpy->device_name, dri2_dpy->fd_render_gpu, open_errno);
+    if (dri2_dpy->fd_render_gpu == -1) {
++      errno = open_errno;
+       _eglLog(_EGL_WARNING, "wayland-egl: could not open %s (%s)",
+               dri2_dpy->device_name, strerror(errno));
+       free(dri2_dpy->device_name);
+@@ -1864,7 +1873,11 @@
+    if (drmGetNodeTypeFromFd(dri2_dpy->fd_render_gpu) == DRM_NODE_RENDER) {
+       dri2_dpy->authenticated = true;
+    } else {
+-      if (drmGetMagic(dri2_dpy->fd_render_gpu, &magic)) {
++      int magic_ret = drmGetMagic(dri2_dpy->fd_render_gpu, &magic);
++      if (magic_ret) {
++         int magic_errno = errno;
++         mesa_logi("GPU68_DIAG initial_zink wl_drm failure reason=drm_get_magic_failed ret=%d errno=%d",
++                   magic_ret, magic_errno);
+          close(dri2_dpy->fd_render_gpu);
+          dri2_dpy->fd_render_gpu = -1;
+          free(dri2_dpy->device_name);
+@@ -1984,11 +1997,22 @@
+ 
+    /* Given the device, look for a render node and try to open it. */
+    memcpy(&dev, device->data, sizeof(dev));
++   mesa_logi("GPU68_DIAG initial_zink dmabuf_feedback main_device=%llu",
++             (unsigned long long)dev);
+    node = loader_get_render_node(dev);
+-   if (!node)
++   mesa_logi("GPU68_DIAG initial_zink loader_get_render_node input_dev=%llu path=%s",
++             (unsigned long long)dev, node ? node : "NULL");
++   if (!node) {
++      mesa_logi("GPU68_DIAG initial_zink dmabuf_feedback failure reason=render_node_not_resolved");
+       return;
++   }
+    fd = loader_open_device(node);
++   int open_errno = fd == -1 ? errno : 0;
++   mesa_logi("GPU68_DIAG initial_zink dmabuf_feedback loader_open_device path=%s fd=%d errno=%d",
++             node, fd, open_errno);
+    if (fd == -1) {
++      errno = open_errno;
++      mesa_logi("GPU68_DIAG initial_zink dmabuf_feedback failure reason=render_node_open_failed");
+       free(node);
+       return;
+    }
+@@ -2199,6 +2223,10 @@
+ static bool
+ dri2_initialize_wayland_drm_extensions(struct dri2_egl_display *dri2_dpy)
+ {
++   mesa_logi("GPU68_DIAG initial_zink drm_extensions entry wl_dmabuf=%d wl_drm_name=%u fd_render_gpu=%d",
++             dri2_dpy->wl_dmabuf != NULL, dri2_dpy->wl_drm_name,
++             dri2_dpy->fd_render_gpu);
++
+    /* Get default dma-buf feedback */
+    if (dri2_dpy->wl_dmabuf &&
+        zwp_linux_dmabuf_v1_get_version(dri2_dpy->wl_dmabuf) >=
+@@ -2208,10 +2236,19 @@
+          zwp_linux_dmabuf_v1_get_default_feedback(dri2_dpy->wl_dmabuf);
+       zwp_linux_dmabuf_feedback_v1_add_listener(
+          dri2_dpy->wl_dmabuf_feedback, &dmabuf_feedback_listener, dri2_dpy);
++      mesa_logi("GPU68_DIAG initial_zink drm_extensions dmabuf_feedback_requested=1");
++   } else {
++      mesa_logi("GPU68_DIAG initial_zink drm_extensions dmabuf_feedback_requested=0");
+    }
+ 
+-   if (roundtrip(dri2_dpy) < 0)
++   int feedback_roundtrip = roundtrip(dri2_dpy);
++   mesa_logi("GPU68_DIAG initial_zink drm_extensions feedback_roundtrip=%d fd_render_gpu=%d device_name=%s",
++             feedback_roundtrip, dri2_dpy->fd_render_gpu,
++             dri2_dpy->device_name ? dri2_dpy->device_name : "NULL");
++   if (feedback_roundtrip < 0) {
++      mesa_logi("GPU68_DIAG initial_zink drm_extensions return=0 reason=dmabuf_feedback_roundtrip_failed");
+       return false;
++   }
+ 
+    /* Destroy the default dma-buf feedback and the format table. */
+    if (dri2_dpy->wl_dmabuf_feedback) {
+@@ -2224,19 +2261,46 @@
+     * feedback was not advertised at all), so we must fallback to wl_drm. */
+    if (dri2_dpy->fd_render_gpu == -1) {
+       /* wl_drm not advertised by compositor, so can't continue */
+-      if (dri2_dpy->wl_drm_name == 0)
++      mesa_logi("GPU68_DIAG initial_zink drm_extensions wl_drm_fallback_available=%d wl_drm_name=%u",
++                dri2_dpy->wl_drm_name != 0, dri2_dpy->wl_drm_name);
++      if (dri2_dpy->wl_drm_name == 0) {
++         mesa_logi("GPU68_DIAG initial_zink drm_extensions return=0 reason=no_render_fd_and_no_wl_drm");
+          return false;
++      }
+       wl_drm_bind(dri2_dpy);
+ 
+-      if (dri2_dpy->wl_drm == NULL)
++      mesa_logi("GPU68_DIAG initial_zink drm_extensions wl_drm_bind_success=%d",
++                dri2_dpy->wl_drm != NULL);
++      if (dri2_dpy->wl_drm == NULL) {
++         mesa_logi("GPU68_DIAG initial_zink drm_extensions return=0 reason=wl_drm_bind_failed");
+          return false;
+-      if (roundtrip(dri2_dpy) < 0 || dri2_dpy->fd_render_gpu == -1)
++      }
++      int wl_drm_roundtrip = roundtrip(dri2_dpy);
++      mesa_logi("GPU68_DIAG initial_zink drm_extensions wl_drm_roundtrip=%d fd_render_gpu=%d authenticated=%d",
++                wl_drm_roundtrip, dri2_dpy->fd_render_gpu,
++                dri2_dpy->authenticated);
++      if (wl_drm_roundtrip < 0 || dri2_dpy->fd_render_gpu == -1) {
++         mesa_logi("GPU68_DIAG initial_zink drm_extensions return=0 reason=%s",
++                   wl_drm_roundtrip < 0 ? "wl_drm_roundtrip_failed" :
++                                         "wl_drm_provided_no_fd");
+          return false;
++      }
+ 
+-      if (!dri2_dpy->authenticated &&
+-          (roundtrip(dri2_dpy) < 0 || !dri2_dpy->authenticated))
+-         return false;
++      if (!dri2_dpy->authenticated) {
++         int auth_roundtrip = roundtrip(dri2_dpy);
++         mesa_logi("GPU68_DIAG initial_zink drm_extensions authentication_roundtrip=%d authenticated=%d",
++                   auth_roundtrip, dri2_dpy->authenticated);
++         if (auth_roundtrip < 0 || !dri2_dpy->authenticated) {
++            mesa_logi("GPU68_DIAG initial_zink drm_extensions return=0 reason=%s",
++                      auth_roundtrip < 0 ? "authentication_roundtrip_failed" :
++                                           "authentication_not_confirmed");
++            return false;
++         }
++      }
+    }
++   mesa_logi("GPU68_DIAG initial_zink drm_extensions return=1 fd_render_gpu=%d device_name=%s",
++             dri2_dpy->fd_render_gpu,
++             dri2_dpy->device_name ? dri2_dpy->device_name : "NULL");
+    return true;
+ }
+ 
+@@ -2995,19 +3059,29 @@
+ static EGLBoolean
+ dri2_initialize_wayland_swrast(_EGLDisplay *disp)
+ {
++   mesa_logi("GPU68_DIAG wayland_swrast entry attempt=%s Options.Zink=%d Options.ForceSoftware=%d",
++             disp->Options.Zink ? "initial_zink" : "software_fallback",
++             disp->Options.Zink, disp->Options.ForceSoftware);
++
+    struct dri2_egl_display *dri2_dpy = dri2_display_create();
+-   if (!dri2_dpy)
++   if (!dri2_dpy) {
++      mesa_logi("GPU68_DIAG wayland_swrast return=0 reason=display_allocation_failed");
+       return EGL_FALSE;
++   }
+ 
+    disp->DriverData = (void *)dri2_dpy;
+ 
+-   if (dri2_wl_formats_init(&dri2_dpy->formats) < 0)
++   if (dri2_wl_formats_init(&dri2_dpy->formats) < 0) {
++      mesa_logi("GPU68_DIAG wayland_swrast goto=cleanup reason=formats_init_failed");
+       goto cleanup;
++   }
+ 
+    if (disp->PlatformDisplay == NULL) {
+       dri2_dpy->wl_dpy = wl_display_connect(NULL);
+-      if (dri2_dpy->wl_dpy == NULL)
++      if (dri2_dpy->wl_dpy == NULL) {
++         mesa_logi("GPU68_DIAG wayland_swrast goto=cleanup reason=wayland_connect_failed");
+          goto cleanup;
++      }
+       dri2_dpy->own_device = true;
+    } else {
+       dri2_dpy->wl_dpy = disp->PlatformDisplay;
+@@ -3017,8 +3091,10 @@
+                                                           "mesa egl swrast display queue");
+ 
+    dri2_dpy->wl_dpy_wrapper = wl_proxy_create_wrapper(dri2_dpy->wl_dpy);
+-   if (dri2_dpy->wl_dpy_wrapper == NULL)
++   if (dri2_dpy->wl_dpy_wrapper == NULL) {
++      mesa_logi("GPU68_DIAG wayland_swrast goto=cleanup reason=wayland_wrapper_failed");
+       goto cleanup;
++   }
+ 
+    wl_proxy_set_queue((struct wl_proxy *)dri2_dpy->wl_dpy_wrapper,
+                       dri2_dpy->wl_queue);
+@@ -3034,27 +3110,54 @@
+       wl_registry_add_listener(dri2_dpy->wl_registry, &registry_listener_swrast,
+                               dri2_dpy);
+ 
+-   if (roundtrip(dri2_dpy) < 0 || dri2_dpy->wl_shm == NULL)
++   int registry_roundtrip = roundtrip(dri2_dpy);
++   if (registry_roundtrip < 0 || dri2_dpy->wl_shm == NULL) {
++      mesa_logi("GPU68_DIAG wayland_swrast goto=cleanup reason=%s registry_roundtrip=%d wl_shm=%d",
++                registry_roundtrip < 0 ? "registry_roundtrip_failed" :
++                                         "wl_shm_missing",
++                registry_roundtrip, dri2_dpy->wl_shm != NULL);
+       goto cleanup;
++   }
+ 
+-   if (roundtrip(dri2_dpy) < 0 ||
++   int formats_roundtrip = roundtrip(dri2_dpy);
++   if (formats_roundtrip < 0 ||
+        !BITSET_TEST_RANGE(dri2_dpy->formats.formats_bitmap, 0,
+-                          dri2_dpy->formats.num_formats))
++                          dri2_dpy->formats.num_formats)) {
++      mesa_logi("GPU68_DIAG wayland_swrast goto=cleanup reason=%s formats_roundtrip=%d",
++                formats_roundtrip < 0 ? "formats_roundtrip_failed" :
++                                        "no_wayland_formats",
++                formats_roundtrip);
+       goto cleanup;
++   }
+ 
+    if (disp->Options.Zink) {
+-      if (!dri2_initialize_wayland_drm_extensions(dri2_dpy) && !disp->Options.ForceSoftware)
++      bool drm_extensions =
++         dri2_initialize_wayland_drm_extensions(dri2_dpy);
++      mesa_logi("GPU68_DIAG initial_zink drm_extensions_result=%d fd_render_gpu=%d fd_display_gpu=%d device_name=%s",
++                drm_extensions, dri2_dpy->fd_render_gpu,
++                dri2_dpy->fd_display_gpu,
++                dri2_dpy->device_name ? dri2_dpy->device_name : "NULL");
++      if (!drm_extensions && !disp->Options.ForceSoftware) {
++         mesa_logi("GPU68_DIAG initial_zink goto=cleanup reason=drm_extension_discovery_failed");
+          goto cleanup;
++      }
+ 
+       if (!disp->Options.ForceSoftware) {
++         mesa_logi("GPU68_DIAG initial_zink user_preferred_fd before render=%d display=%d",
++                   dri2_dpy->fd_render_gpu, dri2_dpy->fd_display_gpu);
+          loader_get_user_preferred_fd(&dri2_dpy->fd_render_gpu,
+                                        &dri2_dpy->fd_display_gpu);
++         mesa_logi("GPU68_DIAG initial_zink user_preferred_fd after render=%d display=%d",
++                   dri2_dpy->fd_render_gpu, dri2_dpy->fd_display_gpu);
+ 
+          if (dri2_dpy->fd_render_gpu != dri2_dpy->fd_display_gpu) {
+             free(dri2_dpy->device_name);
+             dri2_dpy->device_name =
+                loader_get_device_name_for_fd(dri2_dpy->fd_render_gpu);
+             if (!dri2_dpy->device_name) {
++               mesa_logi("GPU68_DIAG initial_zink goto=cleanup reason=preferred_fd_device_name_failed fd_render_gpu=%d fd_display_gpu=%d",
++                         dri2_dpy->fd_render_gpu,
++                         dri2_dpy->fd_display_gpu);
+                _eglError(EGL_BAD_ALLOC, "wayland-egl: failed to get device name "
+                                           "for requested GPU");
+                goto cleanup;
+@@ -3071,11 +3174,29 @@
+    }
+ 
+    dri2_dpy->driver_name = strdup(disp->Options.Zink ? "zink" : "swrast");
+-   if (!dri2_load_driver(disp))
++   mesa_logi("GPU68_DIAG wayland_swrast selected_driver attempt=%s driver_name=%s",
++             disp->Options.Zink ? "initial_zink" : "software_fallback",
++             dri2_dpy->driver_name ? dri2_dpy->driver_name : "NULL");
++   EGLBoolean driver_loaded = dri2_load_driver(disp);
++   mesa_logi("GPU68_DIAG wayland_swrast dri2_load_driver=%d kopper=%d swrast=%d swrast_not_kms=%d",
++             driver_loaded, dri2_dpy->kopper, dri2_dpy->swrast,
++             dri2_dpy->swrast_not_kms);
++   if (!driver_loaded) {
++      mesa_logi("GPU68_DIAG wayland_swrast goto=cleanup reason=dri2_load_driver_failed");
+       goto cleanup;
++   }
+ 
+    dri2_dpy->loader_extensions = disp->Options.Zink ? kopper_swrast_loader_extensions : swrast_loader_extensions;
+-
++   mesa_logi("GPU68_DIAG wayland_swrast loader_extensions=%s",
++             disp->Options.Zink ? "kopper_swrast_loader_extensions" :
++                                  "swrast_loader_extensions");
++
++   mesa_logi("GPU68_DIAG wayland_swrast before_dri2_create_screen attempt=%s fd_render_gpu=%d fd_display_gpu=%d driver_name=%s kopper=%d swrast=%d swrast_not_kms=%d",
++             disp->Options.Zink ? "initial_zink" : "software_fallback",
++             dri2_dpy->fd_render_gpu, dri2_dpy->fd_display_gpu,
++             dri2_dpy->driver_name ? dri2_dpy->driver_name : "NULL",
++             dri2_dpy->kopper, dri2_dpy->swrast,
++             dri2_dpy->swrast_not_kms);
+    if (!dri2_create_screen(disp))
+       goto cleanup;
+ 
+--- a/src/freedreno/drm/freedreno_device.c
++++ b/src/freedreno/drm/freedreno_device.c
+@@ -42,7 +42,9 @@
+       return NULL;
+    }
+ 
+-   if (!strcmp(version->name, "msm")) {
++   /* GPU69 experimental lmi msm_drm alias */
++   if (!strcmp(version->name, "msm") ||
++       !strcmp(version->name, "msm_drm")) {
+       DEBUG_MSG("msm DRM device");
+       if (version->version_major != 1) {
+          ERROR_MSG("unsupported version: %u.%u.%u", version->version_major,
+--- a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
++++ b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
+@@ -30,6 +30,7 @@
+  *
+  **************************************************************************/
+ 
++#include <errno.h>
+ #include <fcntl.h>
+ #include <stdio.h>
+ #include <string.h>
+@@ -144,8 +145,12 @@
+    struct pipe_loader_drm_device *ddev = CALLOC_STRUCT(pipe_loader_drm_device);
+    int vendor_id, chip_id;
+ 
+-   if (!ddev)
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd_nodup entry fd=%d zink=%d allocation_success=%d",
++             fd, zink, ddev != NULL);
++   if (!ddev) {
++      mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd_nodup return=FALSE reason=device_allocation_failed");
+       return false;
++   }
+ 
+    if (loader_get_pci_id_for_fd(fd, &vendor_id, &chip_id)) {
+       ddev->base.type = PIPE_LOADER_DEVICE_PCI;
+@@ -161,8 +166,13 @@
+       ddev->base.driver_name = strdup("zink");
+    else
+       ddev->base.driver_name = loader_get_driver_for_fd(fd);
+-   if (!ddev->base.driver_name)
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd_nodup driver_name_success=%d driver_name=%s",
++             ddev->base.driver_name != NULL,
++             ddev->base.driver_name ? ddev->base.driver_name : "(null)");
++   if (!ddev->base.driver_name) {
++      mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd_nodup failure reason=driver_name_allocation_failed");
+       goto fail;
++   }
+ 
+    /* For the closed source AMD OpenGL driver, we want libgbm to load
+     * "amdgpu_dri.so", but we want Gallium multimedia drivers to load
+@@ -198,6 +208,10 @@
+    plib = &ddev->lib;
+ #endif
+    ddev->dd = get_driver_descriptor(ddev->base.driver_name, plib);
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd_nodup descriptor_found=%d descriptor_name=%s zink_descriptor_found=%d",
++             ddev->dd != NULL,
++             ddev->dd ? ddev->dd->driver_name : "(null)",
++             ddev->dd && strcmp(ddev->dd->driver_name, "zink") == 0);
+ 
+    /* vgem is a virtual device; don't try using it with kmsro */
+    if (strcmp(ddev->base.driver_name, "vgem") == 0)
+@@ -207,10 +221,13 @@
+    if (!ddev->dd && !zink)
+       ddev->dd = get_driver_descriptor("kmsro", plib);
+ 
+-   if (!ddev->dd)
++   if (!ddev->dd) {
++      mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd_nodup failure reason=driver_descriptor_missing");
+       goto fail;
++   }
+ 
+    *dev = &ddev->base;
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd_nodup return=TRUE");
+    return true;
+ 
+   fail:
+@@ -220,6 +237,7 @@
+ #endif
+    FREE(ddev->base.driver_name);
+    FREE(ddev);
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd_nodup return=FALSE");
+    return false;
+ }
+ 
+@@ -227,15 +245,27 @@
+ pipe_loader_drm_probe_fd(struct pipe_loader_device **dev, int fd, bool zink)
+ {
+    bool ret;
+-   int new_fd;
++   int new_fd = -1;
+ 
+-   if (fd < 0 || (new_fd = os_dupfd_cloexec(fd)) < 0)
+-     return false;
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd entry fd=%d zink=%d", fd, zink);
++   if (fd < 0 || (new_fd = os_dupfd_cloexec(fd)) < 0) {
++      int dup_errno = fd < 0 ? 0 : errno;
++      mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd dup_result=%d errno=%d",
++                new_fd, dup_errno);
++      mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd return=FALSE reason=%s",
++                fd < 0 ? "negative_fd" : "dup_failed");
++      return false;
++   }
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd dup_result=%d errno=0",
++             new_fd);
+ 
+    ret = pipe_loader_drm_probe_fd_nodup(dev, new_fd, zink);
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd nodup_result=%d", ret);
+    if (!ret)
+       close(new_fd);
+ 
++   mesa_logi("GPU68_DIAG pipe_loader_drm_probe_fd return=%s",
++             ret ? "TRUE" : "FALSE");
+    return ret;
+ }
+ 
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -1677,6 +1677,10 @@
+ static void
+ choose_pdev(struct zink_screen *screen, int64_t dev_major, int64_t dev_minor, uint64_t adapter_luid)
+ {
++   mesa_logi("GPU68_DIAG choose_pdev entry dev=%lld:%lld adapter_luid=%llu",
++             (long long)dev_major, (long long)dev_minor,
++             (unsigned long long)adapter_luid);
++
+    bool cpu = debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false) ||
+               debug_get_bool_option("D3D_ALWAYS_SOFTWARE", false);
+ 
+@@ -1708,10 +1712,42 @@
+          idx = zink_match_adapter_luid(screen, pdev_count, pdevs, adapter_luid);
+       else if (cpu)
+          idx = zink_get_cpu_device_type(screen, pdev_count, pdevs);
+-      else
++      else {
+          idx = zink_get_display_device(screen, pdev_count, pdevs, dev_major,
+                                        dev_minor);
+ 
++         if (idx == -1 &&
++             debug_get_bool_option("ZINK_ALLOW_KGSL_DISPLAY_DEVICE", false)) {
++            int turnip_idx = -1;
++
++            for (uint32_t i = 0; i < pdev_count; ++i) {
++               VkPhysicalDeviceDriverProperties driver_props = {
++                  VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES
++               };
++               VkPhysicalDeviceProperties2 props = {
++                  VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
++                  &driver_props
++               };
++
++               VKSCR(GetPhysicalDeviceProperties2)(pdevs[i], &props);
++               if (driver_props.driverID != VK_DRIVER_ID_MESA_TURNIP)
++                  continue;
++
++               if (turnip_idx != -1) {
++                  mesa_loge("ZINK: multiple Turnip devices found for explicit KGSL display override");
++                  turnip_idx = -1;
++                  break;
++               }
++               turnip_idx = i;
++            }
++
++            if (turnip_idx != -1) {
++               mesa_logi("ZINK: using explicit Turnip cross-device display override");
++               idx = turnip_idx;
++            }
++         }
++      }
++
+       if (idx != -1)
+          /* valid cpu device */
+          screen->pdev = pdevs[idx];
+@@ -3278,6 +3314,10 @@
+ static struct zink_screen *
+ zink_internal_create_screen(const struct pipe_screen_config *config, int64_t dev_major, int64_t dev_minor, uint64_t adapter_luid)
+ {
++   mesa_logi("GPU68_DIAG zink_internal_create_screen entry dev=%lld:%lld adapter_luid=%llu",
++             (long long)dev_major, (long long)dev_minor,
++             (unsigned long long)adapter_luid);
++
+    if (getenv("ZINK_USE_LAVAPIPE")) {
+       mesa_loge("ZINK_USE_LAVAPIPE is obsolete. Use LIBGL_ALWAYS_SOFTWARE\n");
+       return NULL;
+@@ -3758,21 +3798,52 @@
+    int ret = 0;
+    *dev_major = *dev_minor = -1;
+ #ifdef HAVE_LIBDRM
++   struct stat fd_st;
+    struct stat stx;
+-   drmDevicePtr dev;
++   drmDevicePtr dev = NULL;
++
++   int fd_stat_ret = fstat(fd, &fd_st);
++   int fd_stat_errno = fd_stat_ret ? errno : 0;
++   mesa_logi("GPU68_DIAG zink_render_rdev entry fd=%d fstat_ret=%d errno=%d fd_rdev=%u:%u",
++             fd, fd_stat_ret, fd_stat_errno,
++             fd_stat_ret ? 0 : (unsigned)major(fd_st.st_rdev),
++             fd_stat_ret ? 0 : (unsigned)minor(fd_st.st_rdev));
+ 
+-   if (fd == -1)
++   if (fd == -1) {
++      mesa_logi("GPU68_DIAG zink_render_rdev outcome=success render_rdev=-1:-1");
+       return 0;
++   }
+ 
+-   if (drmGetDevice2(fd, 0, &dev))
++   int drm_ret = drmGetDevice2(fd, 0, &dev);
++   int drm_errno = drm_ret ? errno : 0;
++   mesa_logi("GPU68_DIAG drmGetDevice2 ret=%d errno=%d device_null=%d",
++             drm_ret, drm_errno, dev == NULL);
++   if (drm_ret) {
++      mesa_logi("GPU68_DIAG zink_render_rdev outcome=failure render_rdev=-1:-1");
+       return -1;
++   }
++
++   mesa_logi("GPU68_DIAG drm_device available_nodes=0x%x primary=%d primary_path=%s render=%d render_path=%s",
++             (unsigned)dev->available_nodes,
++             !!(dev->available_nodes & (1 << DRM_NODE_PRIMARY)),
++             (dev->available_nodes & (1 << DRM_NODE_PRIMARY)) && dev->nodes[DRM_NODE_PRIMARY] ?
++                dev->nodes[DRM_NODE_PRIMARY] : "(null)",
++             !!(dev->available_nodes & (1 << DRM_NODE_RENDER)),
++             (dev->available_nodes & (1 << DRM_NODE_RENDER)) && dev->nodes[DRM_NODE_RENDER] ?
++                dev->nodes[DRM_NODE_RENDER] : "(null)");
+ 
+    if(!(dev->available_nodes & (1 << DRM_NODE_RENDER))) {
+       ret = -1;
+       goto free_device;
+    }
+ 
+-   if(stat(dev->nodes[DRM_NODE_RENDER], &stx)) {
++   int stat_ret = stat(dev->nodes[DRM_NODE_RENDER], &stx);
++   int stat_errno = stat_ret ? errno : 0;
++   mesa_logi("GPU68_DIAG render_node_stat path=%s ret=%d errno=%d render_rdev=%u:%u",
++             dev->nodes[DRM_NODE_RENDER], stat_ret, stat_errno,
++             stat_ret ? 0 : (unsigned)major(stx.st_rdev),
++             stat_ret ? 0 : (unsigned)minor(stx.st_rdev));
++   if (stat_ret) {
+       ret = -1;
+       goto free_device;
+    }
+@@ -3784,6 +3855,9 @@
+    drmFreeDevice(&dev);
+ #endif //HAVE_LIBDRM
+ 
++   mesa_logi("GPU68_DIAG zink_render_rdev outcome=%s render_rdev=%lld:%lld",
++             ret ? "failure" : "success",
++             (long long)*dev_major, (long long)*dev_minor);
+    return ret;
+ }
+ 
+@@ -3793,10 +3867,17 @@
+    int64_t dev_major, dev_minor;
+    struct zink_screen *ret;
+ 
+-   if (zink_render_rdev(fd, &dev_major, &dev_minor))
++   mesa_logi("GPU68_DIAG zink_drm_create_screen entry fd=%d", fd);
++   int rdev_ret = zink_render_rdev(fd, &dev_major, &dev_minor);
++   mesa_logi("GPU68_DIAG zink_drm_create_screen after_render_rdev ret=%d continue=%d render_rdev=%lld:%lld",
++             rdev_ret, rdev_ret == 0,
++             (long long)dev_major, (long long)dev_minor);
++   if (rdev_ret)
+       return NULL;
+ 
+    ret = zink_internal_create_screen(config, dev_major, dev_minor, 0);
++   mesa_logi("GPU68_DIAG zink_drm_create_screen after_internal_create success=%d",
++             ret != NULL);
+ 
+    if (ret)
+       ret->drm_fd = os_dupfd_cloexec(fd);
+--- a/src/gallium/frontends/dri/dri_util.c
++++ b/src/gallium/frontends/dri/dri_util.c
+@@ -45,6 +45,7 @@
+ #include "dri_screen.h"
+ #include "dri_drawable.h"
+ #include "util/u_endian.h"
++#include "util/log.h"
+ #include "util/u_memory.h"
+ #include "util/driconf.h"
+ #include "main/framebuffer.h"
+@@ -107,13 +108,26 @@
+ {
+     struct dri_screen *screen;
+ 
++    mesa_logi("GPU68_DIAG driCreateNewScreen3 entry fd=%d type=%d driver_name_is_inferred=%d has_multibuffer=%d loader_extensions=%d",
++              fd, type, driver_name_is_inferred, has_multibuffer,
++              loader_extensions != NULL);
++
+     screen = CALLOC_STRUCT(dri_screen);
+-    if (!screen)
++    mesa_logi("GPU68_DIAG driCreateNewScreen3 screen_allocation_success=%d",
++              screen != NULL);
++    if (!screen) {
++       mesa_logi("GPU68_DIAG driCreateNewScreen3 return=NULL reason=screen_allocation_failed");
+        return NULL;
++    }
+ 
+     setupLoaderExtensions(screen, loader_extensions);
++    mesa_logi("GPU68_DIAG driCreateNewScreen3 loader_bind use_invalidate=%d kopper_loader=%d",
++              screen->dri2.useInvalidate != NULL,
++              screen->kopper_loader != NULL);
+     // dri2 drivers require working invalidate
+     if (fd != -1 && !screen->dri2.useInvalidate) {
++       mesa_logi("GPU68_DIAG driCreateNewScreen3 return=NULL reason=missing_use_invalidate fd=%d",
++                 fd);
+        free(screen);
+        return NULL;
+     }
+@@ -138,6 +152,8 @@
+       pscreen = dri2_init_screen(screen, driver_name_is_inferred);
+       break;
+    case DRI_SCREEN_KOPPER:
++      mesa_logi("GPU68_DIAG driCreateNewScreen3 dispatch=kopper_init_screen fd=%d",
++                screen->fd);
+       pscreen = kopper_init_screen(screen, driver_name_is_inferred);
+       break;
+    case DRI_SCREEN_SWRAST:
+--- a/src/gallium/frontends/dri/kopper.c
++++ b/src/gallium/frontends/dri/kopper.c
+@@ -61,7 +61,11 @@
+ {
+    struct pipe_screen *pscreen = NULL;
+ 
++   mesa_logi("GPU68_DIAG kopper_init_screen entry fd=%d kopper_loader=%d",
++             screen->fd, screen->kopper_loader != NULL);
++
+    if (!screen->kopper_loader) {
++      mesa_logi("GPU68_DIAG kopper_init_screen return=NULL reason=missing_kopper_loader");
+       fprintf(stderr, "mesa: Kopper interface not found!\n"
+                       "      Ensure the versions of %s built with this version of Zink are\n"
+                       "      in your library path!\n", KOPPER_LIB_NAMES);
+@@ -80,11 +84,21 @@
+    success = pipe_loader_vk_probe_dri(&screen->dev);
+ #endif
+ 
+-   if (success)
++   mesa_logi("GPU68_DIAG kopper_init_screen probe_result=%d fd=%d",
++             success, screen->fd);
++
++   if (success) {
++      mesa_logi("GPU68_DIAG kopper_init_screen pipe_loader_create_screen reached=YES");
+       pscreen = pipe_loader_create_screen(screen->dev, driver_name_is_inferred);
++      mesa_logi("GPU68_DIAG kopper_init_screen pipe_loader_create_screen success=%d",
++                pscreen != NULL);
++   }
+ 
+-   if (!pscreen)
++   if (!pscreen) {
++      mesa_logi("GPU68_DIAG kopper_init_screen return=NULL reason=%s",
++                success ? "create_screen_failed" : "probe_failed");
+       return NULL;
++   }
+ 
+    assert(pscreen->caps.device_reset_status_query);
+    screen->is_sw = zink_kopper_is_cpu(pscreen);
