@@ -12,8 +12,8 @@ are relative to `/home/linuxagent/pmos-d-repro-01`.
 - `98d88a9` - GPU72 built the validated rootfs with the `mobian` account;
   this was the canonical `github-export` HEAD and `origin/main` at capture.
 - Boot image: `/home/linuxagent/pmos-d-repro-01/output/D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img`.
-- Flashable rootfs ext4: `/home/linuxagent/pmos-d-repro-01/Mobian-M0/Mobian-M0-GPU_root.ext4`.
-- Unpacked rootfs: `/home/linuxagent/pmos-d-repro-01/Mobian-M0/rootfs-final-gpu72`.
+- Historical flashable rootfs ext4, no longer retained in the workspace: `/home/linuxagent/pmos-d-repro-01/Mobian-M0/Mobian-M0-GPU_root.ext4`.
+- Historical unpacked GPU72 rootfs: `/home/linuxagent/pmos-d-repro-01/Mobian-M0/rootfs-final-gpu72`. This directory is a generated artefact produced by the canonical GPU72 rootfs recipe and is not a unique source input.
 - Active GPU72 integration bundle, historically named GPU71:
   `/home/linuxagent/pmos-d-repro-01/analysis/gpu71-mobian-gles2-integration`.
 - GPU72 Meson build tree:
@@ -114,9 +114,11 @@ The successful M1/GPU72 build produced:
 - raw SHA-256: `b238ca99e9e8ed8c83547ed9cb7c4985efe7b4a3b067da43896e360328d8f3e0`
 - sparse SHA-256: `d3c865f8e51e2006668e22654f2b78e0466c75b2028361f99a23ed4218e85bdc`
 
-The flashable sparse image was:
+The validated flashable sparse image was historically:
 
 `/home/linuxagent/pmos-d-repro-01/output/Mobian-M1-GPU72-userdata-phosh-4G.android-sparse.img`
+
+That generated sparse image is no longer retained in the workspace; its validated size and SHA-256 remain recorded above.
 
 A copy transferred to Windows was SHA-256 verified before flashing.
 
