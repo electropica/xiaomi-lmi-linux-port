@@ -1,0 +1,27 @@
+From 40d333444f72188e5daf7860a41b6dfddd981705 Mon Sep 17 00:00:00 2001
+From: electropica <552299+electropica@users.noreply.github.com>
+Date: Sun, 6 Sep 2026 19:07:04 +0200
+Subject: [PATCH 2/2] esoc: preserve crash state on late run notification
+
+---
+ drivers/esoc/esoc-mdm-drv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/esoc/esoc-mdm-drv.c b/drivers/esoc/esoc-mdm-drv.c
+index b046a479e983..290f313194ec 100644
+--- a/drivers/esoc/esoc-mdm-drv.c
++++ b/drivers/esoc/esoc-mdm-drv.c
+@@ -163,7 +163,9 @@ static void mdm_handle_clink_evt(enum esoc_evt evt,
+ 		esoc_mdm_log(
+ 		"ESOC_RUN_STATE: Calling complete with state: PON_SUCCESS\n");
+ 		mdm_drv->pon_state = PON_SUCCESS;
+-		mdm_drv->mode = RUN,
++		if (mdm_drv->mode != CRASH &&
++		    mdm_drv->mode != PEER_CRASH)
++			mdm_drv->mode = RUN;
+ 		complete(&mdm_drv->pon_done);
+ 		complete(&mdm_drv->ssr_ready);
+ 		break;
+-- 
+2.53.0
+

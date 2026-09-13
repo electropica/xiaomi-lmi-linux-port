@@ -1,0 +1,666 @@
+From 3d6dacc48eda5acd59b40fedb33ae640e3164c1e Mon Sep 17 00:00:00 2001
+From: electropica <552299+electropica@users.noreply.github.com>
+Date: Sun, 6 Sep 2026 09:11:10 +0200
+Subject: [PATCH 1/2] mobian: add boot-safe QCA6390 UART support and restore
+ VFS source fix
+
+---
+ arch/arm64/configs/vendor/kona-perf_defconfig |   3 +
+ drivers/bluetooth/Kconfig                     |   9 +-
+ drivers/bluetooth/btqca.c                     | 172 +++++++++++++-----
+ drivers/bluetooth/btqca.h                     |  10 +-
+ drivers/bluetooth/hci_qca.c                   |  62 +++++--
+ .../qca-wifi-host-cmn/hif/src/ce/ce_main.c    |   2 +-
+ fs/namespace.c                                |   2 +
+ 7 files changed, 199 insertions(+), 61 deletions(-)
+
+diff --git a/arch/arm64/configs/vendor/kona-perf_defconfig b/arch/arm64/configs/vendor/kona-perf_defconfig
+index ac2e1fb72945..d4180c1eb6e4 100644
+--- a/arch/arm64/configs/vendor/kona-perf_defconfig
++++ b/arch/arm64/configs/vendor/kona-perf_defconfig
+@@ -267,6 +267,9 @@ CONFIG_SOCKEV_NLMCAST=y
+ CONFIG_CAN=y
+ CONFIG_CAN_MCP25XXFD=y
+ CONFIG_BT=y
++CONFIG_BT_HCIUART=y
++CONFIG_BT_HCIUART_QCA=y
++CONFIG_BT_HCIUART_QCA6390_LMI=y
+ CONFIG_MSM_BT_POWER=y
+ CONFIG_BT_SLIM_QCA6390=y
+ CONFIG_CFG80211=y
+diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
+index 3e5f9c86f433..539830b935bd 100644
+--- a/drivers/bluetooth/Kconfig
++++ b/drivers/bluetooth/Kconfig
+@@ -212,7 +212,6 @@ config BT_HCIUART_RTL
+ config BT_HCIUART_QCA
+ 	bool "Qualcomm Atheros protocol support"
+ 	depends on BT_HCIUART
+-	depends on BT_HCIUART_SERDEV
+ 	select BT_HCIUART_H4
+ 	select BT_QCA
+ 	help
+@@ -223,6 +222,14 @@ config BT_HCIUART_QCA
+ 
+ 	  Say Y here to compile support for QCA protocol.
+ 
++config BT_HCIUART_QCA6390_LMI
++	bool "Xiaomi lmi QCA6390 non-serdev support"
++	depends on BT_HCIUART_QCA
++	help
++	  Select QCA6390/Hastings for the non-serdev HCI UART path
++	  used by Xiaomi lmi. Power sequencing remains external to
++	  hci_qca.
++
+ config BT_HCIUART_AG6XX
+ 	bool "Intel AG6XX protocol support"
+ 	depends on BT_HCIUART
+diff --git a/drivers/bluetooth/btqca.c b/drivers/bluetooth/btqca.c
+index 9e70f7c7e565..afadc713c4f1 100644
+--- a/drivers/bluetooth/btqca.c
++++ b/drivers/bluetooth/btqca.c
+@@ -27,19 +27,30 @@
+ 
+ #define VERSION "0.1"
+ 
+-int qca_read_soc_version(struct hci_dev *hdev, u32 *soc_version)
++int qca_read_soc_version(struct hci_dev *hdev, u32 *soc_version,
++			 enum qca_btsoc_type soc_type)
+ {
+ 	struct sk_buff *skb;
+ 	struct edl_event_hdr *edl;
+-	struct rome_version *ver;
++	const struct rome_version *ver;
++	const u8 *version_data;
+ 	char cmd;
+ 	int err = 0;
++	u8 event_type = HCI_EV_VENDOR;
++	size_t response_len = sizeof(*edl) + sizeof(*ver);
++	u8 response_type = EDL_APP_VER_RES_EVT;
+ 
+ 	bt_dev_dbg(hdev, "QCA Version Request");
+ 
++	if (soc_type == QCA_QCA6390) {
++		event_type = 0;
++		response_len++;
++		response_type = EDL_PATCH_VER_REQ_CMD;
++	}
++
+ 	cmd = EDL_PATCH_VER_REQ_CMD;
+ 	skb = __hci_cmd_sync_ev(hdev, EDL_PATCH_CMD_OPCODE, EDL_PATCH_CMD_LEN,
+-				&cmd, HCI_EV_VENDOR, HCI_INIT_TIMEOUT);
++				&cmd, event_type, HCI_INIT_TIMEOUT);
+ 	if (IS_ERR(skb)) {
+ 		err = PTR_ERR(skb);
+ 		bt_dev_err(hdev, "Reading QCA version information failed (%d)",
+@@ -47,13 +58,13 @@ int qca_read_soc_version(struct hci_dev *hdev, u32 *soc_version)
+ 		return err;
+ 	}
+ 
+-	if (skb->len != sizeof(*edl) + sizeof(*ver)) {
++	if (skb->len != response_len) {
+ 		bt_dev_err(hdev, "QCA Version size mismatch len %d", skb->len);
+ 		err = -EILSEQ;
+ 		goto out;
+ 	}
+ 
+-	edl = (struct edl_event_hdr *)(skb->data);
++	edl = (struct edl_event_hdr *)skb->data;
+ 	if (!edl) {
+ 		bt_dev_err(hdev, "QCA TLV with no header");
+ 		err = -EILSEQ;
+@@ -61,26 +72,34 @@ int qca_read_soc_version(struct hci_dev *hdev, u32 *soc_version)
+ 	}
+ 
+ 	if (edl->cresp != EDL_CMD_REQ_RES_EVT ||
+-	    edl->rtype != EDL_APP_VER_RES_EVT) {
+-		bt_dev_err(hdev, "QCA Wrong packet received %d %d", edl->cresp,
+-			   edl->rtype);
++	    edl->rtype != response_type) {
++		bt_dev_err(hdev, "QCA Wrong packet received %d %d",
++			   edl->cresp, edl->rtype);
+ 		err = -EIO;
+ 		goto out;
+ 	}
+ 
+-	ver = (struct rome_version *)(edl->data);
++	version_data = edl->data;
++	if (soc_type == QCA_QCA6390)
++		version_data++;
+ 
+-	BT_DBG("%s: Product:0x%08x", hdev->name, le32_to_cpu(ver->product_id));
+-	BT_DBG("%s: Patch  :0x%08x", hdev->name, le16_to_cpu(ver->patch_ver));
+-	BT_DBG("%s: ROM    :0x%08x", hdev->name, le16_to_cpu(ver->rome_ver));
+-	BT_DBG("%s: SOC    :0x%08x", hdev->name, le32_to_cpu(ver->soc_id));
++	ver = (const struct rome_version *)version_data;
++
++	BT_DBG("%s: Product:0x%08x", hdev->name,
++	       le32_to_cpu(ver->product_id));
++	BT_DBG("%s: Patch  :0x%08x", hdev->name,
++	       le16_to_cpu(ver->patch_ver));
++	BT_DBG("%s: ROM    :0x%08x", hdev->name,
++	       le16_to_cpu(ver->rome_ver));
++	BT_DBG("%s: SOC    :0x%08x", hdev->name,
++	       le32_to_cpu(ver->soc_id));
+ 
+ 	/* QCA chipset version can be decided by patch and SoC
+ 	 * version, combination with upper 2 bytes from SoC
+ 	 * and lower 2 bytes from patch will be used.
+ 	 */
+ 	*soc_version = (le32_to_cpu(ver->soc_id) << 16) |
+-			(le16_to_cpu(ver->rome_ver) & 0x0000ffff);
++		       (le16_to_cpu(ver->rome_ver) & 0x0000ffff);
+ 	if (*soc_version == 0)
+ 		err = -EILSEQ;
+ 
+@@ -113,7 +132,8 @@ static int qca_send_reset(struct hci_dev *hdev)
+ }
+ 
+ static void qca_tlv_check_data(struct rome_config *config,
+-				const struct firmware *fw)
++			       const struct firmware *fw,
++			       enum qca_btsoc_type soc_type)
+ {
+ 	const u8 *data;
+ 	u32 type_len;
+@@ -132,6 +152,7 @@ static void qca_tlv_check_data(struct rome_config *config,
+ 	BT_DBG("Length\t\t : %d bytes", length);
+ 
+ 	config->dnld_mode = ROME_SKIP_EVT_NONE;
++	config->dnld_type = ROME_SKIP_EVT_NONE;
+ 
+ 	switch (config->type) {
+ 	case TLV_TYPE_PATCH:
+@@ -144,6 +165,7 @@ static void qca_tlv_check_data(struct rome_config *config,
+ 		 * In case VSE is skipped, only the last segment is acked.
+ 		 */
+ 		config->dnld_mode = tlv_patch->download_mode;
++		config->dnld_type = config->dnld_mode;
+ 
+ 		BT_DBG("Total Length           : %d bytes",
+ 		       le32_to_cpu(tlv_patch->total_size));
+@@ -181,18 +203,27 @@ static void qca_tlv_check_data(struct rome_config *config,
+ 			/* Update NVM tags as needed */
+ 			switch (tag_id) {
+ 			case EDL_TAG_ID_HCI:
+-				/* HCI transport layer parameters
+-				 * enabling software inband sleep
+-				 * onto controller side.
+-				 */
+-				tlv_nvm->data[0] |= 0x80;
++			if (tag_len < 3) {
++				BT_ERR("Invalid HCI NVM tag length %u",
++				       (unsigned int)tag_len);
++				break;
++			}
+ 
+-				/* UART Baud Rate */
++			/* HCI transport layer parameters
++			 * enabling software inband sleep
++			 * onto controller side.
++			 */
++			tlv_nvm->data[0] |= 0x80;
++
++			/* UART Baud Rate */
++			if (soc_type == QCA_QCA6390)
++				tlv_nvm->data[1] = config->user_baud_rate;
++			else
+ 				tlv_nvm->data[2] = config->user_baud_rate;
+ 
+-				break;
++			break;
+ 
+-			case EDL_TAG_ID_DEEP_SLEEP:
++		case EDL_TAG_ID_DEEP_SLEEP:
+ 				/* Sleep enable mask
+ 				 * enabling deep sleep feature on controller.
+ 				 */
+@@ -211,14 +242,42 @@ static void qca_tlv_check_data(struct rome_config *config,
+ 	}
+ }
+ 
++static int qca_inject_cmd_complete_event(struct hci_dev *hdev)
++{
++	struct sk_buff *skb;
++	struct hci_event_hdr *hdr;
++	struct hci_ev_cmd_complete *evt;
++
++	skb = bt_skb_alloc(sizeof(*hdr) + sizeof(*evt) + 1, GFP_KERNEL);
++	if (!skb)
++		return -ENOMEM;
++
++	hdr = skb_put(skb, sizeof(*hdr));
++	hdr->evt = HCI_EV_CMD_COMPLETE;
++	hdr->plen = sizeof(*evt) + 1;
++
++	evt = skb_put(skb, sizeof(*evt));
++	evt->ncmd = 0x01;
++	evt->opcode = cpu_to_le16(EDL_PATCH_CMD_OPCODE);
++
++	skb_put_u8(skb, 0x00);
++	hci_skb_pkt_type(skb) = HCI_EVENT_PKT;
++
++	return hci_recv_frame(hdev, skb);
++}
++
+ static int qca_tlv_send_segment(struct hci_dev *hdev, int seg_size,
+-				 const u8 *data, enum rome_tlv_dnld_mode mode)
++				 const u8 *data, enum rome_tlv_dnld_mode mode,
++				 enum qca_btsoc_type soc_type)
+ {
+ 	struct sk_buff *skb;
+ 	struct edl_event_hdr *edl;
+ 	struct tlv_seg_resp *tlv_resp;
+ 	u8 cmd[MAX_SIZE_PER_TLV_SEGMENT + 2];
+ 	int err = 0;
++	u8 event_type = HCI_EV_VENDOR;
++	size_t response_len = sizeof(*edl) + sizeof(*tlv_resp);
++	u8 response_type = EDL_TVL_DNLD_RES_EVT;
+ 
+ 	cmd[0] = EDL_PATCH_TLV_REQ_CMD;
+ 	cmd[1] = seg_size;
+@@ -228,34 +287,49 @@ static int qca_tlv_send_segment(struct hci_dev *hdev, int seg_size,
+ 		return __hci_cmd_send(hdev, EDL_PATCH_CMD_OPCODE, seg_size + 2,
+ 				      cmd);
+ 
++	if (soc_type == QCA_QCA6390) {
++		event_type = 0;
++		response_len = sizeof(*edl);
++		response_type = EDL_PATCH_TLV_REQ_CMD;
++	}
++
+ 	skb = __hci_cmd_sync_ev(hdev, EDL_PATCH_CMD_OPCODE, seg_size + 2, cmd,
+-				HCI_EV_VENDOR, HCI_INIT_TIMEOUT);
++				event_type, HCI_INIT_TIMEOUT);
+ 	if (IS_ERR(skb)) {
+ 		err = PTR_ERR(skb);
+ 		bt_dev_err(hdev, "QCA Failed to send TLV segment (%d)", err);
+ 		return err;
+ 	}
+ 
+-	if (skb->len != sizeof(*edl) + sizeof(*tlv_resp)) {
++	if (skb->len != response_len) {
+ 		bt_dev_err(hdev, "QCA TLV response size mismatch");
+ 		err = -EILSEQ;
+ 		goto out;
+ 	}
+ 
+-	edl = (struct edl_event_hdr *)(skb->data);
++	edl = (struct edl_event_hdr *)skb->data;
+ 	if (!edl) {
+ 		bt_dev_err(hdev, "TLV with no header");
+ 		err = -EILSEQ;
+ 		goto out;
+ 	}
+ 
+-	tlv_resp = (struct tlv_seg_resp *)(edl->data);
+-
+ 	if (edl->cresp != EDL_CMD_REQ_RES_EVT ||
+-	    edl->rtype != EDL_TVL_DNLD_RES_EVT || tlv_resp->result != 0x00) {
+-		bt_dev_err(hdev, "QCA TLV with error stat 0x%x rtype 0x%x (0x%x)",
+-			   edl->cresp, edl->rtype, tlv_resp->result);
++	    edl->rtype != response_type) {
++		bt_dev_err(hdev, "QCA TLV with error stat 0x%x rtype 0x%x",
++			   edl->cresp, edl->rtype);
+ 		err = -EIO;
++		goto out;
++	}
++
++	if (soc_type != QCA_QCA6390) {
++		tlv_resp = (struct tlv_seg_resp *)edl->data;
++
++		if (tlv_resp->result != 0x00) {
++			bt_dev_err(hdev, "QCA TLV with error result 0x%x",
++				   tlv_resp->result);
++			err = -EIO;
++		}
+ 	}
+ 
+ out:
+@@ -265,7 +339,8 @@ static int qca_tlv_send_segment(struct hci_dev *hdev, int seg_size,
+ }
+ 
+ static int qca_download_firmware(struct hci_dev *hdev,
+-				  struct rome_config *config)
++				 struct rome_config *config,
++				 enum qca_btsoc_type soc_type)
+ {
+ 	const struct firmware *fw;
+ 	const u8 *segment;
+@@ -280,7 +355,7 @@ static int qca_download_firmware(struct hci_dev *hdev,
+ 		return ret;
+ 	}
+ 
+-	qca_tlv_check_data(config, fw);
++	qca_tlv_check_data(config, fw, soc_type);
+ 
+ 	segment = fw->data;
+ 	remain = fw->size;
+@@ -295,13 +370,20 @@ static int qca_download_firmware(struct hci_dev *hdev,
+ 			config->dnld_mode = ROME_SKIP_EVT_NONE;
+ 
+ 		ret = qca_tlv_send_segment(hdev, segsize, segment,
+-					    config->dnld_mode);
++					   config->dnld_mode, soc_type);
+ 		if (ret)
+ 			break;
+ 
+ 		segment += segsize;
+ 	}
+ 
++	if (!ret &&
++	    soc_type == QCA_QCA6390 &&
++	    config->type == TLV_TYPE_PATCH &&
++	    (config->dnld_type == ROME_SKIP_EVT_VSE ||
++	     config->dnld_type == ROME_SKIP_EVT_VSE_CC))
++		ret = qca_inject_cmd_complete_event(hdev);
++
+ 	release_firmware(fw);
+ 
+ 	return ret;
+@@ -344,20 +426,25 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 
+ 	/* Download rampatch file */
+ 	config.type = TLV_TYPE_PATCH;
+-	if (soc_type == QCA_WCN3990) {
++	if (soc_type == QCA_WCN3990 || soc_type == QCA_QCA6390) {
+ 		/* Firmware files to download are based on ROM version.
+ 		 * ROM version is derived from last two bytes of soc_ver.
+ 		 */
+ 		rom_ver = ((soc_ver & 0x00000f00) >> 0x04) |
+ 			    (soc_ver & 0x0000000f);
+-		snprintf(config.fwname, sizeof(config.fwname),
+-			 "qca/crbtfw%02x.tlv", rom_ver);
++
++		if (soc_type == QCA_QCA6390)
++			snprintf(config.fwname, sizeof(config.fwname),
++				 "qca/htbtfw%02x.tlv", rom_ver);
++		else
++			snprintf(config.fwname, sizeof(config.fwname),
++				 "qca/crbtfw%02x.tlv", rom_ver);
+ 	} else {
+ 		snprintf(config.fwname, sizeof(config.fwname),
+ 			 "qca/rampatch_%08x.bin", soc_ver);
+ 	}
+ 
+-	err = qca_download_firmware(hdev, &config);
++	err = qca_download_firmware(hdev, &config, soc_type);
+ 	if (err < 0) {
+ 		bt_dev_err(hdev, "QCA Failed to download patch (%d)", err);
+ 		return err;
+@@ -368,14 +455,17 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 
+ 	/* Download NVM configuration */
+ 	config.type = TLV_TYPE_NVM;
+-	if (soc_type == QCA_WCN3990)
++	if (soc_type == QCA_QCA6390)
++		snprintf(config.fwname, sizeof(config.fwname),
++			 "qca/htnv%02x.bin", rom_ver);
++	else if (soc_type == QCA_WCN3990)
+ 		snprintf(config.fwname, sizeof(config.fwname),
+ 			 "qca/crnv%02x.bin", rom_ver);
+ 	else
+ 		snprintf(config.fwname, sizeof(config.fwname),
+ 			 "qca/nvm_%08x.bin", soc_ver);
+ 
+-	err = qca_download_firmware(hdev, &config);
++	err = qca_download_firmware(hdev, &config, soc_type);
+ 	if (err < 0) {
+ 		bt_dev_err(hdev, "QCA Failed to download NVM (%d)", err);
+ 		return err;
+diff --git a/drivers/bluetooth/btqca.h b/drivers/bluetooth/btqca.h
+index 0c01f375fe83..dc7763c04a02 100644
+--- a/drivers/bluetooth/btqca.h
++++ b/drivers/bluetooth/btqca.h
+@@ -81,6 +81,7 @@ struct rome_config {
+ 	char fwname[64];
+ 	uint8_t user_baud_rate;
+ 	enum rome_tlv_dnld_mode dnld_mode;
++	enum rome_tlv_dnld_mode dnld_type;
+ };
+ 
+ struct edl_event_hdr {
+@@ -131,7 +132,8 @@ enum qca_btsoc_type {
+ 	QCA_INVALID = -1,
+ 	QCA_AR3002,
+ 	QCA_ROME,
+-	QCA_WCN3990
++	QCA_WCN3990,
++	QCA_QCA6390
+ };
+ 
+ #if IS_ENABLED(CONFIG_BT_QCA)
+@@ -139,7 +141,8 @@ enum qca_btsoc_type {
+ int qca_set_bdaddr_rome(struct hci_dev *hdev, const bdaddr_t *bdaddr);
+ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 		   enum qca_btsoc_type soc_type, u32 soc_ver);
+-int qca_read_soc_version(struct hci_dev *hdev, u32 *soc_version);
++int qca_read_soc_version(struct hci_dev *hdev, u32 *soc_version,
++			 enum qca_btsoc_type soc_type);
+ 
+ #else
+ 
+@@ -154,7 +157,8 @@ static inline int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 	return -EOPNOTSUPP;
+ }
+ 
+-static inline int qca_read_soc_version(struct hci_dev *hdev, u32 *soc_version)
++static inline int qca_read_soc_version(struct hci_dev *hdev, u32 *soc_version,
++				       enum qca_btsoc_type soc_type)
+ {
+ 	return -EOPNOTSUPP;
+ }
+diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+index f8b6823db04a..0c9728009472 100644
+--- a/drivers/bluetooth/hci_qca.c
++++ b/drivers/bluetooth/hci_qca.c
+@@ -947,12 +947,29 @@ static uint8_t qca_get_baudrate_value(int speed)
+ 	}
+ }
+ 
++static enum qca_btsoc_type qca_get_btsoc_type(struct hci_uart *hu)
++{
++	struct qca_serdev *qcadev;
++
++	if (!hu->serdev) {
++#ifdef CONFIG_BT_HCIUART_QCA6390_LMI
++		return QCA_QCA6390;
++#else
++		return QCA_ROME;
++#endif
++	}
++
++	qcadev = serdev_device_get_drvdata(hu->serdev);
++
++	return qcadev->btsoc_type;
++}
++
+ static int qca_set_baudrate(struct hci_dev *hdev, uint8_t baudrate)
+ {
+ 	struct hci_uart *hu = hci_get_drvdata(hdev);
+ 	struct qca_data *qca = hu->priv;
+ 	struct sk_buff *skb;
+-	struct qca_serdev *qcadev;
++	enum qca_btsoc_type soc_type;
+ 	u8 cmd[] = { 0x01, 0x48, 0xFC, 0x01, 0x00 };
+ 
+ 	if (baudrate > QCA_BAUDRATE_3200000)
+@@ -969,8 +986,8 @@ static int qca_set_baudrate(struct hci_dev *hdev, uint8_t baudrate)
+ 	/* Disabling hardware flow control is mandatory while
+ 	 * sending change baudrate request to wcn3990 SoC.
+ 	 */
+-	qcadev = serdev_device_get_drvdata(hu->serdev);
+-	if (qcadev->btsoc_type == QCA_WCN3990)
++	soc_type = qca_get_btsoc_type(hu);
++	if (soc_type == QCA_WCN3990)
+ 		hci_uart_set_flow_control(hu, true);
+ 
+ 	/* Assign commands to change baudrate and packet type. */
+@@ -988,7 +1005,7 @@ static int qca_set_baudrate(struct hci_dev *hdev, uint8_t baudrate)
+ 	schedule_timeout(msecs_to_jiffies(BAUDRATE_SETTLE_TIMEOUT_MS));
+ 	set_current_state(TASK_RUNNING);
+ 
+-	if (qcadev->btsoc_type == QCA_WCN3990)
++	if (soc_type == QCA_WCN3990)
+ 		hci_uart_set_flow_control(hu, false);
+ 
+ 	return 0;
+@@ -1061,10 +1078,10 @@ static unsigned int qca_get_speed(struct hci_uart *hu,
+ 
+ static int qca_check_speeds(struct hci_uart *hu)
+ {
+-	struct qca_serdev *qcadev;
++	enum qca_btsoc_type soc_type;
+ 
+-	qcadev = serdev_device_get_drvdata(hu->serdev);
+-	if (qcadev->btsoc_type == QCA_WCN3990) {
++	soc_type = qca_get_btsoc_type(hu);
++	if (soc_type == QCA_WCN3990) {
+ 		if (!qca_get_speed(hu, QCA_INIT_SPEED) &&
+ 		    !qca_get_speed(hu, QCA_OPER_SPEED))
+ 			return -EINVAL;
+@@ -1144,11 +1161,11 @@ static int qca_setup(struct hci_uart *hu)
+ 	struct hci_dev *hdev = hu->hdev;
+ 	struct qca_data *qca = hu->priv;
+ 	unsigned int speed, qca_baudrate = QCA_BAUDRATE_115200;
+-	struct qca_serdev *qcadev;
++	enum qca_btsoc_type soc_type;
+ 	int ret;
+ 	int soc_ver = 0;
+ 
+-	qcadev = serdev_device_get_drvdata(hu->serdev);
++	soc_type = qca_get_btsoc_type(hu);
+ 
+ 	ret = qca_check_speeds(hu);
+ 	if (ret)
+@@ -1157,17 +1174,20 @@ static int qca_setup(struct hci_uart *hu)
+ 	/* Patch downloading has to be done without IBS mode */
+ 	clear_bit(STATE_IN_BAND_SLEEP_ENABLED, &qca->flags);
+ 
+-	if (qcadev->btsoc_type == QCA_WCN3990) {
++	if (soc_type == QCA_WCN3990) {
+ 		bt_dev_info(hdev, "setting up wcn3990");
+ 		ret = qca_wcn3990_init(hu);
+ 		if (ret)
+ 			return ret;
+ 
+-		ret = qca_read_soc_version(hdev, &soc_ver);
++		ret = qca_read_soc_version(hdev, &soc_ver, soc_type);
+ 		if (ret)
+ 			return ret;
+ 	} else {
+-		bt_dev_info(hdev, "ROME setup");
++		if (soc_type == QCA_QCA6390)
++			bt_dev_info(hdev, "setting up qca6390");
++		else
++			bt_dev_info(hdev, "ROME setup");
+ 		qca_set_speed(hu, QCA_INIT_SPEED);
+ 	}
+ 
+@@ -1181,16 +1201,16 @@ static int qca_setup(struct hci_uart *hu)
+ 		qca_baudrate = qca_get_baudrate_value(speed);
+ 	}
+ 
+-	if (qcadev->btsoc_type != QCA_WCN3990) {
++	if (soc_type != QCA_WCN3990) {
+ 		/* Get QCA version information */
+-		ret = qca_read_soc_version(hdev, &soc_ver);
++		ret = qca_read_soc_version(hdev, &soc_ver, soc_type);
+ 		if (ret)
+ 			return ret;
+ 	}
+ 
+ 	bt_dev_info(hdev, "QCA controller version 0x%08x", soc_ver);
+ 	/* Setup patch / NVM configurations */
+-	ret = qca_uart_setup(hdev, qca_baudrate, qcadev->btsoc_type, soc_ver);
++	ret = qca_uart_setup(hdev, qca_baudrate, soc_type, soc_ver);
+ 	if (!ret) {
+ 		set_bit(STATE_IN_BAND_SLEEP_ENABLED, &qca->flags);
+ 		qca_debugfs_init(hdev);
+@@ -1325,6 +1345,7 @@ static int qca_power_setup(struct hci_uart *hu, bool on)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_BT_HCIUART_SERDEV
+ static int qca_init_regulators(struct qca_power *qca,
+ 				const struct qca_vreg *vregs, size_t num_vregs)
+ {
+@@ -1342,6 +1363,9 @@ static int qca_init_regulators(struct qca_power *qca,
+ 	return devm_regulator_bulk_get(qca->dev, num_vregs, qca->vreg_bulk);
+ }
+ 
++#endif
++
++#ifdef CONFIG_BT_HCIUART_SERDEV
+ static int qca_serdev_probe(struct serdev_device *serdev)
+ {
+ 	struct qca_serdev *qcadev;
+@@ -1428,6 +1452,8 @@ static void qca_serdev_remove(struct serdev_device *serdev)
+ 	hci_uart_unregister_device(&qcadev->serdev_hu);
+ }
+ 
++#endif
++
+ static const struct of_device_id qca_bluetooth_of_match[] = {
+ 	{ .compatible = "qcom,qca6174-bt" },
+ 	{ .compatible = "qcom,wcn3990-bt", .data = &qca_soc_data},
+@@ -1435,6 +1461,7 @@ static const struct of_device_id qca_bluetooth_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, qca_bluetooth_of_match);
+ 
++#ifdef CONFIG_BT_HCIUART_SERDEV
+ static struct serdev_device_driver qca_serdev_driver = {
+ 	.probe = qca_serdev_probe,
+ 	.remove = qca_serdev_remove,
+@@ -1443,17 +1470,22 @@ static struct serdev_device_driver qca_serdev_driver = {
+ 		.of_match_table = qca_bluetooth_of_match,
+ 	},
+ };
++#endif
+ 
+ int __init qca_init(void)
+ {
++#ifdef CONFIG_BT_HCIUART_SERDEV
+ 	serdev_device_driver_register(&qca_serdev_driver);
++#endif
+ 
+ 	return hci_uart_register_proto(&qca_proto);
+ }
+ 
+ int __exit qca_deinit(void)
+ {
++#ifdef CONFIG_BT_HCIUART_SERDEV
+ 	serdev_device_driver_unregister(&qca_serdev_driver);
++#endif
+ 
+ 	return hci_uart_unregister_proto(&qca_proto);
+ }
+diff --git a/drivers/staging/qca-wifi-host-cmn/hif/src/ce/ce_main.c b/drivers/staging/qca-wifi-host-cmn/hif/src/ce/ce_main.c
+index ccf04ce52f13..8d66e3beeb82 100644
+--- a/drivers/staging/qca-wifi-host-cmn/hif/src/ce/ce_main.c
++++ b/drivers/staging/qca-wifi-host-cmn/hif/src/ce/ce_main.c
+@@ -2132,7 +2132,7 @@ hif_send_head(struct hif_opaque_softc *hif_ctx,
+ 
+ 	if (qdf_unlikely(!ce_hdl)) {
+ 		HIF_ERROR("%s: error CE handle is null", __func__);
+-		return A_ERROR;
++		return QDF_STATUS_E_FAILURE;
+ 	}
+ 
+ 	QDF_NBUF_UPDATE_TX_PKT_COUNT(nbuf, QDF_NBUF_TX_PKT_HIF);
+diff --git a/fs/namespace.c b/fs/namespace.c
+index 4a69b910710f..83c66725f783 100644
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -2655,6 +2655,8 @@ static int do_new_mount(struct path *path, const char *fstype, int sb_flags,
+ 		err = vfs_parse_fs_string(fc, "source", name, strlen(name));
+ 	if (!err)
+ 		err = parse_monolithic_mount_data(fc, data);
++	if (!err && name && !fc->source)
++		fc->source = kstrdup(name, GFP_KERNEL);
+ 	if (!err)
+ 		err = vfs_get_tree(fc);
+ 	if (!err)
+-- 
+2.53.0
+
