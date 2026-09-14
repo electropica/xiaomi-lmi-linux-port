@@ -6,121 +6,31 @@ This repository collects reproducible source-side work for postmarketOS packagin
 
 ## Current status
 
-### Boot
+Xiaomi Redmi K30 Pro / POCO F2 Pro (`lmi`) now boots into a functional Debian/Mobian Phosh environment.
 
-A Qualcomm downstream Linux 4.19 kernel has been booted successfully on the device using a temporary `fastboot boot` workflow.
+The current validated foundation includes persistent device boot, Debian GNU/Linux 13 with systemd, the internal DSI display and touch input, Phosh, USB networking and SSH, QCA6390 Wi-Fi, and the validated GPU72 Mesa/Turnip/KGSL acceleration path.
 
-The working reference uses:
+The temporary `fastboot boot`, Weston-only, Pixman-only and earlier GPU experiments documented elsewhere in the repository are historical milestones and do not represent the normal current startup state.
 
-- Xiaomi `lmi` / SM8250
-- downstream kernel `4.19.325`
-- postmarketOS initramfs
-- RNDIS USB networking
-- SSH access
-- DRM/KMS on the internal DSI panel
+The latest validated userspace image and its hashes are documented in `docs/CURRENT-BUILD.md`.
 
-Binary boot images and generated userdata images are intentionally not stored in this repository.
-
-### Display
-
-The internal panel is functional through DRM/KMS.
-
-The main display path is:
-
-- DRM device: `card0`
-- output: `DSI-1`
-- mode: `1080x2400`
-- Qualcomm downstream atomic KMS
-
-A major blocker was traced to the bootloader/continuous-splash KMS state.
-
-Before userspace display takeover, the downstream SDE driver retained a continuous-splash association involving CRTC 129 and plane 58. A direct Weston atomic commit could therefore fail even though the panel and DRM device were otherwise functional.
-
-The validated sequence is:
-
-1. perform the historical KMS takeover with `modetest`;
-2. release CRTC 129 and plane 58;
-3. verify the cleared KMS state;
-4. start seat management;
-5. start Weston;
-6. disable the Qualcomm `Virtual-1` output;
-7. enable `DSI-1`.
-
-With this sequence, Weston completes the atomic commit and page flip and renders successfully on the physical display.
-
-### Weston control
-
-A minimal Weston configuration has been validated with:
-
-- Weston 14.0.2
-- DRM backend
-- Pixman renderer
-- kiosk shell
-- `DSI-1`
-- `Virtual-1` disabled
-- no VT requirement
-- seatd with VT binding disabled
-
-A solid-colour screen was used as the hardware-visible validation target.
-
-### USB / SSH
-
-The postmarketOS initramfs creates a ConfigFS RNDIS gadget before `switch_root`.
-
-Observed working state includes:
-
-- gadget: `g1`
-- function: `rndis.usb0`
-- UDC: `a600000.dwc3`
-- VID:PID: `0525:a4a2`
-- device address: `172.16.42.1`
-- host address: `172.16.42.2`
-
-The gadget has been observed to survive `switch_root`.
-
-### Mobian / Debian
-
-Debian trixie arm64 now boots into a functional Phosh session on Xiaomi
-`lmi`. The validated foundation includes systemd, USB networking and SSH,
-DRM/KMS display takeover, seat management, touch input, Wi-Fi and the Phosh
-lock screen and desktop.
-
-The original minimal bring-up path was:
-
-```text
-downstream kernel
-    -> Debian/systemd
-    -> USB networking + SSH
-    -> KMS continuous-splash release
-    -> seat management
-    -> Weston
-    -> visible DSI output
-```
-
-That path is now reproducible and has progressed to Phosh. Separately, an
-isolated Mesa 25.0.7 runtime has rendered and read back a verified pixel
-through EGL surfaceless, Gallium Zink, Vulkan Turnip and `/dev/kgsl-3d0` on
-the real Adreno 650. A subsequent headless Vulkan test also exported a
-Turnip/KGSL allocation as a dma-buf, re-imported it into Turnip, accessed it
-from the GPU and verified its deterministic content. PRIME import into
-downstream `msm_drm`, Wayland presentation, GBM, KMS scanout and accelerated
-Phoc remain open as distinct interoperability stages.
+The current repository architecture and active build entry points are documented in `docs/ARCHITECTURE.md`.
 
 ## Repository layout
 
-```text
-pmaports/
-    postmarketOS device and downstream-kernel packaging for lmi
+- `base/` — M0/base-rootfs files and construction scripts
+- `display/` — display integration
+- `wifi/` — QCA6390 Wi-Fi integration
+- `bluetooth/` — Bluetooth integration
+- `gpu/` — current GPU runtime, firmware, patches and provenance
+- `phosh/` — current Mobian/Phosh userspace construction
+- `apps/` — optional application installation
+- `kernel/` — kernel-side integration files
+- `docs/` — current architecture, build, status and validation documentation
+- `historical/` — superseded experiments and historical material
+- `output/` — generated local artifacts excluded from Git
 
-mobian/
-    Debian/Mobian bootstrap and reproducibility tooling
-
-weston/
-    display-control image tooling and Weston/KMS experiments
-
-historical/
-    historical porting notes, diagnostics and reproducibility scripts
-```
+See `docs/ARCHITECTURE.md` for the authoritative current architecture.
 
 ## Reproducibility
 

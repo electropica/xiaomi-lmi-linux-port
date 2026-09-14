@@ -62,3 +62,55 @@ secrets, tokens, credentials, or unrelated personal or sensitive data.
   least `mobian/STATUS.md`, the applicable README, and related notes -- so that
   manual validation, automated validation, and host-only validation remain
   clearly distinguished.
+
+## Current Mobian lmi userspace build reference
+
+This section describes the repository architecture being prepared for the
+current Xiaomi lmi Mobian/Phosh userspace image.
+
+All paths below are relative to the repository root. Do not infer current
+procedures from historical experiments when an active implementation exists.
+
+The current userspace/Phosh build entry point in this architecture is:
+
+    phosh/scripts/build-m1-phosh.sh
+
+The optional application installer is:
+
+    apps/scripts/install.sh
+
+`INSTALL_OPTIONAL_APPS=1` makes the Phosh/userspace build invoke this optional
+application installation step.
+
+The M0/base-rootfs construction scripts are separate and live under:
+
+    base/scripts/
+
+Their associated base-build files and working inputs live under:
+
+    base/files/
+
+The M0 base rootfs, the Phosh/userspace image, and the kernel are separate
+layers. A userspace or application-only change does not by itself require a
+kernel rebuild.
+
+GPU runtime files consumed by the current userspace build live under:
+
+    gpu/files/
+
+Wi-Fi and Bluetooth integration are maintained independently under:
+
+    wifi/
+    bluetooth/
+
+Display integration is maintained under:
+
+    display/
+
+Generated images and other build outputs belong under:
+
+    output/
+
+The reorganized repository architecture has completed a successful image build and is now the active project layout. The validated build reference is recorded in `docs/CURRENT-BUILD.md`, and the authoritative layout is documented in `docs/ARCHITECTURE.md`.
+
+Historical experiments must not override a current implementation or a later hardware-validated result merely because historical material contains more diagnostic detail.
