@@ -19,7 +19,7 @@ wifi_dir="$repo_dir/wifi"
 bluetooth_dir="$repo_dir/bluetooth"
 display_dir="$repo_dir/display"
 
-expected_base_sha=b12eeb3c561a37e84f2a99037587fdf833979a3b6f4610a03d4e820a51ae6399
+expected_base_prefix_sha=efac0433da55eef42a0b990128744db6499e92f4292206ad56c3ec1e84d472f4
 expected_base_size=1490026496
 final_size=4551868416
 root_start=62464
@@ -44,8 +44,16 @@ unset M1_MOBIAN_PASSWORD
     echo "Missing input or refusing to overwrite an output." >&2
     exit 1
 }
-[[ $(stat -c %s "$base") == "$expected_base_size" ]]
-echo "$expected_base_sha  $base" | sha256sum -c -
+[[ $(stat -c %s "$base") == "$expected_base_size" ]] || {
+    echo "Unexpected BASE_RAW size." >&2
+    exit 1
+}
+base_prefix_sha=$(dd if="$base" bs=4096 count="$root_start" status=none | sha256sum | awk '{print $1}')
+[[ $base_prefix_sha == "$expected_base_prefix_sha" ]] || {
+    echo "Unexpected BASE_RAW inherited prefix." >&2
+    exit 1
+}
+unset base_prefix_sha
 
 mkdir -p "$work"
 tree="$work/rootfs"

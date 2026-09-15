@@ -19,11 +19,11 @@ Les mots **PROUVÉ / TRÈS PROBABLE / INCONNU** sont normatifs. Une voie marqué
 
 **PROUVÉ** — Le dépôt actuel contient le builder M1 et le tree M0 DISPLAY historique survit. Le golden D-repro-01 exact survit également. La géométrie 4K, l'assemblage M0, la fabrication M1, les validations hôte et les identités du build `archi-validation-01` sont suffisamment documentés.
 
-**BLOQUEUR ACTUEL** — `phosh/scripts/build-m1-phosh.sh` exige encore le SHA global du préflight historique `b12eeb3c...`, qui n'est plus disponible localement. Le M0 DISPLAY connu a un autre SHA. Le builder pourrait très vraisemblablement être adapté pour admettre ce M0 DISPLAY, car il écrase ensuite intégralement l'ancienne `pmOS_root`, mais **cette adaptation n'a pas encore été validée par un build puis par le téléphone**.
+**ÉTAT ACTUEL** — Le garde-fou historique fondé sur le SHA global du préflight `b12eeb3c...` a été remplacé localement par un contrôle de la taille du BASE_RAW et du SHA-256 de tout le préfixe réellement hérité avant `pmOS_root` (255 852 544 octets). Le golden D-repro-01 passe ce contrôle. Après agrandissement et passage par `expand-gpt-4k.py`, ce préfixe devient bit-à-bit identique à celui du M1 validé `archi-validation-01`. **Le garde-fou est validé hors build ; le build complet puis la validation téléphone restent à effectuer.**
 
 Donc il existe aujourd'hui :
-- une **ancienne voie validée** dont le BASE_RAW exact manque ;
-- une **nouvelle voie de reconstruction M0 fortement établie**, mais dont l'admission par M1 reste à modifier et valider.
+- une **ancienne voie historiquement validée** dont le préflight BASE_RAW exact manque ;
+- une **voie actuelle utilisant le golden D-repro-01 comme enveloppe**, dont l'admission M1 est préparée et validée hors build, mais dont le build complet et le test téléphone restent à valider.
 
 ---
 
@@ -83,7 +83,7 @@ puis lance le builder M1 dans le namespace utilisateur/montage attendu.
 - l'ancienne `pmOS_root` du BASE_RAW n'est jamais utilisée comme source de fichiers M1.
 
 **PROUVÉ** — Le builder :
-- exige BASE_RAW taille `1490026496` et SHA `b12eeb3c...` ;
+- exige BASE_RAW taille `1490026496` et SHA-256 `efac0433da55eef42a0b990128744db6499e92f4292206ad56c3ec1e84d472f4` sur les 255 852 544 octets précédant `pmOS_root` ;
 - copie `M0_TREE` dans son tree de travail ;
 - prépare le chroot arm64 ;
 - installe/configure M1 ;
@@ -97,7 +97,7 @@ puis lance le builder M1 dans le namespace utilisateur/montage attendu.
 
 ## A3. Commande du build de référence
 
-La commande actuelle ne doit être exécutée que lorsque le BASE_RAW accepté est disponible ou lorsque le contrôle d'admission aura été modifié et validé.
+Le golden D-repro-01 est désormais l'enveloppe BASE_RAW candidate admise par le garde-fou local préparé. La chaîne complète reste à exécuter pour valider cette nouvelle voie de build.
 
 Commande historiquement validée, transposée à l'entrée actuelle du dépôt :
 
@@ -106,7 +106,7 @@ clear
 cd /home/linuxagent/ProjetMobian && INSTALL_OPTIONAL_APPS=1 ./build.sh /chemin/vers/Mobian-M0-userdata-rootfs-330-display-preflight.img /home/linuxagent/ProjetMobian-ancien-workspace/Mobian-M0/rootfs-m0-display-work archi-validation-02
 ```
 
-**ATTENTION — non exécutable aujourd'hui telle quelle** : `/chemin/vers/...` est volontairement un placeholder parce que le préflight exact n'est pas disponible. Ne pas remplacer ce chemin par le golden ou par le M0 DISPLAY sans modification contrôlée du builder.
+**HISTORIQUE** — Le placeholder ci-dessus représente le préflight exact utilisé par `archi-validation-01`, aujourd'hui manquant. Pour la voie actuelle, le garde-fou local a été adapté afin d'admettre le golden D-repro-01 sur l'identité de son préfixe hérité. Cette nouvelle voie n'est pas encore validée par un build complet ni par le téléphone.
 
 ## A4. Applications optionnelles
 
@@ -315,27 +315,23 @@ Filesystem :
 
 ## E2. Faut-il absolument reproduire `b12eeb3c...` ?
 
-**NON pour des raisons structurelles démontrées ; OUI avec le code actuel.**
+**NON.**
 
-Avec le code actuel, le SHA `b12eeb3c...` est un garde-fou obligatoire : sans lui, le builder s'arrête.
+**PROUVÉ** — La reproduction bit-à-bit du préflight global `b12eeb3c...` n'est pas nécessaire au contenu M1 final : toute l'ancienne `pmOS_root` est écrasée.
 
-Mais la preuve que toute l'ancienne root est ensuite écrasée signifie que **la reproduction bit-à-bit de cette ancienne root n'est pas intrinsèquement nécessaire au contenu M1 final**.
+**PROUVÉ** — Le golden D-repro-01 fournit l'enveloppe héritée nécessaire. Ses 255 852 544 premiers octets ont le SHA-256 `efac0433da55eef42a0b990128744db6499e92f4292206ad56c3ec1e84d472f4`. Après copie, agrandissement à 4 551 868 416 octets et application de `expand-gpt-4k.py` avec `root_start=62464` et `root_blocks=1048576`, ce préfixe est bit-à-bit identique à celui de `output/archi-validation-01.img`.
 
-**TRÈS PROBABLE** — Un BASE_RAW connu partageant les octets hérités nécessaires (notamment GPT primaire pertinente, `pmOS_boot` et autres octets conservés) peut servir d'enveloppe équivalente.
+**NON VALIDÉ** — Le build M1 complet avec cette nouvelle admission et son essai sur téléphone restent à effectuer.
 
-**NON VALIDÉ** — Le M0 DISPLAY SHA `9f933e...`, ou le raw reconstruit localement SHA `956bdf...`, n'a pas encore été accepté par un builder modifié puis testé sur téléphone.
+## E3. Adaptation d'admission préparée
 
-## E3. Adaptation recommandée à tester au prochain jalon
+Le contrôle SHA n'a pas été supprimé aveuglément. Le garde-fou global historique a été remplacé localement par :
+- taille BASE_RAW exacte : `1490026496` ;
+- SHA-256 exact des 255 852 544 octets réellement hérités avant `pmOS_root` : `efac0433da55eef42a0b990128744db6499e92f4292206ad56c3ec1e84d472f4`.
 
-La prochaine modification raisonnable n'est pas de supprimer aveuglément le contrôle SHA.
+**PROUVÉ hors build** — Le golden D-repro-01 satisfait ce contrat et son enveloppe transformée reproduit exactement le préfixe du M1 validé.
 
-Il faut remplacer ou compléter le garde-fou global par une admission explicite d'une enveloppe connue, avec au minimum :
-- taille exacte ;
-- GPT 4K valide et bornes attendues ;
-- GUID/type/attributs/noms attendus ;
-- `pmOS_boot` complète au SHA connu ;
-- contrôle des octets hors ancienne `pmOS_root` qui seront réellement hérités ;
-- refus de toute géométrie inattendue.
+**NON VALIDÉ** — Aucun build M1 complet ni test téléphone n'a encore été effectué avec ce nouveau garde-fou.
 
 **À VALIDER EXPÉRIMENTALEMENT** — Aucun patch correspondant n'est encore déclaré validé.
 
@@ -465,7 +461,8 @@ Sorties :
 - `apps/scripts/install.sh` via `INSTALL_OPTIONAL_APPS=1` ;
 - `debug/scripts/install.sh` via `INSTALL_DEBUG_TOOLS=1`, **non encore validé** ;
 - M0_TREE survivant comme entrée tant que la reconstruction de zéro n'est pas finalisée ;
-- prochaine étape technique : résoudre proprement l'admission BASE_RAW puis refaire un build complet de validation.
+- admission BASE_RAW par préfixe hérité préparée et validée hors build ;
+- prochaine étape technique : refaire un build complet de validation avec le golden D-repro-01, puis valider le résultat sur téléphone.
 
 ## Reconstruction historique utile
 
@@ -490,10 +487,9 @@ Sorties :
 # K. BLOQUEURS RÉELS AU 15 SEPTEMBRE 2026
 
 Pour refaire **un M1 fonctionnel à partir des artefacts survivants** :
-1. adapter de façon contrôlée l'admission BASE_RAW pour une enveloppe connue, **ou** récupérer le préflight exact `b12eeb3c...` ;
-2. exécuter le build complet ;
-3. valider hôte ;
-4. valider téléphone.
+1. exécuter le build complet avec le garde-fou BASE_RAW par préfixe hérité et le golden D-repro-01 ;
+2. valider hôte ;
+3. valider téléphone.
 
 Pour refaire **bit-à-bit le préflight historique** :
 - la transformation exacte vers `b12eeb3c...` reste inconnue.
@@ -598,13 +594,13 @@ Le raw reconstruit a obtenu le SHA-256 **`9f933e38966139bbb76bf96d2728e9620058dc
 
 **PROUVÉ** — `pmOS_boot` occupe les octets **8 388 608–255 852 543** (247 463 936 octets). La tranche du raw M1 et `output/archi-validation-01-partition1.bin` ont le même SHA-256 : **`6e2a1555a629126907c452a455ba12e78ee7e3862bbc39e376215569d9e7e03b`**. Le filesystem est ext2, label `pmOS_boot`, UUID `7bd723c2-51d6-4015-b28b-2b38191bf765`, blocs 4K. Le builder ne réécrit pas cette partition : ses octets M1 viennent du BASE_RAW accepté.
 
-**PROUVÉ** — Le builder crée un nouvel ext4 de **4 294 967 296 octets** depuis M0_TREE, copie le BASE_RAW, agrandit la copie, modifie la GPT et écrit **tout** le nouvel ext4 à partir de l'octet **255 852 544** jusqu'à **4 550 819 839** (`phosh/scripts/build-m1-phosh.sh:387-396`). L'ancienne root (octets 255 852 544–1 488 977 919), l'ancien espace après root et l'ancienne GPT secondaire sont entièrement recouverts. Aucun octet de l'ancienne root n'alimente le résultat M1 ; avec le code actuel, toute modification de ces octets fait néanmoins échouer le **SHA global préalable**.
+**PROUVÉ** — Le builder crée un nouvel ext4 de **4 294 967 296 octets** depuis M0_TREE, copie le BASE_RAW, agrandit la copie, modifie la GPT et écrit **tout** le nouvel ext4 à partir de l'octet **255 852 544** jusqu'à **4 550 819 839** (`phosh/scripts/build-m1-phosh.sh:387-396`). L'ancienne root (octets 255 852 544–1 488 977 919), l'ancien espace après root et l'ancienne GPT secondaire sont entièrement recouverts. Aucun octet de l'ancienne root n'alimente le résultat M1. Le garde-fou local actuel ne couvre donc plus ces octets destinés à être écrasés.
 
 **PROUVÉ** — `phosh/scripts/expand-gpt-4k.py:11-50` conserve l'espace LBA 6–2047, réécrit quatre octets du protective MBR, les 92 premiers octets de l'en-tête GPT primaire et sa table, puis crée une GPT secondaire à la nouvelle fin. Le raw M1 conserve GUID, types, attributs et noms de partitions. La taille M0 et l'ancienne borne root sont désormais vérifiables sur le golden récupéré, qui conserve aussi **les octets exacts de l'ancienne GPT secondaire**. Celle-ci est recouverte par le nouvel ext4 dans le M1 et ne sert pas à son résultat.
 
-**TRÈS PROBABLE** — Le M0 DISPLAY réassemblé, dont le raw est identique bit pour bit à celui du backup, pourrait servir de base à un **M1 fonctionnel** si le contrôle d'admission du builder était adapté et si la chaîne ainsi modifiée était validée. Cette voie n'exige plus de concevoir un nouveau raw à GPT et root arbitraires. **INCONNU** — Le résultat pratique de cette voie : le builder actuel exige le SHA du préflight `b12eeb3c...`, différent de celui du M0 DISPLAY, et aucun essai de M1 avec cette entrée adaptée n'est établi.
+**PROUVÉ pour l'enveloppe héritée** — Le golden D-repro-01 peut servir de BASE_RAW au sens des octets conservés par M1. Après les transformations normales de `expand-gpt-4k.py`, ses 255 852 544 premiers octets sont bit-à-bit identiques à ceux de `archi-validation-01`. **NON VALIDÉ** — Le résultat pratique de la chaîne complète : aucun build M1 complet avec cette admission ni essai téléphone correspondant n'est encore établi.
 
-**PROUVÉ** — Le contrôle actuel par SHA global porte aussi sur les octets ensuite écrasés. **TRÈS PROBABLE** — Pour accepter un M0 DISPLAY connu, une adaptation pourrait vérifier sa taille et son SHA exact `9f933e38...` ; une admission structurelle plus générale pourrait contrôler les GPT et leurs CRC, le secteur 4K, les bornes/non-chevauchements, GUID/types/noms/attributs, le protective MBR, le type/UUID ext2 et le SHA de **toute** `pmOS_boot`. Pour préserver le contrôle des autres octets hérités, il faudrait également vérifier les octets conservés du MBR et de l'en-tête, ainsi que l'espace LBA 6–2047 (nul dans le M1 vérifié). **INCONNU** — Le comportement d'un builder ainsi adapté : aucun patch ni essai correspondant n'a été validé.
+**PROUVÉ** — L'ancien contrôle par SHA global portait aussi sur les octets ensuite écrasés. L'admission locale actuelle contrôle à la place la taille exacte et le SHA de **tout le préfixe réellement hérité**, ce qui couvre en une seule identité le MBR, la GPT primaire, les espaces conservés et toute `pmOS_boot`. Le garde-fou passe avec le golden réel et le script reste syntaxiquement valide. **NON VALIDÉ** — Le comportement de la chaîne complète reste à confirmer par un build puis par le téléphone.
 
 ## Chronologie Git synthétique
 
@@ -744,8 +740,8 @@ Cette recette est distincte de la reproduction du **préflight M1** `b12eeb3c...
 
 Pour **refaire un M1 fonctionnel** à partir du M0 DISPLAY connu, les points restants sont distincts :
 
-1. **PROUVÉ, travail restant** — Le builder actuel refuse le SHA du M0 DISPLAY et exige celui du préflight historique ; il faut adapter et valider son admission pour cette entrée, ou retrouver l'entrée exacte qu'il attend.
-2. **INCONNU, validation restante** — Construire et contrôler un M1 par cette voie, puis valider le userdata produit sur téléphone. Le M1 historique `archi-validation-01` a été validé, mais pas cette nouvelle entrée.
+1. **PROUVÉ, admission préparée** — Le builder local contrôle désormais l'identité des 255 852 544 octets réellement hérités plutôt que le SHA global du préflight historique. Le golden D-repro-01 satisfait ce contrôle et son préfixe transformé reproduit bit-à-bit celui du M1 validé.
+2. **INCONNU, validation restante** — Construire et contrôler un M1 complet par cette voie, puis valider le userdata produit sur téléphone. Le M1 historique `archi-validation-01` a été validé, mais pas cette nouvelle entrée.
 
 Pour **reproduire bit pour bit le préflight historique** `Mobian-M0-userdata-rootfs-330-display-preflight.img` de SHA `b12eeb3c...` :
 
