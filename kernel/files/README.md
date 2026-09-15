@@ -44,8 +44,29 @@ Reconstruction order for the retained source lineage:
 The validated QCA6390 V2 + fcsource boot built on 5 September 2026 corresponds
 to the source changes subsequently archived in patch 0001. Patch 0002 (ESOC)
 is a later evolution from 6 September 2026. Applying 0001 + 0002 reconstructs
-the most advanced retained DV43 source lineage, not the exact source content
+the most advanced retained historical DV43 source lineage, not the exact source content
 of the reference boot below.
+
+## Experimental CCI patch — not yet validated on hardware
+
+`patches/0003-media-cam-cci-reject-file-ioctls.patch` changes only the
+NULL-argument return in `cam_cci_subdev_ioctl()` from `rc` (zero) to
+`-ENOTTY`. The CCI file-operation wrappers continue to pass NULL; the
+valid-argument path is unchanged. This rejects unsupported file ioctls
+instead of reporting false success, which can cause endless
+`VIDIOC_ENUMINPUT` enumeration in GStreamer discovery triggered by Chatty.
+
+Patch SHA256:
+
+```text
+4c8716cce129981c856be91b09ef4ba13bf06ba2fbf3d5e0458e742fa90dd6f0  0003-media-cam-cci-reject-file-ioctls.patch
+```
+
+For an experimental source tree, apply 0003 after 0001 and 0002 on the
+exact base above. Sequential application was checked against all nine
+affected source files from that commit. No kernel was compiled and no
+hardware test was performed. The 0001 + 0002 + 0003 lineage is experimental
+and is not a validated kernel or boot reference.
 
 ## Exact configuration of the 5 September reference boot
 
