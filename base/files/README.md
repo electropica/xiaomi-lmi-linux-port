@@ -18,6 +18,12 @@ With the default layout, the generated rootfs is created under:
 
     /home/linuxagent/ProjetMobian/base/files/rootfs-final-330
 
-Required reconstruction inputs retained under `base/files/` include the manifests, local repository data, keyrings, downloads and supporting tools used by the M0 recipe.
+The historical entry point requires manifests, exact local packages, keyrings
+and supporting tools. These inputs are not all retained under `base/files/`;
+the current checkout alone cannot run that historical reconstruction.
 
 `rootfs-final-330` is a generated artifact, not a canonical source input.
+
+The first stage for acquiring a new public-repository M0 closure is documented
+in [M0-ACQUISITION.md](M0-ACQUISITION.md). It does not run the M0 builder or
+change the BASE_RAW/M1 workflow.

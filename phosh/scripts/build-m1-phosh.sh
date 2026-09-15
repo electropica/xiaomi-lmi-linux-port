@@ -96,6 +96,8 @@ for path in dev proc sys; do
 done
 mount -t tmpfs -o mode=0755,nosuid,nodev tmpfs "$tree/run"
 mounted_paths+=("$tree/run")
+debug_tools_enabled=0
+if [[ ${INSTALL_DEBUG_TOOLS:-} == 1 ]]; then install -m 0755 "$repo_dir/debug/scripts/install.sh" "$tree/run/install-debug-tools.sh"; debug_tools_enabled=1; fi
 optional_apps_enabled=0
 if [[ ${INSTALL_OPTIONAL_APPS:-} == 1 ]]; then
     install -m 0755 "$apps_dir/scripts/install.sh" "$tree/run/install-optional-apps.sh"
@@ -134,7 +136,7 @@ install -D -o root -g root -m 0644 \
 install -D -o root -g root -m 0644 \
     "$phosh_files/91_lmi-power.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/91_lmi-power.gschema.override"
-chroot "$tree" /usr/bin/env INSTALL_OPTIONAL_APPS="$optional_apps_enabled" /bin/bash -eu <<'EOF'
+chroot "$tree" /usr/bin/env INSTALL_OPTIONAL_APPS="$optional_apps_enabled" INSTALL_DEBUG_TOOLS="$debug_tools_enabled" /bin/bash -eu <<'EOF'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install --no-install-recommends -y \
@@ -150,6 +152,7 @@ apt-get install --no-install-recommends -y \
     wpasupplicant=2:2.10-24 \
     unzip=6.0-29+deb13u1
 test -z "$(dpkg --audit)"
+if [[ $INSTALL_DEBUG_TOOLS == 1 ]]; then /run/install-debug-tools.sh; fi
 if [[ $INSTALL_OPTIONAL_APPS == 1 ]]; then
     /run/install-optional-apps.sh
 fi

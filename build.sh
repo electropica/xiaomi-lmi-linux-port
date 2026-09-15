@@ -7,7 +7,7 @@ output_dir="$repo_dir/output"
 
 if [[ $# -lt 2 || $# -gt 3 ]]; then
     echo "usage: $0 BASE_RAW M0_TREE [NAME]" >&2
-    echo "example: INSTALL_OPTIONAL_APPS=1 $0 /path/base.img /path/m0-rootfs lmi-test" >&2
+    echo "example: INSTALL_OPTIONAL_APPS=1 INSTALL_DEBUG_TOOLS=1 $0 /path/base.img /path/m0-rootfs lmi-test" >&2
     exit 2
 fi
 

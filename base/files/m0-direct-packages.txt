@@ -1,0 +1,18 @@
+# Xiaomi lmi M0: Trixie arm64 minbase, without mobian-base.
+# Functional roots only; versions and transitive dependencies belong in the lock.
+ca-certificates
+mobian-archive-keyring
+systemd
+systemd-sysv
+udev
+dbus
+openssh-server
+iproute2
+kmod
+seatd
+libseat1
+weston
+libweston-14-0
+libpixman-1-0
+libdrm2
+libdrm-tests
