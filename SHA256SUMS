@@ -1,4 +1,4 @@
-# Reference checksum inventory. The named artifacts are not stored in Git.
+# Reference checksum inventory. Binary artifacts are not stored in Git.
 # Historical identities from the June 2026 manifest:
 38c38390ca9a474b4d29d24fb25ad9139bb58e2ad9cd88b5b601abad2f8c2d5e  historical/kernel-4.19.325-r8
 56fd50b75ff4d17c808665b3980e5dcd6b1800e9361b3bd0276fc70be31c13fb  historical/xiaomi-lmi-userdata.img
@@ -17,3 +17,7 @@ f3dd2436f440bdca823c4efcde8ceeb25c332c5884393419af940da66a2be656  september-inpu
 ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075  september-outputs/boot.img
 47839a2bac46d3513e3b0509fe982657d93762247ecfbdc1e0386837caf1af57  september-outputs/vmlinuz
 38a522a2285ca1f58a0d26986d355378fbea546a2e97e3a8b41e6b862d234ded  september-outputs/initramfs
+5cc328863940b4906c94bb24969e9e0b8f37b05e0074ac339d270d9c6c4db681  september-outputs/boot-dv43-openrc-no-debug-shell-20260923.img
+
+# Tracked reproduction tooling:
+9a7d17522c113394c83092441e8a1e46d7af55d6c55ba3ef6feae0fa9687ba59  scripts/build-openrc-no-debug-shell-boot.sh

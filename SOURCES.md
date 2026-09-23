@@ -75,3 +75,24 @@ were:
 
 - userdata SHA-256: `7e91267713551eeec7c1790d0a100358e23b6554753d67a5df075502a69a401c`;
 - boot image SHA-256: `ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075`.
+
+## No-debug-shell boot validation record (2026-09-23)
+
+The reversible builder is tracked as
+`scripts/build-openrc-no-debug-shell-boot.sh`. Its SHA-256 is
+`9a7d17522c113394c83092441e8a1e46d7af55d6c55ba3ef6feae0fa9687ba59`.
+It is an exact copy of the environment-specific script executed by the owner;
+its absolute paths intentionally describe the validated D-v43 work layout.
+
+The owner's persistent build evidence was stored outside Git at
+`/home/linuxagent/dv43-openrc-reconstruction/no-debug-shell/state-20260923T183544Z-16749`.
+It includes complete pre-build backups, the generated `/boot` tree, and
+`unpackbootimg` output. The extracted new cmdline exactly matches the expected
+historical cmdline with only `pmos.debug-shell` removed. The restored historical
+boot image was rechecked at its original SHA-256.
+
+The owner then supplied the classic-fastboot console result and the live-system
+validation record. The no-debug-shell image was launched with `fastboot boot`,
+not installed persistently. The record covers automatic continuation into
+OpenRC, closed TCP port 23, open TCP port 22, successful SSH access, and a live
+`/proc/cmdline` without `pmos.debug-shell`. No credential is retained here.

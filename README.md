@@ -15,6 +15,11 @@ USB networking returned, and SSH login as `lmi` succeeded. A subsequent manual
 created `wlan0`, `p2p0`, and `wifi-aware0`, and completed a radio scan that
 found six BSS entries.
 
+A follow-up boot image removes `pmos.debug-shell` from the kernel command line.
+It was launched non-persistently with `fastboot boot` and reached OpenRC, USB
+networking, and SSH without Telnet or `pmos_continue_boot`. The image was not
+installed permanently.
+
 This is a **functional, evidence-based reconstruction of the D-v43 OpenRC
 configuration**, not a bit-for-bit reproduction. The original June 2026
 device `r104` APK, boot image, and userdata image are no longer locally
@@ -32,9 +37,11 @@ See:
 - [Evidence and source inventory](SOURCES.md)
 - [Reference checksums](SHA256SUMS)
 - [Consolidated reconstruction/verification script](scripts/reconstruct-dv43-openrc.sh)
+- [Reversible no-debug-shell boot builder](scripts/build-openrc-no-debug-shell-boot.sh)
 
 Hardware validation now covers the complete OpenRC userspace, USB networking,
-SSH access, QCA6390 initialization, and Wi-Fi scanning. Wi-Fi still requires a
-manual trigger in this test; association, Wi-Fi DHCP, and Internet access were
-not tested. The display remains black, and boot still pauses in
-`pmos.debug-shell` until `pmos_continue_boot` is run manually.
+SSH access, autonomous continuation past initramfs, QCA6390 initialization,
+and Wi-Fi scanning. The Wi-Fi result belongs to the preceding boot and was not
+retested with the exact no-debug-shell image; it required a manual trigger.
+Association, Wi-Fi DHCP, and Internet access remain untested. The display
+remains black, and the earlier `powerkey` crash remains unresolved.

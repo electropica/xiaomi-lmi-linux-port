@@ -7,12 +7,16 @@ system. `pmbootstrap install` completed with `DONE`; the installed tree and
 generated artifacts passed static validation. A subsequent operator-run phone
 test reached the full OpenRC system, restored USB networking, and accepted an
 SSH login as `lmi`. A subsequent manual Wi-Fi bring-up initialized the QCA6390,
-created all three expected interfaces, and completed a radio scan.
+created all three expected interfaces, and completed a radio scan. Finally, a
+reversible rebuild removed `pmos.debug-shell`; that exact image reached OpenRC
+and SSH without Telnet or `pmos_continue_boot` when launched with
+`fastboot boot`.
 
 The precise result is a **functional, evidence-based reconstruction of the
 D-v43 OpenRC configuration**. It is not a bit-for-bit reproduction and is not
-validated yet for display, autonomous boot without the debug shell, Wi-Fi
-association, Wi-Fi DHCP, or Internet access.
+validated yet for display, Wi-Fi association, Wi-Fi DHCP, or Internet access.
+The no-debug-shell image has been validated only as a temporary fastboot boot,
+not as a persistently installed boot image.
 
 ## Correction of the earlier systemd interpretation
 
@@ -128,7 +132,7 @@ installed. The on-device result resolves the operational question: TCP port
 started. Thus SSH works, but the running daemon is Dropbear rather than an
 OpenSSH `sshd` service.
 
-## On-device validation
+## Initial on-device validation (debug-shell boot)
 
 The operator performed the hardware test after the static milestone:
 
@@ -192,7 +196,7 @@ routewrangler
 local
 ```
 
-The test also exposed limitations that remain part of the current status:
+That initial test exposed limitations recorded at the time:
 
 - the screen is black;
 - `powerkey` is crashed;
@@ -241,19 +245,74 @@ not validate association with an access point, Wi-Fi DHCP, or Internet access.
 | `boot.img` | `52834304` bytes | `ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075` |
 | `vmlinuz` | `43233304` bytes | `47839a2bac46d3513e3b0509fe982657d93762247ecfbdc1e0386837caf1af57` |
 | `initramfs` | `8714191` bytes | `38a522a2285ca1f58a0d26986d355378fbea546a2e97e3a8b41e6b862d234ded` |
+| `boot-dv43-openrc-no-debug-shell-20260923.img` | `52834304` bytes | `5cc328863940b4906c94bb24969e9e0b8f37b05e0074ac339d270d9c6c4db681` |
 
 These September hashes identify the reconstructed outputs only. None is
 claimed to match a historical June artifact.
+
+## Reversible no-debug-shell rebuild
+
+The owner ran the reversible builder now tracked at
+`scripts/build-openrc-no-debug-shell-boot.sh` (SHA-256
+`9a7d17522c113394c83092441e8a1e46d7af55d6c55ba3ef6feae0fa9687ba59`).
+The script is intentionally tied to the documented local paths and performs
+these guarded steps:
+
+- verifies the installed package versions, historical boot hash, deviceinfo
+  layout, and single occurrence of `pmos.debug-shell`;
+- archives both deviceinfo paths and the complete `/boot` tree in persistent
+  state outside Git;
+- temporarily removes only the exact token from the real deviceinfo target;
+- runs the single pinned offline `pmbootstrap initfs build` command;
+- uses the locally pinned `unpackbootimg` under QEMU to prove that the output
+  cmdline equals the historical cmdline with only that token removed;
+- publishes the result without overwriting an existing file, then restores and
+  verifies deviceinfo and the historical `/boot` tree through an exit trap.
+
+The build completed with `DONE`. Its persistent state is
+`/home/linuxagent/dv43-openrc-reconstruction/no-debug-shell/state-20260923T183544Z-16749`.
+The script reported `Validated rootfs and historical /boot restoration: OK`;
+the historical boot returned to SHA-256
+`ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075`.
+The copied Windows artifact was independently read back with the same new-image
+SHA-256. `pmbootstrap shutdown` subsequently completed and unregistered its
+binfmt handlers.
+
+## Autonomous no-debug-shell hardware validation
+
+The new image was launched temporarily with `fastboot boot`; it was **not**
+flashed or installed persistently. Two earlier `Load Error` results occurred
+while the phone was not in classic fastboot mode. After entering classic
+fastboot manually, the identical image was accepted and booted immediately:
+
+```text
+Sending 'boot.img' (51596 KB) OKAY
+Booting OKAY
+Finished. Total time: 1.345s
+```
+
+The phone then reached the OpenRC system without a Telnet connection and
+without `pmos_continue_boot`. USB networking returned automatically. TCP port
+22 was open, port 23 was closed, and SSH login as `lmi` succeeded. The active
+`/proc/cmdline` contained no `pmos.debug-shell` token. This validates autonomous
+continuation through `switch_root` and into the previously validated OpenRC
+userspace for this exact boot image.
+
+The earlier QCA6390/CNSS/interface/scan result remains valid for the D-v43
+OpenRC reconstruction, but Wi-Fi was not retriggered or retested during this
+exact no-debug-shell boot. No association, Wi-Fi DHCP, or Internet access has
+been validated.
 
 ## Current validation boundary and next milestone
 
 Status: **built, statically validated, and hardware-validated through the full
 OpenRC system with working USB networking, SSH access as `lmi`, complete
-QCA6390 initialization, stable CNSS, and a successful Wi-Fi scan**.
+QCA6390 initialization, stable CNSS, a successful Wi-Fi scan, and autonomous
+boot past initramfs without `pmos.debug-shell` or `pmos_continue_boot`**.
 
-This status does not validate display output, autonomous boot, automatic Wi-Fi
-bring-up, access-point association, Wi-Fi DHCP, or Internet access. The next
-milestone must address the black display and crashed/stopped services, remove
-the `pmos.debug-shell` dependency, automate Wi-Fi bring-up, and test association
-and network configuration. The previously observed `powerkey` crash remains
-unresolved.
+This status does not mean the new boot image is installed persistently: it was
+started with `fastboot boot`. It also does not validate display output,
+automatic Wi-Fi bring-up on this exact boot, access-point association, Wi-Fi
+DHCP, or Internet access. The next milestone must address the black display,
+the previously observed `powerkey` crash and stopped services, automate Wi-Fi
+bring-up, and test association and network configuration.
