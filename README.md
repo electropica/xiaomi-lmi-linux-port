@@ -10,7 +10,10 @@ The D-v43 configuration has been reconstructed as **Shelli + OpenRC** from
 historical evidence and pinned local inputs. The installation completed and
 the resulting root filesystem passed static checks. The reconstructed userdata
 and boot images were then tested on the phone: OpenRC reached the full system,
-USB networking returned, and SSH login as `lmi` succeeded.
+USB networking returned, and SSH login as `lmi` succeeded. A subsequent manual
+`lmi-wifi-start` run brought the QCA6390 to CNSS `ONLINE` with zero crashes,
+created `wlan0`, `p2p0`, and `wifi-aware0`, and completed a radio scan that
+found six BSS entries.
 
 This is a **functional, evidence-based reconstruction of the D-v43 OpenRC
 configuration**, not a bit-for-bit reproduction. The original June 2026
@@ -30,6 +33,8 @@ See:
 - [Reference checksums](SHA256SUMS)
 - [Consolidated reconstruction/verification script](scripts/reconstruct-dv43-openrc.sh)
 
-Hardware validation currently stops at a complete OpenRC userspace accessible
-over SSH. The display remains black, Wi-Fi is untested, and boot still pauses
-in `pmos.debug-shell` until `pmos_continue_boot` is run manually.
+Hardware validation now covers the complete OpenRC userspace, USB networking,
+SSH access, QCA6390 initialization, and Wi-Fi scanning. Wi-Fi still requires a
+manual trigger in this test; association, Wi-Fi DHCP, and Internet access were
+not tested. The display remains black, and boot still pauses in
+`pmos.debug-shell` until `pmos_continue_boot` is run manually.

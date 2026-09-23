@@ -6,11 +6,13 @@ The Xiaomi lmi D-v43 configuration has been reconstructed as a Shelli/OpenRC
 system. `pmbootstrap install` completed with `DONE`; the installed tree and
 generated artifacts passed static validation. A subsequent operator-run phone
 test reached the full OpenRC system, restored USB networking, and accepted an
-SSH login as `lmi`.
+SSH login as `lmi`. A subsequent manual Wi-Fi bring-up initialized the QCA6390,
+created all three expected interfaces, and completed a radio scan.
 
 The precise result is a **functional, evidence-based reconstruction of the
 D-v43 OpenRC configuration**. It is not a bit-for-bit reproduction and is not
-validated yet for display, Wi-Fi, or autonomous boot without the debug shell.
+validated yet for display, autonomous boot without the debug shell, Wi-Fi
+association, Wi-Fi DHCP, or Internet access.
 
 ## Correction of the earlier systemd interpretation
 
@@ -130,8 +132,10 @@ OpenSSH `sshd` service.
 
 The operator performed the hardware test after the static milestone:
 
-1. flashed `D-v43-OPENRC-20260923-rootfs.img` as userdata;
-2. temporarily booted `D-v43-OPENRC-20260923-boot.img`;
+1. flashed `D-v43-OPENRC-20260923-rootfs.img` as userdata (SHA-256
+   `7e91267713551eeec7c1790d0a100358e23b6554753d67a5df075502a69a401c`);
+2. temporarily booted `D-v43-OPENRC-20260923-boot.img` (SHA-256
+   `ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075`);
 3. observed the expected initramfs stop in `pmos.debug-shell`, which remains
    in the kernel command line;
 4. ran `pmos_continue_boot`;
@@ -195,7 +199,39 @@ The test also exposed limitations that remain part of the current status:
 - `postmarketos-zram-swap`, `nftables`, and `largefont` are stopped;
 - `pmos.debug-shell` is still present in `/proc/cmdline`, so boot requires the
   manual `pmos_continue_boot` step;
-- Wi-Fi hardware behavior has not been tested.
+- Wi-Fi does not start autonomously in this test and requires the manual
+  trigger documented below.
+
+## On-device Wi-Fi validation
+
+After logging in over SSH as `lmi`, the owner manually ran:
+
+```sh
+sudo /usr/sbin/lmi-wifi-start
+```
+
+The command waited for the CNSS/WLAN sequence and completed. `iw dev` then
+reported `phy#0` and all three expected interfaces:
+
+| Interface | Type | Observation |
+| --- | --- | --- |
+| `wifi-aware0` | `NAN` | present |
+| `p2p0` | `P2P-device` | present |
+| `wlan0` | `managed` | address `[REDACTED-DEVICE-MAC]`; displayed TX power `0.00 dBm` |
+
+CNSS reported:
+
+```text
+/sys/kernel/cnss/subsys9/state = ONLINE
+/sys/kernel/cnss/subsys9/crash_count = 0
+```
+
+The owner then ran `sudo iw dev wlan0 scan`. The scan succeeded and detected
+six BSS entries. No SSID was recorded, preserving local network information.
+
+This validates complete QCA6390 initialization through interface creation,
+stable CNSS operation without a recorded crash, and radio scanning. It does
+not validate association with an access point, Wi-Fi DHCP, or Internet access.
 
 ## Reconstructed outputs
 
@@ -212,9 +248,12 @@ claimed to match a historical June artifact.
 ## Current validation boundary and next milestone
 
 Status: **built, statically validated, and hardware-validated through the full
-OpenRC system with working USB networking and SSH access as `lmi`**.
+OpenRC system with working USB networking, SSH access as `lmi`, complete
+QCA6390 initialization, stable CNSS, and a successful Wi-Fi scan**.
 
-This status does not validate display output, Wi-Fi, or autonomous boot. The
-next milestone must address the black display and crashed/stopped services,
-remove the `pmos.debug-shell` dependency, and separately test WLAN interfaces,
-scan results, CNSS state, crash count, and MAC persistence.
+This status does not validate display output, autonomous boot, automatic Wi-Fi
+bring-up, access-point association, Wi-Fi DHCP, or Internet access. The next
+milestone must address the black display and crashed/stopped services, remove
+the `pmos.debug-shell` dependency, automate Wi-Fi bring-up, and test association
+and network configuration. The previously observed `powerkey` crash remains
+unresolved.

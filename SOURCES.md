@@ -66,3 +66,12 @@ booting the reconstructed boot image. No phone command was run while preparing
 this repository. The record includes PID 1, `uname`, OS identification,
 installed package names, `rc-status`, USB-network reachability, TCP port 22,
 and a successful SSH login as `lmi`.
+
+The operator then supplied a second on-device record for the same reconstructed
+userdata and boot artifacts. It covers the manual `lmi-wifi-start` invocation,
+`iw dev`, CNSS state and crash count, and a successful scan with the BSS count.
+SSID values were deliberately not recorded. The tested artifact identities
+were:
+
+- userdata SHA-256: `7e91267713551eeec7c1790d0a100358e23b6554753d67a5df075502a69a401c`;
+- boot image SHA-256: `ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075`.
