@@ -96,3 +96,48 @@ validation record. The no-debug-shell image was launched with `fastboot boot`,
 not installed persistently. The record covers automatic continuation into
 OpenRC, closed TCP port 23, open TCP port 22, successful SSH access, and a live
 `/proc/cmdline` without `pmos.debug-shell`. No credential is retained here.
+
+## DRM/KMS display validation record (2026-09-25)
+
+Targeted read-only inspection of the running OpenRC system established that
+`DSI-1` was connected, advertised preferred mode `1080x2400`, and remained
+disabled with no DRM client. The system had no framebuffer console. Shelli's
+OpenRC service launched no graphical process.
+
+The owner then ran the guarded one-shot test now tracked as
+`scripts/test-dsi-modetest.sh`. `modetest` completed a modeset and several
+colored rectangles were physically observed. This validates the CRTC,
+scanout, DSI link, panel, and backlight, but not GPU/EGL, a compositor, Phosh,
+or touch input. No credential, phone-derived secret, or large test log is
+retained here.
+
+Weston 16's DRM backend, desktop shell, libseat, seatd, and seatd-launch were
+subsequently staged in temporary overlays only. The attempts restored every
+affected path and installed nothing permanently. After correcting
+`SEATD_VTBOUND`, Weston reached libseat and opened `card0`, but did not modeset:
+DRM-master acquisition was denied in one path, the backend encountered its
+`weston_drm_format_array_add_format` assertion, and Weston 16 rejected the
+attempt to disable atomic modesetting. The temporary overlays, APKs, state
+directories, and logs are intentionally not stored in Git.
+
+## Offline display-stack reference (2026-09-25)
+
+The source image was inspected read-only at:
+
+- `/mnt/c/Users/julien/Downloads/archi-validation-02.img.android-sparse.img`
+- size: `2960036280` bytes
+- SHA-256: `84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78`
+- format: Android sparse v1.0; logical raw size `4551868416` bytes
+
+Persistent analysis output was kept outside Git under
+`/home/linuxagent/dv43-openrc-reconstruction/display-diagnostic/archi-validation-02-analysis/`.
+The image contains Debian 13.6/systemd 257.13 and kernel 4.19.325 build
+`#7-postmarketOS`. Its relevant display paths are Phosh/Phoc 0.46 and an
+alternative Weston 14.0.2 Pixman/kiosk session using root seatd with
+`SEATD_VTBOUND=0`, root Weston, and an atomic `lmi-splash-release` step for
+CRTC 129/plane 58. VT/fbcon is intentionally absent.
+
+The image filesystems had never been mounted according to their filesystem
+metadata, so the image supplies design evidence, not hardware-validation
+evidence. Its Debian/glibc binaries are not reusable directly on Alpine/musl.
+No sparse/raw image, extracted rootfs, or binary from it is tracked here.

@@ -19,5 +19,9 @@ ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075  september-outp
 38a522a2285ca1f58a0d26986d355378fbea546a2e97e3a8b41e6b862d234ded  september-outputs/initramfs
 5cc328863940b4906c94bb24969e9e0b8f37b05e0074ac339d270d9c6c4db681  september-outputs/boot-dv43-openrc-no-debug-shell-20260923.img
 
+# Offline display-analysis reference (not stored in Git):
+84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78  display-analysis/archi-validation-02.img.android-sparse.img
+
 # Tracked reproduction tooling:
 9a7d17522c113394c83092441e8a1e46d7af55d6c55ba3ef6feae0fa9687ba59  scripts/build-openrc-no-debug-shell-boot.sh
+cc7b0989454984e0d49c646d5033263755478954cb6ec56157ea78dbd423856a  scripts/test-dsi-modetest.sh

@@ -13,10 +13,12 @@ and SSH without Telnet or `pmos_continue_boot` when launched with
 `fastboot boot`.
 
 The precise result is a **functional, evidence-based reconstruction of the
-D-v43 OpenRC configuration**. It is not a bit-for-bit reproduction and is not
-validated yet for display, Wi-Fi association, Wi-Fi DHCP, or Internet access.
-The no-debug-shell image has been validated only as a temporary fastboot boot,
-not as a persistently installed boot image.
+D-v43 OpenRC configuration**. It is not a bit-for-bit reproduction. This boot
+milestone did not validate display, Wi-Fi association, Wi-Fi DHCP, or Internet
+access. The later direct DRM/KMS display validation is recorded separately in
+`2026-09-25-drm-display-validation.md`; it validates the hardware path, not a
+graphical session. The no-debug-shell image has been validated only as a
+temporary fastboot boot, not as a persistently installed boot image.
 
 ## Correction of the earlier systemd interpretation
 
@@ -311,8 +313,10 @@ QCA6390 initialization, stable CNSS, a successful Wi-Fi scan, and autonomous
 boot past initramfs without `pmos.debug-shell` or `pmos_continue_boot`**.
 
 This status does not mean the new boot image is installed persistently: it was
-started with `fastboot boot`. It also does not validate display output,
-automatic Wi-Fi bring-up on this exact boot, access-point association, Wi-Fi
-DHCP, or Internet access. The next milestone must address the black display,
-the previously observed `powerkey` crash and stopped services, automate Wi-Fi
-bring-up, and test association and network configuration.
+started with `fastboot boot`. A later milestone proved the CRTC, scanout, DSI,
+panel, and backlight with a direct DRM/KMS test, while also showing that Shelli
+does not start a persistent graphical client. GPU/EGL, compositor integration,
+touch, automatic Wi-Fi bring-up on this exact boot, access-point association,
+Wi-Fi DHCP, Internet access, and the previously observed `powerkey` crash all
+remain open. See `2026-09-25-drm-display-validation.md` for the exact display
+boundary and Weston investigation.
