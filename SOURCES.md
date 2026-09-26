@@ -164,3 +164,21 @@ The source-only recipe, patch and wrappers are under
 image, remote journal, temporary state or secret is tracked. Weston work is
 intentionally suspended while OS and application work continues on the older
 functional build.
+
+## Historical M1/GPU72 graphical build (2026-09-26)
+
+The prior materially validated graphical base was Debian 13/Mobian with
+systemd, Phosh/Phoc 0.46 and GLES2 → Zink → Turnip → KGSL → Adreno 650.
+GPU-55, GPU-66 and GPU-67 established real EGL/GLES rendering, while GPU-68
+produced visible Phosh output through the same accelerated path. The recorded
+boot SHA-256 is
+`0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`; the
+recorded M1/GPU72 sparse userdata SHA-256 is
+`d3c865f8e51e2006668e22654f2b78e0466c75b2028361f99a23ed4218e85bdc`.
+Those image files are currently absent locally. This build is the priority
+historical base for OS/application continuation.
+
+`archi-validation-02.img.android-sparse.img` is separate offline evidence,
+not a hardware validation: its SHA-256 is
+`84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78`, and it
+was never booted or display-tested.

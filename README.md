@@ -42,6 +42,7 @@ See:
 - [D-v43 OpenRC reconstruction milestone](docs/2026-09-23-d-v43-openrc-reconstruction.md)
 - [DRM/KMS display validation and compositor analysis](docs/2026-09-25-drm-display-validation.md)
 - [D-v43 display milestone and Weston 14 boundary](docs/2026-09-26-d-v43-display-milestone.md)
+- [Historical M1/GPU72 hardware validation](docs/2026-09-26-m1-gpu72-historical-validation.md)
 - [Evidence and source inventory](SOURCES.md)
 - [Reference checksums](SHA256SUMS)
 - [Consolidated reconstruction/verification script](scripts/reconstruct-dv43-openrc.sh)
