@@ -4,7 +4,7 @@ This repository records evidence and reproducible procedures for the Xiaomi
 `lmi` P1 reconstruction effort. It deliberately contains no APK, boot image,
 root filesystem image, private signing key, password, or phone-derived secret.
 
-## Current status — 2026-09-25
+## Current status — 2026-09-26
 
 The D-v43 configuration has been reconstructed as **Shelli + OpenRC** from
 historical evidence and pinned local inputs. The installation completed and
@@ -41,6 +41,7 @@ See:
 
 - [D-v43 OpenRC reconstruction milestone](docs/2026-09-23-d-v43-openrc-reconstruction.md)
 - [DRM/KMS display validation and compositor analysis](docs/2026-09-25-drm-display-validation.md)
+- [D-v43 display milestone and Weston 14 boundary](docs/2026-09-26-d-v43-display-milestone.md)
 - [Evidence and source inventory](SOURCES.md)
 - [Reference checksums](SHA256SUMS)
 - [Consolidated reconstruction/verification script](scripts/reconstruct-dv43-openrc.sh)
@@ -56,3 +57,10 @@ hardware works, but the normal system remains black because Shelli provides a
 plain console and no persistent DRM/KMS client performs a modeset. Weston 16
 did not reach a modeset in temporary tests. Graphical userspace integration
 and the earlier `powerkey` crash remain unresolved.
+
+The 2026-09-26 milestone records a successful Alpine/musl Weston 14
+reconstruction and a legacy test path. Weston 14 reached both its normal
+atomic failure and a forced CRTC-129 legacy path, but both remained black;
+DSI-1 became enabled while `actual_brightness` stayed at zero. Weston work is
+intentionally suspended while OS and application work continues on the older
+functional build.

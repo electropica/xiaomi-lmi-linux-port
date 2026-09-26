@@ -141,3 +141,26 @@ The image filesystems had never been mounted according to their filesystem
 metadata, so the image supplies design evidence, not hardware-validation
 evidence. Its Debian/glibc binaries are not reusable directly on Alpine/musl.
 No sparse/raw image, extracted rootfs, or binary from it is tracked here.
+
+## Weston 14 display milestone (2026-09-26)
+
+Weston 14.0.2 was rebuilt natively for Alpine/musl with DRM, Pixman, kiosk,
+libseat and seatd under `/opt/weston14-lmi`. The r0 package SHA-256 is
+`38b85fd8720aa99fa2e7d4eb05ffeb9d4b0828862170ea331c0861dc0c0322dc`; its
+overlay SHA-256 is
+`926dbe2646d077f7a1b4510f108e26bce0fcf43a94d00894498935f636a659c3`.
+
+Weston 14 atomic commit failed with `EINVAL`. With `WESTON_DISABLE_ATOMIC=1`,
+the legacy path selected DSI-1 on CRTC 184 and stayed black. The separate r1
+source patch and recipe forced only DSI-1 to CRTC 129 after checking the
+connector mask and CRTC availability. The resulting overlay SHA-256 is
+`5f553036577dc87102a7956bd68bce87e3ff20de315b13c52a767b39cb58e814`; it
+also stayed black. During Weston, DSI-1 was `enabled` but
+`actual_brightness=0`. All temporary runs restored DSI-1, seatd and
+`/run/seatd.sock`.
+
+The source-only recipe, patch and wrappers are under
+`scripts/weston14-crtc129/`. No Weston APK, overlay, source tarball, rootfs,
+image, remote journal, temporary state or secret is tracked. Weston work is
+intentionally suspended while OS and application work continues on the older
+functional build.
