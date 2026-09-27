@@ -1,0 +1,32 @@
+# archi-validation-02 APT contract (no authentication data)
+
+[sources]
+deb http://deb.debian.org/debian trixie main
+deb http://security.debian.org/debian-security trixie-security main
+
+Types: deb
+URIs: https://repo.mobian.org/
+Suites: trixie
+Components: main
+Signed-By: /usr/share/keyrings/mobian-archive-keyring.gpg
+
+[preferences]
+Package: *
+Pin: release o=Mobian
+Pin-Priority: 700
+
+[apt-policy]
+Apt::Install-Recommends "false";
+Acquire::Languages "none";
+Binary::apt::APT::Keep-Downloaded-Packages "true";
+APT::Keep-Downloaded-Packages "true";
+
+[locked-state]
+installed-package-count=1086
+package-body-sha256=88e4cc3561749773188e22e05d4a997e539233f5dd67495af4b763473f84a0fc
+extended-states-sha256=e70a69400b30ef04d9746542fefce728452831b058cf240efc52e80ac7ebf72f
+held-packages=none
+
+`PACKAGES.tsv` is authoritative for installed names, versions and
+architectures. Repository URLs are not archival guarantees; exact `.deb`
+objects must be captured separately before claiming an independent rebuild.

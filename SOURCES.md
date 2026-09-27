@@ -120,7 +120,7 @@ DRM-master acquisition was denied in one path, the backend encountered its
 attempt to disable atomic modesetting. The temporary overlays, APKs, state
 directories, and logs are intentionally not stored in Git.
 
-## Offline display-stack reference (2026-09-25)
+## Initial offline display-stack reference (2026-09-25)
 
 The source image was inspected read-only at:
 
@@ -137,10 +137,10 @@ alternative Weston 14.0.2 Pixman/kiosk session using root seatd with
 `SEATD_VTBOUND=0`, root Weston, and an atomic `lmi-splash-release` step for
 CRTC 129/plane 58. VT/fbcon is intentionally absent.
 
-The image filesystems had never been mounted according to their filesystem
-metadata, so the image supplies design evidence, not hardware-validation
-evidence. Its Debian/glibc binaries are not reusable directly on Alpine/musl.
-No sparse/raw image, extracted rootfs, or binary from it is tracked here.
+At this stage only offline design evidence had been collected. That historical
+state was superseded by the 2026-09-27 hardware run documented below. Its
+Debian/glibc binaries are not reusable directly on Alpine/musl. No sparse/raw
+image, extracted rootfs, or binary from it is tracked here.
 
 ## Weston 14 display milestone (2026-09-26)
 
@@ -175,10 +175,32 @@ boot SHA-256 is
 `0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`; the
 recorded M1/GPU72 sparse userdata SHA-256 is
 `d3c865f8e51e2006668e22654f2b78e0466c75b2028361f99a23ed4218e85bdc`.
-Those image files are currently absent locally. This build is the priority
-historical base for OS/application continuation.
+The historical sparse userdata remains absent locally. The boot identity is
+now present at the separate Windows Downloads path recorded by the lock and
+was used for the 2026-09-27 validation. M1/GPU72 remains the historical
+reference for OS/application continuation.
 
-`archi-validation-02.img.android-sparse.img` is separate offline evidence,
-not a hardware validation: its SHA-256 is
-`84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78`, and it
-was never booted or display-tested.
+`archi-validation-02.img.android-sparse.img` is distinct from the missing
+historical M1/GPU72 userdata. Its hardware status changed on 2026-09-27 as
+recorded below; the two userdata identities must still not be conflated.
+
+## Validated archi-validation-02 userspace (2026-09-27)
+
+The sparse userdata image whose SHA-256 is
+`84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78`
+was flashed and booted with the D-repro D-v43 image whose SHA-256 is
+`0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`.
+Phosh was visible and usable. The live Phoc journal identified OpenGL ES 3.2
+Mesa 25.0.7 through GLES2 → Zink → Vulkan Turnip → KGSL → Adreno 650. GNOME
+Console and Calculator worked. Chatty's repeated GStreamer diagnostics remain
+a separate application defect.
+
+The versioned, text-only lock is under
+`reproduction/archi-validation-02-lock/`. It records the exact 1,086-package
+inventory, 65 persistent customizations, APT state, systemd ordering, GPU72
+files and the boot/userspace ABI boundary. `ARTIFACTS.tsv` preserves external
+paths, sizes and hashes as provenance; those artifacts are not in Git. The
+lock supports manifest-only verification after clone and full verification on
+the source workstation. Exact cloning is possible from the existing sparse
+image, and functional derivation is specified independently of kernel
+construction. A bit-for-bit rebuild from source is not established.

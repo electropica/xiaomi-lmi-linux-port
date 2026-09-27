@@ -17,8 +17,10 @@ The matching flashable userdata was:
 
 with SHA-256
 `d3c865f8e51e2006668e22654f2b78e0466c75b2028361f99a23ed4218e85bdc`.
-Both files are currently absent locally; only their documented identities
-remain.
+The sparse userdata remains absent locally. The same boot identity is now
+available from the separate Windows Downloads copy used for the 2026-09-27
+`archi-validation-02` validation; the historical output path above remains
+absent.
 
 The hardware evidence is explicit: GPU-55 created and read back an EGL
 OpenGL ES 3.2 pbuffer through Turnip/KGSL; GPU-66 and GPU-67 validated the
@@ -30,9 +32,15 @@ graphics packages in an image.
 
 This record must not be conflated with
 `archi-validation-02.img.android-sparse.img` (SHA-256
-`84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78`). That
-image was inspected offline but never booted or display-validated on hardware.
+`84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78`). At
+the date of this historical note that image had only been inspected offline.
+It was subsequently booted and graphically validated on 2026-09-27 with the
+same D-repro boot identity; that later result is recorded separately and does
+not make it the missing M1/GPU72 sparse userdata.
 
-M1/GPU72 is therefore the priority historical base for resuming OS and
-application work. Its boot/userdata pair must first be recovered or rebuilt;
-no binary artifact is copied into this repository.
+M1/GPU72 remains the priority historical reference for OS and application
+work. Its original sparse userdata must still be recovered or rebuilt; no
+binary artifact is copied into this repository.
+
+See [the 2026-09-27 userspace milestone](2026-09-27-archi-validation-02-userspace-lock.md)
+for the later `archi-validation-02` hardware validation and reproduction lock.

@@ -4,7 +4,25 @@ This repository records evidence and reproducible procedures for the Xiaomi
 `lmi` P1 reconstruction effort. It deliberately contains no APK, boot image,
 root filesystem image, private signing key, password, or phone-derived secret.
 
-## Current status — 2026-09-26
+## Current status — 2026-09-27
+
+The `archi-validation-02` Debian 13/Mobian userdata has now been booted on the
+Xiaomi `lmi` with the validated D-repro D-v43 RAM boot. Phosh is visible and
+usable. The live renderer journal confirms GLES2 through Zink, Vulkan Turnip,
+KGSL and the Adreno 650 with OpenGL ES 3.2 Mesa 25.0.7. GNOME Console and
+Calculator were exercised successfully. Chatty remains open but emits repeated
+GStreamer diagnostics; that application issue does not invalidate the display
+or GPU result.
+
+The text-only reproduction lock is tracked under
+[`reproduction/archi-validation-02-lock/`](reproduction/archi-validation-02-lock/README.md).
+It records 1,086 exact packages, 65 persistent customizations, the GPU72
+payload identities and the D-repro boot/userspace contract. The userdata can
+be cloned exactly from the existing sparse image or used as the basis of a
+functionally equivalent userspace without rebuilding the kernel. A bit-for-bit
+source rebuild is not yet demonstrated.
+
+## D-v43 OpenRC status — 2026-09-26
 
 The D-v43 configuration has been reconstructed as **Shelli + OpenRC** from
 historical evidence and pinned local inputs. The installation completed and
@@ -43,6 +61,8 @@ See:
 - [DRM/KMS display validation and compositor analysis](docs/2026-09-25-drm-display-validation.md)
 - [D-v43 display milestone and Weston 14 boundary](docs/2026-09-26-d-v43-display-milestone.md)
 - [Historical M1/GPU72 hardware validation](docs/2026-09-26-m1-gpu72-historical-validation.md)
+- [Validated archi-validation-02 userspace lock](docs/2026-09-27-archi-validation-02-userspace-lock.md)
+- [Versioned userspace reproduction lock](reproduction/archi-validation-02-lock/README.md)
 - [Evidence and source inventory](SOURCES.md)
 - [Reference checksums](SHA256SUMS)
 - [Consolidated reconstruction/verification script](scripts/reconstruct-dv43-openrc.sh)

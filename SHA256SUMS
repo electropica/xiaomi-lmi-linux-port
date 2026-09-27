@@ -19,8 +19,12 @@ ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075  september-outp
 38a522a2285ca1f58a0d26986d355378fbea546a2e97e3a8b41e6b862d234ded  september-outputs/initramfs
 5cc328863940b4906c94bb24969e9e0b8f37b05e0074ac339d270d9c6c4db681  september-outputs/boot-dv43-openrc-no-debug-shell-20260923.img
 
-# Offline display-analysis reference (not stored in Git):
-84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78  display-analysis/archi-validation-02.img.android-sparse.img
+# Validated archi-validation-02 external artifacts (not stored in Git):
+0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad  external/D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img
+84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78  external/archi-validation-02.img.android-sparse.img
+329e2124f97032a2f4b15167bbd9bbbd9395bb422f2794a2117ee610a2368f27  external/archi-validation-02.img
+fe4ea70374f15c0a8539c34227d7c388b89833dc8d6dfc50774d24be1cfc7223  external/Mobian-M1-REPRO-pmOS_root.ext4
+1fbfe7cbfd6d8a7faf444409291abb665f7458a36b21cdc3d4438302c66e7e99  external/archi-validation-02-embedded-boot.img
 
 # Tracked reproduction tooling:
 9a7d17522c113394c83092441e8a1e46d7af55d6c55ba3ef6feae0fa9687ba59  scripts/build-openrc-no-debug-shell-boot.sh
@@ -32,12 +36,26 @@ cc7b0989454984e0d49c646d5033263755478954cb6ec56157ea78dbd423856a  scripts/test-d
 5f553036577dc87102a7956bd68bce87e3ff20de315b13c52a767b39cb58e814  external/weston14-lmi-overlay-14.0.2-r1-crtc129.tar.gz
 
 # Tracked milestone documentation and source-only tooling:
-ca7d5714294caeca9f6956ed7aaca6f1a6bcf6bff6d59283a865fc048bcdf17a  README.md
-d3a79f6552cd5f2186e9305a714c8a4f7627078a6e6a948574c00d2f044162d3  SOURCES.md
+92844dce2f2845d0323daab6e732153c4ade1dd8815101b7cded7e449914f12e  README.md
+5358af9b7bf1f7843d81f1055bf85c31fda0ab58947895e2e512541b28e790fe  SOURCES.md
 8d23b2a8cc41224d5324f4d5eecae49493656987143b62101456d5dc8736b5ad  docs/2026-09-26-d-v43-display-milestone.md
-598f9924d3e263691e7e45d58520cdbdd437f34a212b0172b70fe9f073c1f4e6  docs/2026-09-26-m1-gpu72-historical-validation.md
+97c2d975cd897857daf67e3560986a6d81de14a5c0eabc027c1858314062589e  docs/2026-09-26-m1-gpu72-historical-validation.md
+cf2a6a5abe1ae7b013ac2e2a804407bca555d17e6ea904745080aea0e0607b41  docs/2026-09-27-archi-validation-02-userspace-lock.md
 085c2e4d91aa15f720f1855dedab31c6d48050bb6e6d43250400a1a886e1fb3a  scripts/weston14-crtc129/APKBUILD
 855ad94e9f3cb661a0ebdd84bf60e16ace0986482de85abf2f1617977f380b43  scripts/weston14-crtc129/build-weston14-lmi-crtc129.sh
 28eabd4854c081895c4a85c53a793198238e74783ead975b7c71c347c504628b  scripts/weston14-crtc129/package-overlay-crtc129.sh
 b74aace92b7ae8ecc8d3c8dc20c9a564d5982fb44901da14d753de6e27501ee6  scripts/weston14-crtc129/prefer-dsi-crtc-129.patch
 51c1a36710704e67f512ad38b077c8099f09f76855714f5944d8929d5463720a  scripts/weston14-crtc129/weston-lmi.ini
+
+# Tracked archi-validation-02 userspace reproduction lock:
+19753895bc19f832a514f06a27e930dac9bdf5b88ff8c00b35a2161be17c46c4  reproduction/archi-validation-02-lock/APT-SOURCES.txt
+594c4a576d6cad4901229ee8e65b9813d1d663f7da61279f25e197e11e76a286  reproduction/archi-validation-02-lock/ARTIFACTS.tsv
+89b9741f6480138d090a78fa180d393f99bb40a517e3f9af023b716339c5b972  reproduction/archi-validation-02-lock/BOOT-USERSPACE-CONTRACT.md
+1c1a50cf0d225fb087279ed6407dc11b1ee9c7d892eb4c0efd4af0494df1de87  reproduction/archi-validation-02-lock/EXCLUSIONS.md
+d379898e5204681d6728432036966cd8df78a30bb6357085cdaca073e99f8231  reproduction/archi-validation-02-lock/GPU72.tsv
+e88961fb5617560bd599f05aecb93cd1cd21bf249256c1dd2a4b3c117d195a79  reproduction/archi-validation-02-lock/LOCAL-FILES.tsv
+2d74e312d9dd513256f7e0677e68ba8a7159bd425b9e0e67223b429ed3c8cda9  reproduction/archi-validation-02-lock/PACKAGES.tsv
+553e77d503de786f3cd009d1153f00882d0fdc841fd286e9ddd27091a81e0ef9  reproduction/archi-validation-02-lock/README.md
+6f8af1f425c220ebfd58403630945b7f0c666abaf756ccc005e57b880a8ac2fa  reproduction/archi-validation-02-lock/SHA256SUMS
+6f8d84f9f20b12a63f12141c16a2446083b7c5fa5767a1d7e2eda72ccaf342e6  reproduction/archi-validation-02-lock/SYSTEMD-UNITS.tsv
+3d6bd5fce842a5907441ef3d5cd608bcf3a5ed168ace30d7c171ba7d2a579ad0  reproduction/archi-validation-02-lock/verify-archi-validation-02-lock.sh
