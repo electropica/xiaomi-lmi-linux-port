@@ -46,9 +46,15 @@ for name in README.md ARTIFACTS.tsv PACKAGES.tsv APT-SOURCES.txt \
 	EXCLUSIONS.md verify-archi-validation-02-lock.sh SHA256SUMS; do
 	need_file "$LOCK_DIR/$name"
 done
+for name in README.md DEB-CACHE-PRESENT.tsv DEB-CACHE-MISSING.tsv \
+	DEB-DOWNLOAD-PLAN.tsv DEB-UNRESOLVED-PLAN.tsv PACKAGES.tsv SOURCES.tsv \
+	SHA256SUMS STATUS verify-deb-cache.sh; do
+	need_file "$LOCK_DIR/deb-cache/$name"
+done
 
 # The lock is metadata only: no large payload, symlink, device, socket or FIFO.
-find "$LOCK_DIR" -mindepth 1 ! -type f -print | grep -q . &&
+# The single deb-cache directory groups the package provenance manifests.
+find "$LOCK_DIR" -mindepth 1 ! -type f ! -path "$LOCK_DIR/deb-cache" -print | grep -q . &&
 	fail "non-regular entry found in lock directory"
 large=$(find "$LOCK_DIR" -type f -size +10M -print)
 [ -z "$large" ] || fail "large payload found in lock directory: $large"

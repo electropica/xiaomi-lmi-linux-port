@@ -22,6 +22,11 @@ be cloned exactly from the existing sparse image or used as the basis of a
 functionally equivalent userspace without rebuilding the kernel. A bit-for-bit
 source rebuild is not yet demonstrated.
 
+The complete 1,086-package `.deb` cache is preserved through text-only
+provenance manifests under
+[`reproduction/archi-validation-02-lock/deb-cache/`](reproduction/archi-validation-02-lock/deb-cache/README.md).
+The validated cache and its deterministic tar archive remain external to Git.
+
 ## D-v43 OpenRC status — 2026-09-26
 
 The D-v43 configuration has been reconstructed as **Shelli + OpenRC** from

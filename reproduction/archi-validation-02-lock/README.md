@@ -55,3 +55,18 @@ artifact, the extracted rootfs, Android sparse magic, ext4 UUID, persistent
 files, GPU72 payload and APT extended state. `ARCHI_ROOTFS` may override the
 default extracted-rootfs path; paths in `ARTIFACTS.tsv` remain documentary and
 must exist exactly for full verification.
+
+## Complete package cache
+
+The complete 1,086-package `.deb` closure and its provenance are recorded in
+[`deb-cache/`](deb-cache/README.md). The cache archives and its deterministic
+tar are external artifacts and are not stored in Git. After obtaining the
+cache directory, verify it offline with:
+
+```sh
+deb-cache/verify-deb-cache.sh /path/to/archi-validation-02-deb-cache
+```
+
+The verifier accepts the cache directory explicitly, compares its package
+triplets with this lock, validates every `.deb` with `dpkg-deb`, and checks
+all archive SHA-256 values.

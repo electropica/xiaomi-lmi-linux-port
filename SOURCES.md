@@ -204,3 +204,12 @@ lock supports manifest-only verification after clone and full verification on
 the source workstation. Exact cloning is possible from the existing sparse
 image, and functional derivation is specified independently of kernel
 construction. A bit-for-bit rebuild from source is not established.
+
+The complete `.deb` cache is validated separately from the userdata image.
+Text-only package, source, checksum and retrieval-plan manifests are tracked
+under `reproduction/archi-validation-02-lock/deb-cache/`; the 1,086 archives
+and the 523,274,240-byte deterministic tar remain external. The cache contains
+772 archives copied from the original APT cache, 301 from Debian, 12 from
+Debian Snapshot, and one Mobian archive keyring from Debian Snapshot. Its
+external tar SHA-256 is
+`65058c4bc74c6aea3854060a8e7b9a7617ea6aee66d503d90564bcee214a69fd`.
