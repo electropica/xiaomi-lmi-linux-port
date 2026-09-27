@@ -41,6 +41,13 @@ bind fails before the ASoC card can register. The evidence boundary and next
 instrumented diagnostic are recorded in
 [the WCD938x audio blocker note](docs/2026-09-27-wcd938x-audio-blocker.md).
 
+Camera remains blocked at both configuration and downstream-pipeline layers.
+Megapixels `1.8.3-1` cannot find `qcom,kona-mtp.ini`; six generic sensor roles
+are present in the live DT, but the media graph exposes no pads or usable
+standard capture pipeline. Vendor sensor identities are suggestions, not
+confirmed detections, and no speculative INI is included. See the
+[Megapixels downstream camera blocker](docs/2026-09-27-camera-downstream-blocker.md).
+
 ## D-v43 OpenRC status — 2026-09-26
 
 The D-v43 configuration has been reconstructed as **Shelli + OpenRC** from
@@ -85,6 +92,7 @@ See:
 - [Derived userdata builder and validated daily-base profile](reproduction/archi-validation-02-derived-builder/README.md)
 - [daily-base hardware validation record](docs/2026-09-27-daily-base-validation.md)
 - [WCD938x SoundWire audio blocker](docs/2026-09-27-wcd938x-audio-blocker.md)
+- [Megapixels downstream camera blocker](docs/2026-09-27-camera-downstream-blocker.md)
 - [Evidence and source inventory](SOURCES.md)
 - [Reference checksums](SHA256SUMS)
 - [Consolidated reconstruction/verification script](scripts/reconstruct-dv43-openrc.sh)

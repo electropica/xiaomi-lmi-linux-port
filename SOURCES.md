@@ -269,3 +269,24 @@ live DTS, full log, binary or device identifier is versioned. The exact source
 commit and DTB provenance for the running D-repro boot remain unproven; see
 `docs/2026-09-27-wcd938x-audio-blocker.md` for the diagnostic boundary and
 required next experiment.
+
+## Megapixels downstream camera blocker (2026-09-27)
+
+The live camera topology was inspected read-only on the Xiaomi `lmi` running
+the D-repro userspace. Megapixels `1.8.3-1` looked for the absent
+`/usr/share/megapixels/config/qcom,kona-mtp.ini`. Six generic DT camera roles
+and vendor module names were observed, but model-to-node identity and a
+standard media pipeline were not established. The media enumeration exposed
+34 entities and no pads; standard read-only subdevice capability and media-bus
+format queries returned `EINVAL` on all six `cam-sensor-driver` candidates.
+No INI was authored because the required sensor identities, formats and graph
+links remain unknown. The dated blocker note records the facts and limits.
+
+Read-only evidence is private and external to Git at
+`/home/linuxagent/dv43-openrc-reconstruction/camera-diagnostic/megapixels-topology-20260927/`.
+The ioctl result file SHA-256 is
+`5ab4e377cb6a1464de2c8d3beecd2a2f9f2440b42fddba39c99f5dcefc8fd0b8`; the
+method note SHA-256 is
+`b105c4e418484581a5ec282d36b24418c702a8bfae55f7e1e874b924d325178a`.
+These paths are workstation provenance only. No DT dump, complete log,
+identifier or camera binary is tracked.
