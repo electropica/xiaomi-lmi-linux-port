@@ -1,0 +1,20 @@
+[Unit]
+Description=Restore last known UTC time without relying on the hardware RTC
+DefaultDependencies=no
+Wants=local-fs.target
+After=local-fs.target
+Before=basic.target systemd-timesyncd.service systemd-logind.service systemd-user-sessions.service
+Conflicts=shutdown.target
+Before=shutdown.target umount.target
+
+[Service]
+Type=oneshot
+UMask=0077
+ExecStart=/usr/local/libexec/lmi-time-seed restore
+ExecStop=/usr/local/libexec/lmi-time-seed save
+RemainAfterExit=yes
+TimeoutStartSec=15s
+TimeoutStopSec=15s
+
+[Install]
+WantedBy=basic.target

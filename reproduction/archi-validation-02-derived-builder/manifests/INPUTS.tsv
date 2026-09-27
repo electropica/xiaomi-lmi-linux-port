@@ -1,0 +1,6 @@
+role	path	size_bytes	sha256	required
+deb_cache	${ARCHI_DEB_CACHE} (external; 1,086 locked .deb files)	521861380	-	yes
+deb_cache_archive	${ARCHI_DEB_ARCHIVE} (external)	523274240	65058c4bc74c6aea3854060a8e7b9a7617ea6aee66d503d90564bcee214a69fd	yes
+golden_raw	${ARCHI_GOLDEN_RAW} (external)	4551868416	329e2124f97032a2f4b15167bbd9bbbd9395bb422f2794a2117ee610a2368f27	yes
+golden_sparse	${ARCHI_GOLDEN_SPARSE} (external)	2960036280	84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78	yes
+lock	../archi-validation-02-lock (versioned text lock)	-	-	yes

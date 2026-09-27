@@ -213,3 +213,37 @@ and the 523,274,240-byte deterministic tar remain external. The cache contains
 Debian Snapshot, and one Mobian archive keyring from Debian Snapshot. Its
 external tar SHA-256 is
 `65058c4bc74c6aea3854060a8e7b9a7617ea6aee66d503d90564bcee214a69fd`.
+
+## Derived `daily-base` userdata (2026-09-27)
+
+The text-only derivation recipe is tracked under
+`reproduction/archi-validation-02-derived-builder/`. It was copied from the
+external working tree `/home/linuxagent/archi-validation-02-derived-builder`;
+the versioned recipe now accepts explicit `ARCHI_GOLDEN_RAW`,
+`ARCHI_GOLDEN_SPARSE`, `ARCHI_DEB_CACHE`, and `ARCHI_DEB_ARCHIVE` paths, with
+the lock resolved beside the builder by default. The local source workstation
+paths are documentary references only. No source tree under `ProjetMobian`
+was modified.
+
+The `baseline-nochange`, `time-seed`, and `daily-base` profiles and their
+systemd hooks/overlays are versioned; generated `outputs/` payloads and
+`state-*` directories are ignored. The checked daily-base outputs are external:
+raw size 4,551,868,416 bytes, SHA-256
+`5cc226cd96c324b68d74e33eec461a091e7f5dd69b80e0529c2d0267cfa3cad5`; sparse
+size 2,960,466,444 bytes, SHA-256
+`172a4f950252e810f408bf4d5caf5075c699020e6a2198999f7f0b30c7f19928`. Sparse
+expansion matched raw; GPT, UUIDs and the embedded boot partition remained
+unchanged. The state directory could not be reread without interactive sudo
+because it was mode 0700 and owned by `nobody:nogroup`; the images were checked
+independently and the hardware boot was observed.
+
+The RTC was stuck in 1975 and not writable; the system clock had regressed to
+2026-04-13, causing the PAM future-password warning. The `time-seed` profile
+stores a root-only build-host UTC floor and advances time only when the booted
+clock is older. `daily-base` adds a `mobian`-owned, mode-0644 XDG override with
+`Hidden=true` for only the Chatty daemon autostart. Chatty 0.8.7-2 and its
+system desktop entry/manual launcher remain intact. On-device validation
+confirmed Phosh, responsive unlock/lock, DSI-1, GLES2 → Zink → Turnip →
+KGSL/Adreno 650, the active time floor and no new PAM warning; the automatic
+Chatty freeze did not recur. See
+`docs/2026-09-27-daily-base-validation.md` for the milestone boundary.

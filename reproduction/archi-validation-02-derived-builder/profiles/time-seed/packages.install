@@ -1,0 +1,2 @@
+# Exact locked package requests use: package=version
+# Intentionally empty; time-seed uses only systemd, coreutils and the shell already in the golden.

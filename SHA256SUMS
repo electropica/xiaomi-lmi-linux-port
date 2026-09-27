@@ -36,11 +36,12 @@ cc7b0989454984e0d49c646d5033263755478954cb6ec56157ea78dbd423856a  scripts/test-d
 5f553036577dc87102a7956bd68bce87e3ff20de315b13c52a767b39cb58e814  external/weston14-lmi-overlay-14.0.2-r1-crtc129.tar.gz
 
 # Tracked milestone documentation and source-only tooling:
-9f6f08df7ab4dd0bd770524782382ca751973ec155662c622776ee5f9ce85524  README.md
-0cea91eddff1ff87e2fdd767bca2b4007f209c170e8cd0c5ceb3af4a53827840  SOURCES.md
+3997a35f537e6ac4c468e0a509ab996e44b94a3516fcbcf216d09e1e276639fc  README.md
+2acaa4b05db22c04b5f5d5cde320a9efca33f7f7136611ee77eaf9e81bdd3a51  SOURCES.md
 8d23b2a8cc41224d5324f4d5eecae49493656987143b62101456d5dc8736b5ad  docs/2026-09-26-d-v43-display-milestone.md
 97c2d975cd897857daf67e3560986a6d81de14a5c0eabc027c1858314062589e  docs/2026-09-26-m1-gpu72-historical-validation.md
 cf2a6a5abe1ae7b013ac2e2a804407bca555d17e6ea904745080aea0e0607b41  docs/2026-09-27-archi-validation-02-userspace-lock.md
+c174c384563368dba8b551418ed6a4ae87aa99772055d9f4072225805eba1981  docs/2026-09-27-daily-base-validation.md
 085c2e4d91aa15f720f1855dedab31c6d48050bb6e6d43250400a1a886e1fb3a  scripts/weston14-crtc129/APKBUILD
 855ad94e9f3cb661a0ebdd84bf60e16ace0986482de85abf2f1617977f380b43  scripts/weston14-crtc129/build-weston14-lmi-crtc129.sh
 28eabd4854c081895c4a85c53a793198238e74783ead975b7c71c347c504628b  scripts/weston14-crtc129/package-overlay-crtc129.sh
@@ -71,3 +72,44 @@ cd62a5271e379e5b8c68f95e2871a1e66bc191c01b60f322bc0d04126ef79b75  reproduction/a
 c688fa2e17e849a006429b438664c88e931020b6794876869bcecede20028b4e  reproduction/archi-validation-02-lock/deb-cache/SHA256SUMS
 a4bccf5c13ef5ff8311e59b34d492bc7072a55298723601a6a9c127053aee8fc  reproduction/archi-validation-02-lock/deb-cache/STATUS
 6c1aa7a3f291db032c4e92a486135c6a379b752e98b04d0e2b4476ac0b76d85a  reproduction/archi-validation-02-lock/deb-cache/verify-deb-cache.sh
+
+# Derived userdata builder, profiles and text manifests (generated images excluded):
+5006936606cb9b0c3a8273050c11c6e7ab452f93ee6601b9b81b72d239bdfe96  reproduction/archi-validation-02-derived-builder/.gitignore
+09d4cf34efae31d5103f6373c2a8991547ebddf7a99f91916b19851f572e8aa1  reproduction/archi-validation-02-derived-builder/README.md
+6faca9d362fd0eeb13be244f8605dca34d0463a639114060028169b518b12e02  reproduction/archi-validation-02-derived-builder/build-derived-userdata.sh
+0ef1b8230105858732137a78977b4adace67e89a2a31d2836235d5a512dce15a  reproduction/archi-validation-02-derived-builder/lib/loop-cleanup.sh
+a1b2c5177e1764372b2808268dc22df336fc426f1eda372514a4c8de31db7a28  reproduction/archi-validation-02-derived-builder/manifests/CRITICAL-IDENTITIES.tsv
+9c03549e04a1afc34626e3767aed8aa4f6c6815b47c90d68a92c2a56c50c2eec  reproduction/archi-validation-02-derived-builder/manifests/GOLDEN-PARTITIONS.tsv
+b05f6443134269f1b9291ef0ace62b138ba9a97a5a4e4483b307bfc0959d4590  reproduction/archi-validation-02-derived-builder/manifests/GOLDEN-PROTECTED.tsv
+e17819ebf4c64cb2a50f1dcbd0c35fd83c20a759fdf2860f03d7cb0cccbc66e3  reproduction/archi-validation-02-derived-builder/manifests/INPUTS.tsv
+ab8cc9c2466400b5972adc3546a8ad99d4d6145bec8c752e9caf2aaa21e6fa13  reproduction/archi-validation-02-derived-builder/manifests/PROTECTED-PACKAGES.tsv
+cc778141921ab12b89d85ea9921dffa95d2fe1f106fd87e655b93e8444b828ba  reproduction/archi-validation-02-derived-builder/outputs/README.md
+356c5a8f82640dd0eb0c51da9b50bad718403e5a531398bb5c0c0d06d3786f94  reproduction/archi-validation-02-derived-builder/profiles/baseline-nochange/hooks.d/README.md
+a7f74b8f948a878269210de2a283ad3ba6df224746fd757d9dfbf5cf827df05a  reproduction/archi-validation-02-derived-builder/profiles/baseline-nochange/overlay/rootfs/.keep
+5b146db4e09116f8218e3ba1c16be90151af9114fffc383bf5330336797c9104  reproduction/archi-validation-02-derived-builder/profiles/baseline-nochange/packages.install
+36903d043ae5e45199e0d0b02fd4ee5dacb5698711d6681bff818db8bd6de3b7  reproduction/archi-validation-02-derived-builder/profiles/baseline-nochange/packages.remove
+5343d29f55080cc553c1944fbd6aaf9bb9261c0de958d929c0f342844176d8c3  reproduction/archi-validation-02-derived-builder/profiles/baseline-nochange/profile.conf
+8360f6c2c9b147ec5e737b4f6e8521af975d19640357b5b544418c4568c8772f  reproduction/archi-validation-02-derived-builder/profiles/daily-base/README.md
+1f77b111873a1efbd4fdbb75a8b8d6137a01838109e6bbc7c095674e995e03ec  reproduction/archi-validation-02-derived-builder/profiles/daily-base/hooks.d/10-initialize-lmi-time-seed.sh
+87c20f9556662eaf58bba8a8e0d0910cdb392d907787bb141f608c944d298f23  reproduction/archi-validation-02-derived-builder/profiles/daily-base/hooks.d/20-disable-chatty-daemon.sh
+1ef57ba5d7f1448d86d6d45514c73f242fcf89085a6889a6f0ee72c60540a176  reproduction/archi-validation-02-derived-builder/profiles/daily-base/hooks.d/README.md
+87806732def932b932a2e8ec60ba291db5328b7519c984e80af99f3f247312c4  reproduction/archi-validation-02-derived-builder/profiles/daily-base/overlay/rootfs/etc/systemd/system/lmi-time-seed-save.service
+7218bc3818fd4b12531445b2baaf9d1ad5721489c6a6f9f15a2b86a03b77d50e  reproduction/archi-validation-02-derived-builder/profiles/daily-base/overlay/rootfs/etc/systemd/system/lmi-time-seed-save.timer
+cb1546d4c5b51eb0460320eb456838dd7f8bb43031f928d9f8b57c0c34ae2a8d  reproduction/archi-validation-02-derived-builder/profiles/daily-base/overlay/rootfs/etc/systemd/system/lmi-time-seed.service
+51514a1788d5678103d090a22080c303512fff997240a9e1d20c3dfa4b7e7d96  reproduction/archi-validation-02-derived-builder/profiles/daily-base/overlay/rootfs/usr/local/libexec/lmi-time-seed
+d4eff5609d106cee15db3978279321f706ce582742e37abc0f0c284bbc57fbfe  reproduction/archi-validation-02-derived-builder/profiles/daily-base/packages.install
+1114b80774b2241f29f06de21f67aa9b655ea928105f19ed19fae9fe24f15874  reproduction/archi-validation-02-derived-builder/profiles/daily-base/packages.remove
+17e6af3f4a27642b776d58daea1d206c2a33e7513dc3a20e69f828a635af95d6  reproduction/archi-validation-02-derived-builder/profiles/daily-base/profile.conf
+0d2dbd045dae2b6e45f5bca4fb59eddf36a78bd94b59ddaccc688bfb66b29b74  reproduction/archi-validation-02-derived-builder/profiles/time-seed/README.md
+9f6c6f7c32e68c9c725a2d0b5b61c38a2f749cd5fe52f8e820ea06c5babb3ae9  reproduction/archi-validation-02-derived-builder/profiles/time-seed/hooks.d/10-initialize-lmi-time-seed.sh
+f70de989878eca100af8b46e1710986071799ab76cbfa915363714f2ed211cad  reproduction/archi-validation-02-derived-builder/profiles/time-seed/hooks.d/README.md
+87806732def932b932a2e8ec60ba291db5328b7519c984e80af99f3f247312c4  reproduction/archi-validation-02-derived-builder/profiles/time-seed/overlay/rootfs/etc/systemd/system/lmi-time-seed-save.service
+7218bc3818fd4b12531445b2baaf9d1ad5721489c6a6f9f15a2b86a03b77d50e  reproduction/archi-validation-02-derived-builder/profiles/time-seed/overlay/rootfs/etc/systemd/system/lmi-time-seed-save.timer
+cb1546d4c5b51eb0460320eb456838dd7f8bb43031f928d9f8b57c0c34ae2a8d  reproduction/archi-validation-02-derived-builder/profiles/time-seed/overlay/rootfs/etc/systemd/system/lmi-time-seed.service
+51514a1788d5678103d090a22080c303512fff997240a9e1d20c3dfa4b7e7d96  reproduction/archi-validation-02-derived-builder/profiles/time-seed/overlay/rootfs/usr/local/libexec/lmi-time-seed
+c39dd905d686a14708cc52540ce2384304ccc45f6d9b21753eb1aeb0c92e4a8a  reproduction/archi-validation-02-derived-builder/profiles/time-seed/packages.install
+48b77474118daddb5e72462169b73d856a6d18b3bad68ec38ee10a011e3e87c4  reproduction/archi-validation-02-derived-builder/profiles/time-seed/packages.remove
+2513f2bc3521a3b03f6cf5bb33a0a9fcd0c1ecba774798db9c99da79a59290cb  reproduction/archi-validation-02-derived-builder/profiles/time-seed/profile.conf
+8f36dd68941a63e194a322d101455f1994d15ed3f2e2340971faa98386c1a1bf  reproduction/archi-validation-02-derived-builder/tests/test-loop-cleanup.sh
+9baae37e314b958043c21fc51fe1e78159070bd39cbaf2428c12ceb6228864c8  reproduction/archi-validation-02-derived-builder/verify-derived-userdata.sh
+4a4a33423bd71807f451898c0298a22f2b06c4b27adce6ea56cc39ae703a7760  reproduction/archi-validation-02-derived-builder/SHA256SUMS

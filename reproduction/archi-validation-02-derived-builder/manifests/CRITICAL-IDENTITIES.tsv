@@ -1,0 +1,8 @@
+database	name	expected_line
+group	audio	audio:x:29:mobian
+group	input	input:x:996:mobian
+group	mobian	mobian:x:1000:
+group	plugdev	plugdev:x:46:mobian
+group	render	render:x:992:mobian
+group	video	video:x:44:mobian
+passwd	mobian	mobian:x:1000:1000::/home/mobian:/bin/bash

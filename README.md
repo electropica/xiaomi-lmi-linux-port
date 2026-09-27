@@ -27,6 +27,13 @@ provenance manifests under
 [`reproduction/archi-validation-02-lock/deb-cache/`](reproduction/archi-validation-02-lock/deb-cache/README.md).
 The validated cache and its deterministic tar archive remain external to Git.
 
+The derived `daily-base` userdata has now also been validated on the phone:
+Phosh unlock and relock remained responsive, the RTC time floor worked, and
+only Chatty's automatic daemon startup was masked while keeping Chatty
+installed and manually launchable. Its builder and profiles are versioned at
+[`reproduction/archi-validation-02-derived-builder/`](reproduction/archi-validation-02-derived-builder/README.md);
+the generated raw/sparse images and private build state are not in Git.
+
 ## D-v43 OpenRC status — 2026-09-26
 
 The D-v43 configuration has been reconstructed as **Shelli + OpenRC** from
@@ -68,6 +75,8 @@ See:
 - [Historical M1/GPU72 hardware validation](docs/2026-09-26-m1-gpu72-historical-validation.md)
 - [Validated archi-validation-02 userspace lock](docs/2026-09-27-archi-validation-02-userspace-lock.md)
 - [Versioned userspace reproduction lock](reproduction/archi-validation-02-lock/README.md)
+- [Derived userdata builder and validated daily-base profile](reproduction/archi-validation-02-derived-builder/README.md)
+- [daily-base hardware validation record](docs/2026-09-27-daily-base-validation.md)
 - [Evidence and source inventory](SOURCES.md)
 - [Reference checksums](SHA256SUMS)
 - [Consolidated reconstruction/verification script](scripts/reconstruct-dv43-openrc.sh)
