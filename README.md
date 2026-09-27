@@ -34,6 +34,13 @@ installed and manually launchable. Its builder and profiles are versioned at
 [`reproduction/archi-validation-02-derived-builder/`](reproduction/archi-validation-02-derived-builder/README.md);
 the generated raw/sparse images and private build state are not in Git.
 
+Audio output remains blocked below the userspace routing layer: the video
+plays, but PipeWire exposes only `Dummy Output` and the kernel exports no ALSA
+card/PCM. The WCD938x SoundWire slave is discovered but not attached, and its
+bind fails before the ASoC card can register. The evidence boundary and next
+instrumented diagnostic are recorded in
+[the WCD938x audio blocker note](docs/2026-09-27-wcd938x-audio-blocker.md).
+
 ## D-v43 OpenRC status — 2026-09-26
 
 The D-v43 configuration has been reconstructed as **Shelli + OpenRC** from
@@ -77,6 +84,7 @@ See:
 - [Versioned userspace reproduction lock](reproduction/archi-validation-02-lock/README.md)
 - [Derived userdata builder and validated daily-base profile](reproduction/archi-validation-02-derived-builder/README.md)
 - [daily-base hardware validation record](docs/2026-09-27-daily-base-validation.md)
+- [WCD938x SoundWire audio blocker](docs/2026-09-27-wcd938x-audio-blocker.md)
 - [Evidence and source inventory](SOURCES.md)
 - [Reference checksums](SHA256SUMS)
 - [Consolidated reconstruction/verification script](scripts/reconstruct-dv43-openrc.sh)

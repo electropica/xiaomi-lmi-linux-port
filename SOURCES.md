@@ -247,3 +247,25 @@ confirmed Phosh, responsive unlock/lock, DSI-1, GLES2 → Zink → Turnip →
 KGSL/Adreno 650, the active time floor and no new PAM warning; the automatic
 Chatty freeze did not recur. See
 `docs/2026-09-27-daily-base-validation.md` for the milestone boundary.
+
+## WCD938x audio blocker diagnosis (2026-09-27)
+
+The on-device audio observations were collected on Xiaomi `lmi` running the
+D-repro D-v43 boot (recorded boot SHA-256
+`0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`). AVC
+video playback worked and an AAC track was present, but no sound reached the
+speaker. PipeWire/WirePlumber had only `Dummy Output`; ALSA exposed no card or
+PCM. ADSP/Q6 were active and TFA9874 was detected, but the WCD938x SoundWire
+RX slave was not `ATTACHED`. `swrm_get_logical_dev_num` retained `-EINVAL`,
+WCD938x binding failed, and the ASoC card remained in deferred probe.
+
+The private, sanitized diagnostic material was kept outside this repository
+at `/home/linuxagent/dv43-openrc-reconstruction/audio-diagnostic/lmi-audio-kernel-investigation-20260927/`.
+Its local manifest SHA-256 was
+`24cbb2127e2dbfb9665d7a395008fc1a32d3c9f6703138c9ce0fed9575d6c308`. This is
+workstation provenance only: the directory and its evidence are not included
+in Git and are not implied to exist after cloning. No raw live DTB, complete
+live DTS, full log, binary or device identifier is versioned. The exact source
+commit and DTB provenance for the running D-repro boot remain unproven; see
+`docs/2026-09-27-wcd938x-audio-blocker.md` for the diagnostic boundary and
+required next experiment.
