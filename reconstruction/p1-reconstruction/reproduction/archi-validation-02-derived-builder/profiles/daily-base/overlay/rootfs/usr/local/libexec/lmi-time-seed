@@ -1,0 +1,93 @@
+#!/bin/sh
+set -eu
+umask 077
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+state_dir=/var/lib/lmi-time-seed
+seed_file=$state_dir/last-good-utc
+tmp=
+
+log() {
+	if command -v logger >/dev/null 2>&1; then
+		logger -t lmi-time-seed "$*" || :
+	else
+		printf 'lmi-time-seed: %s\n' "$*" >&2
+	fi
+}
+
+fail() { log "ERROR: $*"; exit 1; }
+
+validate_epoch() {
+	value=$1
+	case $value in ''|*[!0-9]*) fail 'epoch must contain decimal digits only' ;; esac
+	[ "${#value}" -ge 1 ] && [ "${#value}" -le 12 ] || fail 'epoch length is outside 1..12 digits'
+	canonical=$(date -u -d "@$value" +%s 2>/dev/null) || fail 'epoch is not representable by date'
+	[ "$canonical" = "$value" ] || fail 'epoch is not canonical'
+}
+
+check_state_dir() {
+	[ -d "$state_dir" ] && [ ! -L "$state_dir" ] || fail 'state directory is missing or unsafe'
+	[ "$(stat -c '%u:%g:%a' "$state_dir")" = 0:0:700 ] || fail 'state directory must be root:root mode 0700'
+}
+
+read_seed() {
+	check_state_dir
+	[ -f "$seed_file" ] && [ ! -L "$seed_file" ] || fail 'seed file is missing or unsafe'
+	[ "$(stat -c '%u:%g:%a' "$seed_file")" = 0:0:600 ] || fail 'seed file must be root:root mode 0600'
+	if ! IFS= read -r value < "$seed_file"; then fail 'seed file must contain one newline-terminated epoch'; fi
+	bytes=$(wc -c < "$seed_file" | tr -d ' ')
+	[ "$bytes" -eq $((${#value} + 1)) ] || fail 'seed file must contain exactly one line'
+	validate_epoch "$value"
+	printf '%s\n' "$value"
+}
+
+atomic_save() {
+	check_state_dir
+	now=$(date -u +%s) || fail 'cannot read current UTC epoch'
+	validate_epoch "$now"
+	if [ -e "$seed_file" ] || [ -L "$seed_file" ]; then
+		previous=$(read_seed)
+		if [ "$now" -lt "$previous" ]; then
+			log "system epoch $now is older than seed $previous; preserving seed without changing the clock"
+			return 0
+		fi
+	fi
+	tmp=$state_dir/.last-good-utc.$$
+	cleanup() { [ -z "$tmp" ] || [ ! -e "$tmp" ] || rm -f -- "$tmp"; }
+	trap cleanup EXIT
+	trap 'exit 129' HUP
+	trap 'exit 130' INT
+	trap 'exit 143' TERM
+	(umask 077; set -C; printf '%s\n' "$now" > "$tmp") || fail 'cannot create temporary seed'
+	chown 0:0 "$tmp"
+	chmod 0600 "$tmp"
+	sync "$tmp" || fail 'cannot sync temporary seed'
+	mv -f -- "$tmp" "$seed_file" || fail 'cannot atomically publish seed'
+	tmp=
+	sync "$state_dir" || fail 'cannot sync seed directory'
+	trap - EXIT HUP INT TERM
+	log "saved UTC epoch $now"
+}
+
+restore_clock() {
+	seed=$(read_seed)
+	current=$(date -u +%s) || fail 'cannot read current system epoch'
+	validate_epoch "$current"
+	if [ "$current" -lt "$seed" ]; then
+		log "system epoch $current is older than seed $seed; advancing system clock"
+		date -u -s "@$seed" >/dev/null || fail 'could not advance system clock from seed'
+		current=$(date -u +%s) || fail 'cannot verify restored system epoch'
+		validate_epoch "$current"
+		[ "$current" -ge "$seed" ] || fail 'system clock remains older than seed'
+	else
+		log "system epoch $current is not older than seed $seed; leaving clock unchanged"
+	fi
+	atomic_save
+}
+
+case ${1:-} in
+	restore) [ "$#" -eq 1 ] || fail 'usage: lmi-time-seed restore|save'; restore_clock ;;
+	save) [ "$#" -eq 1 ] || fail 'usage: lmi-time-seed restore|save'; atomic_save ;;
+	*) fail 'usage: lmi-time-seed restore|save' ;;
+esac

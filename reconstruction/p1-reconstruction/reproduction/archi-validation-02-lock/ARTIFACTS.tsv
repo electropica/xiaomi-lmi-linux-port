@@ -1,0 +1,12 @@
+role	path	size_bytes	sha256	availability
+embedded_boot_img	/home/linuxagent/dv43-openrc-reconstruction/display-diagnostic/archi-validation-02-analysis/boot-extracted/boot.img	53280768	1fbfe7cbfd6d8a7faf444409291abb665f7458a36b21cdc3d4438302c66e7e99	present
+embedded_dtb	/home/linuxagent/dv43-openrc-reconstruction/display-diagnostic/archi-validation-02-analysis/boot-extracted/kona-v2.1-lmi.dtb	874418	212d80826ceef522aff2d967082b5708d20ddccc13ae322edce72412f1a06b51	present
+embedded_initramfs	/home/linuxagent/dv43-openrc-reconstruction/display-diagnostic/archi-validation-02-analysis/boot-extracted/initramfs	9161737	8bec1e576ed1b18d5ccf76aab58cffc30afd9869facef4a4da7240248e4b323b	present
+embedded_vmlinuz	/home/linuxagent/dv43-openrc-reconstruction/display-diagnostic/archi-validation-02-analysis/boot-extracted/vmlinuz	43233304	62246237b9f59c1d56378fabd32a296589dd26e5509f9adb2e102ef7b6daebe0	present
+gpu72_patch	/home/linuxagent/ProjetMobian/gpu/files/gpu72/patches/0001-gpu72-lmi-zink-turnip-kgsl-msm-drm.patch	26907	d2f522c08b3bc344a371ed9626c15a3e5f77014c19b6cbc805fb6338e550128d	present
+local_userdata_raw	/home/linuxagent/ProjetMobian/output/archi-validation-02.img	4551868416	329e2124f97032a2f4b15167bbd9bbbd9395bb422f2794a2117ee610a2368f27	present
+local_userdata_sparse	/home/linuxagent/ProjetMobian/output/archi-validation-02.img.android-sparse.img	2960036280	84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78	present
+root_ext4	/home/linuxagent/ProjetMobian/output/archi-validation-02-work/Mobian-M1-REPRO-pmOS_root.ext4	4294967296	fe4ea70374f15c0a8539c34227d7c388b89833dc8d6dfc50774d24be1cfc7223	present
+userspace_builder	/home/linuxagent/ProjetMobian/phosh/scripts/build-m1-phosh.sh	25643	7ebf5a4056051799e7d0db95c6d002b791e4e9fcccbed144f7eb601513fa0ce2	present
+validated_ram_boot	/mnt/c/Users/julien/Downloads/D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img	52924416	0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad	present
+validated_userdata_sparse	/mnt/c/Users/julien/Downloads/archi-validation-02.img.android-sparse.img	2960036280	84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78	present

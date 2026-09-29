@@ -1,0 +1,23 @@
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -1931,2 +1931,18 @@ drm_output_pick_crtc(struct drm_output *output)
+-	/* Find a crtc that could drive each connector individually at least,
+-	 * and prefer existing routings. */
++	/* The lmi downstream display route historically used CRTC 129 for
++	 * DSI-1. Prefer it only for that named output, and only when the
++	 * connector mask says it is compatible and the CRTC is unused. */
++	if (output->base.name && strcmp(output->base.name, "DSI-1") == 0) {
++		struct drm_crtc *preferred = drm_crtc_find(device, 129);
++
++		if (preferred && preferred->pipe < 32 && !preferred->output &&
++		    (possible_crtcs & (1U << preferred->pipe))) {
++			weston_log("DRM: preferring CRTC 129 for DSI-1 (pipe %u)\n",
++				   preferred->pipe);
++			return preferred;
++		}
++
++		weston_log("DRM: CRTC 129 preference unavailable for DSI-1; "
++			   "using normal selection\n");
++	}
++	/* Find a crtc that could drive each connector individually at least,
++	 * and prefer existing routings. */

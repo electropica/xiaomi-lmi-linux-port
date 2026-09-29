@@ -1,0 +1,12 @@
+[Unit]
+Description=Persist the latest nondecreasing UTC epoch
+Requires=lmi-time-seed.service
+After=lmi-time-seed.service
+Conflicts=shutdown.target
+Before=shutdown.target umount.target
+
+[Service]
+Type=oneshot
+UMask=0077
+ExecStart=/usr/local/libexec/lmi-time-seed save
+TimeoutStartSec=15s

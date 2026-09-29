@@ -1,0 +1,46 @@
+# Isolated Weston 14 CRTC-129 diagnostic variant; no binary sources are tracked.
+pkgname=weston14-lmi
+pkgver=14.0.2
+pkgrel=1
+pkgdesc="Isolated Weston 14 DRM/Pixman/kiosk stack preferring Xiaomi lmi CRTC 129"
+url="https://wayland.freedesktop.org/"
+arch="aarch64"
+license="MIT"
+depends="xkeyboard-config"
+makedepends="cairo-dev eudev-dev libdisplay-info-dev libdrm-dev libevdev-dev libinput-dev libpng-dev libseat-dev libxkbcommon-dev meson pixman-dev samurai wayland-dev wayland-protocols"
+options="!check !pmb:crossdirect !fhs"
+ldpath="/opt/weston14-lmi/lib:/opt/weston14-lmi/lib/weston"
+source="weston-14.0.2.tar.xz libdisplay-info-0.3.patch prefer-dsi-crtc-129.patch weston-lmi.ini"
+builddir="$srcdir/weston-14.0.2"
+
+prepare() { default_prepare; git init -q .; }
+
+build() {
+	abuild-meson --prefix=/opt/weston14-lmi --libdir=lib --libexecdir=libexec \
+		--buildtype=release -Db_ndebug=true -Db_lto=true \
+		-Dbackend-drm=true -Dbackend-default=drm -Dbackend-drm-screencast-vaapi=false \
+		-Dbackend-headless=false -Dbackend-pipewire=false -Dbackend-rdp=false \
+		-Dbackend-vnc=false -Dbackend-wayland=false -Dbackend-x11=false \
+		-Drenderer-gl=false -Dxwayland=false -Dsystemd=false -Dremoting=false \
+		-Dpipewire=false -Dscreenshare=false -Dshell-desktop=false \
+		-Dshell-fullscreen=false -Dshell-ivi=false -Dshell-kiosk=true \
+		-Dcolor-management-lcms=false -Dimage-jpeg=false -Dimage-webp=false \
+		-Dtools= -Ddemo-clients=false -Dsimple-clients= -Dresize-pool=false \
+		-Dwcap-decode=false -Dtests=false -Dtest-junit-xml=false -Ddoc=false build
+	meson compile -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C build
+	rm -rf "$pkgdir/opt/weston14-lmi/include" "$pkgdir/opt/weston14-lmi/lib/pkgconfig" \
+		"$pkgdir/opt/weston14-lmi/share/man" "$pkgdir/opt/weston14-lmi/share/pkgconfig" \
+		"$pkgdir/usr/share/man"
+	install -Dm644 "$srcdir/weston-lmi.ini" "$pkgdir/opt/weston14-lmi/etc/weston.ini"
+}
+
+sha512sums="
+e8214ec893e6c3ae94eb3c92feba104b0201843e9143f726a3e9a4d396d02523c94da706c1348cf934bc339fb1a4bc1fecdb865f0ea914115fd346d9eda091f5  weston-14.0.2.tar.xz
+05354455f1f6ca4e0c7b9e1a6d4faa7701bd62624c83cc103df62666f04b0e592d0e5c5ff4afec1aff9870aa4eb02dcbd2812e069ad0ab8fb7e65c250b2b0afc  libdisplay-info-0.3.patch
+72f6a2ba15cc2f66107c137d25b946ae8836a336fea3716325145d2c659616d0846f84f256883d1772b0774ff3607131620a775c61efcef29aa09650fce864a7  prefer-dsi-crtc-129.patch
+3190e2322b433cb6f61be0d7017714b9fcfe3e58b184dbf729d70f4573198d3230a5e4ff534bfd3568adf5298f2b300562baccf0d63f04b7a9dc28f2118975f7  weston-lmi.ini
+"

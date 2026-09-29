@@ -1,0 +1,4 @@
+# Locally generated image payloads and private, timestamped build state.
+/outputs/*
+!/outputs/README.md
+/state-*/

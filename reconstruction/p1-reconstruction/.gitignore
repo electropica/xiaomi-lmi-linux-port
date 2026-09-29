@@ -1,0 +1,25 @@
+# Generated images and packages must never be committed.
+*.apk
+*.img
+*.bin
+*.dtb
+*.dtbo
+*.elf
+*.iso
+*.raw
+*.sparse
+vmlinuz*
+initramfs*
+
+# Local signing material and credentials.
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+secrets/
+
+# Local pmbootstrap state.
+work/
+packages/
