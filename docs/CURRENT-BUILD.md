@@ -27,7 +27,7 @@ The external raw and Android-sparse images were verified as a matching pair:
 The sparse image was flashed as userdata and booted with the D-repro boot.
 The text lock records its packages, persistent customizations, GPU72 runtime
 and boot/userspace contract in the imported source transit tree at
-[`archi-validation-02-lock/`](../reconstruction/p1-reconstruction/reproduction/archi-validation-02-lock/README.md).
+[`archi-validation-02-lock/`](../reproduction/archi-validation-02-lock/README.md).
 The golden is not in Git. A bit-for-bit rebuild from all historical sources
 is not demonstrated.
 
