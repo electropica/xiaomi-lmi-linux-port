@@ -5,22 +5,15 @@ M1/GPU72 Mobian userspace: Debian 13 (Trixie), systemd, Phosh 0.46 and Phoc
 0.46. Its rendering chain was GLES2 → Mesa Zink → Vulkan Turnip → KGSL →
 Adreno 650, with Phoc/wlroots driving the downstream `msm_drm` DSI output.
 
-The documented boot image was:
-
-`/home/linuxagent/pmos-d-repro-01/output/D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img`
-
-with SHA-256
+The documented boot image was
+`D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img`, with SHA-256
 `0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`.
-The matching flashable userdata was:
-
-`/home/linuxagent/pmos-d-repro-01/output/Mobian-M1-GPU72-userdata-phosh-4G.android-sparse.img`
-
-with SHA-256
+The matching flashable userdata was
+`Mobian-M1-GPU72-userdata-phosh-4G.android-sparse.img`, with SHA-256
 `d3c865f8e51e2006668e22654f2b78e0466c75b2028361f99a23ed4218e85bdc`.
-The sparse userdata remains absent locally. The same boot identity is now
-available from the separate Windows Downloads copy used for the 2026-09-27
-`archi-validation-02` validation; the historical output path above remains
-absent.
+The sparse userdata remains absent from the documented local artifact set.
+The same boot identity was used for the separate 2026-09-27
+`archi-validation-02` validation; that later result is recorded separately.
 
 The hardware evidence is explicit: GPU-55 created and read back an EGL
 OpenGL ES 3.2 pbuffer through Turnip/KGSL; GPU-66 and GPU-67 validated the
@@ -42,5 +35,5 @@ M1/GPU72 remains the priority historical reference for OS and application
 work. Its original sparse userdata must still be recovered or rebuilt; no
 binary artifact is copied into this repository.
 
-See [the 2026-09-27 userspace milestone](2026-09-27-archi-validation-02-userspace-lock.md)
+See [the 2026-09-27 userspace milestone](archi-validation-02-userspace-validation-2026-09-27.md)
 for the later `archi-validation-02` hardware validation and reproduction lock.

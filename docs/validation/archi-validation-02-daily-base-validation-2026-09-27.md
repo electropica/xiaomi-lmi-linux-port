@@ -35,15 +35,15 @@ no new PAM “password changed in future” warning. No claim is made that NTP
 received packets or that the RTC was repaired.
 
 Automatic startup of the Chatty daemon had separately caused an approximately
-one-minute unlock delay. `daily-base` adds only the per-user XDG override
-`/home/mobian/.config/autostart/sm.puri.Chatty-daemon.desktop` with
-`Hidden=true`, owned by `mobian:mobian`, mode 0644. The package Chatty
+one-minute unlock delay. `daily-base` adds only the `mobian` user's XDG
+autostart override `sm.puri.Chatty-daemon.desktop` with `Hidden=true`, owned
+by `mobian:mobian`, mode 0644. The package Chatty
 `0.8.7-2`, its system autostart entry and its manual launcher remain intact;
 Chatty was not running during this validation. The delay did not recur.
 
 The builder, verifiers, helper tests, manifests, profiles, hooks and overlays
 are text-only under
-[`reproduction/archi-validation-02-derived-builder/`](../reproduction/archi-validation-02-derived-builder/README.md).
+[`archi-validation-02-derived-builder/`](../../reconstruction/p1-reconstruction/reproduction/archi-validation-02-derived-builder/README.md).
 The generated raw/sparse images, `.deb` cache, boot image, rootfs, and private
 build state are external and are not versioned. `baseline-nochange` remains
 unchanged; hooks for `time-seed` and `daily-base` require explicit

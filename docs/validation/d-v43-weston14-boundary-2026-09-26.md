@@ -8,7 +8,8 @@ on the physical Xiaomi lmi panel. It requested connector 29 (`DSI-1`) on CRTC
 scanout, DSI link, panel, and backlight path. It does not validate GPU/EGL,
 Weston, Phosh, a persistent graphical session, or touch input.
 
-The reproducible test is [`scripts/test-dsi-modetest.sh`](../scripts/test-dsi-modetest.sh).
+The reproducible test is retained in the imported source transit tree as
+[`test-dsi-modetest.sh`](../../reconstruction/p1-reconstruction/scripts/test-dsi-modetest.sh).
 
 ## Weston results
 
@@ -40,7 +41,8 @@ restored DSI-1 to `disabled`, stopped the private seatd, removed
 `/run/seatd.sock`, and left no persistent test process or configuration.
 
 The CRTC-129 recipe, source patch, and packaging/build wrappers are kept as
-small, source-only material under [`scripts/weston14-crtc129/`](../scripts/weston14-crtc129/).
+small, source-only material under
+[`scripts/weston14-crtc129/`](../../reconstruction/p1-reconstruction/scripts/weston14-crtc129/).
 The r1 build wrapper invokes the packager explicitly through `bash`; direct
 execution had failed with `Permission denied`, while the explicit Bash call
 produced the validated overlay.

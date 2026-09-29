@@ -6,13 +6,30 @@ This repository collects reproducible source-side work for postmarketOS packagin
 
 ## Current status
 
-Xiaomi Redmi K30 Pro / POCO F2 Pro (`lmi`) now boots into a functional Debian/Mobian Phosh environment.
+The current validated Mobian/Phosh userspace baseline is the external
+`archi-validation-02` golden userdata; its `daily-base` derivative was also
+validated on Xiaomi `lmi`. With the original D-repro D-v43 boot, Phosh,
+touch/unlock, DSI-1 and the GLES2 → Zink → Turnip → KGSL/Adreno 650 path were
+observed working. Their images are external artifacts, not files in this
+repository.
 
-The current validated foundation includes persistent device boot, Debian GNU/Linux 13 with systemd, the internal DSI display and touch input, Phosh, USB networking and SSH, QCA6390 Wi-Fi, and the validated GPU72 Mesa/Turnip/KGSL acceleration path.
+The distinct `daily-base-audio-fw-test` profile has progressed beyond the
+initial no-card blocker: WCD938x/TFA9874 and direct ALSA playback work, but
+the audible level is extremely low and user-facing PipeWire/UCM2 routing is
+unfinished. Audio is therefore only partially functional. Proprietary TFA
+firmware remains outside Git.
 
-The temporary `fastboot boot`, Weston-only, Pixman-only and earlier GPU experiments documented elsewhere in the repository are historical milestones and do not represent the normal current startup state.
+The separate D-v43/OpenRC reconstruction has visible direct DRM/KMS test
+rectangles, but no working persistent compositor; Weston D-v43 tests remained
+black. This is not the successful Weston 14 result from the distinct
+historical M0 Mobian environment.
 
-The latest validated userspace image and its hashes are documented in `docs/CURRENT-BUILD.md`.
+The latest userspace identities and the boundaries between the golden,
+derived, and experimental profiles are documented in
+[`docs/CURRENT-BUILD.md`](docs/CURRENT-BUILD.md) and
+[`docs/status/MOBIAN-STATUS.md`](docs/status/MOBIAN-STATUS.md). The dated
+hardware milestones, including the current partial-audio result, are indexed
+under [`docs/validation/`](docs/validation/).
 
 The current repository architecture and active build entry points are documented in `docs/ARCHITECTURE.md`.
 

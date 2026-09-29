@@ -37,8 +37,8 @@ still allocate scanout buffers and program the display.
 
 ## Reproducible DRM/KMS test
 
-The exact one-shot test is tracked as
-[`scripts/test-dsi-modetest.sh`](../scripts/test-dsi-modetest.sh), SHA-256
+The exact one-shot test is retained in the imported source transit tree as
+[`test-dsi-modetest.sh`](../../reconstruction/p1-reconstruction/scripts/test-dsi-modetest.sh), SHA-256
 `cc7b0989454984e0d49c646d5033263755478954cb6ec56157ea78dbd423856a`.
 It refuses to proceed unless the expected device, connector, mode, and initial
 disabled state are present. It runs as the unprivileged `lmi` user, requests
@@ -77,7 +77,10 @@ Weston/backend incompatibility:
 
 Weston never performed a modeset and produced no visible output. These failures
 do not contradict the successful direct KMS test: they concern compositor,
-seat/master, and backend compatibility with this downstream DRM driver.
+seat/master, and backend compatibility with this downstream DRM driver. The
+successful Weston 14 result recorded for Mobian M0 is a separate environment
+and does not describe these D-v43/OpenRC tests; see
+[`M0 display validation`](mobian-m0-display-hardware-validation-2026-09-02.md).
 
 ## Offline comparison image
 
@@ -86,7 +89,7 @@ converted on the Windows filesystem:
 
 | Property | Value |
 | --- | --- |
-| Source | `/mnt/c/Users/julien/Downloads/archi-validation-02.img.android-sparse.img` |
+| Source | External Windows Downloads copy; not versioned |
 | Size | `2960036280` bytes |
 | SHA-256 | `84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78` |
 | Container | Android sparse v1.0 |

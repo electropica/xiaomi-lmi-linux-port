@@ -1,5 +1,9 @@
 # D-v43 OpenRC functional reconstruction — 2026-09-23
 
+> Historical snapshot of the Shelli/OpenRC track. It is separate from the
+> Debian/Mobian M0 Weston success and from the current Mobian userspace
+> baseline; see the dated validation notes linked below.
+
 ## Result and scope
 
 The Xiaomi lmi D-v43 configuration has been reconstructed as a Shelli/OpenRC
@@ -16,7 +20,7 @@ The precise result is a **functional, evidence-based reconstruction of the
 D-v43 OpenRC configuration**. It is not a bit-for-bit reproduction. This boot
 milestone did not validate display, Wi-Fi association, Wi-Fi DHCP, or Internet
 access. The later direct DRM/KMS display validation is recorded separately in
-`2026-09-25-drm-display-validation.md`; it validates the hardware path, not a
+[`D-v43 DRM/KMS validation`](d-v43-drm-kms-validation-2026-09-25.md); it validates the hardware path, not a
 graphical session. The no-debug-shell image has been validated only as a
 temporary fastboot boot, not as a persistently installed boot image.
 
@@ -39,7 +43,8 @@ recorded selection was `systemd=never`.
 ## Historically established facts
 
 The June manifest, historical pmbootstrap configuration, and live Wi-Fi note
-listed in `SOURCES.md` establish:
+summarized in the [source index](../../reconstruction/p1-reconstruction/SOURCES.md)
+establish:
 
 | Item | Historical D-v43 value |
 | --- | --- |
@@ -73,11 +78,9 @@ the historical hashes. Dependencies were resolved from Alpine/postmarketOS
 
 The initial configuration hash before `pmbootstrap init` was
 `2a36086d2fd988ad16cbd62fc1dbb08907fc18dbe8741fd2a70d74066b821409`.
-After `init`, the effective configuration was:
+After `init`, these portable configuration values were recorded:
 
 ```ini
-aports=/home/linuxagent/pmaports-dv43-reference
-work=/home/linuxagent/dv43-openrc-work
 device=xiaomi-lmi
 ui=shelli
 user=lmi
@@ -86,6 +89,8 @@ build_pkgs_on_install=False
 extra_packages=openssh-server,iw,wpa_supplicant,docker,openrc-settingsd,vim,htop
 timezone=Europe/Paris
 ```
+
+Machine-local `aports` and `work` paths are intentionally omitted.
 
 Its observed post-`init` SHA-256 on 2026-09-23 was
 `f3dd2436f440bdca823c4efcde8ceeb25c332c5884393419af940da66a2be656`.
@@ -98,14 +103,12 @@ trusted; after installing those public keys in the relevant trust stores,
 
 ## Installation command
 
-Executed by the user:
+The operator invoked `pmbootstrap install` against the local configuration,
+work directory and aports checkout. Those workstation-specific paths are
+omitted; the recorded operation was:
 
 ```sh
-python3 /home/linuxagent/pmbootstrap-3.10.1/pmbootstrap.py \
-  --config=/home/linuxagent/dv43-openrc-reconstruction/pmbootstrap_v3.cfg \
-  --work=/home/linuxagent/dv43-openrc-work \
-  --aports=/home/linuxagent/pmaports-dv43-reference \
-  install --no-fde --sector-size 4096 --no-sparse \
+pmbootstrap install --no-fde --sector-size 4096 --no-sparse \
   --add "postmarketos-initramfs=3.12.0-r1,device-xiaomi-lmi=1-r104,linux-xiaomi-lmi=4.19.325-r8"
 ```
 
@@ -254,8 +257,10 @@ claimed to match a historical June artifact.
 
 ## Reversible no-debug-shell rebuild
 
-The owner ran the reversible builder now tracked at
-`scripts/build-openrc-no-debug-shell-boot.sh` (SHA-256
+The owner ran the reversible builder retained in the imported source transit
+tree at
+[`build-openrc-no-debug-shell-boot.sh`](../../reconstruction/p1-reconstruction/scripts/build-openrc-no-debug-shell-boot.sh)
+(SHA-256
 `9a7d17522c113394c83092441e8a1e46d7af55d6c55ba3ef6feae0fa9687ba59`).
 The script is intentionally tied to the documented local paths and performs
 these guarded steps:
@@ -271,9 +276,9 @@ these guarded steps:
 - publishes the result without overwriting an existing file, then restores and
   verifies deviceinfo and the historical `/boot` tree through an exit trap.
 
-The build completed with `DONE`. Its persistent state is
-`/home/linuxagent/dv43-openrc-reconstruction/no-debug-shell/state-20260923T183544Z-16749`.
-The script reported `Validated rootfs and historical /boot restoration: OK`;
+The build completed with `DONE`. Its private persistent state remains
+outside Git. The script reported
+`Validated rootfs and historical /boot restoration: OK`;
 the historical boot returned to SHA-256
 `ecaa289c82840ae049ff846a5216937ffc68bd6d73b9c273dc11477c99be0075`.
 The copied Windows artifact was independently read back with the same new-image
@@ -318,5 +323,5 @@ panel, and backlight with a direct DRM/KMS test, while also showing that Shelli
 does not start a persistent graphical client. GPU/EGL, compositor integration,
 touch, automatic Wi-Fi bring-up on this exact boot, access-point association,
 Wi-Fi DHCP, Internet access, and the previously observed `powerkey` crash all
-remain open. See `2026-09-25-drm-display-validation.md` for the exact display
-boundary and Weston investigation.
+remain open. See [the D-v43 DRM/KMS note](d-v43-drm-kms-validation-2026-09-25.md)
+for the exact display boundary and Weston investigation.

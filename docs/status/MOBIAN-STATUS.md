@@ -1,5 +1,32 @@
 # Mobian status
 
+## Current Mobian userspace state — 2026-09-29
+
+The current validated Mobian/Phosh userdata family is based on the external
+`archi-validation-02` golden image and its `daily-base` derivative. The
+golden image booted with the durable original D-repro D-v43 boot; Phosh,
+touch/unlock, DSI-1, GPU72 GLES2/Zink/Turnip/KGSL acceleration, GNOME Console
+and Calculator were exercised. `daily-base` separately validated the
+time-seed correction and responsive unlock with only Chatty's daemon
+autostart hidden. Exact image identities and boundaries are in
+[`docs/CURRENT-BUILD.md`](../CURRENT-BUILD.md).
+
+`daily-base-audio-fw-test` is an experimental userspace profile paired with
+a temporary reset-GPIO diagnostic boot, not a replacement for the durable
+original boot. WCD938x and TFA9874 now bind, ALSA registers, and direct S16_LE
+and S24_LE playback completes. Music is audible only very faintly from the
+lower grille. PipeWire has no finalized user route and UCM2 is not yet built;
+audio remains partially functional.
+
+The proprietary TFA firmware is external and is never tracked. Neither the
+diagnostic boot nor any userdata image is stored in Git. Kernel and userdata
+bit-for-bit reconstruction from all sources is not demonstrated. See the
+[`2026-09-29 audio progress note`](../validation/archi-validation-02-audio-progress-2026-09-29.md).
+
+The M0 Weston result below belongs to a distinct Mobian/M0 environment. It is
+not evidence that Weston works on the separate D-v43/OpenRC system, whose
+Weston experiments remained black.
+
 ## M0 BASE — validated on hardware
 
 Validated on Xiaomi `lmi` hardware with the downstream D-v43 kernel.
@@ -31,6 +58,10 @@ Validated on Xiaomi `lmi` hardware:
 
 See `docs/validation/mobian-m0-display-hardware-validation-2026-09-02.md` for the exact
 experimental evidence and backend identities.
+
+This success is specific to that M0 Mobian rootfs and display setup. It must
+not be merged with the later D-v43/OpenRC Weston 14 tests; see
+[`D-v43 Weston boundary`](../validation/d-v43-weston14-boundary-2026-09-26.md).
 
 ## M1 PHOSH — VALIDATED ON HARDWARE
 
@@ -454,7 +485,7 @@ bidirectional controller exchange rather than a cached kernel query.
 No IBS debugfs counters were available. Successful traffic after an idle
 period longer than the two-second IBS timeout supports only an indirect
 `IBS_FUNCTIONAL=INFERRED` result, not direct sleep/wake proof. The observed
-address `00:00:00:00:5a:ad` has now been traced through the stock Android
+Bluetooth address `[REDACTED-DEVICE-MAC]` has now been traced through the stock Android
 provisioning path. The stock `/vendor/bin/nv_mac` opens Xiaomi's proprietary
 QMI service `0xffe4`, sends message `0x0002` with Bluetooth NV operation
 `0x01bf`, receives the six-byte address payload and writes

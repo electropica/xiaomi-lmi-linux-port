@@ -1,5 +1,10 @@
 # WCD938x SoundWire audio blocker — 2026-09-27
 
+> Initial diagnostic snapshot, superseded by the later
+> [audio progress milestone](archi-validation-02-audio-progress-2026-09-29.md).
+> The no-card and unattached-slave observations below describe the earlier
+> boot state, not the current audio state.
+
 ## Observed result
 
 On Xiaomi `lmi`, AVC video playback was functional and the MP4 contained an
@@ -51,11 +56,9 @@ does not become `ATTACHED`; only then should a minimal correction be selected.
 
 ## Evidence provenance
 
-The local private diagnostic directory was
-`/home/linuxagent/dv43-openrc-reconstruction/audio-diagnostic/lmi-audio-kernel-investigation-20260927/`,
-whose sanitized evidence manifest had SHA-256
+The private diagnostic directory was retained outside Git; its sanitized
+evidence manifest had SHA-256
 `24cbb2127e2dbfb9665d7a395008fc1a32d3c9f6703138c9ce0fed9575d6c308`.
-This path is provenance for the original workstation only; the evidence
-directory is not part of this repository and need not exist after cloning.
-This repository stores only this summary, not the full logs, DTB, full DTS,
-binary dumps, identifiers or secrets.
+The local path is provenance only and need not exist after cloning. This
+repository stores only this summary, not the full logs, DTB, full DTS, binary
+dumps, identifiers or secrets.

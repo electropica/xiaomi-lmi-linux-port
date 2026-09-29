@@ -54,18 +54,16 @@ available locally.
 
 ## Evidence and boundary
 
-Read-only ioctl results and the method note were retained outside Git in the
-private workstation directory
-`/home/linuxagent/dv43-openrc-reconstruction/camera-diagnostic/megapixels-topology-20260927/`.
-Their SHA-256 values are:
+Read-only ioctl results and the method note were retained outside Git in a
+private diagnostic directory; the local directory is provenance only and is
+not a repository dependency. Their SHA-256 values are:
 
 - `v4l2-readonly-ioctl-results.txt` —
   `5ab4e377cb6a1464de2c8d3beecd2a2f9f2440b42fddba39c99f5dcefc8fd0b8`
 - `v4l2-readonly-method.md` —
   `b105c4e418484581a5ec282d36b24418c702a8bfae55f7e1e874b924d325178a`
 
-The private path is provenance for the source workstation, not a repository
-dependency. No DT dump, full journal, device identifier, binary or image is
-included here. No camera configuration or kernel change is proposed. A
+No DT dump, full journal, device identifier, binary or image is included
+here. No camera configuration or kernel change is proposed. A
 provenance-matched camera description and a usable media/capture topology are
 needed before an INI can be authored safely.

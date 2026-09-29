@@ -1,69 +1,79 @@
-# Current validated build
+# Current validated build and userspace state
 
-This document identifies the current validated Mobian/Phosh userspace build
-for Xiaomi `lmi`.
+This document distinguishes the validated Mobian userdata family from the
+separate D-v43/OpenRC reconstruction and from temporary diagnostic boots.
+Generated images are not stored in Git.
 
 ## Current hardware state
 
-The current validated device state is substantially beyond the early bring-up
-described in historical documentation.
+The `archi-validation-02` Debian 13/Mobian userdata was booted on Xiaomi
+`lmi` with the D-repro D-v43 boot. Phosh was visible and usable; touch/unlock,
+DSI-1, and GLES2 → Zink → Vulkan Turnip → KGSL → Adreno 650 were validated.
+GNOME Console and Calculator were exercised. The original D-repro boot
+(`D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img`, SHA-256
+`0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`) is
+the durable boot identity for the golden and `daily-base` validations. The
+boot image embedded in userdata is a distinct artifact.
 
-Validated current foundations include:
+## Golden userdata: `archi-validation-02`
 
-- persistent boot on Xiaomi `lmi`
-- Debian/Mobian userspace
-- systemd
-- Phosh
-- functional internal display
-- touch input
-- USB networking and SSH
-- Wi-Fi
-- GPU acceleration path validated through the current GPU72 runtime
+The external raw and Android-sparse images were verified as a matching pair:
 
-Temporary `fastboot boot` procedures and early Weston-only display bring-up are
-historical milestones rather than the normal current startup procedure.
+| Form | Size | SHA-256 |
+| --- | ---: | --- |
+| Raw `archi-validation-02.img` | 4,551,868,416 bytes | `329e2124f97032a2f4b15167bbd9bbbd9395bb422f2794a2117ee610a2368f27` |
+| Sparse `archi-validation-02.img.android-sparse.img` | 2,960,036,280 bytes | `84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78` |
 
-## Current userspace build
+The sparse image was flashed as userdata and booted with the D-repro boot.
+The text lock records its packages, persistent customizations, GPU72 runtime
+and boot/userspace contract in the imported source transit tree at
+[`archi-validation-02-lock/`](../reconstruction/p1-reconstruction/reproduction/archi-validation-02-lock/README.md).
+The golden is not in Git. A bit-for-bit rebuild from all historical sources
+is not demonstrated.
 
-The latest functional userspace build is:
+## Derived profile: `daily-base`
 
-    output/archi-validation-01.img
+`daily-base` was derived from the golden userdata without rebuilding the
+kernel. It adds the validated time-seed floor and a per-user XDG override
+that disables only automatic Chatty-daemon startup; Chatty remains installed
+and manually launchable.
 
-Its Android sparse image is:
+| Form | Size | SHA-256 |
+| --- | ---: | --- |
+| Raw `archi-validation-02-derived-daily-base-20260927.img` | 4,551,868,416 bytes | `5cc226cd96c324b68d74e33eec461a091e7f5dd69b80e0529c2d0267cfa3cad5` |
+| Sparse `archi-validation-02-derived-daily-base-20260927.img.android-sparse.img` | 2,960,466,444 bytes | `172a4f950252e810f408bf4d5caf5075c699020e6a2198999f7f0b30c7f19928` |
 
-    output/archi-validation-01.img.android-sparse.img
+The raw/sparse round trip and hardware boot were validated. The images remain
+external. See
+[`daily-base` validation](validation/archi-validation-02-daily-base-validation-2026-09-27.md).
 
-The Android sparse image is the build currently validated on the phone.
+## Experimental profile: `daily-base-audio-fw-test`
 
-### SHA-256
+This separate experimental derivative adds the proprietary TFA9874 container
+to the kernel's active firmware lookup path. It was tested with a distinct
+reset-GPIO diagnostic boot loaded temporarily using `fastboot boot`; that
+boot was not installed durably. The firmware binary, userdata and diagnostic
+boot remain external and must never be added to Git.
 
-Work ext4:
+The WCD938x/TFA9874 path and direct ALSA playback now work, but the sound is
+extremely quiet. PipeWire has no finalized user-facing route and UCM2 remains
+to be built. Audio is partially functional, not resolved; see
+[`archi-validation-02` audio progress](validation/archi-validation-02-audio-progress-2026-09-29.md).
 
-    60de98660991379cb1d463ebadc7de43b73242d68f73502308e3891d2350844d
+## Earlier build: `archi-validation-01` (superseded as current pointer)
 
-Raw userdata image:
+The prior Android-sparse build remains a historical artifact identity, not
+the current golden:
 
-    559d6c44f2aa2223f91fd8af1db7a838b8183d7a223ceb80f7bdd13a9b6e31e4
+| Artifact | Size | SHA-256 |
+| --- | ---: | --- |
+| Work ext4 | 4,294,967,296 bytes | `60de98660991379cb1d463ebadc7de43b73242d68f73502308e3891d2350844d` |
+| Raw userdata | 4,551,868,416 bytes | `559d6c44f2aa2223f91fd8af1db7a838b8183d7a223ceb80f7bdd13a9b6e31e4` |
+| Android sparse userdata | 2,834,813,356 bytes | `f61c19a09881c9a7ac165cc5e36ab08f146d65acddae2de18a6bb555c10663b3` |
 
-Android sparse userdata image:
-
-    f61c19a09881c9a7ac165cc5e36ab08f146d65acddae2de18a6bb555c10663b3
-
-### Sizes
-
-Final ext4 filesystem:
-
-    4294967296 bytes
-
-Raw userdata image:
-
-    4551868416 bytes
-
-Android sparse userdata image:
-
-    2834813356 bytes
-
-Both `e2fsck` validation passes completed cleanly during this build.
+Its two `e2fsck` validation passes completed cleanly. It is superseded as the
+current userspace reference by `archi-validation-02` and its validated
+`daily-base` derivative.
 
 ## Build entry points
 
@@ -124,16 +134,16 @@ GPU72 patch.
 The current M0/base-rootfs chain, current Phosh/userspace chain and kernel
 build are separate.
 
-The separate `/home/mobian1/mobian-device` workflow is also not a replacement
-for the current `phosh/scripts/build-m1-phosh.sh` image-production chain.
+The separate Mobian device workflow is not a replacement for the current
+`phosh/scripts/build-m1-phosh.sh` image-production chain.
 
 ## Known deferred work
 
-The following are intentionally deferred and are not blockers for the current
-repository migration:
+The following remain separate deferred items:
 
-- phone audio
+- PipeWire/UCM2 user-facing audio routing and the extremely low speaker level
+- camera configuration and a usable downstream capture pipeline
 - Chinese-character rendering in Debian
 
-They should be handled as separate follow-up work after the repository
-migration is finalized.
+The historical M0 Weston display validation and the later D-v43/OpenRC Weston
+failures are different environments and must not be conflated.
