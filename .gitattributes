@@ -1,0 +1,2 @@
+kernel/diagnostics/audio/patches/0001-lmi-wcd938x-rx-soundwire-diagnostic.patch whitespace=-blank-at-eol,-space-before-tab
+kernel/patches/audio/0001-lmi-wcd938x-reset-gpio-mux.patch whitespace=-blank-at-eol,-space-before-tab

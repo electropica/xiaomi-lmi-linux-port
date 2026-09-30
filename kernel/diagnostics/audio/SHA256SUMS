@@ -1,0 +1,13 @@
+83395fcd2e660b28235b0ab82f15492ccb0335628794932e3742a61db8c2c664  ../../../docs/validation/archi-validation-02-audio-kernel-diagnostics-2026-09-30.md
+a6911e74326c4333e137dccc0b917a07cfae93e407bafa904dd8e60741dab8f7  ../../../userspace/audio/README.md
+6512a0c29ebf987d25c0cceb79917df32d6fed4b67e4c3b94bfad9fdb1745e37  ../../configs/dv43-qca6390-v2.config
+d193cfbaad83811703f5db5990eaa52358e1828af581e09c702f4efa10aec782  ../../patches/0001-mobian-add-boot-safe-QCA6390-UART-support-and-restor.patch
+c94fe70ae385e1f74fb56566b9743d4b5df23b6fc42aeabecbdbee9c3a2004aa  ../../patches/0002-esoc-preserve-crash-state-on-late-run-notification.patch
+1d1859556bb05c207b70225ecccc922c9338eff485f729012abc41ba75fbfef7  ../../patches/audio/0001-lmi-wcd938x-reset-gpio-mux.patch
+2f70a6a94c971dd7b571dba7a68649a381cfea99bd7617f55cfabfeb9b6b8fc2  .gitignore
+f58e5c71e1d3775bee413d5b6df48a3badaff02df01425d8fb31709b18eedc52  INPUTS.tsv
+41167baa6026e3de9c6b93d9dca0dfb819ef14874f1c681ec4e7a87bedc19df0  README.md
+c92da38b49b345ad996799af4d6de7319071f2822ff321affc763fb50241afdc  build-audio-swr-diagnostic-boot.sh
+0129a2f470e9c82ba4b2b6fbf2adb305e0ff4ad4f955c65e090aa161c5a90ed1  build-audio-swr-reset-gpio-diagnostic-boot.sh
+2d5c2188356b0708ebf88b6a2694b216b4ccb62e6e8ab74124a53ea96d3b6e79  patches/0001-lmi-wcd938x-rx-soundwire-diagnostic.patch
+e8910b50c94d8b6e27870db8d480fda9b745f59bdb00b61e9b64b28438556588  run-native-kconfig-check.sh

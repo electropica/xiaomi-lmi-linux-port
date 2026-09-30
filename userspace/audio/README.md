@@ -1,5 +1,10 @@
 # Audio userspace status
 
+The preserved host-only kernel recipes and patch provenance are documented in
+[audio kernel diagnostics](../../kernel/diagnostics/audio/README.md); the
+later reset-GPIO, ALSA-card, and weak-output results are summarized in the
+[dated kernel diagnostic record](../../docs/validation/archi-validation-02-audio-kernel-diagnostics-2026-09-30.md).
+
 The experimental `daily-base-audio-fw-test` userdata profile supplies an
 external, SHA-locked TFA9874 firmware container to the active firmware lookup
 directory. The proprietary container is not stored in this repository.

@@ -1,0 +1,21 @@
+diff --git a/arch/arm64/boot/dts/vendor/qcom/kona-pinctrl.dtsi b/arch/arm64/boot/dts/vendor/qcom/kona-pinctrl.dtsi
+--- a/arch/arm64/boot/dts/vendor/qcom/kona-pinctrl.dtsi
++++ b/arch/arm64/boot/dts/vendor/qcom/kona-pinctrl.dtsi
+@@ -2372,7 +2372,7 @@
+ 		wcd938x_reset_active: wcd938x_reset_active {
+ 			mux {
+ 				pins = "gpio32";
+-				function = "func2";
++				function = "gpio";
+ 			};
+ 
+ 			config {
+@@ -2385,7 +2385,7 @@
+ 		wcd938x_reset_sleep: wcd938x_reset_sleep {
+ 			mux {
+ 				pins = "gpio32";
+-				function = "func2";
++				function = "gpio";
+ 			};
+ 
+ 			config {

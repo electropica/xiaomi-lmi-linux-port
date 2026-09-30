@@ -1,0 +1,95 @@
+diff --git a/techpack/audio/soc/swr-mstr-ctrl.c b/techpack/audio/soc/swr-mstr-ctrl.c
+--- a/techpack/audio/soc/swr-mstr-ctrl.c
++++ b/techpack/audio/soc/swr-mstr-ctrl.c
+@@ -7,3 +7,4 @@
+ #include <linux/irq.h>
++#include <linux/atomic.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+@@ -104,6 +105,77 @@
+ static void swrm_unlock_sleep(struct swr_mstr_ctrl *swrm);
+ static u32 swr_master_read(struct swr_mstr_ctrl *swrm, unsigned int reg_addr);
+ static void swr_master_write(struct swr_mstr_ctrl *swrm, u16 reg_addr, u32 val);
++
++/* WCD938x RX slave address from kona-audio-overlay.dtsi. */
++#define LMI_SWR_DIAG_WCD938X_RX_ID	0x0d01170224ULL
++static atomic_t lmi_swr_diag_rx_captured = ATOMIC_INIT(0);
++
++static const char *lmi_swr_diag_status_name(u32 status)
++{
++	static const char * const names[] = {
++		"NOT_PRESENT", "ATTACHED", "ALERT", "RESERVED"
++	};
++
++	return names[status & SWRM_MCP_SLV_STATUS_MASK];
++}
++
++static void lmi_swr_diag_capture(struct swr_mstr_ctrl *swrm, u64 dev_id,
++				 u32 num_dev)
++{
++	u32 slv_status, irq_status, irq_mask;
++	u32 comp_reset, comp_status, bus_ctrl, mcp_cfg, mcp_status;
++	u32 frame_bank0, frame_bank1;
++	const char *direction;
++	int i;
++
++	if ((dev_id & SWR_DEV_ID_MASK) != LMI_SWR_DIAG_WCD938X_RX_ID ||
++	    atomic_cmpxchg(&lmi_swr_diag_rx_captured, 0, 1))
++		return;
++
++	if (swrm->master_id == MASTER_ID_RX)
++		direction = "RX";
++	else if (swrm->master_id == MASTER_ID_TX)
++		direction = "TX";
++	else
++		direction = "OTHER";
++
++	slv_status = swr_master_read(swrm, SWRM_MCP_SLV_STATUS);
++	irq_status = swr_master_read(swrm, SWRM_INTERRUPT_STATUS);
++	irq_mask = swr_master_read(swrm, SWRM_INTERRUPT_MASK_ADDR);
++	comp_reset = swr_master_read(swrm, SWRM_COMP_SW_RESET);
++	comp_status = swr_master_read(swrm, SWRM_COMP_STATUS);
++	bus_ctrl = swr_master_read(swrm, SWRM_MCP_BUS_CTRL_ADDR);
++	mcp_cfg = swr_master_read(swrm, SWRM_MCP_CFG_ADDR);
++	mcp_status = swr_master_read(swrm, SWRM_MCP_STATUS);
++	frame_bank0 = swr_master_read(swrm, SWRM_MCP_FRAME_CTRL_BANK_ADDR(0));
++	frame_bank1 = swr_master_read(swrm, SWRM_MCP_FRAME_CTRL_BANK_ADDR(1));
++
++	dev_err(swrm->dev,
++		"LMI_SWR_DIAG capture=1 id=0x%llx master_id=%u direction=%s num_dev=%u dev_up=%u state=%d clk_ref_count=%d\n",
++		(unsigned long long)dev_id, swrm->master_id, direction, num_dev,
++		swrm->dev_up, swrm->state, swrm->clk_ref_count);
++	dev_err(swrm->dev,
++		"LMI_SWR_DIAG regs slv_status@0x1090=0x%08x irq_status@0x0200=0x%08x clash=%u irq_mask@0x0204=0x%08x comp_reset@0x0008=0x%08x comp_status@0x0014=0x%08x bus_ctrl@0x1044=0x%08x mcp_cfg@0x1048=0x%08x mcp_status@0x104c=0x%08x frame0=0x%08x frame1=0x%08x\n",
++		slv_status, irq_status,
++		!!(irq_status & SWRM_INTERRUPT_STATUS_MASTER_CLASH_DET), irq_mask,
++		comp_reset, comp_status, bus_ctrl, mcp_cfg, mcp_status,
++		frame_bank0, frame_bank1);
++
++	for (i = 1; i <= num_dev && i <= SWRM_NUM_AUTO_ENUM_SLAVES; i++) {
++		u64 id;
++		u32 status;
++
++		id = (u64)swr_master_read(swrm,
++					  SWRM_ENUMERATOR_SLAVE_DEV_ID_2(i)) << 32;
++		id |= swr_master_read(swrm, SWRM_ENUMERATOR_SLAVE_DEV_ID_1(i));
++		status = (slv_status >> (i * 2)) & SWRM_MCP_SLV_STATUS_MASK;
++		dev_err(swrm->dev,
++			"LMI_SWR_DIAG slot=%d id=0x%llx target=%u raw_status=%u status=%s\n",
++			i, (unsigned long long)(id & SWR_DEV_ID_MASK),
++			(id & SWR_DEV_ID_MASK) == LMI_SWR_DIAG_WCD938X_RX_ID,
++			status, lmi_swr_diag_status_name(status));
++	}
++}
+ static int swrm_runtime_resume(struct device *dev);
+
+ static u8 swrm_get_clk_div(int mclk_freq, int bus_clk_freq)
+@@ -2366,6 +2438,8 @@ static int swrm_get_logical_dev_num(struct swr_master *mstr, u64 dev_id,
+ 	if (ret)
+ 		dev_err(swrm->dev, "%s: device 0x%llx is not ready\n",
+ 			__func__, dev_id);
++	if (ret)
++		lmi_swr_diag_capture(swrm, dev_id, num_dev);
+ 
+ 	pm_runtime_mark_last_busy(swrm->dev);
+ 	pm_runtime_put_autosuspend(swrm->dev);
