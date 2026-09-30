@@ -59,9 +59,9 @@ secrets, tokens, credentials, or unrelated personal or sensitive data.
   firmware or binaries, generated images/rootfs trees, credentials, or secrets
   to Git.
 - After every new hardware milestone, review the complete status surface -- at
-  least `mobian/STATUS.md`, the applicable README, and related notes -- so that
-  manual validation, automated validation, and host-only validation remain
-  clearly distinguished.
+  least `docs/status/MOBIAN-STATUS.md`, the applicable README, and related
+  notes -- so that manual validation, automated validation, and host-only
+  validation remain clearly distinguished.
 
 ## Unified project layout and current Mobian reference
 

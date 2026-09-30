@@ -48,4 +48,4 @@ present after verification. `VALIDATION : OK`.
 The verified copy does **not** authorize deletion of the source or make the
 new location the sole historical reference. Any later removal, retirement,
 or redirection of the old path requires a distinct phase and explicit
-decision under `docs/decisions/migration-protocol-v1.md`.
+decision under `docs/architecture/decisions/migration-protocol-v1.md`.

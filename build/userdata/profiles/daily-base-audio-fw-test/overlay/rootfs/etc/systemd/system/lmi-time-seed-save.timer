@@ -1,0 +1,13 @@
+[Unit]
+Description=Periodically save the last known UTC epoch
+Requires=lmi-time-seed.service
+After=lmi-time-seed.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=lmi-time-seed-save.service
+
+[Install]
+WantedBy=timers.target
