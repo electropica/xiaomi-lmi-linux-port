@@ -7,6 +7,7 @@ REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 GPU72_LIB="$REPO_ROOT/userspace/gpu/files/gpu72/lib"
 GPU72_ICD="$REPO_ROOT/userspace/gpu/files/gpu72/icd.d"
 A650_FIRMWARE="$REPO_ROOT/userspace/gpu/files/firmware/a650"
+PHOC_CONFIG="$REPO_ROOT/userspace/phosh/files/phoc.ini"
 
 install -d -m 0755 "$ROOTFS/opt/mobian-gpu/lib"
 install -d -m 0755 "$ROOTFS/opt/mobian-gpu/icd.d"
@@ -38,7 +39,7 @@ install -o 0 -g 0 -m 0644 "$A650_FIRMWARE/a650_zap.elf" "$ROOTFS/lib/firmware/po
 
 install -o 0 -g 0 -m 0644 "$SCRIPT_DIR/udev/70-kgsl.rules" "$ROOTFS/etc/udev/rules.d/"
 install -o 0 -g 0 -m 0644 "$SCRIPT_DIR/udev/71-ion.rules" "$ROOTFS/etc/udev/rules.d/"
-install -o 0 -g 0 -m 0644 "$SCRIPT_DIR/phoc/phoc.ini" "$ROOTFS/etc/phosh/phoc.ini"
+install -o 0 -g 0 -m 0644 "$PHOC_CONFIG" "$ROOTFS/etc/phosh/phoc.ini"
 install -o 0 -g 0 -m 0644 "$SCRIPT_DIR/systemd/phosh-m0.service" "$ROOTFS/etc/systemd/system/phosh-m0.service"
 
 if ! grep -q '^render:' "$ROOTFS/etc/group"; then

@@ -42,23 +42,22 @@ System.map
 # Rootfs / build trees / caches
 rootfs/
 rootfs-*/
-# The experimental audio-firmware profile deliberately reuses the validated
-# daily-base userspace overlay. Track only these exact text inputs despite the
-# global generated-rootfs exclusion.
+# The experimental audio-firmware profile reuses the validated daily-base
+# overlay. Ignore every new rootfs item by default, then whitelist only its
+# four already-reviewed text inputs below. Do not broaden this exception.
 !/build/userdata/profiles/daily-base-audio-fw-test/
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/
+/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/**
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/etc/
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/etc/systemd/
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/etc/systemd/system/
-/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/etc/systemd/system/*
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/etc/systemd/system/lmi-time-seed-save.service
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/etc/systemd/system/lmi-time-seed-save.timer
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/etc/systemd/system/lmi-time-seed.service
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/usr/
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/usr/local/
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/usr/local/libexec/
-/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/usr/local/libexec/*
 !/build/userdata/profiles/daily-base-audio-fw-test/overlay/rootfs/usr/local/libexec/lmi-time-seed
 # Source recipes under build/ are tracked; generated artifact extensions and
 # output/cache trees remain ignored by the rules above and below.

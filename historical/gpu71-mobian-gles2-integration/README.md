@@ -1,5 +1,11 @@
 # GPU72 Mobian lmi GLES2 integration
 
+This is a historical integration recipe. Shared GPU runtime, Vulkan ICD,
+A650 firmware, and Phoc configuration are kept only at their canonical
+locations under `userspace/gpu/files/` and `userspace/phosh/files/phoc.ini`;
+the installer and `SHA256SUMS` reference those files directly. This historical
+directory does not carry duplicate payload copies.
+
 Validated architecture:
 
 Phosh
