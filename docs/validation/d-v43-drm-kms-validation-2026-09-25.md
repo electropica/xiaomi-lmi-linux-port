@@ -37,8 +37,8 @@ still allocate scanout buffers and program the display.
 
 ## Reproducible DRM/KMS test
 
-The exact one-shot test is retained in the imported source transit tree as
-[`test-dsi-modetest.sh`](../../reconstruction/p1-reconstruction/scripts/test-dsi-modetest.sh), SHA-256
+The exact one-shot test is retained at
+[`userspace/display/tests/d-v43-openrc/test-dsi-modetest.sh`](../../userspace/display/tests/d-v43-openrc/test-dsi-modetest.sh), SHA-256
 `cc7b0989454984e0d49c646d5033263755478954cb6ec56157ea78dbd423856a`.
 It refuses to proceed unless the expected device, connector, mode, and initial
 disabled state are present. It runs as the unprivileged `lmi` user, requests

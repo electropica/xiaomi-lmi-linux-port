@@ -1,0 +1,7 @@
+role	path	size_bytes	sha256	required
+deb_cache	${ARCHI_DEB_CACHE}	521861380	-	yes
+deb_cache_archive	${ARCHI_DEB_ARCHIVE}	523274240	65058c4bc74c6aea3854060a8e7b9a7617ea6aee66d503d90564bcee214a69fd	yes
+golden_raw	${ARCHI_GOLDEN_RAW}	4551868416	329e2124f97032a2f4b15167bbd9bbbd9395bb422f2794a2117ee610a2368f27	yes
+golden_sparse	${ARCHI_GOLDEN_SPARSE}	2960036280	84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78	yes
+lock	${ARCHI_LOCK_DIR:-../locks/userspace}	-	-	yes
+tfa_firmware	${ARCHI_TFA_FIRMWARE_INPUT:-inputs/vendor-firmware/tfa98xx.cnt}	510	07abfca151aaa296595fff35d53c2aa2999e7d16cdc373ade2fd5954ff90c9a9	daily-base-audio-fw-test

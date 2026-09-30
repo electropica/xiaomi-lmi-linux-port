@@ -1,94 +1,84 @@
-# Xiaomi LMI Linux Porting
+# Xiaomi lmi Linux port
 
-Experimental Linux porting work for the Xiaomi Redmi K30 Pro / POCO F2 Pro (`lmi`, Qualcomm SM8250).
+This repository unifies the kernel-side reconstruction records and the
+Mobian/Phosh userspace work for the Xiaomi Redmi K30 Pro / POCO F2 Pro
+(`lmi`, Qualcomm SM8250). It preserves historical D-v43/OpenRC and Weston
+experiments separately from the current Debian/Mobian userspace line.
 
-This repository collects reproducible source-side work for postmarketOS packaging, downstream kernel diagnostics, DRM/KMS display takeover, and ongoing Mobian/Debian userspace bring-up.
+## Current validated state
 
-## Current status
+The external `archi-validation-02` Debian 13/Mobian userdata booted with the
+D-repro D-v43 boot. Phosh, touch/unlock, DSI-1, and GLES2 → Zink → Turnip →
+KGSL/Adreno 650 were observed working. Its `daily-base` derivative was also
+hardware-validated, including the time-seed clock floor and responsive
+lock/unlock with only Chatty daemon autostart disabled. The golden,
+`daily-base`, and experimental audio-profile images are external artifacts;
+none is stored in Git.
+GNOME Console and Calculator were also exercised on the golden userspace.
 
-The current validated Mobian/Phosh userspace baseline is the external
-`archi-validation-02` golden userdata; its `daily-base` derivative was also
-validated on Xiaomi `lmi`. With the original D-repro D-v43 boot, Phosh,
-touch/unlock, DSI-1 and the GLES2 → Zink → Turnip → KGSL/Adreno 650 path were
-observed working. Their images are external artifacts, not files in this
-repository.
+The distinct `daily-base-audio-fw-test` profile loads a proprietary TFA9874
+container kept outside the repository. WCD938x/TFA9874 bind, ALSA registers,
+and direct playback is technically successful, but the speaker output is
+extremely quiet and user-facing PipeWire/UCM2 routing is unfinished. Audio is
+partially functional, not resolved.
 
-The distinct `daily-base-audio-fw-test` profile has progressed beyond the
-initial no-card blocker: WCD938x/TFA9874 and direct ALSA playback work, but
-the audible level is extremely low and user-facing PipeWire/UCM2 routing is
-unfinished. Audio is therefore only partially functional. Proprietary TFA
-firmware remains outside Git.
+The D-v43/OpenRC reconstruction separately validated USB networking, SSH,
+Wi-Fi scanning, and direct DRM/KMS test rectangles on DSI-1. Weston on that
+system remained black. This is not the successful Weston 14 display result
+from the separate historical M0 Mobian environment. The kernel and userdata
+are not claimed to be bit-for-bit reproducible from all sources.
+The dated [D-v43 reconstruction](docs/validation/d-v43-openrc-reconstruction-2026-09-23.md),
+[DRM/KMS validation](docs/validation/d-v43-drm-kms-validation-2026-09-25.md),
+and [Weston boundary record](docs/validation/d-v43-weston14-boundary-2026-09-26.md)
+keep those milestones and their evidence limits explicit.
 
-The separate D-v43/OpenRC reconstruction has visible direct DRM/KMS test
-rectangles, but no working persistent compositor; Weston D-v43 tests remained
-black. This is not the successful Weston 14 result from the distinct
-historical M0 Mobian environment.
-
-The latest userspace identities and the boundaries between the golden,
-derived, and experimental profiles are documented in
-[`docs/CURRENT-BUILD.md`](docs/CURRENT-BUILD.md) and
-[`docs/status/MOBIAN-STATUS.md`](docs/status/MOBIAN-STATUS.md). The dated
-hardware milestones, including the current partial-audio result, are indexed
-under [`docs/validation/`](docs/validation/).
-
-The current repository architecture and active build entry points are documented in `docs/ARCHITECTURE.md`.
+See [current build identities](docs/status/CURRENT-BUILD.md),
+[Mobian status](docs/status/MOBIAN-STATUS.md), and the dated
+[hardware validation records](docs/validation/).
 
 ## Repository layout
 
-- `base/` — M0/base-rootfs files and construction scripts
-- `display/` — display integration
-- `wifi/` — QCA6390 Wi-Fi integration
-- `bluetooth/` — Bluetooth integration
-- `gpu/` — current GPU runtime, firmware, patches and provenance
-- `phosh/` — current Mobian/Phosh userspace construction
-- `apps/` — optional application installation
-- `kernel/` — kernel-side integration files
-- `docs/` — current architecture, build, status and validation documentation
-- `historical/` — superseded experiments and historical material
-- `output/` — generated local artifacts excluded from Git
+- `kernel/` — tracked kernel config, patches, and kernel-side diagnostics or tools
+- `userspace/` — Phosh, GPU, display, audio, camera, Wi-Fi, Bluetooth, base, and app integration
+- `build/kernel/` — kernel build status and future entry points
+- `build/userdata/` — portable derived-userdata builder and profiles
+- `build/locks/userspace/` — the text-only archi-validation-02 userspace lock
+- `docs/` — current status, architecture, provenance, and dated validation
+- `historical/` — superseded D-v43/OpenRC, Weston, and earlier porting work
+- `tools/` — generic project utilities
 
-See `docs/ARCHITECTURE.md` for the authoritative current architecture.
+The canonical structure and active entry points are described in
+[the architecture guide](docs/architecture/ARCHITECTURE.md).
 
-## Reproducibility
+## Build entry points
 
-The project aims to keep the port reproducible from source and configuration rather than distributing generated device images.
+The Mobian image orchestrator is `build/build-mobian-image.sh`; its Phosh
+builder is `userspace/phosh/scripts/build-m1-phosh.sh`. Optional apps are
+installed by `userspace/apps/scripts/install.sh`. The M0/base-rootfs scripts
+are under `userspace/base/scripts/`.
 
-Where practical, experiments record:
+The separate `build/userdata/build-derived-userdata.sh` derives userdata from
+the locked external golden and package cache without rebuilding the kernel.
+Its four profiles and required external inputs are documented in
+[`build/userdata/README.md`](build/userdata/README.md). Heavy image and kernel
+builds are run manually by the operator; this repository does not contain the
+generated images or private build state.
 
-- exact kernel and device-tree inputs;
-- configuration and patches;
-- build commands and scripts;
-- relevant package versions;
-- hashes of generated artifacts;
-- hardware observations and validation criteria.
+The active Mobian builder requires `M1_MOBIAN_PASSWORD` to be supplied via
+the environment; credentials must never be stored in the repository or shell
+logs.
 
-Generated root filesystems, Android images, build caches and other large artifacts are intentionally excluded from Git.
+## Reproducibility and exclusions
 
-## Project status
+The text lock records exact package and persistent-file identities, external
+artifact hashes, and the boot/userspace compatibility boundary. Exact cloning
+from the validated sparse userdata is possible; functional derivation is
+specified by the builder. Rebuilding the full userspace bit-for-bit from
+source is not demonstrated. The boot/kernel is a separate layer and is not
+rebuilt by the userdata derivation workflow.
 
-This is an experimental downstream Linux port.
-
-The repository documents successful hardware milestones as well as failed experiments and diagnostic work. Not every historical script or experiment represents the current recommended configuration.
-
-Do not assume that an image or procedure is safe to flash merely because it appears in the historical documentation.
-
-## Contributing
-
-Contributions are welcome, particularly for:
-
-- Xiaomi Redmi K30 Pro / POCO F2 Pro (`lmi`) hardware support;
-- SM8250 downstream and mainline investigation;
-- postmarketOS packaging;
-- Debian/Mobian userspace integration;
-- DRM/KMS and DSI display support;
-- USB gadget networking;
-- reproducible build and diagnostic tooling;
-- documentation and independent hardware validation.
-
-Please avoid committing proprietary firmware, generated Android images, private keys, credentials, device identifiers or other sensitive artifacts.
-
-## License
-
-See `LICENSE` and `NOTICE` for licensing information.
-
-Individual imported patches or source fragments may retain their original upstream licensing and copyright notices.
+Do not add raw/sparse/boot images, root filesystems, `.deb`/APK payloads,
+package caches, proprietary firmware (including the TFA container), private
+inputs, build states, generated outputs, full device logs, credentials, PINs,
+machine IDs, or real device MAC addresses to Git. See `NOTICE` and `LICENSE`
+for licensing information.

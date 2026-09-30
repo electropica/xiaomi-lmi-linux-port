@@ -1,0 +1,149 @@
+# Current validated build and userspace state
+
+This document distinguishes the validated Mobian userdata family from the
+separate D-v43/OpenRC reconstruction and from temporary diagnostic boots.
+Generated images are not stored in Git.
+
+## Current hardware state
+
+The `archi-validation-02` Debian 13/Mobian userdata was booted on Xiaomi
+`lmi` with the D-repro D-v43 boot. Phosh was visible and usable; touch/unlock,
+DSI-1, and GLES2 → Zink → Vulkan Turnip → KGSL → Adreno 650 were validated.
+GNOME Console and Calculator were exercised. The original D-repro boot
+(`D-repro-01-kernel-Dv43-qca6390-v2-complete-fcsource-boot.img`, SHA-256
+`0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`) is
+the durable boot identity for the golden and `daily-base` validations. The
+boot image embedded in userdata is a distinct artifact.
+
+## Golden userdata: `archi-validation-02`
+
+The external raw and Android-sparse images were verified as a matching pair:
+
+| Form | Size | SHA-256 |
+| --- | ---: | --- |
+| Raw `archi-validation-02.img` | 4,551,868,416 bytes | `329e2124f97032a2f4b15167bbd9bbbd9395bb422f2794a2117ee610a2368f27` |
+| Sparse `archi-validation-02.img.android-sparse.img` | 2,960,036,280 bytes | `84182b57edb7be8e49c29e0f0b472e9b6a54f7efa645ef99664dc0e004759f78` |
+
+The sparse image was flashed as userdata and booted with the D-repro boot.
+The text lock records its packages, persistent customizations, GPU72 runtime
+and boot/userspace contract at
+[`build/locks/userspace/`](../../build/locks/userspace/README.md).
+The golden is not in Git. A bit-for-bit rebuild from all historical sources
+is not demonstrated.
+
+## Derived profile: `daily-base`
+
+`daily-base` was derived from the golden userdata without rebuilding the
+kernel. It adds the validated time-seed floor and a per-user XDG override
+that disables only automatic Chatty-daemon startup; Chatty remains installed
+and manually launchable.
+
+| Form | Size | SHA-256 |
+| --- | ---: | --- |
+| Raw `archi-validation-02-derived-daily-base-20260927.img` | 4,551,868,416 bytes | `5cc226cd96c324b68d74e33eec461a091e7f5dd69b80e0529c2d0267cfa3cad5` |
+| Sparse `archi-validation-02-derived-daily-base-20260927.img.android-sparse.img` | 2,960,466,444 bytes | `172a4f950252e810f408bf4d5caf5075c699020e6a2198999f7f0b30c7f19928` |
+
+The raw/sparse round trip and hardware boot were validated. The images remain
+external. See
+[`daily-base` validation](../validation/archi-validation-02-daily-base-validation-2026-09-27.md).
+
+## Experimental profile: `daily-base-audio-fw-test`
+
+This separate experimental derivative adds the proprietary TFA9874 container
+to the kernel's active firmware lookup path. It was tested with a distinct
+reset-GPIO diagnostic boot loaded temporarily using `fastboot boot`; that
+boot was not installed durably. The firmware binary, userdata and diagnostic
+boot remain external and must never be added to Git.
+
+The WCD938x/TFA9874 path and direct ALSA playback now work, but the sound is
+extremely quiet. PipeWire has no finalized user-facing route and UCM2 remains
+to be built. Audio is partially functional, not resolved; see
+[`archi-validation-02` audio progress](../validation/archi-validation-02-audio-progress-2026-09-29.md).
+
+## Earlier build: `archi-validation-01` (superseded as current pointer)
+
+The prior Android-sparse build remains a historical artifact identity, not
+the current golden:
+
+| Artifact | Size | SHA-256 |
+| --- | ---: | --- |
+| Work ext4 | 4,294,967,296 bytes | `60de98660991379cb1d463ebadc7de43b73242d68f73502308e3891d2350844d` |
+| Raw userdata | 4,551,868,416 bytes | `559d6c44f2aa2223f91fd8af1db7a838b8183d7a223ceb80f7bdd13a9b6e31e4` |
+| Android sparse userdata | 2,834,813,356 bytes | `f61c19a09881c9a7ac165cc5e36ab08f146d65acddae2de18a6bb555c10663b3` |
+
+Its two `e2fsck` validation passes completed cleanly. It is superseded as the
+current userspace reference by `archi-validation-02` and its validated
+`daily-base` derivative.
+
+## Build entry points
+
+Repository orchestrator:
+
+    build/build-mobian-image.sh
+
+Current Phosh/userspace builder:
+
+    userspace/phosh/scripts/build-m1-phosh.sh
+
+Optional application installer:
+
+    userspace/apps/scripts/install.sh
+
+The optional application layer is enabled with:
+
+    INSTALL_OPTIONAL_APPS=1
+
+## Current optional application set
+
+The current selected optional application packages are:
+
+- epiphany-browser
+- gnome-console
+- gnome-calculator
+- gnome-text-editor
+- papers
+- showtime
+- gnome-clocks
+- gnome-weather
+- gnome-contacts
+- gnome-calls
+- chatty
+- megapixels
+- gnome-calendar
+- gnome-maps
+- geary
+- amberol
+- krecorder
+- koko
+
+## GPU source state
+
+The active GPU72 runtime is stored under:
+
+    userspace/gpu/files/gpu72/
+
+Its canonical source provenance is documented in:
+
+    userspace/gpu/files/gpu72/SOURCE-PROVENANCE.md
+
+The validated source reconstruction is upstream Mesa 25.0.7 plus the canonical
+GPU72 patch.
+
+## Important separation of concerns
+
+The current M0/base-rootfs chain, current Phosh/userspace chain and kernel
+build are separate.
+
+The separate Mobian device workflow is not a replacement for the current
+`userspace/phosh/scripts/build-m1-phosh.sh` image-production chain.
+
+## Known deferred work
+
+The following remain separate deferred items:
+
+- PipeWire/UCM2 user-facing audio routing and the extremely low speaker level
+- camera configuration and a usable downstream capture pipeline
+- Chinese-character rendering in Debian
+
+The historical M0 Weston display validation and the later D-v43/OpenRC Weston
+failures are different environments and must not be conflated.

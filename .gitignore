@@ -42,7 +42,8 @@ System.map
 # Rootfs / build trees / caches
 rootfs/
 rootfs-*/
-build/
+# Source recipes under build/ are tracked; generated artifact extensions and
+# output/cache trees remain ignored by the rules above and below.
 builds/
 output/
 downloads/
@@ -89,8 +90,8 @@ Thumbs.db
 *~
 *.swp
 .aider*
-!gpu/files/gpu72/lib/libEGL.so.1.0.0
-!gpu/files/gpu72/lib/libGLESv2.so.2.0.0
-!gpu/files/gpu72/lib/libgallium-25.0.7.so
-!gpu/files/gpu72/lib/libvulkan_freedreno.so
-!gpu/files/firmware/a650/a650_zap.elf
+!userspace/gpu/files/gpu72/lib/libEGL.so.1.0.0
+!userspace/gpu/files/gpu72/lib/libGLESv2.so.2.0.0
+!userspace/gpu/files/gpu72/lib/libgallium-25.0.7.so
+!userspace/gpu/files/gpu72/lib/libvulkan_freedreno.so
+!userspace/gpu/files/firmware/a650/a650_zap.elf

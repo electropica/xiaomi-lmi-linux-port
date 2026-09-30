@@ -19,7 +19,7 @@ the GPU or display result and was not investigated for this milestone.
 ## Reproduction boundary
 
 The text-only lock under
-[`archi-validation-02-lock/`](../../reproduction/archi-validation-02-lock/README.md)
+[`archi-validation-02 lock`](../../build/locks/userspace/README.md)
 captures:
 
 - 1,086 installed packages with exact versions and architectures;

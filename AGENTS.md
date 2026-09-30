@@ -63,54 +63,37 @@ secrets, tokens, credentials, or unrelated personal or sensitive data.
   manual validation, automated validation, and host-only validation remain
   clearly distinguished.
 
-## Current Mobian lmi userspace build reference
-
-This section describes the repository architecture being prepared for the
-current Xiaomi lmi Mobian/Phosh userspace image.
+## Unified project layout and current Mobian reference
 
 All paths below are relative to the repository root. Do not infer current
 procedures from historical experiments when an active implementation exists.
 
-The current userspace/Phosh build entry point in this architecture is:
+- Mobian image orchestrator: `build/build-mobian-image.sh`
+- Phosh/userspace builder: `userspace/phosh/scripts/build-m1-phosh.sh`
+- Optional applications: `userspace/apps/scripts/install.sh`
+- M0/base-rootfs scripts and inputs: `userspace/base/scripts/` and
+  `userspace/base/files/`
+- GPU runtime and provenance: `userspace/gpu/files/`
+- Display, Wi-Fi, Bluetooth, audio, camera, and Phosh integration:
+  `userspace/{display,wifi,bluetooth,audio,camera,phosh}/`
+- Kernel configuration and patches: `kernel/configs/` and `kernel/patches/`
+- Derived userdata builder: `build/userdata/`
+- Userspace lock: `build/locks/userspace/`
+- Generic project utilities: `tools/`
+- Status, provenance, architecture, and validation records: `docs/`
+- Superseded experiments: `historical/`
 
-    phosh/scripts/build-m1-phosh.sh
+The M0 base rootfs, the Phosh/userspace image, derived userdata, and kernel
+are distinct layers. A userspace-only change does not by itself require a
+kernel rebuild. `build/userdata/` derives from external locked inputs and does
+not rebuild the boot/kernel.
 
-The optional application installer is:
+Generated artifacts belong in ignored `output/`, `build/userdata/outputs/`,
+or private `build/userdata/state-*` directories as described by the relevant
+builder. Never add images, package caches, proprietary firmware, credentials,
+or private state to Git.
 
-    apps/scripts/install.sh
-
-`INSTALL_OPTIONAL_APPS=1` makes the Phosh/userspace build invoke this optional
-application installation step.
-
-The M0/base-rootfs construction scripts are separate and live under:
-
-    base/scripts/
-
-Their associated base-build files and working inputs live under:
-
-    base/files/
-
-The M0 base rootfs, the Phosh/userspace image, and the kernel are separate
-layers. A userspace or application-only change does not by itself require a
-kernel rebuild.
-
-GPU runtime files consumed by the current userspace build live under:
-
-    gpu/files/
-
-Wi-Fi and Bluetooth integration are maintained independently under:
-
-    wifi/
-    bluetooth/
-
-Display integration is maintained under:
-
-    display/
-
-Generated images and other build outputs belong under:
-
-    output/
-
-The reorganized repository architecture has completed a successful image build and is now the active project layout. The validated build reference is recorded in `docs/CURRENT-BUILD.md`, and the authoritative layout is documented in `docs/ARCHITECTURE.md`.
-
-Historical experiments must not override a current implementation or a later hardware-validated result merely because historical material contains more diagnostic detail.
+The validated build reference is `docs/status/CURRENT-BUILD.md`; the
+authoritative layout is `docs/architecture/ARCHITECTURE.md`. Historical
+experiments must not override a current implementation or a later
+hardware-validated result merely because they contain more diagnostic detail.

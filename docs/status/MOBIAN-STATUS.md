@@ -9,7 +9,7 @@ touch/unlock, DSI-1, GPU72 GLES2/Zink/Turnip/KGSL acceleration, GNOME Console
 and Calculator were exercised. `daily-base` separately validated the
 time-seed correction and responsive unlock with only Chatty's daemon
 autostart hidden. Exact image identities and boundaries are in
-[`docs/CURRENT-BUILD.md`](../CURRENT-BUILD.md).
+[`current build status`](CURRENT-BUILD.md).
 
 `daily-base-audio-fw-test` is an experimental userspace profile paired with
 a temporary reset-GPIO diagnostic boot, not a replacement for the durable
@@ -185,8 +185,9 @@ DHCP lease and default route, and preserved the independent `usb0` SSH path.
 The kernel dynamically selected `bd_j11gl.elf`; it must not be overridden with
 the older historical `bd_j11.elf` default.
 
-The systemd implementation under `wifi/files/systemd` and `wifi/scripts` and the integrated
-Debian `wpasupplicant` are now validated on hardware in M1 REPRO v3. The image
+The systemd implementation under `userspace/wifi/files/systemd` and
+`userspace/wifi/scripts`, together with the integrated Debian `wpasupplicant`,
+is now validated on hardware in M1 REPRO v3. The image
 completed firmware bring-up, `FW_READY`, qcacld probe, WLAN creation,
 automatic SSID listing, CLI WPA2 association, DHCP, DNS, and Internet access
 while preserving USB SSH. No Wi-Fi profile or credential is tracked. See

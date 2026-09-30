@@ -43,7 +43,7 @@ Chatty was not running during this validation. The delay did not recur.
 
 The builder, verifiers, helper tests, manifests, profiles, hooks and overlays
 are text-only under
-[`archi-validation-02-derived-builder/`](../../reconstruction/p1-reconstruction/reproduction/archi-validation-02-derived-builder/README.md).
+[`daily-base derived-userdata builder`](../../build/userdata/README.md).
 The generated raw/sparse images, `.deb` cache, boot image, rootfs, and private
 build state are external and are not versioned. `baseline-nochange` remains
 unchanged; hooks for `time-seed` and `daily-base` require explicit

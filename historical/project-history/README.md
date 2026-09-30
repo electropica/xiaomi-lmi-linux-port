@@ -27,14 +27,13 @@ device**, not just `lmi`. ([中文版](docs/porting-sm8250-downstream-to-postmar
 
 ## The recipe
 
-The postmarketOS packaging that produces a bootable image:
-
-- [`artifacts/wsl-pmaports/linux-xiaomi-lmi/`](artifacts/wsl-pmaports/linux-xiaomi-lmi/)
-  — kernel package (`APKBUILD`, merged `config-xiaomi-lmi.aarch64`) with
-  `devtmpfs` and configfs RNDIS enabled.
-- [`artifacts/wsl-pmaports/device-xiaomi-lmi/`](artifacts/wsl-pmaports/device-xiaomi-lmi/)
-  — device package (`deviceinfo`, `modules-initfs`) configured for 4096-byte
-  rootfs image sectors and RNDIS USB networking.
+The historical postmarketOS packaging was stored under the excluded
+`artifacts/wsl-pmaports/` workspace tree: `linux-xiaomi-lmi/` held the kernel
+package (`APKBUILD`, merged `config-xiaomi-lmi.aarch64`) with `devtmpfs` and
+configfs RNDIS enabled; `device-xiaomi-lmi/` held `deviceinfo` and
+`modules-initfs` configured for 4096-byte rootfs image sectors and RNDIS USB
+networking. Those artifact directories are intentionally not included in this
+repository; see the retained source-history and provenance notes instead.
 
 Kernel source: `LineageOS/android_kernel_xiaomi_sm8250` @ `a5b3099`
 (matches the stock `4.19.325-cip128-st12-perf-ga5b3099017ae`).

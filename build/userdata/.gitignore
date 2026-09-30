@@ -1,0 +1,4 @@
+# External private inputs, generated payloads, and per-build state.
+/inputs/
+/outputs/
+/state-*/

@@ -43,7 +43,7 @@ recorded selection was `systemd=never`.
 ## Historically established facts
 
 The June manifest, historical pmbootstrap configuration, and live Wi-Fi note
-summarized in the [source index](../../reconstruction/p1-reconstruction/SOURCES.md)
+summarized in the [source index](../provenance/p1-reconstruction-sources.md)
 establish:
 
 | Item | Historical D-v43 value |
@@ -259,7 +259,7 @@ claimed to match a historical June artifact.
 
 The owner ran the reversible builder retained in the imported source transit
 tree at
-[`build-openrc-no-debug-shell-boot.sh`](../../reconstruction/p1-reconstruction/scripts/build-openrc-no-debug-shell-boot.sh)
+[`build-openrc-no-debug-shell-boot.sh`](../../historical/postmarketos-d-v43/scripts/build-openrc-no-debug-shell-boot.sh)
 (SHA-256
 `9a7d17522c113394c83092441e8a1e46d7af55d6c55ba3ef6feae0fa9687ba59`).
 The script is intentionally tied to the documented local paths and performs
