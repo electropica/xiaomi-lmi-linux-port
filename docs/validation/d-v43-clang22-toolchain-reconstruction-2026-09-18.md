@@ -51,6 +51,10 @@ Historical package witnesses recorded for comparison were:
 | `clang22-libs` | `22.1.8-r0` | 38,048,553 bytes | APKINDEX SHA1 `5866305587ff7ab583a6509e73f8a52d61062978` |
 | `lld22-libs` | `22.1.8-r0` | 2,823,514 bytes | SHA1 suffix `f3de37f2` |
 
+The specifically missing historical target was
+`clang22-libs-22.1.8-r0.58663055.apk`. It is a comparison witness, not a
+package included in this repository.
+
 The historical record also distinguished the Clang/LLD r0 build wave from a
 later LLVM 22.1.8-r1 dependency wave. The latter had build date `1784148360`
 and independently matched checksum suffixes for `llvm22` (`4a0df8aa`),
@@ -103,6 +107,29 @@ The Clang recipe's build dependencies were `cmake`, `help2man`, `libxml2-dev`,
 `llvm22-dev`, `llvm22-gtest`, `llvm22-static`, `llvm22-test-utils`, `python3`
 and `samurai`. Its `options="!check"` meant the declared check dependencies
 were not required for that package build.
+
+The closed repository's `build-base 0.5-r4` dependency closure additionally
+required `file 5.47-r2`, `make 4.4.1-r4`, and `libmagic 5.47-r2` (providing
+`so:libmagic.so.1`), alongside `gcc/g++ 15.2.0-r5`. The historical
+`abuild-sudo 3.17.0-r0` subpackage supplied the `abuild-apk` command needed
+by `abuild`.
+
+## Bootstrap package outcomes in the historical note
+
+These rows summarize the package-specific results recorded during dependency
+reconstruction. They document a functional bootstrap closure, not
+byte-identical historical APKs:
+
+| Package family | Version | Recorded result and limitation |
+| --- | --- | --- |
+| OpenSSL | `3.5.7-r0` | Bootstrap copy built its package family with checks disabled after the full test suite intermittently failed at `70-test_quic_radix.t` although that test could pass alone. An initial `3.5.8` family was downgraded to `3.5.7`; result explicitly remained functional, not historically byte-identical. |
+| Expat | `2.8.1-r0` | Exact recipe and distfile used; checks disabled in the bootstrap copy; package family build completed. |
+| SQLite | `3.53.2-r0` | Exact distfiles recovered and verified; the historical recipe already used `options=!check`; package family rebuilt successfully. |
+| bluez-headers | `5.86-r0` | Separate headers aport was selected instead of the full BlueZ package and rebuilt successfully. |
+| tzdata | `2026b-r0` | Three source archives were SHA-512 validated; the `tzdata`, `tzdata-right`, `tzdata-doc`, and `tzdata-utils` packages were produced. |
+| Python | `3.14.5-r1` | Snapshot recipe and source archive used; dependency closure reconstructed; checks disabled in the bootstrap recipe copy; the Python, development, tests, debug, idle, docs, `pyc`, and `pycache` package families were produced. |
+| c-ares | `1.34.6-r0` | Exact source recovered and verified; checks disabled in the bootstrap copy; package family rebuilt. |
+| curl | `8.20.0-r1` | Exact source recovered and verified; dependency chain reconstructed; checks disabled in the bootstrap copy; curl, libcurl, development, static, docs, debug, and shell-completion packages were produced. |
 
 ## Reconstruction lessons and confidence limits
 
