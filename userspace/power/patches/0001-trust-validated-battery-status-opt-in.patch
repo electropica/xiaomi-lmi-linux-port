@@ -1,0 +1,74 @@
+Description: opt-in to hardware-validated battery status
+Author: Mobian lmi contributors
+Origin: other, local downstream integration
+Forwarded: not-needed, local hardware opt-in candidate
+Last-Update: 2026-10-01
+License: GPL-2.0-or-later
+
+--- a/src/linux/up-device-supply-battery.c
++++ b/src/linux/up-device-supply-battery.c
+@@ -307,7 +307,13 @@
+ 	 * found and is a negative value as long as the battery isn't fully charged.*/
+ 	values.state = up_device_supply_get_state (native);
+ 
+-	if (values.state != UP_DEVICE_STATE_FULLY_CHARGED &&
++	/* Opt-in for drivers whose current sign does not follow this heuristic.
++	 * This preserves the reported status; it does not invert the current or
++	 * infer a discharge state. The property must only be set for hardware
++	 * whose status has been validated across a physical charging transition.
++	 */
++	if (!g_udev_device_get_property_as_boolean (native, "UPOWER_TRUST_BATTERY_STATUS") &&
++	    values.state != UP_DEVICE_STATE_FULLY_CHARGED &&
+ 	    g_udev_device_get_sysfs_attr_as_double_uncached (native, "current_now") < 0.0)
+ 		values.state = UP_DEVICE_STATE_DISCHARGING;
+ 
+--- a/src/linux/integration-test.py
++++ b/src/linux/integration-test.py
+@@ -1410,6 +1410,47 @@
+         )
+         self.stop_daemon()
+ 
++    def test_battery_negative_current_status_opt_in(self):
++        """Opt-in preserves status without changing the default heuristic.
++
++        Positive-current discharge is a synthetic contract check, not evidence
++        that any particular downstream device reports that sign when unplugged.
++        """
++        bat0 = self.testbed.add_device(
++            "power_supply", "BAT0", None,
++            ["type", "Battery", "scope", "System", "present", "1",
++             "status", "Charging", "capacity", "50",
++             "charge_full", "4000000", "charge_full_design", "4000000",
++             "charge_now", "2000000", "voltage_now", "4000000",
++             "current_now", "-250000"],
++            [],
++        )
++        cases = (
++            # No rule/property: retain the existing mainline behavior.
++            (None, "Charging", "-250000", UP_DEVICE_STATE_DISCHARGING),
++            ("0", "Charging", "-250000", UP_DEVICE_STATE_DISCHARGING),
++            ("1", "Charging", "-250000", UP_DEVICE_STATE_CHARGING),
++            ("1", "Discharging", "250000", UP_DEVICE_STATE_DISCHARGING),
++            ("1", "Discharging", "-250000", UP_DEVICE_STATE_DISCHARGING),
++            ("0", "Full", "-250000", UP_DEVICE_STATE_FULLY_CHARGED),
++            ("1", "Full", "-250000", UP_DEVICE_STATE_FULLY_CHARGED),
++        )
++        for opt_in, status, current, expected in cases:
++            with self.subTest(opt_in=opt_in, status=status, current=current):
++                if opt_in is not None:
++                    self.testbed.set_property(bat0, "UPOWER_TRUST_BATTERY_STATUS", opt_in)
++                self.testbed.set_attribute(bat0, "status", status)
++                self.testbed.set_attribute(bat0, "current_now", current)
++                # 100% must not suppress the legacy sign override by itself.
++                self.testbed.set_attribute(bat0, "capacity", "100" if status in ("Charging", "Full") else "50")
++                self.start_daemon()
++                try:
++                    devices = self.proxy.EnumerateDevices()
++                    self.assertEqual(len(devices), 1)
++                    self.assertEqual(self.get_dbus_dev_property(devices[0], "State"), expected)
++                finally:
++                    self.stop_daemon()
++
+     def test_battery_charge(self):
+         """battery which reports charge instead of energy
+ 

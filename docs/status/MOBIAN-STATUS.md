@@ -583,3 +583,14 @@ See
 
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private
 keys, caches and other build artifacts are intentionally excluded from Git.
+
+## Battery status opt-in — 2026-10-01
+
+A targeted UPower 1.90.9 opt-in passed seven selected host tests and a
+private ARM64 hardware test: the candidate followed Charging → Discharging
+→ Charging correctly across 80 physical-cycle samples. The installed
+service and image identities remain unchanged. Full Debian package build,
+phone-local activation and persistent deployment remain pending. This
+corrects state interpretation, not the missing FG profile, capacity
+estimation or suspend policy. See the
+[validation record](../validation/lmi-upower-battery-status-2026-10-01.md).

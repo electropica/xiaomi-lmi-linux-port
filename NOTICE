@@ -11,3 +11,8 @@ NOTICE — third-party components and licensing scope
 
 - Stock and recovery boot images for the device are proprietary third-party
   binaries and are intentionally NOT distributed in this repository.
+
+- The UPower patch under userspace/power/patches modifies upstream UPower
+  GPL-2.0-or-later source and is covered by GPL-2.0-or-later. The repository
+  MIT license does not relicense this patch. UPower source and generated
+  package binaries remain external.

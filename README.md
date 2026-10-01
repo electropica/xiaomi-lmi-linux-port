@@ -82,3 +82,10 @@ package caches, proprietary firmware (including the TFA container), private
 inputs, build states, generated outputs, full device logs, credentials, PINs,
 machine IDs, or real device MAC addresses to Git. See `NOTICE` and `LICENSE`
 for licensing information.
+
+## Battery state correction
+
+The [UPower status opt-in](userspace/power/README.md) passed selected host
+tests and a private unplug/replug test on lmi. It is not installed durably;
+the full Debian package and activation procedure remain pending. Battery
+profile recognition, capacity estimation and suspend are distinct issues.
