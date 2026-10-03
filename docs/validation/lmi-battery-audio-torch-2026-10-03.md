@@ -250,3 +250,22 @@ collector at a ten-minute interval. It uses no RTC/wake timer and makes no
 power-policy changes. Initial state: Charging, USB online, 95% capacity,
 CPU-idle opt-in active. Long-run results are pending; this must not be reported
 as completed autonomy validation.
+
+
+## Règle de comparaison batterie — Wi-Fi et essais d'interface
+
+L'opérateur précise que les références batterie actuelles ont été prises
+sans connexion Wi-Fi, avec la radio désactivée pour certains essais.
+Ne pas mélanger une future mesure avec Wi-Fi connecté à ces références.
+Consigner séparément : radio activée/désactivée, association Wi-Fi effective,
+écran, USB, musique/lampe et correctif CPU. « Non associé » n'est pas
+équivalent à « radio désactivée ». Les comparaisons historiques détaillées
+conservent leurs états Wi-Fi respectifs ; aucune n'est requalifiée ici.
+
+Pour les tests d'applications, un inhibiteur temporaire idle+suspend lié à
+USB online a été lancé, limité à deux heures et libéré lorsque l'USB passe
+hors ligne. Il ne change pas les préférences persistantes. Arrêter ce service
+avant une nouvelle mesure batterie : l'écran forcé et le collecteur de
+surveillance USB font partie des conditions d'essai à maîtriser. L'activation
+branchée a été vérifiée ; le débranchement de cette inhibition n'a pas été
+testé physiquement dans ce lot. Aucun nouveau test batterie n'a été effectué.

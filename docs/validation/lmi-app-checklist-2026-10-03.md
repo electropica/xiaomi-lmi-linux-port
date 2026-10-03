@@ -124,3 +124,22 @@ L'opérateur a demandé de reporter la traduction au profit du fonctionnement.
 SSH Windows a atteint le serveur mais refusé la lecture de la clé privée
 dans WSL et du fichier de clés d'hôte. L'accès WSL existant reste utilisé ;
 aucune clé privée n'a été copiée et aucune vérification d'hôte désactivée.
+
+
+## Règle de comparaison batterie — Wi-Fi et essais d'interface
+
+L'opérateur précise que les références batterie actuelles ont été prises
+sans connexion Wi-Fi, avec la radio désactivée pour certains essais.
+Ne pas mélanger une future mesure avec Wi-Fi connecté à ces références.
+Consigner séparément : radio activée/désactivée, association Wi-Fi effective,
+écran, USB, musique/lampe et correctif CPU. « Non associé » n'est pas
+équivalent à « radio désactivée ». Les comparaisons historiques détaillées
+conservent leurs états Wi-Fi respectifs ; aucune n'est requalifiée ici.
+
+Pour les tests d'applications, un inhibiteur temporaire idle+suspend lié à
+USB online a été lancé, limité à deux heures et libéré lorsque l'USB passe
+hors ligne. Il ne change pas les préférences persistantes. Arrêter ce service
+avant une nouvelle mesure batterie : l'écran forcé et le collecteur de
+surveillance USB font partie des conditions d'essai à maîtriser. L'activation
+branchée a été vérifiée ; le débranchement de cette inhibition n'a pas été
+testé physiquement dans ce lot. Aucun nouveau test batterie n'a été effectué.
