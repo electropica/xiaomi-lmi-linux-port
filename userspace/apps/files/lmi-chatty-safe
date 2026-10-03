@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+# Local workaround for downstream video-node enumeration, scoped to Chatty.
+test -d /usr/local/lib/lmi-chatty/gstreamer || exit 1
+cache=${XDG_CACHE_HOME:-$HOME/.cache}/lmi-chatty
+umask 077
+mkdir -p "$cache"
+export GST_PLUGIN_SYSTEM_PATH_1_0=/usr/local/lib/lmi-chatty/gstreamer
+export GST_PLUGIN_PATH_1_0=
+export GST_REGISTRY_1_0=$cache/registry.bin
+# Refuse an unbounded fallback if user cgroup memory control is unavailable.
+exec systemd-run --user --scope --quiet --collect \
+ --property=MemoryMax=402653184 --property=MemorySwapMax=0 \
+ --property=TasksMax=128 /usr/bin/chatty "$@"

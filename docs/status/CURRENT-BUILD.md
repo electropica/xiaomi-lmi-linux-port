@@ -190,3 +190,20 @@ do not identify a memory-power fault; the residual consumer remains
 unresolved. The trace instance was removed after reconnect. A subsequent
 unplugged inspection confirmed USB runtime suspend and its power domains
 disabled; an always-on boost/shared GPIO is a review lead, not a proven cause.
+
+
+## Application checklist and Chatty incident — 2026-10-03
+
+An inventory of 21 visible applications and one-at-a-time functional checks
+is recorded in `docs/validation/lmi-app-checklist-2026-10-03.md`. Chatty
+0.8.7-2 exhausted memory during camera enumeration through GStreamer and
+libpurple. An isolated test excluding two video plugins stayed active at
+approximately 108 MiB. The phone-local desktop/D-Bus helper was then installed
+with an isolated registry and a requested 384 MiB systemd-user memory limit;
+normal launch, user memory delegation and visual navigation still need
+validation. SMS is not validated and no modem was detected. The new helper
+is not automatically installed by the generic image recipe.
+
+The restart interrupted the six-hour battery observer. CPU-idle and UPower
+were active after restart, but no ALSA card was detected; previous music
+confirmations apply to the temporary diagnostic boot, not this restart.
