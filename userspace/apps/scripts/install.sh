@@ -62,3 +62,10 @@ install -Dm 0644 "$apps_files/phosh-portals.conf" /etc/xdg/xdg-desktop-portal/ph
 install -Dm 0644 /usr/share/applications/org.gnome.TextEditor.desktop /usr/local/share/applications/org.gnome.TextEditor.desktop
 sed -i -e 's|^Exec=gnome-text-editor|Exec=/usr/local/bin/lmi-text-editor|' -e 's|^DBusActivatable=true$|DBusActivatable=false|' /usr/local/share/applications/org.gnome.TextEditor.desktop
 grep -q '^Exec=/usr/local/bin/lmi-text-editor %U$' /usr/local/share/applications/org.gnome.TextEditor.desktop
+
+
+# Calculator has its own keypad; suppress automatic OSK only in this app.
+install -m 0755 "$apps_files/lmi-calculator" /usr/local/bin/lmi-calculator
+install -Dm 0644 /usr/share/applications/org.gnome.Calculator.desktop /usr/local/share/applications/org.gnome.Calculator.desktop
+sed -i -e 's|^Exec=gnome-calculator|Exec=/usr/local/bin/lmi-calculator|' -e 's|^DBusActivatable=true$|DBusActivatable=false|' /usr/local/share/applications/org.gnome.Calculator.desktop
+grep -q '^Exec=/usr/local/bin/lmi-calculator' /usr/local/share/applications/org.gnome.Calculator.desktop

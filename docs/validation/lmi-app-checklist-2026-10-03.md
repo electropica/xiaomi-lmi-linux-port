@@ -9,7 +9,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Application | Fonctionnement global | Fonctionnement des menus | Traduction |
 |---|---|---|---|
 | Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
-| Calculatrice | 2+3=5 obtenu par boutons tactiles ; fermeture avec code 0 puis relance vérifiées à distance. Le clavier peut masquer les boutons ; appui long sur la barre inférieure testé pour le cacher. | À tester après résolution du clavier. | À tester. |
+| Calculatrice | 2+3=5 obtenu par boutons tactiles ; fermeture avec code 0 puis relance vérifiées à distance. La relance initiale faisait revenir le clavier : helper GTK simple installé pour supprimer son ouverture automatique dans cette application. Pavé tactile et saisie de touches physiques vérifiés ; confirmation opérateur encore attendue. | À tester après résolution du clavier. | À tester. |
 | Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
 | Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Arrêt SIGSEGV constaté avec le rendu initial ; deux fermetures sans erreur obtenues avec le contournement Cairo limité à cet Éditeur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Préférences et recherche ouvertes puis fermées au toucher. Raccourcis clavier déborde encore ; retour tactile non établi. Impression, remplacement et autres actions restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
 | Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
@@ -426,3 +426,21 @@ Alt+F4 avec Result=success et ExecMainStatus=0 ; relance indépendante active
 sans erreur au contrôle initial. Ce parcours valide le calcul élémentaire et
 la relance, pas tous les modes mathématiques ni une stabilité prolongée.
 Aucun réglage ni paquet de la Calculatrice n’a été modifié.
+
+
+## Calculatrice : corriger le retour automatique du clavier
+
+L’opérateur signale le clavier encore devant la Calculatrice après relance.
+La précédente réussite du geste de masquage n’était pas un correctif durable.
+Le helper lmi-calculator impose GTK_IM_MODULE=gtk-im-context-simple à ce seul
+processus, afin de garder le pavé natif visible. Aucun réglage global du clavier
+n’est changé. Sur l’essai isolé, Visible=false au démarrage et après 2+3=5
+obtenu avec les boutons tactiles ; le champ accepte aussi 8/2 par touches
+injectées via wtype. Un clavier physique réel n’a pas été branché pour ce test.
+Le helper et le routage desktop sont intégrés à l’installateur et au staging
+du prochain build ; aucun build lourd lancé. Confirmation manuelle attendue.
+
+Le contexte simple évite l’activation du text-input Wayland pour cette app.
+Les méthodes de saisie complexes ne sont pas validées dans la Calculatrice,
+et les autres applications conservent leur méthode normale.
+Source : [GTK 4.18.6, sélection du contexte de saisie](https://github.com/GNOME/gtk/blob/4.18.6/gtk/gtkimmodule.c).
