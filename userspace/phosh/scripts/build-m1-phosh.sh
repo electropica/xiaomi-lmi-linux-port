@@ -119,6 +119,8 @@ if [[ ${INSTALL_DEBUG_TOOLS:-} == 1 ]]; then install -m 0755 "$repo_dir/tools/de
 optional_apps_enabled=0
 if [[ ${INSTALL_OPTIONAL_APPS:-} == 1 ]]; then
     install -m 0755 "$apps_dir/scripts/install.sh" "$tree/run/install-optional-apps.sh"
+    install -d "$tree/run/lmi-app-files"
+    install -m 0755 "$apps_dir/files/lmi-photos" "$apps_dir/files/lmi-photos-thumbnails" "$tree/run/lmi-app-files/"
     optional_apps_enabled=1
 fi
 
@@ -177,7 +179,7 @@ apt-get install --no-install-recommends -y \
 test -z "$(dpkg --audit)"
 if [[ $INSTALL_DEBUG_TOOLS == 1 ]]; then /run/install-debug-tools.sh; fi
 if [[ $INSTALL_OPTIONAL_APPS == 1 ]]; then
-    /run/install-optional-apps.sh
+    LMI_APPS_FILES_DIR=/run/lmi-app-files /run/install-optional-apps.sh
 fi
 if ! getent passwd 1000 >/dev/null; then
     useradd --uid 1000 --user-group --create-home --shell /bin/bash mobian

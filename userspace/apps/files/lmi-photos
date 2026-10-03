@@ -1,5 +1,23 @@
 #!/bin/sh
-# Local Xiaomi lmi workaround; does not change the session renderer.
 set -eu
-export QT_QUICK_BACKEND=software
+# Keep the workaround local to Photos and its thumbnail workers.
+if [ -d /opt/mobian-gpu/lib ] && [ -f /opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json ]; then
+    export LD_LIBRARY_PATH=/opt/mobian-gpu/lib
+    export VK_ICD_FILENAMES=/opt/mobian-gpu/icd.d/freedreno_icd.aarch64.json
+    export MESA_LOADER_DRIVER_OVERRIDE=zink
+    export LIBGL_DRIVERS_PATH=/usr/lib/aarch64-linux-gnu/dri
+    export LIBGL_ALWAYS_SOFTWARE=0
+    export GALLIUM_DRIVER=zink
+    export QT_QUICK_BACKEND=rhi
+    export QSG_RHI_BACKEND=opengl
+else
+    export QT_QUICK_BACKEND=software
+fi
+export QT_QUICK_CONTROLS_MOBILE=1
+export QT_QUICK_CONTROLS_STYLE=org.kde.breeze
+export QT_IM_MODULE=compose
+export QT_QPA_OFFSCREEN_NO_GLX=1
+if [ -x /usr/local/bin/lmi-photos-thumbnails ]; then
+    /usr/local/bin/lmi-photos-thumbnails "$@" || true
+fi
 exec /usr/bin/koko "$@"

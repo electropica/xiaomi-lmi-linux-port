@@ -13,7 +13,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
 | Éditeur de texte | À tester : ouvrir, modifier, enregistrer un fichier de test. | À tester. | À tester. |
 | Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
-| Photos (Koko) | À tester : afficher et zoomer une image ; ce n'est pas la capture caméra. | À tester. | À tester. |
+| Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
 | Horloges | À tester : chronomètre/minuterie ; son dépend du rétablissement audio. | À tester. | À tester. |
 | Agenda | À tester : affichage/navigation ; ne pas créer d'événement personnel. | À tester. | À tester. |
 | Contacts | À tester : affichage/navigation ; ne pas modifier les contacts personnels. | À tester. | À tester. |
@@ -43,7 +43,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 
 Priorité décidée par l'opérateur : fonctionnement global, puis menus,
 puis traduction. Une seule application active dans le protocole d'essai ;
-laisser le temps de confirmer chaque geste. L'essai courant reste Discussions.
+laisser le temps de confirmer chaque geste. L'essai courant est Photos ; les résultats Chatty restent conservés.
 
 ## Ordre de validation
 
@@ -276,3 +276,50 @@ Capture distante : grim a été installé comme outil de diagnostic (84 ko insta
 La capture fonctionne, mais montre l'écran verrouillé ; aucun secret ni réglage
 de verrouillage n'a été modifié. Les captures restent privées, hors Git.
 La confirmation visuelle de Photos et des autres menus reste donc en attente.
+
+
+## Photos : retour opérateur et navigation — 3 octobre 2026
+
+L'opérateur confirme que l'interface fonctionne, avec un menu accessible par
+glissement. Une image de test PNG a été envoyée au téléphone, hors Git.
+L'image s'affiche. En revanche, impossible de revenir à la galerie et clavier
+visible pendant la consultation. Le zoom/dézoom paraît sans limites.
+
+Le clavier a été masqué ponctuellement par l'API OSK ; ce geste distant ne
+constitue pas une correction générale du clavier. Le helper Photos active
+maintenant QT_QUICK_CONTROLS_MOBILE=1, seulement pour Koko. qt6-svg-plugins,
+absent, a été installé et ajouté à la recette : une icône vidéo apparaît sur
+la capture après installation, mais tous les boutons ne sont pas encore validés.
+Confirmation ultérieure : le Retour fonctionne et le clavier reste caché après ouverture d'image, avec le helper final.
+
+La source officielle Koko v25.04.0 BaseImageDelegate.qml définit minimumZoomSize=8
+et maximumZoomFactor=100 : la plage est très large, pas réellement infinie.
+Ces bornes n'ont pas été modifiées. Une restriction adaptée au téléphone reste
+à décider après rétablissement de la navigation.
+
+Références : [mode mobile Kirigami](https://develop.kde.org/hig/layout_and_nav/),
+[bornes de zoom Koko](https://github.com/KDE/koko/blob/v25.04.0/src/qml/imagedelegate/BaseImageDelegate.qml).
+
+
+### Photos : miniatures et lanceur final
+
+Le défaut de galerie transparente est contourné par génération automatique
+du cache standard de miniatures. Une capture sans sélection montre l'image de
+test. Le test sur téléphone valide le redimensionnement 256 pixels, les champs
+URI/date/taille du PNG et la réutilisation sans réécriture du cache inchangé.
+L'opérateur confirme ensuite : « Retour fonctionne, clavier caché ».
+
+Le helper emploie le runtime Zink lmi lorsqu'il est présent, le mode mobile,
+Breeze, compose pour l'entrée et un worker hors écran sans GLX. Les trois
+moteurs précédemment essayés ne suffisaient pas à rétablir la génération KIO.
+Une trace shmget=ENOSYS et les sources des versions installées étayent
+l'incompatibilité du flux d'aperçu en l'absence de mémoire partagée.
+Le contournement couvre les images du dossier XDG et les fichiers passés au
+lanceur, avec limites de temps/mémoire ; il ne couvre pas les vidéos.
+
+La ligne « Images » près du bas est le bandeau de navigation du dossier défini
+par AlbumView ; sa disposition et les onglets tronqués restent ouverts. Les
+bornes du zoom n'ont pas été modifiées. Voir [Photos lmi](../../userspace/apps/PHOTOS-LMI.md)
+pour le diagnostic, les sources et les limites. Captures et image de test sont
+hors Git. Le maintien temporaire de l'écran actif sur USB reste réservé aux
+tests d'interface et doit être arrêté avant toute mesure de batterie.

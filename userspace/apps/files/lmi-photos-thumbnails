@@ -1,0 +1,131 @@
+#!/usr/bin/python3
+"""Prepare bounded image previews in the user's standard thumbnail cache."""
+import hashlib
+import os
+from pathlib import Path
+import resource
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+from urllib.parse import unquote, urlparse
+import zlib
+
+SIGNATURE = b"\x89PNG\r\n\x1a\n"
+EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}
+
+
+def png_text(data):
+    if not data.startswith(SIGNATURE):
+        raise ValueError("Not a PNG")
+    result = {}
+    pos = 8
+    while pos + 12 <= len(data):
+        size = struct.unpack("!I", data[pos:pos + 4])[0]
+        kind = data[pos + 4:pos + 8]
+        payload = data[pos + 8:pos + 8 + size]
+        if pos + size + 12 > len(data):
+            raise ValueError("Truncated PNG")
+        if kind == b"tEXt" and b"\0" in payload:
+            key, value = payload.split(b"\0", 1)
+            result[key.decode("latin1")] = value.decode("latin1")
+        pos += size + 12
+        if kind == b"IEND":
+            return result
+    raise ValueError("Missing IEND")
+
+
+def add_text(data, metadata):
+    png_text(data)
+    chunks = b""
+    for key, value in metadata.items():
+        payload = key.encode("latin1") + b"\0" + value.encode("latin1")
+        chunks += (struct.pack("!I", len(payload)) + b"tEXt" + payload
+                   + struct.pack("!I", zlib.crc32(b"tEXt" + payload)))
+    return data[:-12] + chunks + data[-12:]
+
+
+def pictures_dir():
+    config = Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))) / "user-dirs.dirs"
+    try:
+        for line in config.read_text().splitlines():
+            if line.startswith('XDG_PICTURES_DIR="') and line.endswith('"'):
+                return Path(line.split('"')[1].replace("$HOME", str(Path.home())))
+    except OSError:
+        pass
+    return Path.home() / "Pictures"
+
+
+def limit_generator():
+    resource.setrlimit(resource.RLIMIT_AS, (512 * 1024 * 1024,) * 2)
+
+
+def main():
+    if not Path("/usr/bin/gdk-pixbuf-thumbnailer").is_file():
+        return
+    targets = [pictures_dir()]
+    for arg in sys.argv[1:]:
+        if arg.startswith("file://"):
+            url = urlparse(arg)
+            if url.netloc not in ("", "localhost"):
+                continue
+            arg = unquote(url.path)
+        if "://" not in arg:
+            targets.append(Path(arg))
+    cache = Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))) / "thumbnails/large"
+    cache.mkdir(mode=0o700, parents=True, exist_ok=True)
+    deadline = time.monotonic() + 3
+    visited, generated, examined = set(), 0, 0
+    for target in targets:
+        if target.is_symlink():
+            continue
+        paths = [target] if target.is_file() else target.rglob("*") if target.is_dir() else []
+        for path in paths:
+            if time.monotonic() >= deadline or examined >= 256:
+                return
+            examined += 1
+            if path.is_symlink() or not path.is_file() or path.suffix.lower() not in EXTENSIONS:
+                continue
+            path = path.absolute()
+            uri = path.as_uri()
+            if uri in visited:
+                continue
+            visited.add(uri)
+            temporary = None
+            try:
+                stat = path.stat()
+                if stat.st_size > 64 * 1024 * 1024:
+                    continue
+                metadata = {"Thumb::URI": uri, "Thumb::MTime": str(int(stat.st_mtime)),
+                            "Thumb::Size": str(stat.st_size)}
+                output = cache / (hashlib.md5(uri.encode()).hexdigest() + ".png")
+                if output.is_file() and output.stat().st_size < 2 * 1024 * 1024:
+                    try:
+                        old = png_text(output.read_bytes())
+                        if all(old.get(k) == v for k, v in metadata.items()):
+                            continue
+                    except ValueError:
+                        pass
+                fd, temporary = tempfile.mkstemp(prefix=".lmi-", suffix=".png", dir=cache)
+                os.close(fd)
+                subprocess.run(["/usr/bin/gdk-pixbuf-thumbnailer", "-s", "256", str(path), temporary],
+                               check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                               timeout=max(0.05, deadline - time.monotonic()), preexec_fn=limit_generator)
+                if path.stat().st_mtime_ns != stat.st_mtime_ns or path.stat().st_size != stat.st_size:
+                    continue
+                metadata["Software"] = "lmi-photos standard cache workaround"
+                Path(temporary).write_bytes(add_text(Path(temporary).read_bytes(), metadata))
+                os.replace(temporary, output)
+                generated += 1
+            except (OSError, ValueError, subprocess.SubprocessError):
+                continue
+            finally:
+                if temporary and Path(temporary).exists():
+                    Path(temporary).unlink()
+    if generated:
+        print(f"Photos: {generated} image preview(s) prepared", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()
