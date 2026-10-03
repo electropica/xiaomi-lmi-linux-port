@@ -9,7 +9,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Application | Fonctionnement global | Fonctionnement des menus | Traduction |
 |---|---|---|---|
 | Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
-| Calculatrice | Démarrage obtenu ; calcul non confirmé. Clavier apparaît à la saisie sans bouton visible pour le cacher ; application fermée par l'opérateur. | À tester après résolution du clavier. | À tester. |
+| Calculatrice | 2+3=5 obtenu par boutons tactiles ; fermeture avec code 0 puis relance vérifiées à distance. Le clavier peut masquer les boutons ; appui long sur la barre inférieure testé pour le cacher. | À tester après résolution du clavier. | À tester. |
 | Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
 | Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Arrêt SIGSEGV constaté avec le rendu initial ; deux fermetures sans erreur obtenues avec le contournement Cairo limité à cet Éditeur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Préférences et recherche ouvertes puis fermées au toucher. Raccourcis clavier déborde encore ; retour tactile non établi. Impression, remplacement et autres actions restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
 | Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
@@ -43,7 +43,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 
 Priorité décidée par l'opérateur : fonctionnement global, puis menus,
 puis traduction. Une seule application active dans le protocole d'essai ;
-laisser le temps de confirmer chaque geste. L'essai courant est l’Éditeur de texte ; les résultats Chatty et Photos restent conservés.
+laisser le temps de confirmer chaque geste. L’essai courant est la Calculatrice ; les résultats Éditeur, Chatty et Photos restent conservés.
 
 ## Ordre de validation
 
@@ -412,3 +412,17 @@ ne valide pas un retour au toucher. L’ajustement Phoc par application ne corri
 pas ce dialogue ; un essai global bref le réduit sans établir son utilisabilité.
 Les réglages global et Éditeur ont tous deux été rétablis à false. Le défaut
 reste ouvert ; aucune correction de taille n’est publiée dans ce lot.
+
+
+## Priorité au fonctionnement global : Calculatrice
+
+L’opérateur reporte explicitement l’optimisation des menus. L’essai de menu
+mobile de l’Éditeur a été arrêté : aucune surcouche de menu n’est ajoutée
+au lanceur durable ou au constructeur. Le défaut Raccourcis reste documenté.
+
+Calculatrice 48.1-2+b1 : clavier masqué par appui long sur la barre inférieure,
+puis 2, +, 3 et = touchés sur le pavé réel. Capture : 2+3=5. Fermeture par
+Alt+F4 avec Result=success et ExecMainStatus=0 ; relance indépendante active
+sans erreur au contrôle initial. Ce parcours valide le calcul élémentaire et
+la relance, pas tous les modes mathématiques ni une stabilité prolongée.
+Aucun réglage ni paquet de la Calculatrice n’a été modifié.
