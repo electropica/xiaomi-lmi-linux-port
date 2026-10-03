@@ -11,7 +11,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
 | Calculatrice | Démarrage obtenu ; calcul non confirmé. Clavier apparaît à la saisie sans bouton visible pour le cacher ; application fermée par l'opérateur. | À tester après résolution du clavier. | À tester. |
 | Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
-| Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Arrêt SIGSEGV constaté avec le rendu initial ; deux fermetures sans erreur obtenues avec le contournement Cairo limité à cet Éditeur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Autres menus restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
+| Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Arrêt SIGSEGV constaté avec le rendu initial ; deux fermetures sans erreur obtenues avec le contournement Cairo limité à cet Éditeur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Préférences et recherche ouvertes puis fermées au toucher. Raccourcis clavier déborde encore ; retour tactile non établi. Impression, remplacement et autres actions restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
 | Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
 | Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
 | Horloges | À tester : chronomètre/minuterie ; son dépend du rétablissement audio. | À tester. | À tester. |
@@ -390,3 +390,25 @@ les autres applications et l’environnement graphique global ne changent pas.
 Il s’agit d’un contournement validé sur ce parcours, pas d’une localisation
 précise du défaut par backtrace ni d’une validation de stabilité prolongée.
 Le masquage du clavier et les autres menus restent ouverts.
+
+
+## Éditeur : clavier et menus — poursuite du 3 octobre
+
+Un appui long d’environ 1,2 seconde sur la barre blanche inférieure masque
+le clavier ; un second appui le réaffiche, avec Visible=true lu sur le bus.
+Le geste a été produit par un périphérique tactile uinput temporaire, sans
+appel SetVisible : confirmation manuelle de ce geste encore souhaitable.
+Aucune disposition de clavier ni préférence persistante n’a été modifiée.
+
+Préférences : ouverture depuis le menu, bouton X visible et fermeture tactile
+réussie, sans changer les options. Recherche : ouverture depuis le menu,
+saisie du mot Mobian et occurrence surlignée dans le document, puis fermeture
+avec son bouton X. Le document de trois lignes est resté intact et le service
+Éditeur est actif après ces essais. Le remplacement n’a pas été essayé.
+
+Raccourcis clavier : débordement important confirmé sur capture ; aucun bouton
+de retour visible. Échap envoyé par l’outil distant permet d’en sortir, ce qui
+ne valide pas un retour au toucher. L’ajustement Phoc par application ne corrige
+pas ce dialogue ; un essai global bref le réduit sans établir son utilisabilité.
+Les réglages global et Éditeur ont tous deux été rétablis à false. Le défaut
+reste ouvert ; aucune correction de taille n’est publiée dans ce lot.
