@@ -9,12 +9,12 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Application | Fonctionnement global | Fonctionnement des menus | Traduction |
 |---|---|---|---|
 | Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
-| Calculatrice | 2+3=5 obtenu par boutons tactiles ; fermeture avec code 0 puis relance vérifiées à distance. La relance initiale faisait revenir le clavier : helper GTK simple installé pour supprimer son ouverture automatique dans cette application. Pavé tactile et saisie de touches physiques vérifiés ; confirmation opérateur encore attendue. | À tester après résolution du clavier. | À tester. |
+| Calculatrice | 2+3=5 obtenu par boutons tactiles ; fermeture avec code 0 puis relance vérifiées à distance. La relance initiale faisait revenir le clavier : helper GTK simple installé pour supprimer son ouverture automatique dans cette application. Pavé tactile et saisie de touches physiques vérifiés ; pavé entier sans clavier superposé confirmé par l’opérateur. | À tester après résolution du clavier. | À tester. |
 | Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
 | Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Arrêt SIGSEGV constaté avec le rendu initial ; deux fermetures sans erreur obtenues avec le contournement Cairo limité à cet Éditeur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Préférences et recherche ouvertes puis fermées au toucher. Raccourcis clavier déborde encore ; retour tactile non établi. Impression, remplacement et autres actions restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
 | Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
 | Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
-| Horloges | À tester : chronomètre/minuterie ; son dépend du rétablissement audio. | À tester. | À tester. |
+| Horloges | Chronomètre : démarrage, progression, tour, pause et remise à zéro vérifiés au toucher simulé. Minuterie et alarmes sonores non validées ; audio à rétablir. | À tester. | À tester. |
 | Agenda | À tester : affichage/navigation ; ne pas créer d'événement personnel. | À tester. | À tester. |
 | Contacts | À tester : affichage/navigation ; ne pas modifier les contacts personnels. | À tester. | À tester. |
 | Paramètres | À tester : navigation/affichage ; éviter les changements de réseau/alimentation durant les autres essais. | À tester. | À tester. |
@@ -43,7 +43,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 
 Priorité décidée par l'opérateur : fonctionnement global, puis menus,
 puis traduction. Une seule application active dans le protocole d'essai ;
-laisser le temps de confirmer chaque geste. L’essai courant est la Calculatrice ; les résultats Éditeur, Chatty et Photos restent conservés.
+laisser le temps de confirmer chaque geste. Les derniers essais globaux concernent Calculatrice et Horloges ; les résultats Éditeur, Chatty et Photos restent conservés.
 
 ## Ordre de validation
 
@@ -444,3 +444,28 @@ Le contexte simple évite l’activation du text-input Wayland pour cette app.
 Les méthodes de saisie complexes ne sont pas validées dans la Calculatrice,
 et les autres applications conservent leur méthode normale.
 Source : [GTK 4.18.6, sélection du contexte de saisie](https://github.com/GNOME/gtk/blob/4.18.6/gtk/gtkimmodule.c).
+
+
+## Confirmation Calculatrice et contrôle Horloges
+
+L’opérateur confirme après installation : « Oui, pavé visible sans clavier ».
+Cette confirmation valide le résultat visuel du lanceur corrigé, contrairement
+au seul geste temporaire de masquage testé précédemment.
+
+Horloges : l’application déjà active en arrière-plan a été présentée via son
+aperçu. Chronomètre initial à zéro ; démarrage, progression, création d’un tour
+à environ 3,1 secondes, pause à environ 54,7 secondes et retour à zéro vérifiés
+sur captures. L’essai de pause initial avait visé l’ancienne position du bouton,
+qui se déplace après un tour ; la pause a été obtenue au bouton visible actuel.
+Retour à l’onglet Monde initial après l’essai. Aucune ville ou alarme existante
+n’a été supprimée ni modifiée. Minuterie, réveil en veille et alarme sonore
+restent non validés. Les rayures de l’aperçu Phosh sont toujours observées,
+mais ne sont pas traitées dans ce lot fonctionnel.
+
+Caméra, contrôle ciblé courant : Megapixels 1.8.3-1, compatible qcom,kona-mtp
+et absence de sa configuration dans la liste du paquet. Les nœuds présents
+sous sysfs sont video0=cam-req-mgr et video1=cam_sync, sans nœud de capture
+standard établi par ce contrôle. Les fichiers de périphériques seuls ne
+suffisent pas à démontrer une caméra exploitable. Le blocage documenté du
+pipeline downstream reste ouvert. Pas d’énumération GStreamer, de nouvelle
+configuration spéculative ni de build kernel dans cette reprise.
