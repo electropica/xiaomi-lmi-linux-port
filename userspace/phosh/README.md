@@ -611,3 +611,29 @@ Detailed evidence is in
 `docs/validation/mobian-m1-sdx55-dv121-sahara-milestone-2026-09-06.md`,
 `docs/validation/mobian-m1-sdx55-esoc-b1-validation-2026-09-06.md` and
 `docs/validation/mobian-m1-sdx55-dv207-remotefs-reset-offline-validation-2026-09-07.md`.
+
+## Multilingual next-build policy — 2026-10-03
+
+The next M1 build always includes `fonts-noto-core`, `fonts-noto-cjk`,
+`fonts-noto-color-emoji` and `locales-all`; this does not depend on optional
+applications. Script coverage and document language are independent of the
+interface language. Korean UI with Turkish document text is an intended
+case, as are Japanese, Thai and Arabic text. Noto coverage is broad, not a
+guarantee for every Unicode character, historical script or application.
+
+`M1_LOCALE` selects the build's initial UTF-8 interface locale (default
+`fr_FR.UTF-8`, e.g. `ko_KR.UTF-8`). System locale, Phosh environment and the
+Mobian AccountsService record use the same selection. `M1_XKB_LAYOUT`
+selects the default XKB keyboard (default `fr`). An XKB layout alone does
+not provide Korean/Japanese/Chinese composition; input-method integration
+and a first-boot language selector remain separate, unvalidated work.
+Changing AccountsService language later is not yet proven to override the
+build's fixed Phosh service environment. Do not claim runtime language
+switching or complete interface translations from font installation alone.
+
+The recipe is prepared and statically checked, not a freshly rebuilt image.
+No multilingual session change is applied to the battery-test phone.
+Existing golden and userspace locks retain their historical identities.
+Debian package versions for fonts follow the build repositories and must be
+recorded in the generated package manifest; locales-all retains the libc
+version pin. Budget image space for the larger installed locale/font set.

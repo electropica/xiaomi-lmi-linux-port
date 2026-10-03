@@ -113,7 +113,6 @@ The current selected optional application packages are:
 - gnome-maps
 - geary
 - amberol
-- fonts-noto-cjk
 - krecorder
 - koko
 
@@ -162,3 +161,12 @@ diagnostic boot. ALSA controls restore on close. The graphical torch app's
 Allumer and Éteindre buttons were operator-confirmed. Camera capture remains
 blocked. These are live-phone customizations, not newly locked golden images.
 See the [validation record](../validation/lmi-battery-audio-torch-2026-10-03.md).
+
+## Next-build multilingual baseline — prepared 2026-10-03
+
+The M1 recipe now includes core/CJK/emoji Noto fonts and all Debian locales
+without requiring optional apps. Initial interface locale and XKB layout are
+build parameters. Korean-interface/Turkish-document rendering is an intended
+validation scenario, not yet an image/hardware result. No new image was built
+and the battery-test phone was not changed. See the Phosh recipe README for
+remaining input-method, runtime language selection and translation limits.

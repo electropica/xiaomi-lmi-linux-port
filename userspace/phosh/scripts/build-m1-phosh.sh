@@ -18,6 +18,16 @@ gpu_dir="$repo_dir/userspace/gpu/files"
 wifi_dir="$repo_dir/userspace/wifi"
 bluetooth_dir="$repo_dir/userspace/bluetooth"
 display_dir="$repo_dir/userspace/display"
+# Locale controls interface/formatting; font coverage is independent.
+m1_locale=${M1_LOCALE:-fr_FR.UTF-8}
+m1_xkb_layout=${M1_XKB_LAYOUT:-fr}
+[[ $m1_locale =~ ^[a-z]{2,3}_[A-Z]{2}\.UTF-8$ ]] || {
+    echo "M1_LOCALE must name a supported UTF-8 locale, e.g. ko_KR.UTF-8." >&2; exit 2;
+}
+[[ $m1_xkb_layout =~ ^[a-z0-9_+-]+$ ]] || {
+    echo "M1_XKB_LAYOUT must be an XKB layout identifier." >&2; exit 2;
+}
+m1_language="${m1_locale%.UTF-8}:${m1_locale%%_*}"
 
 expected_base_prefix_sha=efac0433da55eef42a0b990128744db6499e92f4292206ad56c3ec1e84d472f4
 expected_base_size=1490026496
@@ -141,10 +151,11 @@ chmod 0755 "$tree/usr/sbin/policy-rc.d"
 install -D -o root -g root -m 0644 \
     "$phosh_files/90_lmi-input-sources.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override"
+printf "[org.gnome.desktop.input-sources]\nsources=[('xkb', '%s')]\n" "$m1_xkb_layout" >"$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override"
 install -D -o root -g root -m 0644 \
     "$phosh_files/91_lmi-power.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/91_lmi-power.gschema.override"
-chroot "$tree" /usr/bin/env INSTALL_OPTIONAL_APPS="$optional_apps_enabled" INSTALL_DEBUG_TOOLS="$debug_tools_enabled" /bin/bash -eu <<'EOF'
+chroot "$tree" /usr/bin/env M1_LOCALE="$m1_locale" M1_LANGUAGE="$m1_language" INSTALL_OPTIONAL_APPS="$optional_apps_enabled" INSTALL_DEBUG_TOOLS="$debug_tools_enabled" /bin/bash -eu <<'EOF'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install --no-install-recommends -y \
@@ -154,6 +165,10 @@ apt-get install --no-install-recommends -y \
     gnome-session=48.0-1+deb13u1 \
     gnome-keyring=48.0-1 \
     locales=2.41-12+deb13u4 \
+    locales-all=2.41-12+deb13u4 \
+    fonts-noto-core \
+    fonts-noto-cjk \
+    fonts-noto-color-emoji \
     network-manager=1.52.1-1 \
     qrtr-tools=1.1-2+b1 \
     systemd-timesyncd=257.13-1~deb13u1 \
@@ -169,10 +184,9 @@ if ! getent passwd 1000 >/dev/null; then
 fi
 test "$(getent passwd 1000 | cut -d: -f1)" = mobian
 usermod -aG audio,video,render,input,plugdev mobian
-sed -i 's/^# *fr_FR.UTF-8 UTF-8$/fr_FR.UTF-8 UTF-8/' /etc/locale.gen
-grep -qx 'fr_FR.UTF-8 UTF-8' /etc/locale.gen
-locale-gen fr_FR.UTF-8
-update-locale LANG=fr_FR.UTF-8 LANGUAGE=fr_FR:fr
+locale -a | tr '[:upper:]' '[:lower:]' | grep -Fxq "$(printf '%s' "$M1_LOCALE" | tr '[:upper:]' '[:lower:]' | tr -d '-')"
+update-locale LANG="$M1_LOCALE" LANGUAGE="$M1_LANGUAGE"
+fc-cache -f
 test -x /usr/bin/glib-compile-schemas
 test -f /usr/share/glib-2.0/schemas/org.gnome.desktop.input-sources.gschema.xml
 glib-compile-schemas --strict /usr/share/glib-2.0/schemas
@@ -200,6 +214,7 @@ printf '\nX-GNOME-HiddenUnderSystemd=true\n' >>"$xdg_user_dirs_desktop"
 test "$(grep -c '^X-GNOME-HiddenUnderSystemd=true$' "$xdg_user_dirs_desktop")" = 1
 
 install -D -o root -g root -m 0644 "$phosh_files/phosh-m0.service" "$tree/etc/systemd/system/phosh-m0.service"
+sed -i "s/^Environment=LANG=.*/Environment=LANG=$m1_locale/; s/^Environment=LANGUAGE=.*/Environment=LANGUAGE=$m1_language/" "$tree/etc/systemd/system/phosh-m0.service"
 mkdir -p "$tree/opt/mobian-gpu/lib" "$tree/opt/mobian-gpu/icd.d"
 install -o root -g root -m 0755 "$gpu_dir/gpu72/lib/libEGL.so.1.0.0" "$tree/opt/mobian-gpu/lib/libEGL.so.1.0.0"
 install -o root -g root -m 0755 "$gpu_dir/gpu72/lib/libGLESv2.so.2.0.0" "$tree/opt/mobian-gpu/lib/libGLESv2.so.2.0.0"
@@ -226,6 +241,7 @@ install -D -o root -g root -m 0644 "$display_dir/files/systemd/lmi-splash-releas
 install -D -o root -g root -m 0644 "$phosh_files/lmi-splash-release-m1.conf" "$tree/etc/systemd/system/lmi-splash-release.service.d/m1-device-wait.conf"
 install -D -o root -g root -m 0644 "$phosh_files/user-runtime-dir-1000-m1.conf" "$tree/etc/systemd/system/user-runtime-dir@1000.service.d/m1-runtime-fix.conf"
 install -D -o root -g root -m 0600 "$phosh_files/accountsservice-mobian.ini" "$tree/var/lib/AccountsService/users/mobian"
+sed -i "s/^Language=.*/Language=$m1_locale/" "$tree/var/lib/AccountsService/users/mobian"
 install -D -o root -g root -m 0644 "$phosh_files/networkmanager-usb0-unmanaged.conf" "$tree/etc/NetworkManager/conf.d/10-m1-usb0-unmanaged.conf"
 install -D -o root -g root -m 0644 "$gpu_dir/udev/70-lmi-gpu-access.rules" "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
 install -D -o root -g root -m 0755 "$wifi_dir/scripts/lmi-android-wifi-mounts" "$tree/usr/local/sbin/lmi-android-wifi-mounts"
@@ -287,8 +303,8 @@ test -f "$tree/etc/pam.d/login"
 grep -Eq '^[[:space:]]*@include[[:space:]]+common-session([[:space:]]|$)' "$tree/etc/pam.d/login"
 grep -Eq '^[[:space:]]*session[[:space:]]+[^#]*pam_systemd\.so([[:space:]]|$)' "$tree/etc/pam.d/common-session"
 grep -qx 'Environment=WLR_RENDERER=gles2' "$tree/etc/systemd/system/phosh-m0.service"
-grep -qx 'Environment=LANG=fr_FR.UTF-8' "$tree/etc/systemd/system/phosh-m0.service"
-grep -qx 'Environment=LANGUAGE=fr_FR:fr' "$tree/etc/systemd/system/phosh-m0.service"
+grep -Fxq "Environment=LANG=$m1_locale" "$tree/etc/systemd/system/phosh-m0.service"
+grep -Fxq "Environment=LANGUAGE=$m1_language" "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=WLR_BACKENDS=drm,libinput' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=WLR_DRM_DEVICES=/dev/dri/card0' "$tree/etc/systemd/system/phosh-m0.service"
 grep -qx 'Environment=LD_LIBRARY_PATH=/opt/mobian-gpu/lib' "$tree/etc/systemd/system/phosh-m0.service"
@@ -310,13 +326,11 @@ grep -qx 'ExecStartPost=/bin/sh -ec '\''chown 1000:1000 /run/user/1000; chmod 07
 grep -qx "ExecStartPre=/usr/bin/timeout 10 /bin/sh -ec 'until \[ -c /dev/dri/card0 \]; do sleep 0.1; done'" "$tree/etc/systemd/system/lmi-splash-release.service.d/m1-device-wait.conf"
 ! grep -Rqs 'dev-dri-card0\.device' "$tree/etc/systemd/system/lmi-splash-release.service" "$tree/etc/systemd/system/lmi-splash-release.service.d"
 test "$(cat "$tree/etc/hostname")" = PocoF2Pro
-grep -qx 'LANG=fr_FR.UTF-8' "$tree/etc/default/locale"
-grep -qx 'LANGUAGE=fr_FR:fr' "$tree/etc/default/locale"
-test -s "$tree/usr/lib/locale/locale-archive"
-grep -qx 'Language=fr_FR.UTF-8' "$tree/var/lib/AccountsService/users/mobian"
-cmp -s "$phosh_files/90_lmi-input-sources.gschema.override" \
-    "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override"
-test "$(grep -Fxc "sources=[('xkb', 'fr')]" \
+grep -Fxq "LANG=$m1_locale" "$tree/etc/default/locale"
+grep -Fxq "LANGUAGE=$m1_language" "$tree/etc/default/locale"
+chroot "$tree" locale -a | tr '[:upper:]' '[:lower:]' | grep -Fx "$(printf '%s' "$m1_locale" | tr '[:upper:]' '[:lower:]' | tr -d '-')" >/dev/null
+grep -Fxq "Language=$m1_locale" "$tree/var/lib/AccountsService/users/mobian"
+test "$(grep -Fxc "sources=[('xkb', '$m1_xkb_layout')]" \
     "$tree/usr/share/glib-2.0/schemas/90_lmi-input-sources.gschema.override")" = 1
 cmp -s "$phosh_files/91_lmi-power.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/91_lmi-power.gschema.override"
@@ -389,7 +403,7 @@ test "$(stat -c %a "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules")" = 644
 grep -Fqx 'KERNEL=="kgsl-3d0", GROUP="render", MODE="0660"' "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
 grep -Fqx 'KERNEL=="ion", GROUP="render", MODE="0660"' "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
 chroot "$tree" id mobian
-chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session gnome-keyring locales network-manager qrtr-tools systemd-timesyncd wpasupplicant unzip
+chroot "$tree" dpkg-query -W phosh phoc squeekboard gnome-session gnome-keyring locales locales-all fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji network-manager qrtr-tools systemd-timesyncd wpasupplicant unzip
 df -B1 "$tree"
 
 truncate -s $((root_blocks * 4096)) "$rootimg"

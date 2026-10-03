@@ -11,7 +11,6 @@ apt-get install -y --no-install-recommends \
     papers \
     showtime \
     amberol \
-    fonts-noto-cjk \
     gnome-clocks \
     gnome-contacts \
     gnome-weather \

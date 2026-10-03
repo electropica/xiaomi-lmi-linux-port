@@ -606,3 +606,11 @@ are confirmed. Noto CJK fonts were installed and Files relaunched. A controlled
 RTC deep-suspend test succeeded, but the gauge-derived current remained about
 102 mA versus 218 mA awake idle; acceptable long-term autonomy is still not
 established. See the latest battery/audio/torch validation record.
+
+## Next-build language support — 2026-10-03
+
+The next M1 recipe includes broad Noto core/CJK/emoji font coverage and all
+Debian locales by default. Initial interface locale and XKB layout are build
+parameters; document scripts do not depend on the selected interface language.
+This is prepared recipe work, not a new image or phone deployment. Input
+methods and runtime language switching remain separate validation work.
