@@ -92,3 +92,11 @@ installed with a phone-local opt-in, and the installed service passed a real
 unplug/replug cycle. Profile recognition, capacity accuracy and autonomy
 remain unresolved. The graphical torch buttons are also hardware-confirmed;
 see the [installed battery, speaker and torch validation](docs/validation/lmi-battery-audio-torch-2026-10-03.md).
+
+## Additional operator confirmations — 2026-10-03
+
+MP3/MP4 playback, hardware volume buttons and Chinese filenames in Files
+are confirmed. Noto CJK fonts were installed and Files relaunched. A controlled
+RTC deep-suspend test succeeded, but the gauge-derived current remained about
+102 mA versus 218 mA awake idle; acceptable long-term autonomy is still not
+established. See the latest battery/audio/torch validation record.

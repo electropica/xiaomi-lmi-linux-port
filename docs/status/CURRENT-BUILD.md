@@ -113,6 +113,7 @@ The current selected optional application packages are:
 - gnome-maps
 - geary
 - amberol
+- fonts-noto-cjk
 - krecorder
 - koko
 
@@ -143,7 +144,6 @@ The following remain separate deferred items:
 
 - full UCM2 routing, microphone/headset and durable audio-boot deployment
 - camera configuration and a usable downstream capture pipeline
-- Chinese-character rendering in Debian
 
 The historical M0 Weston display validation and the later D-v43/OpenRC Weston
 failures are different environments and must not be conflated.

@@ -598,3 +598,11 @@ diagnostic boot. ALSA controls restore on close. The graphical torch app's
 Allumer and Éteindre buttons were operator-confirmed. Camera capture remains
 blocked. These are live-phone customizations, not newly locked golden images.
 See the [validation record](../validation/lmi-battery-audio-torch-2026-10-03.md).
+
+## Additional operator confirmations — 2026-10-03
+
+MP3/MP4 playback, hardware volume buttons and Chinese filenames in Files
+are confirmed. Noto CJK fonts were installed and Files relaunched. A controlled
+RTC deep-suspend test succeeded, but the gauge-derived current remained about
+102 mA versus 218 mA awake idle; acceptable long-term autonomy is still not
+established. See the latest battery/audio/torch validation record.

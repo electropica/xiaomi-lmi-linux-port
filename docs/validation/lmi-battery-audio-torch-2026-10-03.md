@@ -80,3 +80,50 @@ Megapixels is installed, but a usable capture pipeline is not established.
 The downstream request-manager/sync video nodes are not a standard image
 capture device. The existing camera-blocker record still applies; installing
 another frontend alone is not demonstrated to solve it.
+
+## MP3, MP4, volume controls and Chinese filenames — 2026-10-03
+
+The operator confirmed normal MP3 and MP4 playback and working hardware
+volume buttons. These confirmations extend the previous PipeWire WAV test;
+the private songs/videos and their personal titles are excluded from Git.
+
+`fonts-noto-cjk` version `1:20240730+repack1-1` was installed on the phone.
+Because phone DNS failed, the official Debian package was downloaded on the
+host and checked against the phone's APT metadata before local installation.
+The package SHA-256 is
+`f5dc28a754e17327d99f0a612134d92c8dd6187314ae967cb77f25df60860139`.
+Fontconfig selected CJK families; the active user's font cache was rebuilt.
+A new GTK window displayed the exact Chinese filename characters with both
+default and explicit Noto fonts. The existing Files process initially still
+showed incorrect glyphs; after a normal quit/relaunch, the operator confirmed
+correct Chinese names in Files. The optional-app installer now includes the
+font package, without modifying the external golden image or its historical
+lock. Existing applications may need relaunching to refresh their font maps.
+
+## Controlled battery idle/deep comparison — 2026-10-03
+
+A finite phone-local collector waited for USB unplug, sampled awake idle,
+then requested a 120-second RTC-timed deep suspend. The successful suspend
+counter increased from 106 to 107 with failures unchanged at 2; RTC IRQ 323
+caused resume. Kernel suspend timing reported 121.224 seconds asleep.
+
+Over the measured 30.077-second awake-idle interval, the reported charge
+counter fell from 1,434,830 to 1,433,005 uAh: approximately 218.4 mA average.
+Across the 121.423-second before/after-suspend interval it fell to 1,429,556
+uAh: approximately 102.3 mA average. Capacity stayed at 53%. These averages
+come from the downstream fuel gauge, not an external current meter. The
+comparison includes transition overhead and does not establish long-term
+runtime. The immediate post-unplug negative-current sample was transient;
+the settled unplugged samples had positive current and Discharging status.
+
+The live battery type now reads `j11sun_4700mah`, nominal capacity 4,700,000
+uAh, learned full capacity 2,845,000 uAh, and resistance ID 99,900 ohms. The
+boot log reports authentication retries; the exact driver includes fallback
+profile selection, so this name alone is not proof of authenticated battery
+identity or correct learned capacity. Earlier unknown-profile observations
+must not be treated as the current live value. No charge parameters, fuel-
+gauge learning data or battery IRQ wake controls were changed in this test.
+
+Debugfs is disabled in this kernel. Readable RPMh master and DDR residency
+statistics exist in sysfs; a before/after controlled comparison is still
+needed before attributing the residual consumption to a hardware domain.
