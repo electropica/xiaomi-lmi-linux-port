@@ -11,7 +11,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
 | Calculatrice | Démarrage obtenu ; calcul non confirmé. Clavier apparaît à la saisie sans bouton visible pour le cacher ; application fermée par l'opérateur. | À tester après résolution du clavier. | À tester. |
 | Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
-| Éditeur de texte | Saisie, création/enregistrement, réouverture, modification/enregistrement et fermeture normale validés à distance sur fichiers de test. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Autres menus restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
+| Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Fermeture non validée : arrêt SIGSEGV constaté après le retour opérateur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Autres menus restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
 | Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
 | Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
 | Horloges | À tester : chronomètre/minuterie ; son dépend du rétablissement audio. | À tester. | À tester. |
@@ -345,10 +345,10 @@ le sélecteur adapté. Le défaut ne demandait ni nouveau kernel ni nouveau root
 
 Contrôles réellement passés : création de deux lignes par saisie dans l'Éditeur,
 enregistrement par le bouton visible et vérification du contenu sur disque ;
-fermeture normale de la fenêtre puis réouverture avec texte visible ; menu
+disparition de la fenêtre puis réouverture avec texte visible ; menu
 Enregistrer sous produisant un second fichier identique ; ajout d'une troisième
 ligne et sauvegarde dans ce fichier ; nouvelle fermeture avec disparition du
-processus. Ce parcours valide des fonctions, pas seulement un lancement.
+processus. Ces disparitions ne prouvent pas une fermeture normale : voir le contrôle des journaux ci-dessous.
 
 Le helper et le fichier de routage sont installés sur le téléphone ; la recette
 et le staging du constructeur préparent leur intégration au prochain build.
@@ -361,3 +361,18 @@ par ce lot. Les portails pour applications sandboxées ne sont pas validés ;
 le document portal FUSE reste en échec sur le kernel courant.
 
 Source : [GNOME 47 et ses nouveaux dialogues de fichiers](https://release.gnome.org/47/).
+
+
+### Rectification après la fermeture signalée par l’opérateur
+
+Le contrôle des services montre un arrêt signal=11/SEGV pour les essais
+reopen et ready. Le précédent contrôle de disparition du processus était
+insuffisant pour valider une fermeture normale ; cette validation est retirée.
+Les deux fichiers de test existent ; le second contient bien les trois lignes
+enregistrées et a été rouvert avec ce contenu visible sur capture. Il n’y a
+pas de perte du texte de test constatée. Aucun document personnel n’a été lu.
+
+Un essai isolé de réouverture avec GSK_RENDERER=cairo est actif ; le lanceur
+persistant reste inchangé. L’ouverture réussit, mais la cause du crash et la
+stabilité lors de la fermeture restent à établir. Aucun coredump disponible
+ne permet encore d’attribuer le crash au moteur graphique ou au portail.
