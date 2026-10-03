@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+# App-only workaround for the observed crash when deleting a contact on lmi.
+export GSK_RENDERER=cairo
+exec /usr/bin/gnome-contacts "$@"

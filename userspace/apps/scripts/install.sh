@@ -69,3 +69,11 @@ install -m 0755 "$apps_files/lmi-calculator" /usr/local/bin/lmi-calculator
 install -Dm 0644 /usr/share/applications/org.gnome.Calculator.desktop /usr/local/share/applications/org.gnome.Calculator.desktop
 sed -i -e 's|^Exec=gnome-calculator|Exec=/usr/local/bin/lmi-calculator|' -e 's|^DBusActivatable=true$|DBusActivatable=false|' /usr/local/share/applications/org.gnome.Calculator.desktop
 grep -q '^Exec=/usr/local/bin/lmi-calculator' /usr/local/share/applications/org.gnome.Calculator.desktop
+
+
+# Contacts: app-only Cairo workaround for the observed deletion-dialog crash.
+install -m 0755 "$apps_files/lmi-contacts" /usr/local/bin/lmi-contacts
+install -Dm 0644 /usr/share/applications/org.gnome.Contacts.desktop /usr/local/share/applications/org.gnome.Contacts.desktop
+sed -i -e 's|^Exec=gnome-contacts|Exec=/usr/local/bin/lmi-contacts|' -e 's|^DBusActivatable=true$|DBusActivatable=false|' /usr/local/share/applications/org.gnome.Contacts.desktop
+grep -q '^Exec=/usr/local/bin/lmi-contacts' /usr/local/share/applications/org.gnome.Contacts.desktop
+grep -q '^DBusActivatable=false$' /usr/local/share/applications/org.gnome.Contacts.desktop

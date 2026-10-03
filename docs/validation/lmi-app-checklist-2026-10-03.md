@@ -16,7 +16,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
 | Horloges | Chronomètre : démarrage, progression, tour, pause et remise à zéro vérifiés au toucher simulé. Minuterie : lancement d’une minute, décompte, pause et retrait du seul minuteur de test vérifiés. Expiration et alarmes sonores non validées ; audio à rétablir. | À tester. | À tester. |
 | Agenda | Navigation mensuelle et Aujourd’hui, création locale d’un événement fictif explicitement autorisé, lecture et retrait effectif vérifiés. Réouverture sans reliquat et fermeture normale code 0 confirmées. Synchronisation et rappels non validés. | Dialogue de création/édition et bouton de suppression utilisables après masquage du clavier ; autres menus non validés. | Libellés français visibles, couverture complète non validée. |
-| Contacts | À tester : affichage/navigation ; ne pas modifier les contacts personnels. | À tester. | À tester. |
+| Contacts | Création locale d’une fiche fictive sans coordonnées, persistance après relance et recherche positive/négative vérifiées. Suppression initiale : SIGSEGV ; deux retraits et fermetures code 0 réussis avec Cairo limité à Contacts. Lanceur installé et prochain build préparé. | Formulaire Ajouter et menu Supprimer testés ; édition, import/export et fusion non validés. | Libellés français visibles ; couverture complète non validée. |
 | Paramètres | À tester : navigation/affichage ; éviter les changements de réseau/alimentation durant les autres essais. | À tester. | À tester. |
 | Console | Commande de test et calcul shell affichés. Fin du shell mal détectée : code -1 et erreur GLib waitid(P_PIDFD)=EINVAL. Repli sans pidfd testé temporairement, aucun lanceur durable modifié. | À tester. | À tester. |
 | Lampe torche lmi | Allumer/éteindre confirmés avant redémarrage ; à recontrôler. | Pas de menu supplémentaire testé. | Interface française présente ; pas de validation multilingue. |
@@ -570,3 +570,31 @@ unité déjà déchargée n’est pas utilisé comme preuve du code de fermeture
 Pas de modification du lanceur ou des paquets Agenda, pas de correctif
 graphique nécessaire sur ce parcours. La synchronisation, les récurrences,
 les invitations et les rappels sonores restent non validés.
+
+
+## Contacts : corriger le crash de suppression — 3 octobre 2026
+
+gnome-contacts 48.0-2+b1, carnet système à backend local, liste initialement
+vide. Une fiche TEST-LMI-CONTACT-20261003 sans numéro ni courriel a été créée
+par l’interface. Sa persistance après fermeture code 0 et relance est vérifiée.
+La recherche du nom retrouve cette fiche ; un nom sans correspondance donne
+une liste vide. Aucun contact personnel modifié, aucun compte distant ajouté,
+aucun message ou appel effectué.
+
+Le menu Supprimer sur cette fiche a laissé une fenêtre figée, puis le service
+s’est arrêté avec Result=signal, ExecMainCode=2 et ExecMainStatus=11. La fiche
+existait toujours à la relance ; sa suppression n’était donc pas validée.
+L’essai app-only GSK_RENDERER=cairo a ensuite permis le retrait et une
+fermeture normale : Result=success, ExecMainCode=1, ExecMainStatus=0.
+Un second cycle indépendant avec le helper durable a créé puis retiré la
+fiche TEST-LMI-CONTACT-20261003-B et terminé avec les mêmes codes normaux.
+Les notifications d’annulation ont été fermées pour finaliser les retraits.
+
+Le helper lmi-contacts et le routage desktop sont installés sur le téléphone.
+DBusActivatable=false empêche ce lanceur de contourner le helper ; les
+traductions du desktop amont sont conservées. L’installateur et le staging
+Phosh incluent ce helper pour le prochain build, qui n’a pas été lancé.
+Le contournement ne modifie pas le moteur graphique global. Sans backtrace,
+il n’établit pas la cause précise du SIGSEGV ni une stabilité prolongée.
+Modification de fiche, photo de contact, appels, messagerie, import/export,
+fusion et synchronisation restent non validés.

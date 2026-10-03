@@ -674,3 +674,18 @@ portal routing and a per-app launcher now give an accessible Save button.
 Remote tests passed create/save, reopen, Save As, edit/save and normal close;
 the operator also confirmed the Save As dialog usable by touch. Recipe and
 builder staging include these userspace fixes; no new image was built.
+
+
+## Calendar and Contacts functional follow-up — 2026-10-03
+
+Calendar passed month navigation, Today, explicitly authorized local test-event
+creation, reopening, removal and a normal close with retained exit status 0.
+No test event remains; remote synchronization and reminders are unvalidated.
+Contacts passed local dummy-contact creation, persistence and search, but
+initial deletion crashed with SIGSEGV. An app-only Cairo launcher then passed
+two deletion/normal-close cycles. This workaround is installed locally and
+included in the next-build application recipe/staging; no new image was built.
+No personal contacts were modified. Broader contact operations remain untested.
+Console’s incomplete pidfd/waitid kernel interface remains open, with no
+persistent syscall filter or global library replacement installed.
+See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
