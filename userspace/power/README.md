@@ -120,4 +120,22 @@ A subsequent private tracefs collection recorded 121.761 seconds of deep
 suspend without new failures, with APSS/ADSP asleep almost throughout
 and approximately 96.2 mA reported consumption. Static DDR counters
 do not identify a memory-power fault; the residual consumer remains
-unresolved. The trace instance was removed after reconnect.
+unresolved. The trace instance was removed after reconnect. A subsequent
+unplugged inspection confirmed USB runtime suspend and its power domains
+disabled; an always-on boost/shared GPIO is a review lead, not a proven cause.
+
+
+## Finite runtime observation
+
+`scripts/watch-battery-runtime.py` logs selected battery/USB sysfs properties,
+suspend counters, boottime/monotonic timestamps and the CPU-idle parameter to
+a new private JSONL file. It refuses an existing output and bounds duration
+and sampling interval. No wake alarm is created; the sleep pauses during
+system suspend, so samples can be delayed until a normal resume. It does not
+change charge, display, suspend or regulator policies. Keep logs outside Git.
+
+A six-hour, ten-minute-interval observation was started on the tested phone
+after the peripheral-idle test. Its first sample showed Charging, USB online,
+95% capacity and `sleep_disabled=N`. This is an active observation, not a
+completed long-run validation. Samples spanning charging and unplugged use
+must be separated; coarse polling cannot locate every transition exactly.

@@ -197,3 +197,56 @@ battery status read Charging, and the CPU-idle service remained active with
 `sleep_disabled=N`. No new boot was built or flashed. Approximately 96 mA
 reported deep-suspend consumption remains unresolved; capacity/profile
 accuracy and long-duration runtime still need validation.
+
+
+## Unplugged peripheral idle inspection — 2026-10-03
+
+A finite read-only collector sampled runtime PM and regulator states every
+five seconds for 30 seconds after unplug. It did not request system suspend
+or change a power policy. The collector exited successfully; Charging was
+confirmed after reconnect.
+
+The USB controller `a600000.ssusb` changed from active to suspended. Both
+`usb30_prim_gdsc` and `hsphy@88e3000` changed from enabled/one user to
+disabled/zero users and stayed disabled through all unplugged snapshots.
+The exact `dwc3-msm.c` source disables these resources on cable-disconnected
+runtime suspend. USB remaining powered after unplug is therefore not
+supported as the cause of the residual current in this test.
+
+GPU CX/GX regulators were disabled throughout, although the KGSL runtime-PM
+attribute said active; that attribute alone cannot establish GPU consumption.
+UFS alternated between active and suspended while the collector itself read
+sysfs and appended its log. The settled 20.075-second charge-counter interval
+reported 123.91 mA; this sampled awake-idle interval must not replace or be
+directly equated to the previous uninterrupted deep-suspend measurement.
+
+The live tree contains an always-on `vdd_boost_vreg` and a separate enabled
+`regulator-haptics-boost` declaration referencing the same PM8150B GPIO 5.
+The exact common DTS has these declarations too. The boost stayed enabled;
+this is a device-tree review lead, not evidence of its current draw or of an
+audio-supply fault. The separate `vdd_hap_boost` regulator was disabled with
+zero users. The exact regulator core explicitly supports shared enable GPIOs
+and balances their enable counts; sharing alone is not a GPIO conflict or a
+driver bug. The AW8697 software activate/duration attributes both
+read zero. No GPIO or regulator was force-disabled. Console suspend was
+enabled, and no no_console_suspend/clock-ignore boot flag was observed.
+
+DDR driver inspection showed that this exact downstream reader maps and
+reads the firmware statistics area without sending a refresh command.
+Upstream's newer QMP refresh mechanism is explicitly described for SM8450
+and later, so it is not a validated fix for this SM8250 boot:
+[upstream qcom_stats.c at a fixed commit](https://code.googlesource.com/linux/torvalds/linux/+/75f2c0b3690702c90863c2e138cb5520670845ea/drivers/soc/qcom/qcom_stats.c).
+No AOP command or firmware-memory write was attempted.
+
+Next diagnostic boundary: establish the boost's board function and consumer
+ownership before considering a change, and obtain reliable resource/DDR
+observability before attributing residual deep-suspend current to that domain.
+The installed CPU-idle improvement remains active; acceptable autonomy is
+still unvalidated.
+
+
+A finite six-hour observation was then armed with the canonical runtime
+collector at a ten-minute interval. It uses no RTC/wake timer and makes no
+power-policy changes. Initial state: Charging, USB online, 95% capacity,
+CPU-idle opt-in active. Long-run results are pending; this must not be reported
+as completed autonomy validation.

@@ -631,4 +631,6 @@ A subsequent private tracefs collection recorded 121.761 seconds of deep
 suspend without new failures, with APSS/ADSP asleep almost throughout
 and approximately 96.2 mA reported consumption. Static DDR counters
 do not identify a memory-power fault; the residual consumer remains
-unresolved. The trace instance was removed after reconnect.
+unresolved. The trace instance was removed after reconnect. A subsequent
+unplugged inspection confirmed USB runtime suspend and its power domains
+disabled; an always-on boost/shared GPIO is a review lead, not a proven cause.
