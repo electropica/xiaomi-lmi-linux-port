@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Lampe torche lmi
+Comment=Lampe à faible courant avec arrêt automatique
+Exec=/usr/local/bin/lmi-flashlight
+Icon=weather-clear-night-symbolic
+Terminal=false
+Categories=Utility;

@@ -1,0 +1,19 @@
+pcm.lmi_speaker {
+    type hooks
+    slave.pcm {
+        type plug
+        slave {
+            pcm "hw:0,0"
+            format S32_LE
+            rate 48000
+            channels 2
+        }
+    }
+    hooks.0 {
+        type ctl_elems
+        hook_args [
+            { name "PRIM_MI2S_RX Format" value 1 preserve true lock true }
+            { name "PRI_MI2S_RX Audio Mixer MultiMedia1" value [1 0] preserve true lock true }
+        ]
+    }
+}

@@ -1,6 +1,6 @@
 # Mobian status
 
-## Current Mobian userspace state — 2026-09-29
+## Current Mobian userspace state — updated 2026-10-03
 
 The current validated Mobian/Phosh userdata family is based on the external
 `archi-validation-02` golden image and its `daily-base` derivative. The
@@ -14,9 +14,9 @@ autostart hidden. Exact image identities and boundaries are in
 `daily-base-audio-fw-test` is an experimental userspace profile paired with
 a temporary reset-GPIO diagnostic boot, not a replacement for the durable
 original boot. WCD938x and TFA9874 now bind, ALSA registers, and direct S16_LE
-and S24_LE playback completes. Music is audible only very faintly from the
-lower grille. PipeWire has no finalized user route and UCM2 is not yet built;
-audio remains partially functional.
+and S24_LE playback completes. Later S32_LE frontend tests produced clear
+music, confirmed through a local PipeWire speaker route on 2026-10-03.
+UCM2, microphone/headset routing and durable boot deployment remain pending.
 
 The proprietary TFA firmware is external and is never tracked. Neither the
 diagnostic boot nor any userdata image is stored in Git. Kernel and userdata
@@ -584,13 +584,17 @@ See
 Generated `.img`, `.ext4`, Android sparse images, root filesystems, private
 keys, caches and other build artifacts are intentionally excluded from Git.
 
-## Battery status opt-in — 2026-10-01
+## Battery, speaker and torch updates — 2026-10-03
 
-A targeted UPower 1.90.9 opt-in passed seven selected host tests and a
-private ARM64 hardware test: the candidate followed Charging → Discharging
-→ Charging correctly across 80 physical-cycle samples. The installed
-service and image identities remain unchanged. Full Debian package build,
-phone-local activation and persistent deployment remain pending. This
-corrects state interpretation, not the missing FG profile, capacity
-estimation or suspend policy. See the
-[validation record](../validation/lmi-upower-battery-status-2026-10-01.md).
+The full Debian ARM64 UPower `1.90.9-1+lmi1` package and phone-local activation
+are installed. Seven explicit ARM64 integration tests passed; the installed
+service tracked a real unplug/replug cycle correctly over 90 observations.
+Capacity accuracy and autonomy remain unresolved. Automatic battery suspend
+is locally enabled; frequent msoc-delta wakes remain under investigation.
+
+Clear speaker music was operator-confirmed through an installed PipeWire
+route using the S32_LE frontend and S24_LE backend on the temporary GPIO
+diagnostic boot. ALSA controls restore on close. The graphical torch app's
+Allumer and Éteindre buttons were operator-confirmed. Camera capture remains
+blocked. These are live-phone customizations, not newly locked golden images.
+See the [validation record](../validation/lmi-battery-audio-torch-2026-10-03.md).

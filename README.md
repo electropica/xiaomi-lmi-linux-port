@@ -18,9 +18,10 @@ GNOME Console and Calculator were also exercised on the golden userspace.
 
 The distinct `daily-base-audio-fw-test` profile loads a proprietary TFA9874
 container kept outside the repository. WCD938x/TFA9874 bind, ALSA registers,
-and direct playback is technically successful, but the speaker output is
-extremely quiet and user-facing PipeWire/UCM2 routing is unfinished. Audio is
-partially functional, not resolved.
+and clear speaker music was confirmed through both direct S32_LE ALSA and
+an installed opt-in PipeWire route on the temporary reset-GPIO diagnostic
+boot. Microphone/headset routing, UCM2 and durable boot deployment remain
+unvalidated. See the [installed battery, speaker and torch validation](docs/validation/lmi-battery-audio-torch-2026-10-03.md).
 
 The D-v43/OpenRC reconstruction separately validated USB networking, SSH,
 Wi-Fi scanning, and direct DRM/KMS test rectangles on DSI-1. Weston on that
@@ -86,6 +87,8 @@ for licensing information.
 ## Battery state correction
 
 The [UPower status opt-in](userspace/power/README.md) passed selected host
-tests and a private unplug/replug test on lmi. It is not installed durably;
-the full Debian package and activation procedure remain pending. Battery
-profile recognition, capacity estimation and suspend are distinct issues.
+tests and private hardware checks. The full Debian ARM64 package is now
+installed with a phone-local opt-in, and the installed service passed a real
+unplug/replug cycle. Profile recognition, capacity accuracy and autonomy
+remain unresolved. The graphical torch buttons are also hardware-confirmed;
+see the [installed battery, speaker and torch validation](docs/validation/lmi-battery-audio-torch-2026-10-03.md).

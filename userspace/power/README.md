@@ -16,7 +16,7 @@ The patch is based on [UPower v1.90.9](https://gitlab.freedesktop.org/upower/upo
 and is GPL-2.0-or-later. Original documentation and helper scripts follow the
 repository license.
 
-## Package build: prepared, not yet executed or installed
+## Package build: built and deployed on the validated phone
 
 Use an expendable Debian 13 ARM64 build environment, separate from the
 phone and the locked image builders. Enable the corresponding Debian source
@@ -44,7 +44,7 @@ source tree. Generated `.deb` packages and build trees stay outside Git.
 The temporary validation binary disabled Polkit and libimobiledevice: it
 must not replace the installed Debian service permanently.
 
-## Installation and rollback procedure: pending package validation
+## Installation and rollback procedure
 
 Before installation, verify the package architecture, version, dependencies
 and enabled features. Preserve/download the currently installed versions of
@@ -72,9 +72,11 @@ Create the empty marker only when deliberately enabling this validated
 quirk, reload the rules, trigger only the battery supply and restart UPower.
 Before and after restart, compare kernel `status`, `current_now`, USB
 `online` and UPower `State`/`OnBattery`. Repeat the unplug/replug cycle and
-check `Full` when reached. This persistent rule and the full package have
-not yet been validated on hardware; the completed test used a private
-udev database and private D-Bus, leaving the installed service unchanged.
+check `Full` when reached. The full package and this persistent rule were
+installed and validated
+with a physical cycle on 2026-10-03. See the
+[deployment record](../../docs/validation/lmi-battery-audio-torch-2026-10-03.md).
+Full/low-battery behavior and a rollback execution remain untested.
 
 For rollback, remove only the added rule and marker, reload rules, trigger
 the battery supply, reinstall the preserved original versions of all three

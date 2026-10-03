@@ -31,6 +31,7 @@ fi
 command -v dch >/dev/null
 (cd "$source_dir" && dpkg-checkbuilddeps)
 [[ ! -e "$source_dir/debian/patches/0001-trust-validated-battery-status-opt-in.patch" ]]
+mkdir -p "$source_dir/debian/patches"
 install -m 644 "$patch_file" "$source_dir/debian/patches/0001-trust-validated-battery-status-opt-in.patch"
 printf '\n0001-trust-validated-battery-status-opt-in.patch\n' >> "$source_dir/debian/patches/series"
 (

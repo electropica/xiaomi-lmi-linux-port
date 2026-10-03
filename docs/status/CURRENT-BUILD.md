@@ -55,9 +55,9 @@ reset-GPIO diagnostic boot loaded temporarily using `fastboot boot`; that
 boot was not installed durably. The firmware binary, userdata and diagnostic
 boot remain external and must never be added to Git.
 
-The WCD938x/TFA9874 path and direct ALSA playback now work, but the sound is
-extremely quiet. PipeWire has no finalized user-facing route and UCM2 remains
-to be built. Audio is partially functional, not resolved; see
+The WCD938x/TFA9874 path now supports clear speaker music through direct
+S32_LE ALSA and an installed opt-in PipeWire route (2026-10-03). A complete
+UCM2 profile and microphone/headset validation remain pending; see
 [`archi-validation-02` audio progress](../validation/archi-validation-02-audio-progress-2026-09-29.md).
 
 ## Earlier build: `archi-validation-01` (superseded as current pointer)
@@ -141,20 +141,24 @@ The separate Mobian device workflow is not a replacement for the current
 
 The following remain separate deferred items:
 
-- PipeWire/UCM2 user-facing audio routing and the extremely low speaker level
+- full UCM2 routing, microphone/headset and durable audio-boot deployment
 - camera configuration and a usable downstream capture pipeline
 - Chinese-character rendering in Debian
 
 The historical M0 Weston display validation and the later D-v43/OpenRC Weston
 failures are different environments and must not be conflated.
 
-## Battery status opt-in — 2026-10-01
+## Battery, speaker and torch updates — 2026-10-03
 
-A targeted UPower 1.90.9 opt-in passed seven selected host tests and a
-private ARM64 hardware test: the candidate followed Charging → Discharging
-→ Charging correctly across 80 physical-cycle samples. The installed
-service and image identities remain unchanged. Full Debian package build,
-phone-local activation and persistent deployment remain pending. This
-corrects state interpretation, not the missing FG profile, capacity
-estimation or suspend policy. See the
-[validation record](../validation/lmi-upower-battery-status-2026-10-01.md).
+The full Debian ARM64 UPower `1.90.9-1+lmi1` package and phone-local activation
+are installed. Seven explicit ARM64 integration tests passed; the installed
+service tracked a real unplug/replug cycle correctly over 90 observations.
+Capacity accuracy and autonomy remain unresolved. Automatic battery suspend
+is locally enabled; frequent msoc-delta wakes remain under investigation.
+
+Clear speaker music was operator-confirmed through an installed PipeWire
+route using the S32_LE frontend and S24_LE backend on the temporary GPIO
+diagnostic boot. ALSA controls restore on close. The graphical torch app's
+Allumer and Éteindre buttons were operator-confirmed. Camera capture remains
+blocked. These are live-phone customizations, not newly locked golden images.
+See the [validation record](../validation/lmi-battery-audio-torch-2026-10-03.md).
