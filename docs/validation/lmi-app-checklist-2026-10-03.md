@@ -10,15 +10,15 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 |---|---|---|---|
 | Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
 | Calculatrice | 2+3=5 obtenu par boutons tactiles ; fermeture avec code 0 puis relance vérifiées à distance. La relance initiale faisait revenir le clavier : helper GTK simple installé pour supprimer son ouverture automatique dans cette application. Pavé tactile et saisie de touches physiques vérifiés ; pavé entier sans clavier superposé confirmé par l’opérateur. | À tester après résolution du clavier. | À tester. |
-| Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
+| Fichiers | Création d’un dossier de test via le menu et bouton Créer, présence sur disque, ouverture et retour vérifiés ; fermeture du service avec code 0. Noms chinois confirmés avant redémarrage seulement. Copie/renommage/suppression non validés. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
 | Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Arrêt SIGSEGV constaté avec le rendu initial ; deux fermetures sans erreur obtenues avec le contournement Cairo limité à cet Éditeur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Préférences et recherche ouvertes puis fermées au toucher. Raccourcis clavier déborde encore ; retour tactile non établi. Impression, remplacement et autres actions restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
-| Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
+| Papiers | PDF de test à deux pages affiché ; passage à la seconde page par glissement tactile, fermeture avec code 0 et réouverture vérifiés. Recherche et annotation non validées. | À tester. | À tester. |
 | Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
-| Horloges | Chronomètre : démarrage, progression, tour, pause et remise à zéro vérifiés au toucher simulé. Minuterie et alarmes sonores non validées ; audio à rétablir. | À tester. | À tester. |
+| Horloges | Chronomètre : démarrage, progression, tour, pause et remise à zéro vérifiés au toucher simulé. Minuterie : lancement d’une minute, décompte, pause et retrait du seul minuteur de test vérifiés. Expiration et alarmes sonores non validées ; audio à rétablir. | À tester. | À tester. |
 | Agenda | À tester : affichage/navigation ; ne pas créer d'événement personnel. | À tester. | À tester. |
 | Contacts | À tester : affichage/navigation ; ne pas modifier les contacts personnels. | À tester. | À tester. |
 | Paramètres | À tester : navigation/affichage ; éviter les changements de réseau/alimentation durant les autres essais. | À tester. | À tester. |
-| Console | À tester : ouverture et commande inoffensive. | À tester. | À tester. |
+| Console | Commande de test et calcul shell affichés. Fin du shell mal détectée : code -1 et erreur GLib waitid(P_PIDFD)=EINVAL. Repli sans pidfd testé temporairement, aucun lanceur durable modifié. | À tester. | À tester. |
 | Lampe torche lmi | Allumer/éteindre confirmés avant redémarrage ; à recontrôler. | Pas de menu supplémentaire testé. | Interface française présente ; pas de validation multilingue. |
 | Amberol | MP3 et volume confirmés avant redémarrage ; aucune carte ALSA détectée après redémarrage. | À tester. | À tester. |
 | Showtime | MP4 confirmé avant redémarrage ; son à rétablir. | À tester. | À tester. |
@@ -469,3 +469,51 @@ standard établi par ce contrôle. Les fichiers de périphériques seuls ne
 suffisent pas à démontrer une caméra exploitable. Le blocage documenté du
 pipeline downstream reste ouvert. Pas d’énumération GStreamer, de nouvelle
 configuration spéculative ni de build kernel dans cette reprise.
+
+
+## Essais autonomes : Fichiers, Papiers, minuterie et Console
+
+Essais du 3 octobre 2026, après-midi, une application à la fois. Captures,
+PDF et données de test restent hors Git ; aucun fichier personnel modifié.
+Ces gestes ont été produits par uinput/wtype, sans confirmation opérateur
+pendant son absence. Ils ne valident pas toutes les fonctions des applications.
+
+Fichiers : Nouveau dossier ouvert dans un répertoire vide réservé au test,
+nom saisi et bouton Créer touché. Présence sur disque puis miniature vérifiées.
+Le dossier sélectionné a été ouvert avec Entrée ; une seule touche tactile
+initiale le sélectionnait sans l’ouvrir. Retour par le bouton flèche inférieur,
+puis fermeture Alt+F4 : Result=success, ExecMainStatus=0. Pas de test de copie,
+renommage ou suppression, et aucune de ces fonctions déclarée validée.
+
+Papiers : PDF synthétique de deux pages créé et contrôlé sur le poste, puis
+ouvert sur le téléphone. Première et deuxième pages lisibles sur captures ;
+navigation par glissement tactile. Fermeture de l’unité avec code 0 et
+réouverture indépendante réussies. Recherche, annotation, impression et
+formulaires restent non testés. Le processus de test a ensuite été arrêté.
+
+Horloges : onglet Minuteur initialement vide ; lancement du raccourci une
+minute, capture à 58 secondes, pause à 10 secondes. Le seul minuteur créé
+pour l’essai a été retiré, puis retour à Monde. Aucune ville ou alarme
+existante modifiée. Expiration, son et réveil en veille non validés.
+
+Console 48.0.1 / GLib 2.84.4-3~deb13u5 : texte de test et résultat shell 2+3=5
+visibles. Après exit, le terminal affiche Lecture seule et code -1 ; le
+journal signale waitid(P_PIDFD)=EINVAL. Le kernel courant est un downstream
+4.19.325 ; cette observation ne prouve pas encore quel backport est incomplet.
+Le code officiel GLib ouvre un pidfd, utilise waitid(P_PIDFD), et se replie
+sur SIGCHLD seulement si pidfd_open échoue.
+
+Deux unités de diagnostic séparées ont temporairement bloqué pidfd_open
+avec SystemCallFilter=~pidfd_open et SystemCallErrorNumber=ENOSYS. Le shell
+quittant à zéro donne alors le bandeau bleu normal, sans code -1. Le shell
+quittant à 7 affiche 1792 (statut wait brut, 7<<8), et non -1 : il subsiste
+donc une mauvaise présentation du code de sortie. Les deux unités ont été
+arrêtées et le filtre n’est pas installé dans le lanceur. Ce mécanisme peut
+imposer NoNewPrivileges et gêner l’élévation de privilèges dans un terminal ;
+ce n’est pas une correction durable validée. Aucune bibliothèque globale,
+configuration kernel ou préférence de Console n’a été remplacée.
+
+Source : [GLib 2.84.4, gmain.c](https://github.com/GNOME/glib/blob/2.84.4/glib/gmain.c).
+Suite prioritaire : résoudre la surveillance des processus de Console sans
+restreindre ses usages, puis poursuivre les fonctions globales des apps.
+Les améliorations de présentation restent secondaires.
