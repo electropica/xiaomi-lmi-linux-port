@@ -15,7 +15,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Papiers | PDF de test à deux pages affiché ; passage à la seconde page par glissement tactile, fermeture avec code 0 et réouverture vérifiés. Recherche et annotation non validées. | À tester. | À tester. |
 | Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
 | Horloges | Chronomètre : démarrage, progression, tour, pause et remise à zéro vérifiés au toucher simulé. Minuterie : lancement d’une minute, décompte, pause et retrait du seul minuteur de test vérifiés. Expiration et alarmes sonores non validées ; audio à rétablir. | À tester. | À tester. |
-| Agenda | À tester : affichage/navigation ; ne pas créer d'événement personnel. | À tester. | À tester. |
+| Agenda | Navigation mensuelle et Aujourd’hui, création locale d’un événement fictif explicitement autorisé, lecture et retrait effectif vérifiés. Réouverture sans reliquat et fermeture normale code 0 confirmées. Synchronisation et rappels non validés. | Dialogue de création/édition et bouton de suppression utilisables après masquage du clavier ; autres menus non validés. | Libellés français visibles, couverture complète non validée. |
 | Contacts | À tester : affichage/navigation ; ne pas modifier les contacts personnels. | À tester. | À tester. |
 | Paramètres | À tester : navigation/affichage ; éviter les changements de réseau/alimentation durant les autres essais. | À tester. | À tester. |
 | Console | Commande de test et calcul shell affichés. Fin du shell mal détectée : code -1 et erreur GLib waitid(P_PIDFD)=EINVAL. Repli sans pidfd testé temporairement, aucun lanceur durable modifié. | À tester. | À tester. |
@@ -542,3 +542,31 @@ failed to copy output DSI-1. ScreenSaver.GetActive=true, USB online=1 ;
 l’écran était verrouillé. L’unité Agenda a été arrêtée, sans événement créé,
 et son fonctionnement visuel reste non validé. Ne pas transformer ce simple
 démarrage en réussite dans la checklist.
+
+
+## Agenda : parcours local complet — 3 octobre, après remise à zéro du quota
+
+gnome-calendar 48.1-2+b1 : ouverture au 3 octobre, navigation au mois de
+novembre puis retour Aujourd’hui au mois d’octobre vérifiés sur captures.
+Le backend du calendrier Personnel est local ; aucun compte distant ajouté.
+Après autorisation explicite de l’opérateur, le seul événement fictif
+TEST-LMI-AGENDA-20261003 a été enregistré, avec titre visible dans la liste
+et SUMMARY correspondant dans le calendrier ICS. Aucun participant ni
+invitation, aucun rappel configuré. Son aperçu a été ouvert, puis le dialogue
+d’édition a permis d’accéder à Supprimer l’événement.
+
+Le premier glissement avait commencé sur le clavier et ajouté gt dans le
+titre du dialogue ; cette modification n’a pas été enregistrée. Un appui
+long sur la barre inférieure a masqué le clavier, puis le glissement dans
+le contenu a révélé le bouton Supprimer. La notification permettait encore
+d’annuler : sa fermeture a été suivie de la disparition visuelle et de zéro
+occurrence du SUMMARY de test dans le fichier calendrier. Réouverture
+indépendante : Aucun événement, sans reliquat du test.
+
+La seconde unité a utilisé RemainAfterExit=yes pour garder les métadonnées
+après fermeture : Result=success, ExecMainCode=1 (sortie normale),
+ExecMainStatus=0 et SubState=exited. Le simple résultat par défaut d’une
+unité déjà déchargée n’est pas utilisé comme preuve du code de fermeture.
+Pas de modification du lanceur ou des paquets Agenda, pas de correctif
+graphique nécessaire sur ce parcours. La synchronisation, les récurrences,
+les invitations et les rappels sonores restent non validés.
