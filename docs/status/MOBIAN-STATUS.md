@@ -652,3 +652,14 @@ is not automatically installed by the generic image recipe.
 The restart interrupted the six-hour battery observer. CPU-idle and UPower
 were active after restart, but no ALSA card was detected; previous music
 confirmations apply to the temporary diagnostic boot, not this restart.
+
+
+## Application follow-up — 2026-10-03
+
+The operator's application and menu defects are preserved in the app checklist.
+Koko's missing Qt/QML dependencies were installed on the test phone and made
+explicit in the application recipe. A per-app software-rendering launcher removes
+the observed EGL startup failure; visual gallery validation is still pending.
+This is a live userspace repair, not a newly built or hardware-validated image.
+No automatic rotation sensor or usable GPS was established in this follow-up.
+See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).

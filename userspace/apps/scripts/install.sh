@@ -21,7 +21,11 @@ apt-get install -y --no-install-recommends \
     gnome-maps \
     geary \
     krecorder \
-    koko
+    koko \
+    qt6-wayland \
+    libqt6sql6-sqlite \
+    qml6-module-org-kde-kquickcontrolsaddons \
+    qml6-module-org-kde-purpose
 
 audit=$(dpkg --audit)
 if [[ -n $audit ]]; then

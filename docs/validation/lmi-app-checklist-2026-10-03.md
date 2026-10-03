@@ -154,3 +154,125 @@ réglés directement par root. Aucun redémarrage ni écriture RTC effectué.
 La synchronisation NTP automatique et le maintien de l'heure après un
 redémarrage restent à vérifier. Ce résultat remplace le statut « heure
 incorrecte » pour le démarrage courant, pas pour les observations antérieures.
+
+
+## Retour manuel du 3 octobre — après correction de l'heure
+
+Ces résultats viennent de l'opérateur. « OK » ne valide pas une fonction
+matérielle non explicitement essayée. Priorité : fonctionnement global,
+menus, puis traduction ; une application à la fois.
+
+| Application | Fonctionnement global | Fonctionnement des menus | Traduction |
+|---|---|---|---|
+| Éditeur de texte | Fermeture impossible signalée, puis disparition après plusieurs minutes ; crash non confirmé. | Enregistrer/Enregistrer sous débordent de l'écran. Préférences accessibles. | Préférences françaises confirmées. |
+| Appels | Interface OK ; appel et modem non validés. | Pas de défaut rapporté. | Non évaluée séparément. |
+| Discussions | Fonctionnement confirmé après contournement du blocage. | Raccourcis trop grands, retour impossible. | Préférences partiellement françaises ; correction complète reportée. |
+| Contacts | OK selon l'opérateur. | Pas de défaut rapporté. | Non évaluée séparément. |
+| Amberol | Lecture auparavant validée ; pas de nouvelle mesure audio ici. | Raccourcis clavier inadaptés. | Non évaluée séparément. |
+| Console, Fichiers, Papiers | OK selon l'opérateur. | Pas de défaut rapporté. | Non évaluée séparément. |
+| Geary | Ouverture OK ; aucun compte, réception/envoi non testés. | À approfondir. | Non évaluée séparément. |
+| Horloges | OK selon l'opérateur ; alarme matérielle non explicitement validée. | Pas de défaut rapporté. | Non évaluée séparément. |
+| Megapixels | Chargement puis fenêtre vide ; capture non fonctionnelle. | Non validés. | Secondaire. |
+| Photos (Koko) | Fenêtre vide. | Non validés. | Secondaire. |
+| Paramètres | Réouvre la dernière page au lieu de la page principale. | Certaines options paraissent limitées ; revue complète encore requise. | Non évaluée séparément. |
+
+### Défauts transversaux et essais restant à faire
+
+- Aperçu des applications ouvertes : rayures noires et blanches ; cause non établie.
+- Dialogues Raccourcis clavier : débordement et absence de retour, sur plusieurs applications.
+  Ils restent utiles avec un clavier externe, mais doivent pouvoir être fermés sur téléphone.
+- Grille d'applications : débordement/gestes de défilement à vérifier visuellement.
+- Libellé du filtre mobile tronqué. Le réglage actuel est app-filter-mode=['adaptive'],
+  force-adaptive=[] ; déclaration mobile et compatibilité réelle sont distinctes.
+- Enregistreur : microphone et écouteur interne non testés ; ne pas les confondre avec le HP inférieur.
+- Rotation automatique, GPS et boussole non validés.
+- Galerie photo/vidéo et capture caméra sont deux fonctions distinctes ; Showtime lit les vidéos,
+  Koko doit encore fonctionner et Megapixels n'a pas de pipeline de capture établi.
+- Clavier logiciel : absence de bouton visible de réduction toujours ouverte.
+
+### Contrôles à distance de cette reprise
+
+Koko 25.04.0-1 signale un plugin Qt Wayland absent, un pilote SQL QSQLITE absent,
+puis l'échec de chargement de Main.qml : module org.kde.kquickcontrolsaddons absent.
+Cela établit des dépendances manquantes, sans prouver que tous les défauts graphiques
+seront résolus par leur installation. La recette utilise --no-install-recommends.
+
+L'éditeur 48.3-3 a journalisé des erreurs de dimensions GtkLabel et des annulations
+de dialogue. Aucun OOM/segfault n'a été retrouvé dans le contrôle ciblé de ce démarrage ;
+la disparition de sa fenêtre reste inexpliquée.
+
+Les trois périphériques IIO exposés sont des ADC PM8150/PM8150B/PM8150L, pas des
+accéléromètres ou magnétomètres. iio-sensor-proxy n'est pas installé ; aucun capteur
+de rotation standard n'est actuellement établi. GeoClue est installé, ce qui ne
+prouve ni la présence d'un récepteur GPS utilisable ni une localisation satellite.
+
+### Batterie et protocole pendant l'absence
+
+Téléphone débranché vers 10h40 puis rebranché. Lecture après reconnexion à 11h58 :
+96 %, charge_counter=2753852 µAh, Charging. Faute de valeur de départ synchronisée,
+ce seul relevé ne permet pas de calculer la consommation de l'intervalle.
+Le service CPU idle est actif. L'inhibiteur temporaire d'écran branché est actif ;
+il devra être arrêté avant tout nouveau protocole batterie comparatif.
+L'opérateur est absent : aucun débranchement, écoute ou validation visuelle ne
+doit être demandé ni supposé. Aucun changement Wi-Fi pour les essais batterie.
+
+
+## Photos : dépendances et essai limité — 3 octobre 2026
+
+La recette d'applications explicite maintenant qt6-wayland, libqt6sql6-sqlite,
+qml6-module-org-kde-kquickcontrolsaddons et qml6-module-org-kde-purpose.
+Ces quatre paquets, avec leurs dépendances (29 nouveaux paquets au total), ont
+été installés sur le téléphone sans mise à jour générale. dpkg --audit est vide.
+Les erreurs QSQLITE, plugin Wayland et modules QML manquants ont disparu.
+
+Le démarrage accéléré a ensuite montré des erreurs Mesa get-param/pipe allocation
+et egl: failed to create dri2 screen. Un essai QT_QUICK_BACKEND=software limité
+à Koko a chargé l'interface sans ces erreurs dans le relevé de démarrage, à environ
+69 Mio dans le cgroup. Deux avertissements QML de placement/empilement persistent.
+Le service de test avait MemoryMax=512 Mio et RuntimeMaxSec=20 : aucun processus
+de test illimité n'est conservé. Cela valide le chargement automatique, pas le
+rendu visuel, la navigation, le zoom ou la lecture de vidéos.
+
+Le helper userspace/apps/files/lmi-photos et une surcharge utilisateur du lanceur
+Photos appliquent le rendu logiciel seulement à Koko sur le téléphone d'essai.
+Le helper n'est pas activé par défaut dans le constructeur générique avant
+validation visuelle. Les dépendances explicites, elles, sont intégrées à la recette.
+Retour arrière local : retirer la surcharge utilisateur org.kde.koko.desktop ;
+le lanceur système demeure intact. Le rendu logiciel pourrait coûter plus de CPU
+pendant l'affichage d'images ; consommation non mesurée.
+
+Paramètres mémorise last-panel='privacy' dans org.gnome.Settings. L'aide de la
+version installée n'expose pas d'option --overview ; remettre la clé à vide
+sélectionnerait le premier panneau, sans garantir un accueil principal.
+Aucun faux correctif de lanceur n'a donc été appliqué. La navigation mobile
+vers la liste des panneaux reste à vérifier visuellement.
+
+Références techniques :
+- [Qt : rendu logiciel Qt Quick](https://doc.qt.io/qt-6.5/qtquick-visualcanvas-adaptations.html).
+- [GNOME Settings 48 : restauration du dernier panneau](https://sources.debian.org/src/gnome-control-center/1:48.4-1~deb13u1/shell/cc-window.c/).
+
+### Installation d'applications et options matérielles
+
+La liste d'applications n'est pas fixe : les paquets Debian ARM64 sont installables
+avec APT. Firefox s'appelle firefox-esr dans Debian trixie ; aucune installation
+Firefox n'a été faite dans cet essai. GNOME Software fournit un catalogue graphique
+avec les moteurs appropriés, mais n'est pas installé ici. Architecture ARM64 et
+interface adaptée au téléphone sont deux critères distincts.
+
+« Souris et pavé tactile » concerne les périphériques de pointage, notamment
+externes ; ce panneau n'est pas le réglage du tactile de l'écran ou du clavier
+virtuel. Des panneaux dépendent des périphériques et services présents. Leur
+présence limitée ne démontre pas à elle seule un défaut d'affichage.
+
+La rotation automatique et une boussole exigent des capteurs exposés et leur
+prise en charge logicielle ; les ADC observés ne les remplacent pas. Cartes peut
+utiliser GeoClue, mais une position réseau ne constituerait pas une validation GPS.
+
+Références : [Firefox ESR Debian](https://packages.debian.org/trixie/firefox-esr),
+[GNOME Software](https://apps.gnome.org/Software/).
+
+
+Capture distante : grim a été installé comme outil de diagnostic (84 ko installés).
+La capture fonctionne, mais montre l'écran verrouillé ; aucun secret ni réglage
+de verrouillage n'a été modifié. Les captures restent privées, hors Git.
+La confirmation visuelle de Photos et des autres menus reste donc en attente.

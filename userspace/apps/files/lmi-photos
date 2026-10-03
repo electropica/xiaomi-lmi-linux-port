@@ -1,0 +1,5 @@
+#!/bin/sh
+# Local Xiaomi lmi workaround; does not change the session renderer.
+set -eu
+export QT_QUICK_BACKEND=software
+exec /usr/bin/koko "$@"
