@@ -138,8 +138,8 @@ is recorded in `docs/validation/lmi-app-checklist-2026-10-03.md`. Chatty
 libpurple. An isolated test excluding two video plugins stayed active at
 approximately 108 MiB. The phone-local desktop/D-Bus helper was then installed
 with an isolated registry and a requested 384 MiB systemd-user memory limit;
-normal launch, user memory delegation and visual navigation still need
-validation. SMS is not validated and no modem was detected. The new helper
+user memory delegation was checked after restart at 384 MiB and zero swap.
+Normal launch and visual navigation still need validation. SMS is not validated and no modem was detected. The new helper
 is not automatically installed by the generic image recipe.
 
 The restart interrupted the six-hour battery observer. CPU-idle and UPower

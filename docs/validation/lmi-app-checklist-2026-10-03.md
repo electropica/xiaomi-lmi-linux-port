@@ -78,9 +78,10 @@ helper. Il demande un scope systemd utilisateur avec MemoryMax=384 MiB,
 MemorySwapMax=0 et TasksMax=128, sans repli non limité. Ces changements ne
 sont pas activés dans le constructeur d'image générique.
 
-L'installation a été vérifiée par lecture des deux commandes Exec. Le
-lancement normal, la délégation mémoire utilisateur et la navigation après
-le nouveau redémarrage restent à vérifier avant de marquer Discussions OK.
+L'installation a été vérifiée par lecture des deux commandes Exec. La délégation mémoire utilisateur a été vérifiée après redémarrage : un
+scope inoffensif a exposé memory.max=402653184 et memory.swap.max=0. Les deux
+overrides et le helper étaient toujours présents. Aucune application n’a été
+lancée pour ce contrôle. Le lancement normal et la navigation restent à vérifier avant de marquer Discussions OK.
 La validation des 20 autres applications n'a pas été effectuée pendant ce
 lot. Les essais sont arrêtés pour préserver le quota annoncé par l'opérateur.
 
