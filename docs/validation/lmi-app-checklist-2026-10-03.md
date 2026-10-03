@@ -143,3 +143,14 @@ avant une nouvelle mesure batterie : l'écran forcé et le collecteur de
 surveillance USB font partie des conditions d'essai à maîtriser. L'activation
 branchée a été vérifiée ; le débranchement de cette inhibition n'a pas été
 testé physiquement dans ce lot. Aucun nouveau test batterie n'a été effectué.
+
+
+## Correction manuelle de l'heure — 3 octobre 2026
+
+L'horloge système a été réglée depuis l'UTC du PC et le fuseau installé est
+Europe/Paris. Lecture vérifiée : 2026-10-03T09:55:19+02:00. timedatectl a
+refusé l'autorisation ; les fichiers localtime/timezone et date ont été
+réglés directement par root. Aucun redémarrage ni écriture RTC effectué.
+La synchronisation NTP automatique et le maintien de l'heure après un
+redémarrage restent à vérifier. Ce résultat remplace le statut « heure
+incorrecte » pour le démarrage courant, pas pour les observations antérieures.
