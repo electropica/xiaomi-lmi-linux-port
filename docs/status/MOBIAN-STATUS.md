@@ -702,3 +702,16 @@ but touch-only dismissal remains unvalidated. No renderer workaround or
 launcher modification was installed. Temporary test services and USB-only
 screen inhibition were stopped. See the
 [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
+
+## Window close controls and mail/call UI — 2026-10-03
+
+The live window button layout omitted Close (`appmenu:`). It is now
+`appmenu:close`; Calls' VoIP dialog and the Calls/Settings main windows passed
+touch-simulated close checks. A Phosh schema default and builder validation
+are prepared for the next image, without running a build. Custom-header
+dialogs can still omit Close; Settings' mouse-test dialog remains open work.
+Geary passed empty-account startup, add-form cancellation, reopening and
+normal closure; no mail account or message was created. Calls has no usable
+modem/VoIP account in its UI; no actual call was attempted. See the
+[application checklist](../validation/lmi-app-checklist-2026-10-03.md).

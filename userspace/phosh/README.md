@@ -637,3 +637,20 @@ Existing golden and userspace locks retain their historical identities.
 Debian package versions for fonts follow the build repositories and must be
 recorded in the generated package manifest; locales-all retains the libc
 version pin. Budget image space for the larger installed locale/font set.
+
+
+## Touch-accessible window close controls — 2026-10-03
+
+The next-build schema override `92_lmi-window-controls.gschema.override`
+sets `org.gnome.desktop.wm.preferences button-layout` to `appmenu:close`,
+including the Phosh desktop default. This preserves the app-menu position
+and exposes a close button in GTK windows and standard dialogs. The previous
+live value `appmenu:` hid it. The live user preference has been corrected;
+Calls' VoIP dialog and the Calls/Settings main windows were closed through
+the restored button during testing. Custom headers may still omit it:
+Settings' mouse-test dialog remains affected. This does not fix dialog sizing.
+
+The builder installs and checks the compiled default without starting a new
+image build. Existing per-user preferences take precedence over defaults;
+the override alone does not migrate an existing dconf database. Future
+reboot persistence and all applications' custom dialogs remain unvalidated.

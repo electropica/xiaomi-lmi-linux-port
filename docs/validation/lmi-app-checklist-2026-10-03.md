@@ -24,11 +24,11 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Showtime | MP4 confirmé avant redémarrage ; son à rétablir. | À tester. | À tester. |
 | Enregistreur | À tester ; microphone non validé. | À tester. | À tester. |
 | Megapixels | Bloqué : pipeline de capture standard non établi. | Non validé. | Non prioritaire avant capture fonctionnelle. |
-| Appels | À tester ; aucun modem détecté, aucun appel réel lancé. | À tester. | À tester. |
+| Appels | Ouverture, relance, onglet Pavé numérique et fermeture normale code 0 vérifiés. Interface indique absence de modem/compte VoIP ; aucun numéro composé ni appel lancé. | Comptes VoIP ouvert ; bouton Fermer rétabli par le réglage de session, retrait du dialogue au toucher vérifié en gardant Appels ouvert. | Libellés français sur les écrans examinés ; couverture complète non validée. |
 | Web | À tester ; DNS Internet défaillant lors du dernier contrôle. | À tester. | À tester. |
 | Cartes | À tester ; réseau et position non validés. | À tester. | À tester. |
 | Météo | À tester ; réseau requis pour l'actualisation. | À tester. | À tester. |
-| Geary | À tester ; aucun compte à configurer ni courriel à envoyer durant l'essai. | À tester. | À tester. |
+| Geary | Ouverture et relance sur Comptes sans compte, puis deux fermetures normales code 0. Réception/envoi non validés. | Ajouter ouvre le formulaire ; Retour annule, puis Retour depuis Comptes ferme normalement. Aucun compte créé ni identifiant saisi. | Libellés français et texte d’accueil anglais observés ; couverture partielle. |
 
 ### Contrôles système séparés
 
@@ -631,3 +631,39 @@ Cette préférence n’a pas été réinitialisée et aucun helper n’a été i
 Les services temporaires de test et l’inhibition d’écran limitée au câble
 USB ont été arrêtés après les essais. L’ensemble des panneaux et des menus
 reste à tester ; l’application n’est pas déclarée intégralement validée.
+
+
+## Geary, Appels et boutons Fermer — 3 octobre 2026
+
+Geary 46.0-7 : ouverture et relance sans compte, formulaire Ajouter puis
+annulation par Retour vérifiés. Retour depuis Comptes ferme l’application
+normalement ; une autre fermeture par Alt+F4 a également terminé avec
+Result=success, ExecMainCode=1 et ExecMainStatus=0. Aucun compte ni message
+n’a été créé. Les fonctions de courrier et les menus accessibles seulement
+après connexion restent non validés.
+
+Appels 48.2-1 : interface Récentes et Pavé numérique affichée, menu Comptes
+VoIP ouvert. Le bandeau indique qu’aucun modem/compte VoIP n’est disponible.
+Aucun numéro, appel ou compte n’a été créé. Le réglage utilisateur initial
+org.gnome.desktop.wm.preferences button-layout était appmenu:, omettant
+Fermer. Le passage à appmenu:close a fait apparaître ce bouton dans les
+fenêtres GTK observées et le dialogue VoIP. Une nouvelle instance a confirmé
+la fermeture de ce dialogue au toucher simulé, avec l’application encore
+visible, puis sa fermeture normale par son propre bouton (code 0).
+Paramètres a aussi été fermé normalement par le bouton rétabli.
+
+Ce correctif est installé dans la préférence utilisateur du téléphone et
+préparé comme défaut de schéma dans le prochain build. Il ne garantit pas
+les dialogues à bandeau personnalisé : Tester les paramètres de la souris
+ne présente toujours pas de bouton de dialogue. Son problème signalé dans
+la section précédente reste ouvert. Les fenêtres Raccourcis des autres
+applications n’ont pas encore été recontrôlées après cette correction.
+Les unités d’essai ont été arrêtées ; aucun build d’image n’a été lancé.
+
+
+Validation de recette : bash -n et git diff --check passent. Les XML de
+schémas/énumérations et overrides installés ont été copiés dans un répertoire
+temporaire, avec le nouvel override ; glib-compile-schemas --strict passe.
+La lecture GSETTINGS_BACKEND=memory retourne appmenu:close pour le contexte
+générique, Phosh et Phosh:GNOME. Le répertoire temporaire a été retiré
+automatiquement. Cette vérification ne reconstruit pas une image complète.

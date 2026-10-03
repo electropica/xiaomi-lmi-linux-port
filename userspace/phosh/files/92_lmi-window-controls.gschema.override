@@ -1,0 +1,6 @@
+# Keep a touch-accessible close button in GTK windows and standard dialogs.
+[org.gnome.desktop.wm.preferences]
+button-layout='appmenu:close'
+
+[org.gnome.desktop.wm.preferences:Phosh]
+button-layout='appmenu:close'
