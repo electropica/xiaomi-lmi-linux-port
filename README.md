@@ -139,7 +139,8 @@ libpurple. An isolated test excluding two video plugins stayed active at
 approximately 108 MiB. The phone-local desktop/D-Bus helper was then installed
 with an isolated registry and a requested 384 MiB systemd-user memory limit;
 user memory delegation was checked after restart at 384 MiB and zero swap.
-Normal launch and visual navigation still need validation. SMS is not validated and no modem was detected. The new helper
+The operator subsequently confirmed normal opening, menu access and relaunch;
+shortcut-window sizing remains defective. SMS/MMS remain unvalidated. SMS is not validated and no modem was detected. The new helper
 is not automatically installed by the generic image recipe.
 
 The restart interrupted the six-hour battery observer. CPU-idle and UPower

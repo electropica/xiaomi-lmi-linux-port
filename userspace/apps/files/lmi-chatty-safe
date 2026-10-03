@@ -8,6 +8,12 @@ mkdir -p "$cache"
 export GST_PLUGIN_SYSTEM_PATH_1_0=/usr/local/lib/lmi-chatty/gstreamer
 export GST_PLUGIN_PATH_1_0=
 export GST_REGISTRY_1_0=$cache/registry.bin
+# Optional local French-only settings overlay; keep upstream UI in other languages.
+if test -f /usr/local/share/lmi-chatty/ui/chatty-settings-dialog.ui; then
+ case "${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}" in
+  fr*) export G_RESOURCE_OVERLAYS=/sm/puri/Chatty/ui=/usr/local/share/lmi-chatty/ui;;
+ esac
+fi
 # Refuse an unbounded fallback if user cgroup memory control is unavailable.
 exec systemd-run --user --scope --quiet --collect \
  --property=MemoryMax=402653184 --property=MemorySwapMax=0 \

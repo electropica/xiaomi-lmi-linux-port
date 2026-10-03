@@ -6,29 +6,44 @@ des contrôles du démarrage actuel. Aucun compte, message ou contact personnel
 n'est créé pour ces essais. Les actions visuelles attendent la confirmation
 de l'opérateur, sans délai imposé pour effectuer son geste.
 
-| Application | Fonction principale à vérifier | État connu |
-|---|---|---|
-| Discussions (Chatty) | Démarrage, navigation ; SMS séparément | Échec initial : 6,4 Go, OOM et perte de session. Reproduit sous limite 384 Mo. Essai avec plugins vidéo filtrés actif à environ 108 Mo ; confirmation visuelle en attente. Aucun modem détecté. |
-| Calculatrice | Calcul simple, effacement | À tester |
-| Fichiers | Navigation, ouverture, noms chinois | Confirmé avant redémarrage ; à recontrôler |
-| Éditeur de texte | Ouvrir, modifier et enregistrer un fichier de test | À tester |
-| Papiers | Ouvrir un PDF, changer de page, rechercher | À tester |
-| Photos (Koko) | Ouvrir et zoomer sur une image | À tester ; ce n'est pas l'application de capture |
-| Horloges | Chronomètre et minuterie | À tester ; avertissement sonore dépend du rétablissement audio |
-| Agenda | Affichage et navigation entre dates | À tester ; création éventuelle d'un événement de test séparée |
-| Contacts | Affichage et navigation | À tester ; ne pas modifier les contacts personnels |
-| Paramètres | Navigation, affichage des réglages | À tester ; ne pas modifier le réseau ou l'alimentation pendant les autres essais |
-| Console | Ouverture et commande inoffensive | À tester |
-| Lampe torche lmi | Allumer puis éteindre visiblement | Boutons confirmés avant redémarrage ; à recontrôler |
-| Amberol | Lecture MP3, pause, reprise, volume | Lecture MP3 et boutons volume confirmés avant redémarrage ; plus de carte son détectée après redémarrage |
-| Showtime | Lecture MP4, pause, recherche dans la vidéo, audio | Lecture MP4 confirmée avant redémarrage ; audio à rétablir |
-| Enregistreur | Capture et relecture d'un enregistrement court | À tester ; microphone non validé |
-| Megapixels | Aperçu et prise de photo | Bloqué : pipeline de capture standard non établi |
-| Appels | Démarrage ; appel séparément | À tester ; aucun modem détecté, ne pas lancer d'appel réel |
-| Web | Démarrage, page locale ; navigation Internet séparément | À tester ; DNS Internet actuellement défaillant |
-| Cartes | Démarrage, affichage d'une carte | À tester ; données réseau et position non validées |
-| Météo | Démarrage, affichage des informations | À tester ; requiert réseau pour actualiser les données |
-| Geary | Démarrage, navigation | À tester ; ne pas configurer un compte ni envoyer de courriel |
+| Application | Fonctionnement global | Fonctionnement des menus | Traduction |
+|---|---|---|---|
+| Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
+| Calculatrice | Démarrage obtenu ; calcul non confirmé. Clavier apparaît à la saisie sans bouton visible pour le cacher ; application fermée par l'opérateur. | À tester après résolution du clavier. | À tester. |
+| Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
+| Éditeur de texte | À tester : ouvrir, modifier, enregistrer un fichier de test. | À tester. | À tester. |
+| Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
+| Photos (Koko) | À tester : afficher et zoomer une image ; ce n'est pas la capture caméra. | À tester. | À tester. |
+| Horloges | À tester : chronomètre/minuterie ; son dépend du rétablissement audio. | À tester. | À tester. |
+| Agenda | À tester : affichage/navigation ; ne pas créer d'événement personnel. | À tester. | À tester. |
+| Contacts | À tester : affichage/navigation ; ne pas modifier les contacts personnels. | À tester. | À tester. |
+| Paramètres | À tester : navigation/affichage ; éviter les changements de réseau/alimentation durant les autres essais. | À tester. | À tester. |
+| Console | À tester : ouverture et commande inoffensive. | À tester. | À tester. |
+| Lampe torche lmi | Allumer/éteindre confirmés avant redémarrage ; à recontrôler. | Pas de menu supplémentaire testé. | Interface française présente ; pas de validation multilingue. |
+| Amberol | MP3 et volume confirmés avant redémarrage ; aucune carte ALSA détectée après redémarrage. | À tester. | À tester. |
+| Showtime | MP4 confirmé avant redémarrage ; son à rétablir. | À tester. | À tester. |
+| Enregistreur | À tester ; microphone non validé. | À tester. | À tester. |
+| Megapixels | Bloqué : pipeline de capture standard non établi. | Non validé. | Non prioritaire avant capture fonctionnelle. |
+| Appels | À tester ; aucun modem détecté, aucun appel réel lancé. | À tester. | À tester. |
+| Web | À tester ; DNS Internet défaillant lors du dernier contrôle. | À tester. | À tester. |
+| Cartes | À tester ; réseau et position non validés. | À tester. | À tester. |
+| Météo | À tester ; réseau requis pour l'actualisation. | À tester. | À tester. |
+| Geary | À tester ; aucun compte à configurer ni courriel à envoyer durant l'essai. | À tester. | À tester. |
+
+### Contrôles système séparés
+
+- Heure incorrecte signalée par l'opérateur. Lecture du téléphone :
+  `2026-10-02T13:42:19+00:00`, fuseau `Etc/UTC`, `NTPSynchronized=no`, alors
+  que la date opérateur est le 3 octobre 2026 en Europe/Paris. Vérifier à la
+  fois l'horloge/synchronisation et le fuseau ; ne pas attribuer tout le
+  décalage au seul fuseau. Aucun réglage d'heure modifié dans ce contrôle.
+- Clavier : apparition à la saisie sans moyen visible de le masquer.
+  `sm.puri.OSK0.SetVisible(false)` fonctionne par SSH, mais cela ne valide
+  pas un geste ou bouton utilisable depuis l'interface. Problème ouvert.
+
+Priorité décidée par l'opérateur : fonctionnement global, puis menus,
+puis traduction. Une seule application active dans le protocole d'essai ;
+laisser le temps de confirmer chaque geste. L'essai courant reste Discussions.
 
 ## Ordre de validation
 
@@ -90,3 +105,22 @@ devront être revus. Pour rollback, retirer seulement les deux overrides
 utilisateur créés et le helper/vue installés ; les fichiers et plugins
 système originaux n'ont pas été modifiés. Un rollback réexpose le défaut
 initial : ne pas relancer Chatty sans confinement dans cet état.
+
+
+## Reprise ciblée : lanceur habituel de Discussions
+
+Le lanceur utilisateur protégé a été testé. L'opérateur a confirmé le menu,
+la fermeture et la relance sans blocage. Le processus relancé appartenait à
+un scope utilisateur exposant memory.max=402653184, memory.swap.max=0,
+memory.current=71299072 et zéro événement oom/oom_kill lors du contrôle.
+Cette validation corrige les points de lancement/délégation encore en attente
+dans les relevés antérieurs ; elle ne valide pas les fonctions SMS/MMS.
+
+Une correction française de la seule ressource de paramètres a été générée
+localement depuis Chatty 0.8.7-2. Elle ne modifie pas le paquet système et n'est
+pas une validation visuelle ni une modification du constructeur générique.
+L'opérateur a demandé de reporter la traduction au profit du fonctionnement.
+
+SSH Windows a atteint le serveur mais refusé la lecture de la clé privée
+dans WSL et du fichier de clés d'hôte. L'accès WSL existant reste utilisé ;
+aucune clé privée n'a été copiée et aucune vérification d'hôte désactivée.
