@@ -11,7 +11,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
 | Calculatrice | Démarrage obtenu ; calcul non confirmé. Clavier apparaît à la saisie sans bouton visible pour le cacher ; application fermée par l'opérateur. | À tester après résolution du clavier. | À tester. |
 | Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
-| Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Fermeture non validée : arrêt SIGSEGV constaté après le retour opérateur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Autres menus restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
+| Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Arrêt SIGSEGV constaté avec le rendu initial ; deux fermetures sans erreur obtenues avec le contournement Cairo limité à cet Éditeur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Autres menus restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
 | Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
 | Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
 | Horloges | À tester : chronomètre/minuterie ; son dépend du rétablissement audio. | À tester. | À tester. |
@@ -376,3 +376,17 @@ Un essai isolé de réouverture avec GSK_RENDERER=cairo est actif ; le lanceur
 persistant reste inchangé. L’ouverture réussit, mais la cause du crash et la
 stabilité lors de la fermeture restent à établir. Aucun coredump disponible
 ne permet encore d’attribuer le crash au moteur graphique ou au portail.
+
+
+### Contournement de fermeture : rendu Cairo limité à l’Éditeur
+
+Deux unités indépendantes avec GSK_RENDERER=cairo ont terminé avec
+Result=success et ExecMainStatus=0 après fermeture de fenêtre. Le second essai
+a inclus une réouverture du texte enregistré, l’ouverture du menu réel
+Enregistrer sous et son annulation avant fermeture. Le fichier de trois lignes
+reste présent. Le helper durable utilise désormais Cairo pour l’Éditeur seul ;
+les autres applications et l’environnement graphique global ne changent pas.
+
+Il s’agit d’un contournement validé sur ce parcours, pas d’une localisation
+précise du défaut par backtrace ni d’une validation de stabilité prolongée.
+Le masquage du clavier et les autres menus restent ouverts.
