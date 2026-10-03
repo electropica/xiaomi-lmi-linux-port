@@ -17,7 +17,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Horloges | Chronomètre : démarrage, progression, tour, pause et remise à zéro vérifiés au toucher simulé. Minuterie : lancement d’une minute, décompte, pause et retrait du seul minuteur de test vérifiés. Expiration et alarmes sonores non validées ; audio à rétablir. | À tester. | À tester. |
 | Agenda | Navigation mensuelle et Aujourd’hui, création locale d’un événement fictif explicitement autorisé, lecture et retrait effectif vérifiés. Réouverture sans reliquat et fermeture normale code 0 confirmées. Synchronisation et rappels non validés. | Dialogue de création/édition et bouton de suppression utilisables après masquage du clavier ; autres menus non validés. | Libellés français visibles, couverture complète non validée. |
 | Contacts | Création locale d’une fiche fictive sans coordonnées, persistance après relance et recherche positive/négative vérifiées. Suppression initiale : SIGSEGV ; deux retraits et fermetures code 0 réussis avec Cairo limité à Contacts. Lanceur installé et prochain build préparé. | Formulaire Ajouter et menu Supprimer testés ; édition, import/export et fusion non validés. | Libellés français visibles ; couverture complète non validée. |
-| Paramètres | À tester : navigation/affichage ; éviter les changements de réseau/alimentation durant les autres essais. | À tester. | À tester. |
+| Paramètres | Liste principale et pages Souris et pavé tactile, Clavier et Système accessibles au toucher simulé ; deux fermetures normales code 0. Relance sur le dernier panneau confirmée, ouverture sur la liste encore non corrigée. Réglages système non modifiés. | Dialogue Tester les paramètres ouvert, mais sans bouton Fermer visible : touches hors dialogue sans fermeture, sortie par Échap vérifiée. Retour tactile à corriger ; autres sous-menus non validés. | Pages examinées principalement françaises ; couverture complète non validée. |
 | Console | Commande de test et calcul shell affichés. Fin du shell mal détectée : code -1 et erreur GLib waitid(P_PIDFD)=EINVAL. Repli sans pidfd testé temporairement, aucun lanceur durable modifié. | À tester. | À tester. |
 | Lampe torche lmi | Allumer/éteindre confirmés avant redémarrage ; à recontrôler. | Pas de menu supplémentaire testé. | Interface française présente ; pas de validation multilingue. |
 | Amberol | MP3 et volume confirmés avant redémarrage ; aucune carte ALSA détectée après redémarrage. | À tester. | À tester. |
@@ -598,3 +598,36 @@ Le contournement ne modifie pas le moteur graphique global. Sans backtrace,
 il n’établit pas la cause précise du SIGSEGV ni une stabilité prolongée.
 Modification de fiche, photo de contact, appels, messagerie, import/export,
 fusion et synchronisation restent non validés.
+
+
+## Paramètres — navigation fonctionnelle du 3 octobre 2026
+
+Version installée : gnome-control-center 1:48.4-1~deb13u1. La liste principale
+est accessible par la flèche Retour depuis le panneau restauré. Les pages
+Souris et pavé tactile, Clavier et Système se sont ouvertes au toucher simulé.
+Les contrôles souris/pavé tactile concernent les périphériques physiques,
+pas l’écran tactile du téléphone ; leur présence ne prouve pas qu’un tel
+périphérique est connecté. Aucun changement de source de saisie, de réseau,
+d’heure ou d’alimentation n’a été effectué pendant ces essais.
+
+Tester les paramètres ouvre un dialogue de test des clics/défilement sans
+bouton Fermer visible sur la capture. Deux touches hors du dialogue n’ont
+pas permis de sortir ; Échap, injecté à distance, a fermé le dialogue, puis
+la flèche Retour a restauré la liste. La fermeture utilisable au seul toucher
+reste donc non validée. Les fonctions de test souris elles-mêmes n’ont pas
+été validées avec une souris physique.
+
+Deux fermetures par Alt+F4 ont été constatées dans des services conservant
+leur résultat : Result=success, ExecMainCode=1, ExecMainStatus=0. Il n’a pas
+été nécessaire de changer le moteur de rendu pour ces contrôles.
+Même après retour à la liste avant fermeture, la relance a ouvert Système.
+La préférence org.gnome.Settings last-panel mémorise le dernier panneau.
+Le schéma installé indique qu’une valeur inconnue sélectionne le premier
+panneau, et le [code GNOME 48.4](https://github.com/GNOME/gnome-control-center/blob/48.4/shell/cc-window.c)
+confirme ce repli dans maybe_load_last_panel : effacer cette préférence
+ne constitue pas une correction démontrée de l’ouverture sur la liste.
+Cette préférence n’a pas été réinitialisée et aucun helper n’a été installé.
+
+Les services temporaires de test et l’inhibition d’écran limitée au câble
+USB ont été arrêtés après les essais. L’ensemble des panneaux et des menus
+reste à tester ; l’application n’est pas déclarée intégralement validée.

@@ -689,3 +689,16 @@ No personal contacts were modified. Broader contact operations remain untested.
 Console’s incomplete pidfd/waitid kernel interface remains open, with no
 persistent syscall filter or global library replacement installed.
 See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
+
+## Settings functional follow-up — 2026-10-03
+
+Settings passed navigation to its overview, Mouse and Touchpad, Keyboard and
+System pages, plus two normal closes with retained exit status 0. No system
+settings were changed. Reopening still restores the last panel even after
+closing from the overview; overview-on-launch remains unresolved. The mouse
+test dialog has no visible close button on this display; Escape closes it,
+but touch-only dismissal remains unvalidated. No renderer workaround or
+launcher modification was installed. Temporary test services and USB-only
+screen inhibition were stopped. See the
+[application checklist](../validation/lmi-app-checklist-2026-10-03.md).
