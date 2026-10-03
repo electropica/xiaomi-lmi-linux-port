@@ -517,3 +517,28 @@ Source : [GLib 2.84.4, gmain.c](https://github.com/GNOME/glib/blob/2.84.4/glib/g
 Suite prioritaire : résoudre la surveillance des processus de Console sans
 restreindre ses usages, puis poursuivre les fonctions globales des apps.
 Les améliorations de présentation restent secondaires.
+
+
+### Console : incompatibilité syscall confirmée
+
+Un probe Python indépendant de GTK/GLib a créé son propre enfant quittant
+à 7, ouvert son pidfd avec succès, puis obtenu errno=22/EINVAL pour
+waitid(P_PIDFD). Le repli waitpid a récupéré cet enfant avec exit=7.
+Tous les descripteurs ont été fermés ; aucun processus de test laissé actif.
+Cela confirme l’incompatibilité de ces deux interfaces sur le kernel démarré,
+au-delà de la seule trace d’une application graphique.
+
+L’arbre source de référence a5b3099017ae conservé pour le diagnostic contient
+SYSCALL_DEFINE2(pidfd_open) dans kernel/pid.c. En revanche, include/uapi/linux/wait.h
+définit seulement P_ALL, P_PID et P_PGID ; kernel/exit.c ne contient pas de
+branche P_PIDFD. Cette inspection concorde avec le probe matériel. L’ajout
+isolé de pidfd_open sans la prise en charge waitid correspond à la panne
+observée de GLib. Aucune correction kernel compilée ou démarrée dans cet essai.
+Le prochain correctif doit rendre ces interfaces cohérentes et être validé
+avec les codes de sortie normaux et signalés, avant de déclarer Console corrigée.
+
+Agenda : processus démarré, mais les deux captures ont échoué avec
+failed to copy output DSI-1. ScreenSaver.GetActive=true, USB online=1 ;
+l’écran était verrouillé. L’unité Agenda a été arrêtée, sans événement créé,
+et son fonctionnement visuel reste non validé. Ne pas transformer ce simple
+démarrage en réussite dans la checklist.
