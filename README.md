@@ -161,3 +161,10 @@ open. Helpers and dependencies are recorded in the recipe.
 This is a live userspace repair, not a newly built or hardware-validated image.
 No automatic rotation sensor or usable GPS was established in this follow-up.
 See the [application checklist](docs/validation/lmi-app-checklist-2026-10-03.md).
+
+
+The text editor's off-screen GTK Save dialog was reproduced. GNOME file-chooser
+portal routing and a per-app launcher now give an accessible Save button.
+Remote tests passed create/save, reopen, Save As, edit/save and normal close;
+the operator also confirmed the Save As dialog usable by touch. Recipe and
+builder staging include these userspace fixes; no new image was built.

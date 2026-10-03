@@ -11,7 +11,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 | Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
 | Calculatrice | Démarrage obtenu ; calcul non confirmé. Clavier apparaît à la saisie sans bouton visible pour le cacher ; application fermée par l'opérateur. | À tester après résolution du clavier. | À tester. |
 | Fichiers | Navigation et noms chinois confirmés avant redémarrage ; à recontrôler. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
-| Éditeur de texte | À tester : ouvrir, modifier, enregistrer un fichier de test. | À tester. | À tester. |
+| Éditeur de texte | Saisie, création/enregistrement, réouverture, modification/enregistrement et fermeture normale validés à distance sur fichiers de test. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Autres menus restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
 | Papiers | À tester : PDF, changement de page et recherche. | À tester. | À tester. |
 | Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
 | Horloges | À tester : chronomètre/minuterie ; son dépend du rétablissement audio. | À tester. | À tester. |
@@ -43,7 +43,7 @@ de l'opérateur, sans délai imposé pour effectuer son geste.
 
 Priorité décidée par l'opérateur : fonctionnement global, puis menus,
 puis traduction. Une seule application active dans le protocole d'essai ;
-laisser le temps de confirmer chaque geste. L'essai courant est Photos ; les résultats Chatty restent conservés.
+laisser le temps de confirmer chaque geste. L'essai courant est l’Éditeur de texte ; les résultats Chatty et Photos restent conservés.
 
 ## Ordre de validation
 
@@ -323,3 +323,41 @@ bornes du zoom n'ont pas été modifiées. Voir [Photos lmi](../../userspace/app
 pour le diagnostic, les sources et les limites. Captures et image de test sont
 hors Git. Le maintien temporaire de l'écran actif sur USB reste réservé aux
 tests d'interface et doit être arrêté avant toute mesure de batterie.
+
+
+## Éditeur de texte : enregistrement et fermeture — 3 octobre 2026
+
+Versions testées : gnome-text-editor 48.3-3, nautilus 48.3-2,
+xdg-desktop-portal 1.20.3+ds-1 et backend GNOME 48.0-2.
+Le dialogue GTK initial dépasse la largeur de l'écran ; le bouton Enregistrer
+est hors écran. Ce défaut empêche un parcours tactile normal. Les touches
+distantes seules ne suffisaient pas à tester tous les boutons ; un périphérique
+tactile uinput temporaire a permis de toucher les contrôles visibles, puis
+était détruit après chaque geste. wtype est un outil de test, pas une nouvelle
+dépendance du build. Aucun document personnel n'a été édité.
+
+Le routage FileChooser utilise maintenant GNOME pour Phosh, en conservant les
+autres préférences du portail. Le lanceur local de l'Éditeur force les portails
+GTK4 et transmet l'environnement Wayland au bus d'activation. Avant cette
+transmission, Nautilus activé par D-Bus ne pouvait pas connecter son affichage,
+avec une erreur org.gnome.Mutter.ServiceChannel ; après, il démarre et fournit
+le sélecteur adapté. Le défaut ne demandait ni nouveau kernel ni nouveau rootfs.
+
+Contrôles réellement passés : création de deux lignes par saisie dans l'Éditeur,
+enregistrement par le bouton visible et vérification du contenu sur disque ;
+fermeture normale de la fenêtre puis réouverture avec texte visible ; menu
+Enregistrer sous produisant un second fichier identique ; ajout d'une troisième
+ligne et sauvegarde dans ce fichier ; nouvelle fermeture avec disparition du
+processus. Ce parcours valide des fonctions, pas seulement un lancement.
+
+Le helper et le fichier de routage sont installés sur le téléphone ; la recette
+et le staging du constructeur préparent leur intégration au prochain build.
+Les fichiers desktop gardent leurs traductions et dirigent aussi l'action
+Nouvelle fenêtre vers le helper. Aucun build lourd n'a été lancé. Confirmation
+tactile obtenue : l’opérateur a ouvert Enregistrer sous puis annulé et confirme
+le dialogue utilisable, avec le bouton de validation visible. Le clavier reste
+visible dans l'Éditeur en mode saisie : son masquage général n'est pas corrigé
+par ce lot. Les portails pour applications sandboxées ne sont pas validés ;
+le document portal FUSE reste en échec sur le kernel courant.
+
+Source : [GNOME 47 et ses nouveaux dialogues de fichiers](https://release.gnome.org/47/).

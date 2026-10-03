@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+# GTK4 otherwise falls back to a file chooser too wide for the lmi screen.
+export GTK_USE_PORTAL=1
+export GDK_DEBUG="${GDK_DEBUG:+$GDK_DEBUG,}portals"
+# D-Bus activated Nautilus must know which Wayland display to use.
+if [ -n "${WAYLAND_DISPLAY:-}" ] && command -v dbus-update-activation-environment >/dev/null 2>&1; then
+    dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS XDG_CURRENT_DESKTOP || true
+fi
+exec /usr/bin/gnome-text-editor "$@"
