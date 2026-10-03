@@ -25,7 +25,7 @@ Not charging/State=5/OnBattery=false. The current-sign workaround therefore
 works in the installed service, not merely in a private test binary.
 
 This fixes state interpretation. It does not establish capacity accuracy,
-recognize the missing fuel-gauge profile, or prove acceptable autonomy.
+authenticate the selected fuel-gauge profile, or prove acceptable autonomy.
 Battery inactivity suspend is locally enabled after 900 seconds; AC stays
 awake. Notification screen-wakeup triggers were locally disabled for the
 long test. Suspend counters grew by 104 successes without new failures;
@@ -125,8 +125,9 @@ must not be treated as the current live value. No charge parameters, fuel-
 gauge learning data or battery IRQ wake controls were changed in this test.
 
 Debugfs is disabled in this kernel. Readable RPMh master and DDR residency
-statistics exist in sysfs; a before/after controlled comparison is still
-needed before attributing the residual consumption to a hardware domain.
+statistics exist in sysfs. The subsequent controlled comparisons below
+show sleeping masters but unchanged DDR counters; they do not identify the
+residual consumer.
 
 ## Repeated RPMh and CPU-idle comparisons — 2026-10-03
 
@@ -162,3 +163,37 @@ collision during the first activation was corrected before successful
 deployment. Reboot and long-duration validation remain pending. All
 currents are short-interval fuel-gauge estimates; acceptable long-term
 battery life and an authenticated capacity/profile are not established.
+
+
+## Suspend trace with the CPU-idle opt-in active — 2026-10-03
+
+A finite collector used a private tracefs instance, without changing global
+tracing, charging policy or regulator settings. It recorded 2,716 events;
+the buffer retained all 2,716, without overflow. USB was unplugged for the
+measurement and the RTC requested a 120-second deep suspend.
+
+The before/after interval was 121.987 seconds, including 121.761 seconds
+asleep according to the kernel. The charge counter implied 96.21 mA average.
+Suspend success increased by one, failures did not increase, and RTC IRQ 323
+caused resume. APSS accumulated 121.795 seconds asleep and ADSP 121.980
+seconds at the source-defined 19.2 MHz timebase. These are fuel-gauge and
+kernel-counter observations, not external power measurements.
+
+The trace selected L3 cluster index 1 with `idle:0` during system suspend;
+the live device tree names this level `llcc-off`. RPMh command writes were
+recorded around the transition. This confirms the selected path and emitted
+commands, not the independently measured power state of every resource.
+The trace timestamp stayed unchanged across machine_suspend and advanced
+during syscore_resume: the apparent zero-duration machine_suspend event must
+not override the elapsed-time and sleep-counter evidence.
+
+DDR residency was identical before and after. Its displayed percentages
+cannot be used to claim active DDR frequency during this interval. Likewise,
+a readable GPU clock value alone is not evidence that the GPU was powered.
+No hardware domain is identified as the residual consumer by this trace.
+
+After reconnect, the private trace instance was removed, USB online read 1,
+battery status read Charging, and the CPU-idle service remained active with
+`sleep_disabled=N`. No new boot was built or flashed. Approximately 96 mA
+reported deep-suspend consumption remains unresolved; capacity/profile
+accuracy and long-duration runtime still need validation.

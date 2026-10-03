@@ -182,3 +182,9 @@ images/cmdline and the historical golden are unchanged. Reboot and long-run
 validation remain pending. Deep-suspend current still reports about 97 mA;
 acceptable autonomy and fuel-gauge accuracy are not yet established. See
 `userspace/power/README.md` and the 2026-10-03 validation record.
+
+A subsequent private tracefs collection recorded 121.761 seconds of deep
+suspend without new failures, with APSS/ADSP asleep almost throughout
+and approximately 96.2 mA reported consumption. Static DDR counters
+do not identify a memory-power fault; the residual consumer remains
+unresolved. The trace instance was removed after reconnect.

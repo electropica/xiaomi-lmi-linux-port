@@ -115,3 +115,9 @@ pending. Install the helper as `/usr/local/sbin/lmi-cpu-idle` and the unit
 as `/etc/systemd/system/lmi-cpu-idle.service`, with the explicit local marker.
 Disable/stop the service to restore the saved parameter. No charge current,
 capacity-learning data or thermal protections are modified.
+
+A subsequent private tracefs collection recorded 121.761 seconds of deep
+suspend without new failures, with APSS/ADSP asleep almost throughout
+and approximately 96.2 mA reported consumption. Static DDR counters
+do not identify a memory-power fault; the residual consumer remains
+unresolved. The trace instance was removed after reconnect.
