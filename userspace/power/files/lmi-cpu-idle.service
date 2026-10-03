@@ -1,0 +1,14 @@
+[Unit]
+Description=Validated lmi CPU idle opt-in
+ConditionPathExists=/etc/lmi/cpu-idle-opt-in
+ConditionPathExists=/sys/module/lpm_levels/parameters/sleep_disabled
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/lmi-cpu-idle --enable
+ExecStop=/usr/local/sbin/lmi-cpu-idle --restore
+ExecStopPost=/usr/local/sbin/lmi-cpu-idle --restore
+
+[Install]
+WantedBy=multi-user.target

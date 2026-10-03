@@ -127,3 +127,38 @@ gauge learning data or battery IRQ wake controls were changed in this test.
 Debugfs is disabled in this kernel. Readable RPMh master and DDR residency
 statistics exist in sysfs; a before/after controlled comparison is still
 needed before attributing the residual consumption to a hardware domain.
+
+## Repeated RPMh and CPU-idle comparisons — 2026-10-03
+
+With Wi-Fi enabled, a 181.830-second interval reported 99.75 mA from the charge
+counter. APSS slept 181.633 seconds and ADSP 181.826 seconds (19.2 MHz counter
+conversion); RTC caused the only system resume. DDR residency was unchanged,
+so its static frequency percentages cannot establish current memory activity.
+
+With Wi-Fi temporarily disabled through NetworkManager, a 181.912-second
+interval reported 96.48 mA. APSS and ADSP again slept almost the full interval.
+The small difference does not establish Wi-Fi as the main residual consumer;
+Wi-Fi was explicitly restored. No driver or regulator was force-disabled.
+
+The live cmdline and sysfs parameter explicitly disable deeper CPU idle:
+`lpm_levels.sleep_disabled=1`, parameter `Y`, no C1 usage. In the exact source,
+`lpm_disallowed()` rejects normal cpuidle levels when this flag is set;
+`lpm_suspend_enter()` uses a separate suspend path. This distinction explains
+why deep suspend could work while awake idle was still inefficient.
+
+A finite test measured baseline awake idle for 30.111 seconds at 208.39 mA
+with zero C1 entries, then 30.138 seconds at 100.82 mA with 831 C1 entries
+with the parameter `N`. A following 181.471-second suspend reported 97.21 mA
+and succeeded without additional failures; APSS/ADSP slept almost throughout.
+The original `Y` setting was restored and checked after reconnect.
+
+A subsequent connected runtime test with `N` kept SSH/USB, Phosh and UPower
+active and increased CPU0 C1 entries from 354 to 631 over 15 seconds. The
+operator confirmed normal touch, music and volume controls. The optional
+CPU-idle service was then installed, enabled and activated with the local
+marker. Its stop/start check restored `Y`, removed the temporary state and
+reactivated `N`; USB remained available. A staging-file/state-directory name
+collision during the first activation was corrected before successful
+deployment. Reboot and long-duration validation remain pending. All
+currents are short-interval fuel-gauge estimates; acceptable long-term
+battery life and an authenticated capacity/profile are not established.

@@ -170,3 +170,15 @@ build parameters. Korean-interface/Turkish-document rendering is an intended
 validation scenario, not yet an image/hardware result. No new image was built
 and the battery-test phone was not changed. See the Phosh recipe README for
 remaining input-method, runtime language selection and translation limits.
+
+## CPU idle improvement — installed 2026-10-03
+
+A legacy `lpm_levels.sleep_disabled=1` boot parameter blocks deeper CPU idle
+between activities. A controlled test reported awake-idle current dropping
+from 208.4 to 100.8 mA with 831 C1 entries after a runtime opt-in. Touch,
+music, volume and USB remained functional. The phone-local opt-in service is
+installed and enabled; stopping it restores the original parameter. Boot
+images/cmdline and the historical golden are unchanged. Reboot and long-run
+validation remain pending. Deep-suspend current still reports about 97 mA;
+acceptable autonomy and fuel-gauge accuracy are not yet established. See
+`userspace/power/README.md` and the 2026-10-03 validation record.

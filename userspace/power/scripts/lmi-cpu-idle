@@ -1,0 +1,27 @@
+#!/bin/sh
+# Phone-local opt-in only; never changes boot images or charge parameters.
+set -eu
+setting=/sys/module/lpm_levels/parameters/sleep_disabled
+state=/run/lmi-cpu-idle-state/original
+case ${1:-} in
+ --enable)
+  test "$(uname -r)" = 4.19.325-cip128-st12-perf-ga5b3099017ae-dirty
+  original=$(cat "$setting")
+  case "$original" in Y|N) ;; *) exit 1;; esac
+  install -d -m 700 /run/lmi-cpu-idle-state
+  test ! -e "$state"
+  printf '%s\n' "$original" > "$state"
+  printf N > "$setting"
+  test "$(cat "$setting")" = N
+  ;;
+ --restore)
+  test -e "$state" || exit 0
+  original=$(cat "$state")
+  case "$original" in Y|N) ;; *) exit 1;; esac
+  printf '%s' "$original" > "$setting"
+  test "$(cat "$setting")" = "$original"
+  rm -- "$state"
+  rmdir /run/lmi-cpu-idle-state
+  ;;
+ *) echo 'Usage: lmi-cpu-idle --enable|--restore' >&2; exit 2;;
+esac

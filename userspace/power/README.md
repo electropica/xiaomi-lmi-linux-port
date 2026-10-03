@@ -93,3 +93,25 @@ capacity, enable suspend or change charger parameters. With the opt-in,
 `OnBattery=false` was obtained while charging even though the USB supply
 remained unexported. A separate USB scope correction is still needed for
 explicit representation of that supply; it was not applied here.
+
+## CPU idle opt-in — 2026-10-03
+
+The running diagnostic boot passes `lpm_levels.sleep_disabled=1`; the live
+parameter is `Y`, blocking non-default cpuidle selection. A controlled unplugged
+comparison reported 208.4 mA awake idle with zero C1 entries, then 100.8 mA
+with 831 C1 entries after setting it to `N`. Deep suspend succeeded and still
+reported 97.2 mA. This is evidence of an awake-idle improvement, not a complete
+fix for deep-suspend consumption or fuel-gauge accuracy.
+
+The opt-in helper and service are limited to the exact tested kernel release.
+They retain the previous runtime setting and restore it on service stop.
+Installation does not alter boot cmdline, kernel or battery charge parameters.
+The service requires `/etc/lmi/cpu-idle-opt-in`; the marker is local and must
+not be included in generic images before wider validation. No automatic
+integration into the next image builder is made by this patch. Runtime USB remained functional and the operator confirmed touch, music and
+volume controls. The phone-local service is installed, enabled and active;
+its stop/start rollback was tested. Long-run and reboot validation remain
+pending. Install the helper as `/usr/local/sbin/lmi-cpu-idle` and the unit
+as `/etc/systemd/system/lmi-cpu-idle.service`, with the explicit local marker.
+Disable/stop the service to restore the saved parameter. No charge current,
+capacity-learning data or thermal protections are modified.
