@@ -956,3 +956,13 @@ validated and it is not the running kernel. The reproducible inspection and
 backend acceptance gates are in the [camera README](../../userspace/camera/README.md#oem-backend-feasibility--2026-10-04).
 Camera capture remains blocked; this is progress on identifying prerequisites,
 not a working camera or a replacement app installation.
+
+### Isolated camera HIDL milestone
+
+The HIDL manager was found in system_ext and registered on private Binder
+after a diagnostic-only synthetic-context adaptation for the no-SELinux
+kernel. Physical camera nodes and networking were excluded; no camera
+provider or capture was started. Runtime CPU use was unexpectedly high and
+properties/client IPC remain unresolved. The process and all temporary
+mounts/mappings were removed. See the [backend test and limits](../../userspace/camera/README.md#isolated-hidl-registration-milestone--2026-10-04).
+Megapixels remains nonfunctional; this milestone does not change that status.

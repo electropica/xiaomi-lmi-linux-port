@@ -881,3 +881,9 @@ present, but missing Binder nodes/properties and a broken HIDL-manager target.
 A read-only probe is now preserved; no Android service or capture was started.
 The alternate CAMSS/OV13B10 source is distinct from the running kernel and is
 not a validated camera. See the [backend prerequisites](../../userspace/camera/README.md#oem-backend-feasibility--2026-10-04).
+
+The isolated HIDL follow-up located the manager in system_ext and obtained
+private Binder registration with a test-only synthetic context. No camera
+device/provider was exposed. High CPU and missing properties remain blockers;
+all runtime processes, mounts and loop mappings were removed. Details and
+source-only diagnostics are in the [camera milestone](../../userspace/camera/README.md#isolated-hidl-registration-milestone--2026-10-04).

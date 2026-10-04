@@ -64,3 +64,54 @@ integration displays a preview and saves/reopens that image; only then test
 controls and additional capabilities. The current work completes inspection,
 not these capture gates. No vendor binaries, output inventory, partition data
 or private device information are included in Git.
+
+## Isolated HIDL registration milestone — 2026-10-04
+
+The Android linker's documented `--list` mode resolved the provider and camera
+module dependency trees with exit status 0 in the observed runs; a missing
+generated linker-configuration warning remains. This maps dependency objects,
+not a successful HAL initialization or capture. The
+[AOSP linker implementation](https://android.googlesource.com/platform/bionic/+/94657009839a4918337ac069652085906e3ee322/linker/linker_main.cpp)
+documents this list mode separately from target execution.
+
+The apparent missing HIDL manager was located in the existing `system_ext`
+logical partition. A [read-only metadata reader](diagnostics/inspect-system-ext-metadata.py)
+checked geometry, header and table checksums before its single linear extent
+was inspected. The manager is 99,832 bytes and uses the Android bootstrap
+linker. System and vendor both report Android SDK 36. A private mount used a
+read-only loop and `ro,noload,nosuid,nodev,noexec`; it was then removed. No
+partition was copied, repaired or written.
+
+An isolated runtime then mounted system/vendor/runtime/system_ext read-only
+and created private BinderFS devices. Mount and network namespaces were
+separate; its device tree exposed null, urandom, ashmem and private Binder,
+but no video/media/subdevice/block/DRM devices. All three Binder protocol
+queries returned version 8. The unchanged HIDL manager aborted with
+`Failed to acquire hwservicemanager context.` The running kernel has
+`CONFIG_SECURITY_SELINUX` disabled. AOSP's
+[AccessControl implementation](https://android.googlesource.com/platform/system/hwservicemanager/+/e609036145cd4457439e4798878f6ff5bf9c756f/AccessControl.cpp)
+places this error at the failed `getcon` call; this supports the failure
+interpretation, without asserting an exact source match for the OEM binary.
+
+The [private context test source](diagnostics/private-context-test.c) supplies
+one synthetic process context solely to this diagnostic runtime. It is not
+installed by any recipe, not a production policy, and must not be preloaded
+into the host session. With it, the manager stayed active for the six-second
+test and a second context-manager registration attempt returned `EBUSY`,
+showing the private HIDL manager already owned that Binder context. No camera
+provider was started. This is registration evidence, not full IPC validation.
+
+The final test used a real 256 MiB cgroup memory cap, zero swap, at most 64
+tasks and a 25-second outer runtime limit. An earlier 384 MiB address-space
+limit was unsuitable for Scudo's large virtual reservation and is not
+recommended. Missing Android property service warnings remain. CPU time was
+6.222 seconds over a 6.280-second test: unexpectedly high, requiring diagnosis
+before enabling camera hardware. The process group was stopped; mounts,
+temporary root and loop mapping were removed. No HIDL process remained.
+
+Next gates: explain the busy runtime and implement coherent properties;
+verify real client/server IPC in the isolated environment; only then permit
+the camera provider and bounded sensor enumeration. A native-app capture
+bridge is still required. Do not interpret a synthetic-context startup as a
+security or production-runtime solution. Test binaries, partition metadata
+output and phone-private wrappers stay outside Git.
