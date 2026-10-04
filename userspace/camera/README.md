@@ -284,3 +284,21 @@ no stream or capture request. The private mount settings and process-lifetime
 limitations above still apply. Temporary supervisor paths refer to the
 metadata inspector installed as `/tmp/lmi-camera-super-metadata.py`, from
 [the source-only super metadata inspector](diagnostics/inspect-system-ext-metadata.py).
+
+The rear ID 0 metadata advertised 23 BLOB output sizes and JPEG maximum
+size 32,572,808 bytes. A single 320 x 240 JFIF BLOB stream configured
+successfully, returning usage 0x20003 and max_buffers 8; close returned 0.
+No buffer or capture request was submitted. The preparation probe's
+`--configure` flag reproduces this bounded stream-only check.
+
+The [legacy allocation probe](diagnostics/camera-gralloc-allocate.c) then
+returned -2 for a 16 MiB BLOB allocation. A syscall trace showed no ION
+open or ioctl. Static inspection established that `gralloc.default.so` is
+an AOSP legacy ashmem allocator, not the Qualcomm DMA-buffer allocator:
+its BLOB allocation calls `ashmem_create_region` and propagates -errno.
+Fixing that path alone would not establish a compatible camera handle.
+Existing external Qualcomm gralloccore/QTI and mapper 3/4 implementations
+are the next allocation candidates. A production capture must size the
+buffer from the JPEG maximum metadata and honor the HAL-returned usage;
+the 16 MiB failed allocator test is not a valid capture-buffer recipe.
+Megapixels still has no working preview or photo capture.
