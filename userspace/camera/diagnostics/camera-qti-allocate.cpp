@@ -3,16 +3,29 @@
  * Descriptor declarations derived from Qualcomm/LF public source:
  * https://android.googlesource.com/platform/hardware/qcom/sm7250/display/+/refs/heads/android12-s2-release/gralloc/gr_buf_descriptor.h
  * Copyright (c) 2016-2018, 2020, The Linux Foundation. All rights reserved.
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided the above copyright notice, this list of conditions and
- * disclaimer are retained. Binary redistributions must reproduce them in the
- * documentation and/or other materials. Neither the name of The Linux Foundation
- * nor its contributors may endorse derived products without prior permission.
- * THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. COPYRIGHT
- * HOLDERS AND CONTRIBUTORS ARE NOT LIABLE FOR DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES HOWEVER CAUSED, ON ANY THEORY
- * OF LIABILITY, ARISING FROM USE OF THE SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of The Linux Foundation nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+ * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Use only with the inspected vendor library ABI and matching system libc++.so.
  * Binary accesses verified: name0,width24,height28,format32,layers36,usage40,

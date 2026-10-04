@@ -31,12 +31,27 @@ try:
         dst=root/target; dst.mkdir(parents=True,exist_ok=True)
         run('mount','--bind',source,str(dst)); mounts.append(dst)
         run('mount','-o','remount,bind,ro',str(dst))
+    settings=Path('/vendor/etc/camera/camxoverridesettings.txt').read_text()
+    assert settings.splitlines().count('enableNCSService=TRUE') == 1
+    replacement=root/'private-camxoverridesettings.txt'
+    replacement.write_text(settings.replace('enableNCSService=TRUE','enableNCSService=FALSE'))
+    target=root/'vendor/etc/camera/camxoverridesettings.txt'
+    run('mount','--bind',str(replacement),str(target)); mounts.append(target)
+    run('mount','-o','remount,bind,ro',str(target))
+    print('PRIVATE_CAMERA_NCS_DISABLED_NO_IMU_SERVICE',flush=True)
     firmware=root/'lib/firmware/postmarketos/CAMERA_ICP.elf'
     firmware.touch()
     run('mount','--bind','/vendor/firmware/CAMERA_ICP.elf',str(firmware)); mounts.append(firmware)
     run('mount','-o','remount,bind,ro',str(firmware))
+    output=Path('/tmp/lmi-camera-capture-20261004')
+    output.mkdir(mode=0o700,exist_ok=False)
+    destination=root/'data/vendor/camera'
+    run('mount','--bind',str(output),str(destination)); mounts.append(destination)
+    bridge=root/'liblmi_qti_bridge.so'; bridge.touch()
+    run('mount','--bind','/tmp/liblmi_qti_bridge.so',str(bridge)); mounts.append(bridge)
+    run('mount','-o','remount,bind,ro',str(bridge))
     probe=root/'private-camera-enumerate'; probe.touch()
-    run('mount','--bind','/tmp/camera-module-enumerate',str(probe)); mounts.append(probe)
+    run('mount','--bind','/tmp/camera-module-capture',str(probe)); mounts.append(probe)
     run('mount','-o','remount,bind,ro',str(probe))
     loop=run('losetup','--find','--show','--read-only','--offset',str(start),'--sizelimit',str(size),'/dev/block/by-name/super')
     assert loop.startswith('/dev/loop') and loop[9:].isdigit()
@@ -81,7 +96,7 @@ try:
         os.chdir('/')
     os.environ['LMI_PRIVATE_BINDER_NO_SECCTX']='1'
     child=subprocess.Popen(['/system/bin/bootstrap/linker64','/system_ext/bin/hwservicemanager'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True,preexec_fn=limits,env={'PATH':'/system/bin','ANDROID_ROOT':'/system','ANDROID_DATA':'/data','LD_PRELOAD':'/private-context-test.so','LMI_PRIVATE_CONTEXT_ACTIVE':'1','LMI_PRIVATE_BINDER_NO_SECCTX':'1','LMI_PRIVATE_PEER_CHECK':'1'})
-    time.sleep(1)
+    time.sleep(2)
     registered=False
     with (root/'dev/hwbinder').open('rb',buffering=0) as f:
         try:
@@ -120,7 +135,7 @@ try:
         assert 'android.hidl.manager@1.2::IServiceManager/default' in client_output
         assert 'android.hidl.token@1.0::ITokenManager/default' in client_output
         print('CLIENT_SERVICE_QUERY_WORKS_DEBUG_PID_METADATA_WARNING',flush=True)
-    provider=subprocess.Popen(['/system/bin/sh','-c','kill -STOP $$; exec /private-camera-enumerate'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True,preexec_fn=limits,env={'PATH':'/system/bin','ANDROID_ROOT':'/system','ANDROID_DATA':'/data','LD_PRELOAD':'/private-context-test.so','LMI_PRIVATE_CONTEXT_ACTIVE':'1','LMI_PRIVATE_BINDER_NO_SECCTX':'1','LMI_PRIVATE_HIDL_READY_CHECKED':'1','LMI_PRIVATE_BOOT_HARDWARE':'qcom','LMI_PRIVATE_BOOT_PLATFORM':'kona'})
+    provider=subprocess.Popen(['/system/bin/sh','-c','kill -STOP $$; exec /private-camera-enumerate 0'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True,preexec_fn=limits,env={'PATH':'/system/bin','ANDROID_ROOT':'/system','ANDROID_DATA':'/data','LD_PRELOAD':'/private-context-test.so','LMI_PRIVATE_CONTEXT_ACTIVE':'1','LMI_PRIVATE_BINDER_NO_SECCTX':'1','LMI_PRIVATE_HIDL_READY_CHECKED':'1','LD_LIBRARY_PATH':'/','LMI_PRIVATE_BOOT_HARDWARE':'qcom','LMI_PRIVATE_BOOT_PLATFORM':'kona'})
     deadline=time.monotonic()+1
     while time.monotonic()<deadline:
         status_line=next(line for line in Path('/proc',str(provider.pid),'status').read_text().splitlines() if line.startswith('State:'))
@@ -131,19 +146,12 @@ try:
         raise RuntimeError('provider did not stop at identity gate')
     (root/'checked-client.pid').write_text(str(provider.pid)+'\n')
     os.kill(provider.pid,signal.SIGCONT)
-    time.sleep(25)
+    time.sleep(2)
     if provider.poll() is None:
         print('MODULE_THREAD_WAITS '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc',str(provider.pid),'task').iterdir()}),flush=True)
         print('MANAGER_THREAD_WAITS '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc',str(child.pid),'task').iterdir()}),flush=True)
-        try:
-            trace=subprocess.run(['gdb','-nx','-nh','-batch','-ex','set auto-load off','-ex','set auto-solib-add off','-ex','set pagination off','-ex','set sysroot /proc/'+str(provider.pid)+'/root','-p',str(provider.pid),'-ex','sharedlibrary libc.so|libcamx|camera.qcom|libhidlbase|libOpenCL','-ex','thread 1','-ex','bt 16','-ex','info registers pc x0 x1 x2 x8 x9 x30','-ex','info proc mappings','-ex','detach'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=8)
-            Path('/tmp/lmi-camera-native-backtrace.log').write_text(trace.stdout)
-            frames='\n'.join(line for line in trace.stdout.splitlines() if line.startswith(('#','pc ','x0 ','x1 ','x2 ','x8 ','x9 ','x30 ')) or 'camera.qcom.so' in line or 'com.qti.chi.override.so' in line)
-            print('MODULE_USER_BACKTRACE result='+str(trace.returncode)+'\n'+(frames or trace.stdout[-1800:]),flush=True)
-        except subprocess.TimeoutExpired:
-            print('BACKTRACE_DEADLINE_REACHED',flush=True)
     try:
-        provider_output,_=provider.communicate(timeout=2)
+        provider_output,_=provider.communicate(timeout=35)
         provider_status=provider.returncode
     except subprocess.TimeoutExpired:
         print('MODULE_FINAL_THREAD_WAITS '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc',str(provider.pid),'task').iterdir()}),flush=True)

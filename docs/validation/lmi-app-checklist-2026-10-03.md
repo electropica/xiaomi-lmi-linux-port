@@ -985,3 +985,10 @@ several real candidate EEPROM probes succeeded. The direct camera module
 now returns eight OEM IDs when the unavailable NCS/IMU service is disabled privately. These are backend
 milestones, not a working photo application. See the [sensor progress and
 capture gates](../../userspace/camera/README.md#oem-module-and-sensor-probe-progress--2026-10-04).
+
+
+Rear camera diagnostic (2026-10-04): a real 320 x 240 JPEG request returned
+an OK buffer and a decodable JPEG via the verified Qualcomm allocation
+bridge. The first image was nearly black; scene/exposure remains unvalidated.
+This does not make Megapixels functional. Sources and limits are documented
+in [first rear JPEG diagnostic](../../userspace/camera/README.md#first-rear-jpeg-diagnostic--2026-10-04).

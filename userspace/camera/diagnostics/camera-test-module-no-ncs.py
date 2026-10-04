@@ -176,6 +176,3 @@ finally:
         run('losetup','--detach',loop)
     root.rmdir()
     print('ISOLATED_RUNTIME_REMOVED',flush=True)
-
-
-

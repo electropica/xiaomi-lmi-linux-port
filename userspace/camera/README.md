@@ -314,3 +314,53 @@ handle also returned 0. No image data was read and no camera request was
 submitted by this allocation-only test. The installed libraries remain
 external inputs; neither their binaries nor any photo belongs in Git.
 This verifies an allocation route, not yet full CamX buffer compatibility.
+
+## First rear JPEG diagnostic — 2026-10-04
+
+The [single-frame capture probe](diagnostics/camera-module-capture.c), with
+its [QTI buffer bridge](diagnostics/camera-qti-bridge.cpp), submitted one
+STILL_CAPTURE request on rear ID 0 at 320 x 240. The HAL returned 0,
+metadata partials 1/2 and an output buffer with status OK, no error and no
+release fence. QTI CPU lock/unlock, device close and buffer release returned
+0. A bounded unique-footer diagnostic identified JPEG footer offset 416,708
+and JPEG size 4,594 bytes. The file decoded at 320 x 240 but was nearly
+black: scene/exposure correctness remains unvalidated. Photos and vendor
+calibration outputs are private temporary data, never Git artifacts.
+
+The footer position exactly matches Android's resolution-scaled JPEG
+buffer sizing: 416,716 logical bytes for 320 x 240 using maximum 4624 x 3472,
+JPEG maximum 32,572,808 and minimum 256 KiB + 8; the footer is eight bytes
+before that logical end. See
+[AOSP Camera3Device::getJpegBufferSize](https://android.googlesource.com/platform/frameworks/av/+/d56db1d/services/camera/libcameraservice/device3/Camera3Device.cpp).
+The buffer's physical capacity is not its resolution-scaled JPEG end.
+The current diagnostic accepts only a unique bounded footer with matching
+SOI/EOI and size; a production client should compute the documented size.
+
+The bridge validates the installed vendor native-handle header/magic before
+reading its mapped base at offset 84, after vendor LockBuffer success. That
+field and the allocation size at offset 72 were verified against both the
+public packed Qualcomm handle and the installed library instructions.
+It only manages handles it allocated, refuses release while locked and
+requires this exact inspected ABI. It is a diagnostic, not a portable HAL.
+The [private capture supervisor](diagnostics/camera-test-capture.py) requires
+a new private temporary output directory and manual temporary binaries;
+the successful tests used 640 MiB, zero swap, 128 tasks and a 48-second
+outer deadline. All runtimes were stopped/unmounted and loop devices
+released. Megapixels remains nonfunctional; preview, exposure validation
+and native app integration are separate outstanding gates.
+
+A second capture after the user oriented the rear lens toward a lit object
+also produced a valid 320 x 240 JPEG (4,590 bytes) but remained nearly black.
+Correct scene reproduction is therefore still blocked; a covered lens alone
+does not explain the observations. A bounded multi-frame exposure check is
+the next diagnostic, not a declaration of a working camera app.
+
+A bounded five-request follow-up reused the same vendor buffer only after
+each matching result/fence and CPU unlock. Frames 1 through 4 were discarded;
+only frame 5 was saved. All five requests returned OK output buffers and
+validated JPEGs; the fifth file was 4,646 bytes and decoded at 320 x 240,
+but remained nearly black. The current capture source includes that five-
+request diagnostic. Additional frames alone did not establish correct
+exposure. The next useful checks are public 3A/exposure result metadata,
+actual sensor exposure programming and the selected physical camera path,
+before preview or Megapixels integration. No camera-front mechanism was used.
