@@ -115,3 +115,56 @@ the camera provider and bounded sensor enumeration. A native-app capture
 bridge is still required. Do not interpret a synthetic-context startup as a
 security or production-runtime solution. Test binaries, partition metadata
 output and phone-private wrappers stay outside Git.
+
+## Readiness spin resolved; client IPC blocked — 2026-10-04
+
+This follow-up supersedes the unexplained high-CPU observation above, but
+does not validate a camera backend. Bounded tracing found no syscalls during
+the spin; a one-second, 49 Hz target-only profile placed the dominant samples
+in `WaitForProperty` through `steady_clock::now`. The runtime has no Android
+shared property area. A diagnostic-local `hwservicemanager.ready` token,
+updated by the manager's own property-set call, made the manager wait in
+`do_epoll_wait`. Comparable ten-second unit runs consumed 10.587 seconds of
+CPU before and 429 milliseconds after the token. These are whole-unit totals,
+not isolated manager utilization. Other Android properties are not emulated.
+
+The client receives this local readiness token only after the supervisor
+observes `EBUSY` from a second private Binder context registration attempt.
+`lshal list --types=binderized --neat --interface` then reaches the manager,
+but returns status 8. With the original security-context request enabled,
+Binder reports `EOPNOTSUPP` (-95): the running kernel cannot produce the
+requested transaction security context without SELinux. The matching local
+Binder source places this failure at `security_secid_to_secctx`.
+
+One private test cleared only `FLAT_BINDER_FLAG_TXN_SECURITY_CTX` for the
+context-manager registration. The transaction progressed further, but the
+manager aborted and the client received `DEAD_OBJECT`. An observing hook
+printed the original abort reason while preserving the abort:
+
+```
+Check failed: nullptr == self->getServingStackPointer()
+Pid [diagnostic client] missing service context.
+```
+
+The [Android 16 ServiceManager source](https://android.googlesource.com/platform/system/hwservicemanager/+/refs/heads/android16-release/ServiceManager.cpp)
+contains this check when an incoming transaction has no caller SID. This
+matches the observed failure; it is not a claim of an exact OEM source match.
+Removing the kernel request alone therefore does not provide compatible IPC.
+No assertion was disabled and no production access-control policy was changed.
+
+The expanded [diagnostic source](diagnostics/private-context-test.c) is gated
+by `LMI_PRIVATE_CONTEXT_ACTIVE=1`; the client-readiness flag must be supplied
+only after the private context registration check. It observes aborts and
+contains the failed security-context experiment, not a deployable fix. Its
+variadic ioctl forwarding is limited to the tested pointer-argument callers.
+Never preload it into the host session or an unrestricted camera provider.
+The supervised test retained the 256 MiB / zero-swap / 64-task / 25-second
+limits and excluded physical camera devices. Both processes stopped and all
+private mounts, mappings and temporary roots were removed.
+
+Next prerequisite is a coherent Android runtime bridge with an explicit
+caller-identity/access-control design compatible with this kernel, or a
+separately validated native capture backend. A readiness token and synthetic
+manager label do not satisfy that requirement. Full properties, provider
+initialization, sensor enumeration, preview and still capture remain unvalidated.
+No camera provider was started in these experiments.

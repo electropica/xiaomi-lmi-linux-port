@@ -966,3 +966,13 @@ provider or capture was started. Runtime CPU use was unexpectedly high and
 properties/client IPC remain unresolved. The process and all temporary
 mounts/mappings were removed. See the [backend test and limits](../../userspace/camera/README.md#isolated-hidl-registration-milestone--2026-10-04).
 Megapixels remains nonfunctional; this milestone does not change that status.
+
+
+Camera follow-up (2026-10-04): the private HIDL startup spin was traced to
+waiting for an unavailable Android readiness property. A local diagnostic
+token removed the spin. Real client IPC still fails: this non-SELinux kernel
+cannot supply the requested transaction security context, and omitting the
+request triggers Android 16's missing-caller-context assertion. All test
+processes/mounts were removed; no camera provider or physical capture was
+started. Megapixels remains nonfunctional. See the [measured results and
+remaining runtime prerequisite](../../userspace/camera/README.md#readiness-spin-resolved-client-ipc-blocked--2026-10-04).
