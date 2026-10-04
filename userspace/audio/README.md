@@ -50,3 +50,13 @@ but only Dummy Output exists and no microphone source is exposed. This is
 startup recovery, not speaker/microphone validation. Re-test physical playback
 on the known diagnostic boot before claiming it for this revised configuration.
 See the [application checklist](../../docs/validation/lmi-app-checklist-2026-10-03.md).
+
+## Diagnostic-boot speaker retest — 2026-10-04
+
+After a temporary Fastboot load of the preserved diagnostic boot, the ALSA
+card returned and the revised nonfatal speaker adapter loaded. The operator
+confirmed ten seconds of clear music without distortion. Standard ALSA
+capture produced eight seconds of data with all tested controls restored;
+recognizable microphone sound and application integration remain unvalidated.
+No kernel was installed durably and no microphone source was installed.
+See the [application checklist](../../docs/validation/lmi-app-checklist-2026-10-03.md).

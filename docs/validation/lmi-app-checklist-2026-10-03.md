@@ -680,3 +680,36 @@ audio source. The correction restores server availability when the card is
 absent; it does not restore physical speaker or microphone operation. The
 missing-card warning remains expected. Physical-card playback with the new
 flag awaits the diagnostic boot retest. No kernel/image build or flash ran.
+
+## Diagnostic-boot audio retest — 2026-10-04
+
+The operator loaded the preserved reset-GPIO diagnostic boot temporarily
+through Windows Fastboot. The host file SHA-256 was verified as
+`43132d1ad4a73728e3e4408ff3570d7693d43bc45bbc9ab9945880e1d1ae2638`.
+No partition was flashed. SSH initially refused the connection and became
+available on the next attempt without a USB unplug/replug request.
+
+The ALSA `kona-mtp-snd-card` returned, and the revised PipeWire speaker adapter
+loaded normally with `flags = [ nofail ]`. Ten seconds of the existing music
+fixture played through `pw-play --target=lmi-speaker --volume=0.5` with exit
+status 0. The operator confirmed clear music without distortion. That volume
+is the stream's software setting, not a measurement of speaker loudness.
+No microphone source was automatically exposed to applications.
+
+A private capture experiment used the on-device OEM static overlay's
+`speaker-mic` route, plus the base `audio-record` route: ADC4/INP5 via
+TX SMIC MUX0, DEC0 and TX_CDC_DMA_TX_3 into MultiMedia1. ALSA hooks retained
+and restored all eight controls. PCM preparation succeeded with mono S16_LE,
+48 kHz. A custom nonblocking reader first captured zero frames; an explicit
+start produced a short sample, but a subsequent trial failed with EFAULT and
+kernel `msm_pcm_capture_copy: Invalid dsp buf offset`. That trial is not counted
+as microphone validation.
+
+The existing ALSA aplay executable's standard arecord mode subsequently
+captured exactly 384,000 frames (eight seconds), peak 1,923 and RMS 77.34 in
+signed-16 units. All eight controls matched their original values afterwards.
+No persistent microphone configuration or PipeWire source was installed.
+Capture data exists, but recognition of the recorded video sound and app-level
+recording still require validation. Audio fixtures/recordings remain private,
+outside Git. A preview amplified eight times was prepared without clipping;
+listening confirmation is pending at this checkpoint.

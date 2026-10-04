@@ -238,3 +238,13 @@ remains specific to the temporary diagnostic boot. Its installed opt-in
 PipeWire adapter now tolerates a missing card, allowing the server to start;
 Dummy Output is not physical audio. Diagnostic-boot speaker and microphone
 retesting is pending. See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
+## Diagnostic-boot speaker retest — 2026-10-04
+
+After a temporary Fastboot load of the preserved diagnostic boot, the ALSA
+card returned and the revised nonfatal speaker adapter loaded. The operator
+confirmed ten seconds of clear music without distortion. Standard ALSA
+capture produced eight seconds of data with all tested controls restored;
+recognizable microphone sound and application integration remain unvalidated.
+No kernel was installed durably and no microphone source was installed.
+See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
