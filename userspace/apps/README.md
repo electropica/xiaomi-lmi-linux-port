@@ -13,7 +13,7 @@ of the upstream applications. The original system binaries remain in use.
 | Contacts | [lmi-contacts](files/lmi-contacts) | App-only Cairo workaround for deletion/teardown crash. |
 | Discussions (Chatty) | [lmi-chatty-safe](files/lmi-chatty-safe), [diagnosis and installation scope](CHATTY-LMI.md) | Isolated GStreamer plugin view and bounded memory scope. SMS/MMS and modem remain unvalidated. |
 | Photos (Koko) | [lmi-photos](files/lmi-photos), [thumbnail helper](files/lmi-photos-thumbnails), [diagnosis](PHOTOS-LMI.md) | Mobile launch environment and image-thumbnail workaround. Does not establish camera capture or video support. |
-| Recorder (KRecorder) | [audio integration and opt-in settings](../audio/README.md#microphone-and-recorder-capture--2026-10-04) | Diagnostic-boot microphone route, scheduling workaround and WAV/PCM preferences; not automatically installed by the app installer. |
+| Recorder (KRecorder) | [lmi-recorder](files/lmi-recorder), [audio integration and opt-in settings](../audio/README.md#microphone-and-recorder-capture--2026-10-04) | App-only KDE theme restores action icons and Close. Microphone route, scheduling workaround and WAV/PCM preferences remain opt-in; the app installer stages only the launcher. |
 | Flashlight | [application](files/lmi-flashlight.py), [desktop entry](files/lmi-flashlight.desktop), [usage](files/LMI-FLASHLIGHT.md) | lmi flashlight controls. |
 | Close buttons | [Phosh schema override](../phosh/files/92_lmi-window-controls.gschema.override) | Restores Close in standard GTK headers; custom headers can still omit it. |
 | Oversized windows | [Phoc schema override](../phosh/files/93_lmi-scale-to-fit.gschema.override) | Adjusts oversized windows. Chatty shortcut dismissal tested; Editor still clips. |

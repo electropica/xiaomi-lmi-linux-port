@@ -107,3 +107,25 @@ or a rebuilt image. Remove only the microphone fragment, adapter and the
 two added recorder preferences to roll back; restart user audio services.
 Private recordings, screenshots, firmware and generated images stay out of
 Git. The files are opt-in, not automatically added to the image builder.
+
+
+## Recorder controls and normal launcher — 2026-10-04
+
+The functional recording reported as quiet was confirmed good after replay;
+the operator clarified that playback volume, not microphone gain, was too
+low and set the output to 1.00. Microphone gain remains 1.00.
+
+The default Qt theme left Recorder's Play/Pause, Stop and action buttons
+without visible icons. Selecting `XDG_CURRENT_DESKTOP=KDE` only in Recorder's
+process resolves the already installed Breeze icons and exposes a window
+Close button. The `lmi-recorder` wrapper also retains the tested mobile and
+compose input settings. Phosh and other apps retain their session environment.
+The normal desktop entry keeps upstream translations and invokes the wrapper;
+the app installer stages this wrapper for the next image. Audio configuration
+and version-specific recorder preferences remain a separate opt-in.
+
+On-phone checks: launch from the Phosh icon, record, usable Save/Discard
+dialog with visible icons, save a WAV, and close using the visible window
+button. Playback reached the fixture's eight-second duration; Back returned
+to the list. Other codecs, export destinations and every edit operation
+remain unvalidated. No new image was built and no session-wide theme changed.

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+# Select Qt's KDE theme only for Recorder, so its Breeze action icons resolve.
+# This does not change the Phosh session or other applications.
+export XDG_CURRENT_DESKTOP=KDE
+export QT_QUICK_CONTROLS_MOBILE=1
+export QT_IM_MODULE=compose
+exec /usr/bin/krecorder "$@"

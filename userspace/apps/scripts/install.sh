@@ -64,6 +64,14 @@ sed -i -e 's|^Exec=gnome-text-editor|Exec=/usr/local/bin/lmi-text-editor|' -e 's
 grep -q '^Exec=/usr/local/bin/lmi-text-editor %U$' /usr/local/share/applications/org.gnome.TextEditor.desktop
 
 
+# Recorder: load the existing KDE/Breeze theme only in this process.
+# Preserve upstream translations and use the normal app binary.
+install -m 0755 "$apps_files/lmi-recorder" /usr/local/bin/lmi-recorder
+install -Dm 0644 /usr/share/applications/org.kde.krecorder.desktop /usr/local/share/applications/org.kde.krecorder.desktop
+sed -i 's|^Exec=krecorder$|Exec=/usr/local/bin/lmi-recorder|' /usr/local/share/applications/org.kde.krecorder.desktop
+grep -q '^Exec=/usr/local/bin/lmi-recorder$' /usr/local/share/applications/org.kde.krecorder.desktop
+
+
 # Calculator has its own keypad; suppress automatic OSK only in this app.
 install -m 0755 "$apps_files/lmi-calculator" /usr/local/bin/lmi-calculator
 install -Dm 0644 /usr/share/applications/org.gnome.Calculator.desktop /usr/local/share/applications/org.gnome.Calculator.desktop
