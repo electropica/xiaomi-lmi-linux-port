@@ -728,3 +728,16 @@ then the main window's Close button gives retained exit status 0. No test
 document was changed. Other apps' shortcut dialogs remain unverified after
 the layout change. See the
 [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
+
+## Chatty shortcut-dialog adjustment — 2026-10-04
+
+Phoc's oversized-window adjustment is now enabled in the live session and
+prepared as a next-build schema default. Chatty's shortcut dialog fits and
+passed touch-simulated close/reopen checks with the restored Close layout.
+No message/account was created. Text Editor's shortcut dialog shrinks but
+still clips horizontally; its touch-only exit remains unvalidated. Both
+test applications closed normally and test units were stopped. Transient
+black line artifacts after the preference toggle were absent on the next
+Chatty capture, without establishing GPU stability. See the
+[application checklist](../validation/lmi-app-checklist-2026-10-03.md).

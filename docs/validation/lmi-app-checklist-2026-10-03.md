@@ -1,692 +1,653 @@
-# Checklist des applications lmi — 3 octobre 2026
+# lmi application checklist — October 3, 2026
 
-Chaque application est testée seule. Un démarrage réussi ne valide pas toutes
-ses fonctions. Les confirmations antérieures au redémarrage sont séparées
-des contrôles du démarrage actuel. Aucun compte, message ou contact personnel
-n'est créé pour ces essais. Les actions visuelles attendent la confirmation
-de l'opérateur, sans délai imposé pour effectuer son geste.
+Each application is tested separately. Successful startup does not validate
+every function. Confirmations obtained before a reboot are distinguished from
+checks on the current boot. No personal account, message or contact is created
+for these tests. Requested operator actions wait for confirmation, without a
+deadline for performing the gesture. Autonomous gestures below are explicitly
+identified as simulated input, rather than operator confirmation.
 
-| Application | Fonctionnement global | Fonctionnement des menus | Traduction |
+The table summarizes the latest evidence; the dated sections preserve the
+sequence of earlier findings, corrections and superseding checks. French UI
+labels are retained where useful to identify controls on the test phone.
+
+| Application | Overall functionality | Menu functionality | Translation |
 |---|---|---|---|
-| Discussions (Chatty) | Ouverture et relance confirmées après contournement ; limite réelle de 384 Mio, zéro swap et aucun nouvel OOM dans le contrôle du scope. SMS/MMS non validés, aucun modem détecté. | Défaut signalé : fenêtre « Raccourcis » trop grande/impossible à réduire ; fermeture et adaptation encore à valider. | Paramètres encore en anglais malgré locale française ; catalogue partiel. Correction locale préparée mais non validée, priorité basse. |
-| Calculatrice | 2+3=5 obtenu par boutons tactiles ; fermeture avec code 0 puis relance vérifiées à distance. La relance initiale faisait revenir le clavier : helper GTK simple installé pour supprimer son ouverture automatique dans cette application. Pavé tactile et saisie de touches physiques vérifiés ; pavé entier sans clavier superposé confirmé par l’opérateur. | À tester après résolution du clavier. | À tester. |
-| Fichiers | Création d’un dossier de test via le menu et bouton Créer, présence sur disque, ouverture et retour vérifiés ; fermeture du service avec code 0. Noms chinois confirmés avant redémarrage seulement. Copie/renommage/suppression non validés. | À tester. | À tester ; affichage des noms chinois validé, distinct de la langue des menus. |
-| Éditeur de texte | Saisie, création/enregistrement, réouverture et modification/enregistrement vérifiés sur fichiers de test. Arrêt SIGSEGV constaté avec le rendu initial ; deux fermetures sans erreur obtenues avec le contournement Cairo limité à cet Éditeur. Dialogue Enregistrer sous utilisable au toucher confirmé par l’opérateur avec le lanceur final. | Enregistrer sous via le menu réel crée un fichier distinct au contenu identique ; sélecteur GNOME adapté à l’écran. Préférences et recherche ouvertes puis fermées au toucher. Raccourcis clavier déborde encore ; retour tactile non établi. Impression, remplacement et autres actions restent à tester. | Préférences françaises déjà signalées par l’opérateur ; traduction non prioritaire. |
-| Papiers | PDF de test à deux pages affiché ; passage à la seconde page par glissement tactile, fermeture avec code 0 et réouverture vérifiés. Recherche et annotation non validées. | À tester. | À tester. |
-| Photos (Koko) | Image de test ouverte et zoomée par l’opérateur ; miniature visible sur capture après contournement du cache KIO. Aucune capture caméra validée. | Retour à la galerie fonctionnel et clavier caché confirmés après correction. Menu coulissant accessible ; bandeau Images et libellés encore mal adaptés. Recherche/édition/vidéo non validées. | Libellés français visibles ; couverture complète non validée. |
-| Horloges | Chronomètre : démarrage, progression, tour, pause et remise à zéro vérifiés au toucher simulé. Minuterie : lancement d’une minute, décompte, pause et retrait du seul minuteur de test vérifiés. Expiration et alarmes sonores non validées ; audio à rétablir. | À tester. | À tester. |
-| Agenda | Navigation mensuelle et Aujourd’hui, création locale d’un événement fictif explicitement autorisé, lecture et retrait effectif vérifiés. Réouverture sans reliquat et fermeture normale code 0 confirmées. Synchronisation et rappels non validés. | Dialogue de création/édition et bouton de suppression utilisables après masquage du clavier ; autres menus non validés. | Libellés français visibles, couverture complète non validée. |
-| Contacts | Création locale d’une fiche fictive sans coordonnées, persistance après relance et recherche positive/négative vérifiées. Suppression initiale : SIGSEGV ; deux retraits et fermetures code 0 réussis avec Cairo limité à Contacts. Lanceur installé et prochain build préparé. | Formulaire Ajouter et menu Supprimer testés ; édition, import/export et fusion non validés. | Libellés français visibles ; couverture complète non validée. |
-| Paramètres | Liste principale et pages Souris et pavé tactile, Clavier et Système accessibles au toucher simulé ; deux fermetures normales code 0. Relance sur le dernier panneau confirmée, ouverture sur la liste encore non corrigée. Réglages système non modifiés. | Dialogue Tester les paramètres ouvert, mais sans bouton Fermer visible : touches hors dialogue sans fermeture, sortie par Échap vérifiée. Retour tactile à corriger ; autres sous-menus non validés. | Pages examinées principalement françaises ; couverture complète non validée. |
-| Console | Commande de test et calcul shell affichés. Fin du shell mal détectée : code -1 et erreur GLib waitid(P_PIDFD)=EINVAL. Repli sans pidfd testé temporairement, aucun lanceur durable modifié. | À tester. | À tester. |
-| Lampe torche lmi | Allumer/éteindre confirmés avant redémarrage ; à recontrôler. | Pas de menu supplémentaire testé. | Interface française présente ; pas de validation multilingue. |
-| Amberol | MP3 et volume confirmés avant redémarrage ; aucune carte ALSA détectée après redémarrage. | À tester. | À tester. |
-| Showtime | MP4 confirmé avant redémarrage ; son à rétablir. | À tester. | À tester. |
-| Enregistreur | À tester ; microphone non validé. | À tester. | À tester. |
-| Megapixels | Bloqué : pipeline de capture standard non établi. | Non validé. | Non prioritaire avant capture fonctionnelle. |
-| Appels | Ouverture, relance, onglet Pavé numérique et fermeture normale code 0 vérifiés. Interface indique absence de modem/compte VoIP ; aucun numéro composé ni appel lancé. | Comptes VoIP ouvert ; bouton Fermer rétabli par le réglage de session, retrait du dialogue au toucher vérifié en gardant Appels ouvert. | Libellés français sur les écrans examinés ; couverture complète non validée. |
-| Web | À tester ; DNS Internet défaillant lors du dernier contrôle. | À tester. | À tester. |
-| Cartes | À tester ; réseau et position non validés. | À tester. | À tester. |
-| Météo | À tester ; réseau requis pour l'actualisation. | À tester. | À tester. |
-| Geary | Ouverture et relance sur Comptes sans compte, puis deux fermetures normales code 0. Réception/envoi non validés. | Ajouter ouvre le formulaire ; Retour annule, puis Retour depuis Comptes ferme normalement. Aucun compte créé ni identifiant saisi. | Libellés français et texte d’accueil anglais observés ; couverture partielle. |
+| Discussions (Chatty) | Startup and reopening confirmed after the workaround; actual 384 MiB limit, zero swap and no new OOM in the checked scope. SMS/MMS unvalidated; no modem detected. | Shortcuts initially too wide. With Phoc window adjustment and Close restored, the whole dialog and touch-simulated close/reopen were verified on October 4. Other menus need further checks. | Settings still contain English despite the French locale; partial catalog. Local correction prepared but not fully validated; low priority. |
+| Calculator | 2+3=5 obtained through touch buttons; exit status 0 and reopening checked remotely. Initial reopening brought back the keyboard; an app-only simple GTK input-context helper prevents its automatic appearance. Keypad and injected physical-key input checked; operator confirmed the full keypad without an overlaid keyboard. | Further checks pending after the keyboard correction. | Pending. |
+| Files | Test folder created through the menu and Create button; disk presence, opening and return checked; service exited with status 0. Chinese names confirmed only before reboot. Copy/rename/delete unvalidated. | Pending. | Pending; Chinese filename rendering is validated separately from menu language. |
+| Text Editor | Input, creation/save, reopening and modification/save verified on test files. Initial renderer teardown produced SIGSEGV; two normal closures obtained with app-only Cairo. Operator confirmed touch usability of Save As with the final launcher. | Save As through the actual menu creates a separate file with identical contents; GNOME chooser fits the display. Preferences and search opened and closed through simulated touch. Shortcuts still clip; touch-only dismissal unvalidated. Printing, replacement and other actions pending. | Operator previously reported French preferences; translation is not the priority. |
+| Papers | Two-page test PDF displayed; swipe to page two, exit status 0 and reopening verified. Search and annotation unvalidated. | Pending. | Pending. |
+| Photos (Koko) | Operator opened and zoomed a test image; thumbnail visible in a capture after the KIO cache workaround. No camera capture validated. | Return to gallery and hidden keyboard confirmed after correction. Sliding menu accessible; Images bar and labels remain poorly adapted. Search/editing/video unvalidated. | French labels visible; complete coverage unvalidated. |
+| Clocks | Stopwatch start, progression, lap, pause and reset checked with simulated touch. One-minute timer start, countdown, pause and removal of only the test timer verified. Expiration and audible alarms unvalidated; audio needs restoration. | Pending. | Pending. |
+| Calendar | Month navigation and Today, explicitly authorized local dummy-event creation, reading and removal verified. Reopening without a leftover and normal exit status 0 confirmed. Synchronization and reminders unvalidated. | Creation/edit dialog and Delete usable after hiding the keyboard; other menus unvalidated. | French labels visible; complete coverage unvalidated. |
+| Contacts | Local dummy contact without contact details, persistence after reopening and positive/negative search verified. Initial deletion caused SIGSEGV; two removal/exit-status-0 cycles passed with app-only Cairo. Launcher installed and next build prepared. | Add form and Delete menu tested; editing, import/export and merging unvalidated. | French labels visible; complete coverage unvalidated. |
+| Settings | Overview and Mouse and Touchpad, Keyboard and System pages accessible through simulated touch; two normal exits with status 0. Last-panel restoration confirmed; overview-on-launch unresolved. No system settings changed in that navigation test. | Mouse-test dialog opens without a visible Close button; outside touches did not dismiss it, Escape did. Touch-only dismissal unresolved; other submenus unvalidated. | Examined pages mostly French; complete coverage unvalidated. |
+| Console | Test text and shell arithmetic displayed. Shell termination misdetected: status -1 and GLib waitid(P_PIDFD)=EINVAL. Temporary pidfd fallback tested; no persistent launcher change. | Pending. | Pending. |
+| lmi Flashlight | On/off confirmed before reboot; recheck pending. | No additional menu tested. | French interface present; no multilingual validation. |
+| Amberol | MP3 playback and volume confirmed before reboot; no ALSA card detected after reboot. | Pending. | Pending. |
+| Showtime | MP4 playback confirmed before reboot; audio needs restoration. | Pending. | Pending. |
+| Recorder | Pending; microphone unvalidated. | Pending. | Pending. |
+| Megapixels | Blocked: no established standard capture pipeline. | Unvalidated. | Not the priority before functional capture. |
+| Calls | Startup, reopening, Keypad tab and normal exit status 0 verified. UI reports no modem/VoIP account; no number entered or call placed. | VoIP Accounts opened; session preference restores Close, and simulated touch dismisses the dialog while Calls stays open. | French labels on examined screens; complete coverage unvalidated. |
+| Web | Pending; Internet DNS failed at the last check. | Pending. | Pending. |
+| Maps | Pending; network and position unvalidated. | Pending. | Pending. |
+| Weather | Pending; updates require network access. | Pending. | Pending. |
+| Geary | Startup and reopening on Accounts without an account, then two normal exits with status 0. Receiving/sending unvalidated. | Add opens the form; Back cancels, then Back from Accounts closes normally. No account created or credentials entered. | French labels and English welcome text observed; partial coverage. |
 
-### Contrôles système séparés
+### Separate system checks
 
-- Heure incorrecte signalée par l'opérateur. Lecture du téléphone :
-  `2026-10-02T13:42:19+00:00`, fuseau `Etc/UTC`, `NTPSynchronized=no`, alors
-  que la date opérateur est le 3 octobre 2026 en Europe/Paris. Vérifier à la
-  fois l'horloge/synchronisation et le fuseau ; ne pas attribuer tout le
-  décalage au seul fuseau. Aucun réglage d'heure modifié dans ce contrôle.
-- Clavier : apparition à la saisie sans moyen visible de le masquer.
-  `sm.puri.OSK0.SetVisible(false)` fonctionne par SSH, mais cela ne valide
-  pas un geste ou bouton utilisable depuis l'interface. Problème ouvert.
+- Operator reported incorrect time. Phone reading: `2026-10-02T13:42:19+00:00`,
+  timezone `Etc/UTC`, `NTPSynchronized=no`, while the operator date was
+  October 3, 2026 in Europe/Paris. Check the clock/synchronization and timezone;
+  do not attribute the entire offset to the timezone alone. No time setting
+  changed during this initial check; the later correction is recorded below.
+- Keyboard appears during input without a visible hide control.
+  `sm.puri.OSK0.SetVisible(false)` works over SSH, but this alone does not
+  validate a gesture or button usable from the UI. Issue remains open;
+  subsequent simulated long-press checks are distinguished below.
 
-Priorité décidée par l'opérateur : fonctionnement global, puis menus,
-puis traduction. Une seule application active dans le protocole d'essai ;
-laisser le temps de confirmer chaque geste. Les derniers essais globaux concernent Calculatrice et Horloges ; les résultats Éditeur, Chatty et Photos restent conservés.
+Operator priority: overall functionality, then menus, then translation.
+One test application at a time, allowing time to confirm each physical
+gesture. Calculator and Clocks were the latest overall-function checks at
+the initial checkpoint; Editor, Chatty and Photos evidence remains preserved.
 
-## Ordre de validation
+## Initial validation order
 
-Terminer l'essai isolé de Chatty et conserver son diagnostic, puis passer à
-Calculatrice, Fichiers, Éditeur de texte, Papiers et Photos. Ensuite vérifier
-les utilitaires, la lampe et les applications multimédia. Les fonctions
-caméra, modem et Internet restent explicitement bloquées tant que leurs
-prérequis matériels ou réseau ne sont pas disponibles.
+Finish the isolated Chatty test and preserve its diagnosis, then test
+Calculator, Files, Text Editor, Papers and Photos. Check utilities, flashlight
+and multimedia next. Camera, modem and Internet functions remain explicitly
+blocked while their hardware or network prerequisites are unavailable.
 
-## Incident Chatty
+## Chatty incident
 
-Version installée : 0.8.7-2. Le journal kernel du démarrage précédent indique
-un anonymous RSS de 6 438 704 kB avant la mise à mort du processus. Le bus de
-session a également subi un OOM ; le téléphone a redémarré pendant l'incident.
-Le diagnostic n'a pas envoyé de SMS ni modifié les données utilisateur.
+Installed version: 0.8.7-2. The previous boot's kernel log reports anonymous
+RSS of 6 438 704 kB before the process was killed. The session bus also
+suffered an OOM; the phone rebooted during the incident. Diagnosis sent no
+SMS and changed no user data.
 
-La trace GDB avec arrêt sur la première erreur critique passe par le
-fournisseur video4linux2, le fournisseur uvch264, le moniteur de périphériques
-GStreamer et libpurple. Abaisser les rangs des fournisseurs n'a pas suffi.
-Une vue de plugins isolée excluant `libgstvideo4linux2.so` et
-`libgstuvch264.so`, avec un registre séparé, permet au processus de rester
-actif lors du contrôle initial. Cela désigne la détection vidéo comme piste
-causale du démarrage, sans établir encore l'erreur exacte du pilote/kernel.
-Les paquets GStreamer globaux sont conservés. La messagerie et le modem ne
-sont pas validés par la simple ouverture de l'interface.
+GDB stopped at the first critical error in the video4linux2 provider,
+uvch264 provider, GStreamer device monitor and libpurple path. Lowering
+provider ranks was insufficient. An isolated plugin view excluding
+`libgstvideo4linux2.so` and `libgstuvch264.so`, with a separate registry,
+kept the process alive during the initial check. This identifies video
+detection as a causal lead at startup, without locating the exact
+driver/kernel error. System GStreamer packages remain installed. Opening
+the interface does not validate messaging or the modem.
 
-Le redémarrage a interrompu le suivi batterie temporaire de six heures :
-aucun résultat d'autonomie complète n'est acquis. Le correctif CPU et UPower
-sont actifs ; la carte ALSA n'est plus détectée sur ce démarrage.
+The reboot interrupted the temporary six-hour battery monitor: no complete
+runtime result was obtained. CPU and UPower corrections are active;
+the ALSA card is no longer detected on this boot.
 
+## Recovery after an ordinary relaunch
 
-## Reprise après une relance ordinaire
+The operator closed the isolated test and reopened Discussions through the
+ordinary launcher, which did not yet include the workaround. Consumption
+blocked the session again. Chatty was killed over SSH as soon as access
+returned; available memory rose to approximately 7 GB. The ordinary launcher
+should have been secured before the manual check. This does not establish
+failure of the isolated filter; it confirms the ordinary launch path was
+still unsafe.
 
-L'opérateur a fermé l'essai isolé puis rouvert Discussions avec le lanceur
-ordinaire, qui n'avait pas encore reçu le contournement. La consommation a
-de nouveau bloqué la session. Chatty a été tué par SSH dès son retour ; la
-mémoire disponible est remontée à environ 7 Go. Le lanceur aurait dû être
-sécurisé avant la vérification manuelle ; cet essai ne constitue pas un
-échec du filtrage isolé mais confirme que le chemin de lancement ordinaire
-restait dangereux.
+`userspace/apps/files/lmi-chatty-safe` was then installed locally as
+`/usr/local/bin/lmi-chatty-safe`. Its symlink plugin view excludes only
+video4linux2 and uvch264, using a private registry. User desktop and D-Bus
+launchers now route through the helper. It requests a user systemd scope
+with MemoryMax=384 MiB, MemorySwapMax=0 and TasksMax=128, without an
+unlimited fallback. These changes were not enabled in the generic image
+builder at this checkpoint.
 
-Le helper `userspace/apps/files/lmi-chatty-safe` a ensuite été installé
-localement sous `/usr/local/bin/lmi-chatty-safe`. Une vue de plugins par
-symlinks exclut seulement video4linux2 et uvch264, avec un registre privé.
-Les lanceurs desktop et D-Bus de l'utilisateur pointent désormais vers ce
-helper. Il demande un scope systemd utilisateur avec MemoryMax=384 MiB,
-MemorySwapMax=0 et TasksMax=128, sans repli non limité. Ces changements ne
-sont pas activés dans le constructeur d'image générique.
+Both Exec commands were inspected. User memory delegation was checked after
+reboot: a harmless scope exposed memory.max=402653184 and memory.swap.max=0.
+Both overrides and the helper remained present. No application was launched
+for that delegation check. Normal startup/navigation remained pending at
+this checkpoint, before Discussions could be marked OK.
+The other 20 applications were not validated in this batch; testing stopped
+to preserve the quota reported by the operator.
 
-L'installation a été vérifiée par lecture des deux commandes Exec. La délégation mémoire utilisateur a été vérifiée après redémarrage : un
-scope inoffensif a exposé memory.max=402653184 et memory.swap.max=0. Les deux
-overrides et le helper étaient toujours présents. Aucune application n’a été
-lancée pour ce contrôle. Le lancement normal et la navigation restent à vérifier avant de marquer Discussions OK.
-La validation des 20 autres applications n'a pas été effectuée pendant ce
-lot. Les essais sont arrêtés pour préserver le quota annoncé par l'opérateur.
+After GStreamer plugin updates, links in the isolated view need review.
+Rollback removes only the two created user overrides and installed helper/view;
+original system files and plugins were not changed. Rollback re-exposes the
+initial defect: do not relaunch Chatty without confinement in that state.
 
-Après une mise à jour des plugins GStreamer, les liens de cette vue isolée
-devront être revus. Pour rollback, retirer seulement les deux overrides
-utilisateur créés et le helper/vue installés ; les fichiers et plugins
-système originaux n'ont pas été modifiés. Un rollback réexpose le défaut
-initial : ne pas relancer Chatty sans confinement dans cet état.
+## Targeted recovery: ordinary Discussions launcher
 
+The protected user launcher was tested. The operator confirmed its menu,
+closure and reopening without a freeze. The reopened process belonged to
+a user scope exposing memory.max=402653184, memory.swap.max=0,
+memory.current=71299072 and zero oom/oom_kill events at inspection.
+This supersedes the pending launch/delegation items in earlier notes;
+it does not validate SMS/MMS.
 
-## Reprise ciblée : lanceur habituel de Discussions
+A French correction of only the settings resource was generated locally
+from Chatty 0.8.7-2. It does not modify the system package and is neither
+visual validation nor a generic-builder modification. The operator asked
+to defer translation in favor of functionality.
 
-Le lanceur utilisateur protégé a été testé. L'opérateur a confirmé le menu,
-la fermeture et la relance sans blocage. Le processus relancé appartenait à
-un scope utilisateur exposant memory.max=402653184, memory.swap.max=0,
-memory.current=71299072 et zéro événement oom/oom_kill lors du contrôle.
-Cette validation corrige les points de lancement/délégation encore en attente
-dans les relevés antérieurs ; elle ne valide pas les fonctions SMS/MMS.
+Windows SSH reached the server but could not read the WSL private key
+and host-key file. Existing WSL access remains in use; no private key was
+copied and host verification was not disabled.
 
-Une correction française de la seule ressource de paramètres a été générée
-localement depuis Chatty 0.8.7-2. Elle ne modifie pas le paquet système et n'est
-pas une validation visuelle ni une modification du constructeur générique.
-L'opérateur a demandé de reporter la traduction au profit du fonctionnement.
+## Battery comparison rule: Wi-Fi and UI testing
 
-SSH Windows a atteint le serveur mais refusé la lecture de la clé privée
-dans WSL et du fichier de clés d'hôte. L'accès WSL existant reste utilisé ;
-aucune clé privée n'a été copiée et aucune vérification d'hôte désactivée.
+The operator states that current battery references were recorded without
+Wi-Fi association, with the radio disabled in some tests. Do not mix a future
+Wi-Fi-connected measurement with those references. Record separately: radio
+enabled/disabled, actual association, screen, USB, music/flashlight and CPU
+correction. Unassociated is not equivalent to radio disabled. Detailed
+historical comparisons retain their own Wi-Fi states; none are reclassified here.
 
+A temporary idle+suspend inhibitor tied to USB online was started for UI
+tests, limited to two hours and released when USB goes offline. It changes
+no persistent preferences. Stop it before another battery measurement:
+screen inhibition and USB monitoring are test conditions to control.
+Activation while plugged in was checked; physical unplug behavior was not
+tested in this batch. No new battery test was performed.
 
-## Règle de comparaison batterie — Wi-Fi et essais d'interface
+## Manual time correction — October 3, 2026
 
-L'opérateur précise que les références batterie actuelles ont été prises
-sans connexion Wi-Fi, avec la radio désactivée pour certains essais.
-Ne pas mélanger une future mesure avec Wi-Fi connecté à ces références.
-Consigner séparément : radio activée/désactivée, association Wi-Fi effective,
-écran, USB, musique/lampe et correctif CPU. « Non associé » n'est pas
-équivalent à « radio désactivée ». Les comparaisons historiques détaillées
-conservent leurs états Wi-Fi respectifs ; aucune n'est requalifiée ici.
+The system clock was set from the PC's UTC time; installed timezone is
+Europe/Paris. Verified reading: 2026-10-03T09:55:19+02:00. timedatectl refused
+authorization; root directly updated localtime/timezone and used date.
+No reboot or RTC write occurred. Automatic NTP synchronization and time
+retention after reboot remain unverified. This supersedes the incorrect-time
+status for the current boot, not earlier observations.
 
-Pour les tests d'applications, un inhibiteur temporaire idle+suspend lié à
-USB online a été lancé, limité à deux heures et libéré lorsque l'USB passe
-hors ligne. Il ne change pas les préférences persistantes. Arrêter ce service
-avant une nouvelle mesure batterie : l'écran forcé et le collecteur de
-surveillance USB font partie des conditions d'essai à maîtriser. L'activation
-branchée a été vérifiée ; le débranchement de cette inhibition n'a pas été
-testé physiquement dans ce lot. Aucun nouveau test batterie n'a été effectué.
+## Operator feedback — October 3, after time correction
 
+These are operator reports. OK does not validate hardware functions that
+were not explicitly tested. Priority: overall functionality, menus, then
+translation; one application at a time.
 
-## Correction manuelle de l'heure — 3 octobre 2026
-
-L'horloge système a été réglée depuis l'UTC du PC et le fuseau installé est
-Europe/Paris. Lecture vérifiée : 2026-10-03T09:55:19+02:00. timedatectl a
-refusé l'autorisation ; les fichiers localtime/timezone et date ont été
-réglés directement par root. Aucun redémarrage ni écriture RTC effectué.
-La synchronisation NTP automatique et le maintien de l'heure après un
-redémarrage restent à vérifier. Ce résultat remplace le statut « heure
-incorrecte » pour le démarrage courant, pas pour les observations antérieures.
-
-
-## Retour manuel du 3 octobre — après correction de l'heure
-
-Ces résultats viennent de l'opérateur. « OK » ne valide pas une fonction
-matérielle non explicitement essayée. Priorité : fonctionnement global,
-menus, puis traduction ; une application à la fois.
-
-| Application | Fonctionnement global | Fonctionnement des menus | Traduction |
+| Application | Overall functionality | Menu functionality | Translation |
 |---|---|---|---|
-| Éditeur de texte | Fermeture impossible signalée, puis disparition après plusieurs minutes ; crash non confirmé. | Enregistrer/Enregistrer sous débordent de l'écran. Préférences accessibles. | Préférences françaises confirmées. |
-| Appels | Interface OK ; appel et modem non validés. | Pas de défaut rapporté. | Non évaluée séparément. |
-| Discussions | Fonctionnement confirmé après contournement du blocage. | Raccourcis trop grands, retour impossible. | Préférences partiellement françaises ; correction complète reportée. |
-| Contacts | OK selon l'opérateur. | Pas de défaut rapporté. | Non évaluée séparément. |
-| Amberol | Lecture auparavant validée ; pas de nouvelle mesure audio ici. | Raccourcis clavier inadaptés. | Non évaluée séparément. |
-| Console, Fichiers, Papiers | OK selon l'opérateur. | Pas de défaut rapporté. | Non évaluée séparément. |
-| Geary | Ouverture OK ; aucun compte, réception/envoi non testés. | À approfondir. | Non évaluée séparément. |
-| Horloges | OK selon l'opérateur ; alarme matérielle non explicitement validée. | Pas de défaut rapporté. | Non évaluée séparément. |
-| Megapixels | Chargement puis fenêtre vide ; capture non fonctionnelle. | Non validés. | Secondaire. |
-| Photos (Koko) | Fenêtre vide. | Non validés. | Secondaire. |
-| Paramètres | Réouvre la dernière page au lieu de la page principale. | Certaines options paraissent limitées ; revue complète encore requise. | Non évaluée séparément. |
+| Text Editor | Operator could not close it; disappeared after several minutes. Crash not confirmed at this checkpoint. | Save/Save As overflow the display. Preferences accessible. | French preferences confirmed. |
+| Calls | Interface OK; calls and modem unvalidated. | No defect reported. | Not assessed separately. |
+| Discussions | Functionality confirmed after freeze workaround. | Shortcuts too large; cannot return. | Partially French preferences; full correction deferred. |
+| Contacts | OK according to operator. | No defect reported. | Not assessed separately. |
+| Amberol | Playback previously validated; no new audio measurement here. | Keyboard shortcuts poorly adapted. | Not assessed separately. |
+| Console, Files, Papers | OK according to operator. | No defect reported. | Not assessed separately. |
+| Geary | Startup OK; no account, receiving/sending untested. | Further checks needed. | Not assessed separately. |
+| Clocks | OK according to operator; hardware alarm not explicitly validated. | No defect reported. | Not assessed separately. |
+| Megapixels | Loading followed by empty window; capture nonfunctional. | Unvalidated. | Secondary. |
+| Photos (Koko) | Empty window. | Unvalidated. | Secondary. |
+| Settings | Restores last page instead of overview. | Some options appear limited; full review still needed. | Not assessed separately. |
 
-### Défauts transversaux et essais restant à faire
+### Cross-application defects and pending tests
 
-- Aperçu des applications ouvertes : rayures noires et blanches ; cause non établie.
-- Dialogues Raccourcis clavier : débordement et absence de retour, sur plusieurs applications.
-  Ils restent utiles avec un clavier externe, mais doivent pouvoir être fermés sur téléphone.
-- Grille d'applications : débordement/gestes de défilement à vérifier visuellement.
-- Libellé du filtre mobile tronqué. Le réglage actuel est app-filter-mode=['adaptive'],
-  force-adaptive=[] ; déclaration mobile et compatibilité réelle sont distinctes.
-- Enregistreur : microphone et écouteur interne non testés ; ne pas les confondre avec le HP inférieur.
-- Rotation automatique, GPS et boussole non validés.
-- Galerie photo/vidéo et capture caméra sont deux fonctions distinctes ; Showtime lit les vidéos,
-  Koko doit encore fonctionner et Megapixels n'a pas de pipeline de capture établi.
-- Clavier logiciel : absence de bouton visible de réduction toujours ouverte.
+- Open-app overview: black/white stripes; cause unestablished.
+- Keyboard Shortcuts dialogs overflow and lack a return control in several apps.
+  They remain useful with an external keyboard but must be dismissible on a phone.
+- App grid overflow and scroll gestures need visual checks.
+- Mobile-filter label is clipped. Current app-filter-mode=['adaptive'],
+  force-adaptive=[]; declaring mobile support differs from actual compatibility.
+- Recorder: microphone and internal earpiece untested; distinguish them from
+  the bottom loudspeaker.
+- Automatic rotation, GPS and compass unvalidated.
+- Photo/video gallery and camera capture are different functions. Showtime
+  plays video; Koko still needed repair at this checkpoint, and Megapixels
+  has no established capture pipeline.
+- Software keyboard still lacks an obvious visible hide button.
 
-### Contrôles à distance de cette reprise
+### Remote checks at this checkpoint
 
-Koko 25.04.0-1 signale un plugin Qt Wayland absent, un pilote SQL QSQLITE absent,
-puis l'échec de chargement de Main.qml : module org.kde.kquickcontrolsaddons absent.
-Cela établit des dépendances manquantes, sans prouver que tous les défauts graphiques
-seront résolus par leur installation. La recette utilise --no-install-recommends.
+Koko 25.04.0-1 reports a missing Qt Wayland plugin, missing QSQLITE driver,
+then Main.qml load failure due to missing org.kde.kquickcontrolsaddons.
+This establishes missing dependencies, not that installing them will fix
+every graphical issue. The recipe uses --no-install-recommends.
 
-L'éditeur 48.3-3 a journalisé des erreurs de dimensions GtkLabel et des annulations
-de dialogue. Aucun OOM/segfault n'a été retrouvé dans le contrôle ciblé de ce démarrage ;
-la disparition de sa fenêtre reste inexpliquée.
+Editor 48.3-3 logged GtkLabel dimension errors and dialog cancellations.
+No OOM/segfault was found in the targeted check of this boot at that time;
+its disappearing window remained unexplained.
 
-Les trois périphériques IIO exposés sont des ADC PM8150/PM8150B/PM8150L, pas des
-accéléromètres ou magnétomètres. iio-sensor-proxy n'est pas installé ; aucun capteur
-de rotation standard n'est actuellement établi. GeoClue est installé, ce qui ne
-prouve ni la présence d'un récepteur GPS utilisable ni une localisation satellite.
+The three exposed IIO devices are PM8150/PM8150B/PM8150L ADCs, not
+accelerometers or magnetometers. iio-sensor-proxy is not installed;
+no standard rotation sensor is established. GeoClue is installed, which
+proves neither an available GPS receiver nor satellite positioning.
 
-### Batterie et protocole pendant l'absence
+### Battery and protocol during operator absence
 
-Téléphone débranché vers 10h40 puis rebranché. Lecture après reconnexion à 11h58 :
-96 %, charge_counter=2753852 µAh, Charging. Faute de valeur de départ synchronisée,
-ce seul relevé ne permet pas de calculer la consommation de l'intervalle.
-Le service CPU idle est actif. L'inhibiteur temporaire d'écran branché est actif ;
-il devra être arrêté avant tout nouveau protocole batterie comparatif.
-L'opérateur est absent : aucun débranchement, écoute ou validation visuelle ne
-doit être demandé ni supposé. Aucun changement Wi-Fi pour les essais batterie.
+Phone unplugged around 10:40 and later reconnected. Reading after reconnection
+at 11:58: 96%, charge_counter=2753852 µAh, Charging. Without a synchronized
+starting value, this reading alone cannot quantify interval consumption.
+CPU-idle service active; temporary plugged-in screen inhibitor active.
+Stop it before any new comparative battery protocol. During operator absence,
+do not request or assume unplugging, listening or visual confirmation.
+No Wi-Fi changes for battery testing.
 
+## Photos: dependencies and limited test — October 3, 2026
 
-## Photos : dépendances et essai limité — 3 octobre 2026
+The application recipe now explicitly includes qt6-wayland,
+libqt6sql6-sqlite, qml6-module-org-kde-kquickcontrolsaddons and
+qml6-module-org-kde-purpose. These four packages and dependencies
+(29 new packages total) were installed on the phone without a general
+upgrade. dpkg --audit is empty. QSQLITE, Wayland-plugin and missing-QML
+module errors disappeared.
 
-La recette d'applications explicite maintenant qt6-wayland, libqt6sql6-sqlite,
-qml6-module-org-kde-kquickcontrolsaddons et qml6-module-org-kde-purpose.
-Ces quatre paquets, avec leurs dépendances (29 nouveaux paquets au total), ont
-été installés sur le téléphone sans mise à jour générale. dpkg --audit est vide.
-Les erreurs QSQLITE, plugin Wayland et modules QML manquants ont disparu.
+Accelerated startup then showed Mesa get-param/pipe allocation errors and
+egl: failed to create dri2 screen. An app-only QT_QUICK_BACKEND=software
+test loaded Koko's interface without those errors in the startup sample,
+at approximately 69 MiB in its cgroup. Two QML placement/stacking warnings
+remain. The test service used MemoryMax=512 MiB and RuntimeMaxSec=20;
+no unlimited test process remains. This validates automatic loading, not
+visual rendering, navigation, zoom or video playback.
 
-Le démarrage accéléré a ensuite montré des erreurs Mesa get-param/pipe allocation
-et egl: failed to create dri2 screen. Un essai QT_QUICK_BACKEND=software limité
-à Koko a chargé l'interface sans ces erreurs dans le relevé de démarrage, à environ
-69 Mio dans le cgroup. Deux avertissements QML de placement/empilement persistent.
-Le service de test avait MemoryMax=512 Mio et RuntimeMaxSec=20 : aucun processus
-de test illimité n'est conservé. Cela valide le chargement automatique, pas le
-rendu visuel, la navigation, le zoom ou la lecture de vidéos.
+The userspace/apps/files/lmi-photos helper and a user Photos launcher override
+apply software rendering only to Koko on the test phone. At this checkpoint,
+the helper was not enabled by default in the generic builder before visual
+validation; explicit dependencies were included in the recipe.
+Local rollback: remove the user org.kde.koko.desktop override; the system
+launcher is intact. Software rendering could cost more CPU while showing
+images; consumption was not measured.
 
-Le helper userspace/apps/files/lmi-photos et une surcharge utilisateur du lanceur
-Photos appliquent le rendu logiciel seulement à Koko sur le téléphone d'essai.
-Le helper n'est pas activé par défaut dans le constructeur générique avant
-validation visuelle. Les dépendances explicites, elles, sont intégrées à la recette.
-Retour arrière local : retirer la surcharge utilisateur org.kde.koko.desktop ;
-le lanceur système demeure intact. Le rendu logiciel pourrait coûter plus de CPU
-pendant l'affichage d'images ; consommation non mesurée.
+Settings remembers last-panel='privacy' in org.gnome.Settings. Installed
+help exposes no --overview option; clearing the key selects the first panel
+without guaranteeing an overview. No unproven launcher correction was applied.
+Mobile navigation back to the panel list still needed visual validation then.
 
-Paramètres mémorise last-panel='privacy' dans org.gnome.Settings. L'aide de la
-version installée n'expose pas d'option --overview ; remettre la clé à vide
-sélectionnerait le premier panneau, sans garantir un accueil principal.
-Aucun faux correctif de lanceur n'a donc été appliqué. La navigation mobile
-vers la liste des panneaux reste à vérifier visuellement.
+Technical references:
 
-Références techniques :
-- [Qt : rendu logiciel Qt Quick](https://doc.qt.io/qt-6.5/qtquick-visualcanvas-adaptations.html).
-- [GNOME Settings 48 : restauration du dernier panneau](https://sources.debian.org/src/gnome-control-center/1:48.4-1~deb13u1/shell/cc-window.c/).
+- [Qt Quick software rendering](https://doc.qt.io/qt-6.5/qtquick-visualcanvas-adaptations.html).
+- [GNOME Settings 48 last-panel restoration](https://sources.debian.org/src/gnome-control-center/1:48.4-1~deb13u1/shell/cc-window.c/).
 
-### Installation d'applications et options matérielles
+### Installing applications and hardware options
 
-La liste d'applications n'est pas fixe : les paquets Debian ARM64 sont installables
-avec APT. Firefox s'appelle firefox-esr dans Debian trixie ; aucune installation
-Firefox n'a été faite dans cet essai. GNOME Software fournit un catalogue graphique
-avec les moteurs appropriés, mais n'est pas installé ici. Architecture ARM64 et
-interface adaptée au téléphone sont deux critères distincts.
+The application list is not fixed: Debian ARM64 packages can be installed
+through APT. Firefox is firefox-esr in Debian trixie; Firefox was not installed
+in this test. GNOME Software provides a graphical catalog with appropriate
+backends but is not installed here. ARM64 availability and phone-adapted
+interfaces are separate requirements.
 
-« Souris et pavé tactile » concerne les périphériques de pointage, notamment
-externes ; ce panneau n'est pas le réglage du tactile de l'écran ou du clavier
-virtuel. Des panneaux dépendent des périphériques et services présents. Leur
-présence limitée ne démontre pas à elle seule un défaut d'affichage.
+Mouse and Touchpad concerns pointing devices, including external devices;
+it does not configure the screen's touch input or virtual keyboard. Panels
+depend on available hardware/services; limited options do not alone prove
+a rendering defect. Automatic rotation and compass require exposed sensors
+and software support; the observed ADCs are not substitutes. Maps may use
+GeoClue, but network-derived location would not validate GPS.
 
-La rotation automatique et une boussole exigent des capteurs exposés et leur
-prise en charge logicielle ; les ADC observés ne les remplacent pas. Cartes peut
-utiliser GeoClue, mais une position réseau ne constituerait pas une validation GPS.
-
-Références : [Firefox ESR Debian](https://packages.debian.org/trixie/firefox-esr),
+References: [Debian Firefox ESR](https://packages.debian.org/trixie/firefox-esr),
 [GNOME Software](https://apps.gnome.org/Software/).
 
-
-Capture distante : grim a été installé comme outil de diagnostic (84 ko installés).
-La capture fonctionne, mais montre l'écran verrouillé ; aucun secret ni réglage
-de verrouillage n'a été modifié. Les captures restent privées, hors Git.
-La confirmation visuelle de Photos et des autres menus reste donc en attente.
-
-
-## Photos : retour opérateur et navigation — 3 octobre 2026
-
-L'opérateur confirme que l'interface fonctionne, avec un menu accessible par
-glissement. Une image de test PNG a été envoyée au téléphone, hors Git.
-L'image s'affiche. En revanche, impossible de revenir à la galerie et clavier
-visible pendant la consultation. Le zoom/dézoom paraît sans limites.
-
-Le clavier a été masqué ponctuellement par l'API OSK ; ce geste distant ne
-constitue pas une correction générale du clavier. Le helper Photos active
-maintenant QT_QUICK_CONTROLS_MOBILE=1, seulement pour Koko. qt6-svg-plugins,
-absent, a été installé et ajouté à la recette : une icône vidéo apparaît sur
-la capture après installation, mais tous les boutons ne sont pas encore validés.
-Confirmation ultérieure : le Retour fonctionne et le clavier reste caché après ouverture d'image, avec le helper final.
-
-La source officielle Koko v25.04.0 BaseImageDelegate.qml définit minimumZoomSize=8
-et maximumZoomFactor=100 : la plage est très large, pas réellement infinie.
-Ces bornes n'ont pas été modifiées. Une restriction adaptée au téléphone reste
-à décider après rétablissement de la navigation.
-
-Références : [mode mobile Kirigami](https://develop.kde.org/hig/layout_and_nav/),
-[bornes de zoom Koko](https://github.com/KDE/koko/blob/v25.04.0/src/qml/imagedelegate/BaseImageDelegate.qml).
-
-
-### Photos : miniatures et lanceur final
-
-Le défaut de galerie transparente est contourné par génération automatique
-du cache standard de miniatures. Une capture sans sélection montre l'image de
-test. Le test sur téléphone valide le redimensionnement 256 pixels, les champs
-URI/date/taille du PNG et la réutilisation sans réécriture du cache inchangé.
-L'opérateur confirme ensuite : « Retour fonctionne, clavier caché ».
-
-Le helper emploie le runtime Zink lmi lorsqu'il est présent, le mode mobile,
-Breeze, compose pour l'entrée et un worker hors écran sans GLX. Les trois
-moteurs précédemment essayés ne suffisaient pas à rétablir la génération KIO.
-Une trace shmget=ENOSYS et les sources des versions installées étayent
-l'incompatibilité du flux d'aperçu en l'absence de mémoire partagée.
-Le contournement couvre les images du dossier XDG et les fichiers passés au
-lanceur, avec limites de temps/mémoire ; il ne couvre pas les vidéos.
-
-La ligne « Images » près du bas est le bandeau de navigation du dossier défini
-par AlbumView ; sa disposition et les onglets tronqués restent ouverts. Les
-bornes du zoom n'ont pas été modifiées. Voir [Photos lmi](../../userspace/apps/PHOTOS-LMI.md)
-pour le diagnostic, les sources et les limites. Captures et image de test sont
-hors Git. Le maintien temporaire de l'écran actif sur USB reste réservé aux
-tests d'interface et doit être arrêté avant toute mesure de batterie.
-
-
-## Éditeur de texte : enregistrement et fermeture — 3 octobre 2026
-
-Versions testées : gnome-text-editor 48.3-3, nautilus 48.3-2,
-xdg-desktop-portal 1.20.3+ds-1 et backend GNOME 48.0-2.
-Le dialogue GTK initial dépasse la largeur de l'écran ; le bouton Enregistrer
-est hors écran. Ce défaut empêche un parcours tactile normal. Les touches
-distantes seules ne suffisaient pas à tester tous les boutons ; un périphérique
-tactile uinput temporaire a permis de toucher les contrôles visibles, puis
-était détruit après chaque geste. wtype est un outil de test, pas une nouvelle
-dépendance du build. Aucun document personnel n'a été édité.
-
-Le routage FileChooser utilise maintenant GNOME pour Phosh, en conservant les
-autres préférences du portail. Le lanceur local de l'Éditeur force les portails
-GTK4 et transmet l'environnement Wayland au bus d'activation. Avant cette
-transmission, Nautilus activé par D-Bus ne pouvait pas connecter son affichage,
-avec une erreur org.gnome.Mutter.ServiceChannel ; après, il démarre et fournit
-le sélecteur adapté. Le défaut ne demandait ni nouveau kernel ni nouveau rootfs.
-
-Contrôles réellement passés : création de deux lignes par saisie dans l'Éditeur,
-enregistrement par le bouton visible et vérification du contenu sur disque ;
-disparition de la fenêtre puis réouverture avec texte visible ; menu
-Enregistrer sous produisant un second fichier identique ; ajout d'une troisième
-ligne et sauvegarde dans ce fichier ; nouvelle fermeture avec disparition du
-processus. Ces disparitions ne prouvent pas une fermeture normale : voir le contrôle des journaux ci-dessous.
-
-Le helper et le fichier de routage sont installés sur le téléphone ; la recette
-et le staging du constructeur préparent leur intégration au prochain build.
-Les fichiers desktop gardent leurs traductions et dirigent aussi l'action
-Nouvelle fenêtre vers le helper. Aucun build lourd n'a été lancé. Confirmation
-tactile obtenue : l’opérateur a ouvert Enregistrer sous puis annulé et confirme
-le dialogue utilisable, avec le bouton de validation visible. Le clavier reste
-visible dans l'Éditeur en mode saisie : son masquage général n'est pas corrigé
-par ce lot. Les portails pour applications sandboxées ne sont pas validés ;
-le document portal FUSE reste en échec sur le kernel courant.
-
-Source : [GNOME 47 et ses nouveaux dialogues de fichiers](https://release.gnome.org/47/).
-
-
-### Rectification après la fermeture signalée par l’opérateur
-
-Le contrôle des services montre un arrêt signal=11/SEGV pour les essais
-reopen et ready. Le précédent contrôle de disparition du processus était
-insuffisant pour valider une fermeture normale ; cette validation est retirée.
-Les deux fichiers de test existent ; le second contient bien les trois lignes
-enregistrées et a été rouvert avec ce contenu visible sur capture. Il n’y a
-pas de perte du texte de test constatée. Aucun document personnel n’a été lu.
-
-Un essai isolé de réouverture avec GSK_RENDERER=cairo est actif ; le lanceur
-persistant reste inchangé. L’ouverture réussit, mais la cause du crash et la
-stabilité lors de la fermeture restent à établir. Aucun coredump disponible
-ne permet encore d’attribuer le crash au moteur graphique ou au portail.
-
-
-### Contournement de fermeture : rendu Cairo limité à l’Éditeur
-
-Deux unités indépendantes avec GSK_RENDERER=cairo ont terminé avec
-Result=success et ExecMainStatus=0 après fermeture de fenêtre. Le second essai
-a inclus une réouverture du texte enregistré, l’ouverture du menu réel
-Enregistrer sous et son annulation avant fermeture. Le fichier de trois lignes
-reste présent. Le helper durable utilise désormais Cairo pour l’Éditeur seul ;
-les autres applications et l’environnement graphique global ne changent pas.
-
-Il s’agit d’un contournement validé sur ce parcours, pas d’une localisation
-précise du défaut par backtrace ni d’une validation de stabilité prolongée.
-Le masquage du clavier et les autres menus restent ouverts.
-
-
-## Éditeur : clavier et menus — poursuite du 3 octobre
-
-Un appui long d’environ 1,2 seconde sur la barre blanche inférieure masque
-le clavier ; un second appui le réaffiche, avec Visible=true lu sur le bus.
-Le geste a été produit par un périphérique tactile uinput temporaire, sans
-appel SetVisible : confirmation manuelle de ce geste encore souhaitable.
-Aucune disposition de clavier ni préférence persistante n’a été modifiée.
-
-Préférences : ouverture depuis le menu, bouton X visible et fermeture tactile
-réussie, sans changer les options. Recherche : ouverture depuis le menu,
-saisie du mot Mobian et occurrence surlignée dans le document, puis fermeture
-avec son bouton X. Le document de trois lignes est resté intact et le service
-Éditeur est actif après ces essais. Le remplacement n’a pas été essayé.
-
-Raccourcis clavier : débordement important confirmé sur capture ; aucun bouton
-de retour visible. Échap envoyé par l’outil distant permet d’en sortir, ce qui
-ne valide pas un retour au toucher. L’ajustement Phoc par application ne corrige
-pas ce dialogue ; un essai global bref le réduit sans établir son utilisabilité.
-Les réglages global et Éditeur ont tous deux été rétablis à false. Le défaut
-reste ouvert ; aucune correction de taille n’est publiée dans ce lot.
-
-
-## Priorité au fonctionnement global : Calculatrice
-
-L’opérateur reporte explicitement l’optimisation des menus. L’essai de menu
-mobile de l’Éditeur a été arrêté : aucune surcouche de menu n’est ajoutée
-au lanceur durable ou au constructeur. Le défaut Raccourcis reste documenté.
-
-Calculatrice 48.1-2+b1 : clavier masqué par appui long sur la barre inférieure,
-puis 2, +, 3 et = touchés sur le pavé réel. Capture : 2+3=5. Fermeture par
-Alt+F4 avec Result=success et ExecMainStatus=0 ; relance indépendante active
-sans erreur au contrôle initial. Ce parcours valide le calcul élémentaire et
-la relance, pas tous les modes mathématiques ni une stabilité prolongée.
-Aucun réglage ni paquet de la Calculatrice n’a été modifié.
-
-
-## Calculatrice : corriger le retour automatique du clavier
-
-L’opérateur signale le clavier encore devant la Calculatrice après relance.
-La précédente réussite du geste de masquage n’était pas un correctif durable.
-Le helper lmi-calculator impose GTK_IM_MODULE=gtk-im-context-simple à ce seul
-processus, afin de garder le pavé natif visible. Aucun réglage global du clavier
-n’est changé. Sur l’essai isolé, Visible=false au démarrage et après 2+3=5
-obtenu avec les boutons tactiles ; le champ accepte aussi 8/2 par touches
-injectées via wtype. Un clavier physique réel n’a pas été branché pour ce test.
-Le helper et le routage desktop sont intégrés à l’installateur et au staging
-du prochain build ; aucun build lourd lancé. Confirmation manuelle attendue.
-
-Le contexte simple évite l’activation du text-input Wayland pour cette app.
-Les méthodes de saisie complexes ne sont pas validées dans la Calculatrice,
-et les autres applications conservent leur méthode normale.
-Source : [GTK 4.18.6, sélection du contexte de saisie](https://github.com/GNOME/gtk/blob/4.18.6/gtk/gtkimmodule.c).
-
-
-## Confirmation Calculatrice et contrôle Horloges
-
-L’opérateur confirme après installation : « Oui, pavé visible sans clavier ».
-Cette confirmation valide le résultat visuel du lanceur corrigé, contrairement
-au seul geste temporaire de masquage testé précédemment.
-
-Horloges : l’application déjà active en arrière-plan a été présentée via son
-aperçu. Chronomètre initial à zéro ; démarrage, progression, création d’un tour
-à environ 3,1 secondes, pause à environ 54,7 secondes et retour à zéro vérifiés
-sur captures. L’essai de pause initial avait visé l’ancienne position du bouton,
-qui se déplace après un tour ; la pause a été obtenue au bouton visible actuel.
-Retour à l’onglet Monde initial après l’essai. Aucune ville ou alarme existante
-n’a été supprimée ni modifiée. Minuterie, réveil en veille et alarme sonore
-restent non validés. Les rayures de l’aperçu Phosh sont toujours observées,
-mais ne sont pas traitées dans ce lot fonctionnel.
-
-Caméra, contrôle ciblé courant : Megapixels 1.8.3-1, compatible qcom,kona-mtp
-et absence de sa configuration dans la liste du paquet. Les nœuds présents
-sous sysfs sont video0=cam-req-mgr et video1=cam_sync, sans nœud de capture
-standard établi par ce contrôle. Les fichiers de périphériques seuls ne
-suffisent pas à démontrer une caméra exploitable. Le blocage documenté du
-pipeline downstream reste ouvert. Pas d’énumération GStreamer, de nouvelle
-configuration spéculative ni de build kernel dans cette reprise.
-
-
-## Essais autonomes : Fichiers, Papiers, minuterie et Console
-
-Essais du 3 octobre 2026, après-midi, une application à la fois. Captures,
-PDF et données de test restent hors Git ; aucun fichier personnel modifié.
-Ces gestes ont été produits par uinput/wtype, sans confirmation opérateur
-pendant son absence. Ils ne valident pas toutes les fonctions des applications.
-
-Fichiers : Nouveau dossier ouvert dans un répertoire vide réservé au test,
-nom saisi et bouton Créer touché. Présence sur disque puis miniature vérifiées.
-Le dossier sélectionné a été ouvert avec Entrée ; une seule touche tactile
-initiale le sélectionnait sans l’ouvrir. Retour par le bouton flèche inférieur,
-puis fermeture Alt+F4 : Result=success, ExecMainStatus=0. Pas de test de copie,
-renommage ou suppression, et aucune de ces fonctions déclarée validée.
-
-Papiers : PDF synthétique de deux pages créé et contrôlé sur le poste, puis
-ouvert sur le téléphone. Première et deuxième pages lisibles sur captures ;
-navigation par glissement tactile. Fermeture de l’unité avec code 0 et
-réouverture indépendante réussies. Recherche, annotation, impression et
-formulaires restent non testés. Le processus de test a ensuite été arrêté.
-
-Horloges : onglet Minuteur initialement vide ; lancement du raccourci une
-minute, capture à 58 secondes, pause à 10 secondes. Le seul minuteur créé
-pour l’essai a été retiré, puis retour à Monde. Aucune ville ou alarme
-existante modifiée. Expiration, son et réveil en veille non validés.
-
-Console 48.0.1 / GLib 2.84.4-3~deb13u5 : texte de test et résultat shell 2+3=5
-visibles. Après exit, le terminal affiche Lecture seule et code -1 ; le
-journal signale waitid(P_PIDFD)=EINVAL. Le kernel courant est un downstream
-4.19.325 ; cette observation ne prouve pas encore quel backport est incomplet.
-Le code officiel GLib ouvre un pidfd, utilise waitid(P_PIDFD), et se replie
-sur SIGCHLD seulement si pidfd_open échoue.
-
-Deux unités de diagnostic séparées ont temporairement bloqué pidfd_open
-avec SystemCallFilter=~pidfd_open et SystemCallErrorNumber=ENOSYS. Le shell
-quittant à zéro donne alors le bandeau bleu normal, sans code -1. Le shell
-quittant à 7 affiche 1792 (statut wait brut, 7<<8), et non -1 : il subsiste
-donc une mauvaise présentation du code de sortie. Les deux unités ont été
-arrêtées et le filtre n’est pas installé dans le lanceur. Ce mécanisme peut
-imposer NoNewPrivileges et gêner l’élévation de privilèges dans un terminal ;
-ce n’est pas une correction durable validée. Aucune bibliothèque globale,
-configuration kernel ou préférence de Console n’a été remplacée.
-
-Source : [GLib 2.84.4, gmain.c](https://github.com/GNOME/glib/blob/2.84.4/glib/gmain.c).
-Suite prioritaire : résoudre la surveillance des processus de Console sans
-restreindre ses usages, puis poursuivre les fonctions globales des apps.
-Les améliorations de présentation restent secondaires.
-
-
-### Console : incompatibilité syscall confirmée
-
-Un probe Python indépendant de GTK/GLib a créé son propre enfant quittant
-à 7, ouvert son pidfd avec succès, puis obtenu errno=22/EINVAL pour
-waitid(P_PIDFD). Le repli waitpid a récupéré cet enfant avec exit=7.
-Tous les descripteurs ont été fermés ; aucun processus de test laissé actif.
-Cela confirme l’incompatibilité de ces deux interfaces sur le kernel démarré,
-au-delà de la seule trace d’une application graphique.
-
-L’arbre source de référence a5b3099017ae conservé pour le diagnostic contient
-SYSCALL_DEFINE2(pidfd_open) dans kernel/pid.c. En revanche, include/uapi/linux/wait.h
-définit seulement P_ALL, P_PID et P_PGID ; kernel/exit.c ne contient pas de
-branche P_PIDFD. Cette inspection concorde avec le probe matériel. L’ajout
-isolé de pidfd_open sans la prise en charge waitid correspond à la panne
-observée de GLib. Aucune correction kernel compilée ou démarrée dans cet essai.
-Le prochain correctif doit rendre ces interfaces cohérentes et être validé
-avec les codes de sortie normaux et signalés, avant de déclarer Console corrigée.
-
-Agenda : processus démarré, mais les deux captures ont échoué avec
-failed to copy output DSI-1. ScreenSaver.GetActive=true, USB online=1 ;
-l’écran était verrouillé. L’unité Agenda a été arrêtée, sans événement créé,
-et son fonctionnement visuel reste non validé. Ne pas transformer ce simple
-démarrage en réussite dans la checklist.
-
-
-## Agenda : parcours local complet — 3 octobre, après remise à zéro du quota
-
-gnome-calendar 48.1-2+b1 : ouverture au 3 octobre, navigation au mois de
-novembre puis retour Aujourd’hui au mois d’octobre vérifiés sur captures.
-Le backend du calendrier Personnel est local ; aucun compte distant ajouté.
-Après autorisation explicite de l’opérateur, le seul événement fictif
-TEST-LMI-AGENDA-20261003 a été enregistré, avec titre visible dans la liste
-et SUMMARY correspondant dans le calendrier ICS. Aucun participant ni
-invitation, aucun rappel configuré. Son aperçu a été ouvert, puis le dialogue
-d’édition a permis d’accéder à Supprimer l’événement.
-
-Le premier glissement avait commencé sur le clavier et ajouté gt dans le
-titre du dialogue ; cette modification n’a pas été enregistrée. Un appui
-long sur la barre inférieure a masqué le clavier, puis le glissement dans
-le contenu a révélé le bouton Supprimer. La notification permettait encore
-d’annuler : sa fermeture a été suivie de la disparition visuelle et de zéro
-occurrence du SUMMARY de test dans le fichier calendrier. Réouverture
-indépendante : Aucun événement, sans reliquat du test.
-
-La seconde unité a utilisé RemainAfterExit=yes pour garder les métadonnées
-après fermeture : Result=success, ExecMainCode=1 (sortie normale),
-ExecMainStatus=0 et SubState=exited. Le simple résultat par défaut d’une
-unité déjà déchargée n’est pas utilisé comme preuve du code de fermeture.
-Pas de modification du lanceur ou des paquets Agenda, pas de correctif
-graphique nécessaire sur ce parcours. La synchronisation, les récurrences,
-les invitations et les rappels sonores restent non validés.
-
-
-## Contacts : corriger le crash de suppression — 3 octobre 2026
-
-gnome-contacts 48.0-2+b1, carnet système à backend local, liste initialement
-vide. Une fiche TEST-LMI-CONTACT-20261003 sans numéro ni courriel a été créée
-par l’interface. Sa persistance après fermeture code 0 et relance est vérifiée.
-La recherche du nom retrouve cette fiche ; un nom sans correspondance donne
-une liste vide. Aucun contact personnel modifié, aucun compte distant ajouté,
-aucun message ou appel effectué.
-
-Le menu Supprimer sur cette fiche a laissé une fenêtre figée, puis le service
-s’est arrêté avec Result=signal, ExecMainCode=2 et ExecMainStatus=11. La fiche
-existait toujours à la relance ; sa suppression n’était donc pas validée.
-L’essai app-only GSK_RENDERER=cairo a ensuite permis le retrait et une
-fermeture normale : Result=success, ExecMainCode=1, ExecMainStatus=0.
-Un second cycle indépendant avec le helper durable a créé puis retiré la
-fiche TEST-LMI-CONTACT-20261003-B et terminé avec les mêmes codes normaux.
-Les notifications d’annulation ont été fermées pour finaliser les retraits.
-
-Le helper lmi-contacts et le routage desktop sont installés sur le téléphone.
-DBusActivatable=false empêche ce lanceur de contourner le helper ; les
-traductions du desktop amont sont conservées. L’installateur et le staging
-Phosh incluent ce helper pour le prochain build, qui n’a pas été lancé.
-Le contournement ne modifie pas le moteur graphique global. Sans backtrace,
-il n’établit pas la cause précise du SIGSEGV ni une stabilité prolongée.
-Modification de fiche, photo de contact, appels, messagerie, import/export,
-fusion et synchronisation restent non validés.
-
-
-## Paramètres — navigation fonctionnelle du 3 octobre 2026
-
-Version installée : gnome-control-center 1:48.4-1~deb13u1. La liste principale
-est accessible par la flèche Retour depuis le panneau restauré. Les pages
-Souris et pavé tactile, Clavier et Système se sont ouvertes au toucher simulé.
-Les contrôles souris/pavé tactile concernent les périphériques physiques,
-pas l’écran tactile du téléphone ; leur présence ne prouve pas qu’un tel
-périphérique est connecté. Aucun changement de source de saisie, de réseau,
-d’heure ou d’alimentation n’a été effectué pendant ces essais.
-
-Tester les paramètres ouvre un dialogue de test des clics/défilement sans
-bouton Fermer visible sur la capture. Deux touches hors du dialogue n’ont
-pas permis de sortir ; Échap, injecté à distance, a fermé le dialogue, puis
-la flèche Retour a restauré la liste. La fermeture utilisable au seul toucher
-reste donc non validée. Les fonctions de test souris elles-mêmes n’ont pas
-été validées avec une souris physique.
-
-Deux fermetures par Alt+F4 ont été constatées dans des services conservant
-leur résultat : Result=success, ExecMainCode=1, ExecMainStatus=0. Il n’a pas
-été nécessaire de changer le moteur de rendu pour ces contrôles.
-Même après retour à la liste avant fermeture, la relance a ouvert Système.
-La préférence org.gnome.Settings last-panel mémorise le dernier panneau.
-Le schéma installé indique qu’une valeur inconnue sélectionne le premier
-panneau, et le [code GNOME 48.4](https://github.com/GNOME/gnome-control-center/blob/48.4/shell/cc-window.c)
-confirme ce repli dans maybe_load_last_panel : effacer cette préférence
-ne constitue pas une correction démontrée de l’ouverture sur la liste.
-Cette préférence n’a pas été réinitialisée et aucun helper n’a été installé.
-
-Les services temporaires de test et l’inhibition d’écran limitée au câble
-USB ont été arrêtés après les essais. L’ensemble des panneaux et des menus
-reste à tester ; l’application n’est pas déclarée intégralement validée.
-
-
-## Geary, Appels et boutons Fermer — 3 octobre 2026
-
-Geary 46.0-7 : ouverture et relance sans compte, formulaire Ajouter puis
-annulation par Retour vérifiés. Retour depuis Comptes ferme l’application
-normalement ; une autre fermeture par Alt+F4 a également terminé avec
-Result=success, ExecMainCode=1 et ExecMainStatus=0. Aucun compte ni message
-n’a été créé. Les fonctions de courrier et les menus accessibles seulement
-après connexion restent non validés.
-
-Appels 48.2-1 : interface Récentes et Pavé numérique affichée, menu Comptes
-VoIP ouvert. Le bandeau indique qu’aucun modem/compte VoIP n’est disponible.
-Aucun numéro, appel ou compte n’a été créé. Le réglage utilisateur initial
-org.gnome.desktop.wm.preferences button-layout était appmenu:, omettant
-Fermer. Le passage à appmenu:close a fait apparaître ce bouton dans les
-fenêtres GTK observées et le dialogue VoIP. Une nouvelle instance a confirmé
-la fermeture de ce dialogue au toucher simulé, avec l’application encore
-visible, puis sa fermeture normale par son propre bouton (code 0).
-Paramètres a aussi été fermé normalement par le bouton rétabli.
-
-Ce correctif est installé dans la préférence utilisateur du téléphone et
-préparé comme défaut de schéma dans le prochain build. Il ne garantit pas
-les dialogues à bandeau personnalisé : Tester les paramètres de la souris
-ne présente toujours pas de bouton de dialogue. Son problème signalé dans
-la section précédente reste ouvert. Les fenêtres Raccourcis des autres
-applications n’ont pas encore été recontrôlées après cette correction.
-Les unités d’essai ont été arrêtées ; aucun build d’image n’a été lancé.
-
-
-Validation de recette : bash -n et git diff --check passent. Les XML de
-schémas/énumérations et overrides installés ont été copiés dans un répertoire
-temporaire, avec le nouvel override ; glib-compile-schemas --strict passe.
-La lecture GSETTINGS_BACKEND=memory retourne appmenu:close pour le contexte
-générique, Phosh et Phosh:GNOME. Le répertoire temporaire a été retiré
-automatiquement. Cette vérification ne reconstruit pas une image complète.
-
-
-## Raccourcis de l’Éditeur — reprise du 4 octobre 2026
-
-Le réglage button-layout=appmenu:close est toujours présent à la reprise.
-Éditeur 48.3-3 lancé via lmi-text-editor, libadwaita 1.7.6-1~deb13u1.
-Le menu réel Raccourcis clavier ouvre une vue trop large pour l’écran :
-libellés tronqués à gauche et absence de bouton Fermer accessible pour le
-dialogue. Masquer le clavier par appui long sur la barre inférieure libère
-la hauteur, mais ne résout pas ce débordement horizontal. La fermeture de
-ce dialogue au toucher n’est pas validée ; Échap injecté à distance permet
-de revenir au document.
-
-L’essai Phoc scale-to-fit limité à org.gnome.TextEditor, initialement false,
-a été activé puis retiré faute d’amélioration visible. Aucun réglage global
-de mise à l’échelle n’a été changé. La ressource embarquée help-overlay.ui
-déclare un GtkShortcutsWindow et une GtkShortcutsSection max-height=15 ;
-elle n’a pas été modifiée. Aucun patch de ressource ni nouveau helper n’a
-été installé. Le document de test est resté inchangé. Après sortie par
-Échap, la croix de la fenêtre principale a fermé l’application normalement
-(Result=success, ExecMainCode=1, ExecMainStatus=0). L’unité de test a été
-arrêtée. Ce résultat précise la limite du correctif général de boutons :
-il ne corrige pas les fenêtres de raccourcis surdimensionnées.
+Remote screenshots: grim was installed as a diagnostic tool (84 kB installed).
+Capture works but initially showed the lock screen; no secrets or lock settings
+were changed. Captures stay private, outside Git. Visual confirmation of
+Photos and other menus was therefore still pending at that checkpoint.
+
+## Photos: operator feedback and navigation — October 3, 2026
+
+The operator confirmed a working interface with a sliding menu. A test PNG
+was transferred outside Git and displayed, but returning to the gallery
+was initially impossible, with the keyboard visible during viewing.
+Zoom in/out appeared unlimited.
+
+The OSK API temporarily hid the keyboard; that remote action is not a general
+keyboard correction. The Photos helper now sets QT_QUICK_CONTROLS_MOBILE=1
+only for Koko. Missing qt6-svg-plugins was installed and added to the recipe:
+a video icon appears in the capture afterward, but not every button is validated.
+Later operator confirmation: Return works and the keyboard stays hidden
+after opening an image with the final helper.
+
+Official Koko v25.04.0 BaseImageDelegate.qml sets minimumZoomSize=8 and
+maximumZoomFactor=100: the range is broad, not infinite. These bounds were
+not changed. Phone-appropriate limits remain a separate decision after
+restoring navigation.
+
+References: [Kirigami mobile layout](https://develop.kde.org/hig/layout_and_nav/),
+[Koko zoom bounds](https://github.com/KDE/koko/blob/v25.04.0/src/qml/imagedelegate/BaseImageDelegate.qml).
+
+### Photos: thumbnails and final launcher
+
+The transparent gallery is worked around by automatically generating the
+standard thumbnail cache. A capture without selection shows the test image.
+Phone checks validate 256-pixel resizing, URI/date/size PNG metadata and
+reuse without rewriting an unchanged cache. The operator subsequently
+confirmed working Return and a hidden keyboard.
+
+The helper uses the lmi Zink runtime when available, mobile mode, Breeze,
+compose input and an offscreen worker without GLX. Three previously tested
+engines did not restore KIO generation. A shmget=ENOSYS trace and installed
+version sources support incompatibility of the preview path without shared
+memory. The workaround covers the XDG image directory and launcher arguments,
+with time/memory limits; it does not cover video.
+
+The Images line near the bottom is AlbumView's folder navigation bar;
+layout and clipped tabs remain unresolved. Zoom bounds were not changed.
+See [Photos lmi](../../userspace/apps/PHOTOS-LMI.md) for diagnosis, sources
+and limitations. Captures/test image stay outside Git. Temporary USB screen
+inhibition is reserved for UI testing and must stop before battery measurement.
+
+## Text Editor: saving and closure — October 3, 2026
+
+Tested versions: gnome-text-editor 48.3-3, nautilus 48.3-2,
+xdg-desktop-portal 1.20.3+ds-1 and GNOME backend 48.0-2.
+The initial GTK dialog is wider than the display; Save is off-screen,
+blocking a normal touch workflow. Remote keys alone could not test every
+button. A temporary uinput touchscreen touched visible controls and was
+destroyed after each gesture. wtype is a test tool, not a new build dependency.
+No personal document was edited.
+
+FileChooser routing now uses GNOME for Phosh while retaining other portal
+preferences. The local Editor launcher forces GTK4 portals and exports
+Wayland environment to the activation bus. Before that export, D-Bus-activated
+Nautilus could not connect its display, with org.gnome.Mutter.ServiceChannel
+error. Afterward it starts and provides the adapted chooser. This did not
+require a new kernel or rootfs.
+
+Checks actually completed: two lines typed in Editor; Save through the visible
+button and disk contents checked; window disappearance followed by reopening
+with visible text; actual Save As menu producing another identical file;
+third line added/saved in that file; further closure with process disappearance.
+Disappearance alone does not prove normal termination; see the journal
+correction below.
+
+Helper and routing file are installed on the phone; recipe and builder
+staging prepare them for the next build. Desktop translations are retained;
+New Window also routes through the helper. No heavy build ran. The operator
+opened Save As, canceled and confirmed its usability with the confirmation
+button visible. Keyboard remains visible in Editor input mode; this batch
+does not correct general hiding. Sandboxed application portals are unvalidated;
+document portal FUSE still fails on the current kernel.
+
+Source: [GNOME 47 file dialogs](https://release.gnome.org/47/).
+
+### Correction after operator-reported closure
+
+Service inspection found signal=11/SEGV exits for reopen and ready tests.
+Earlier process disappearance was insufficient evidence of normal closure;
+that validation is withdrawn. Both test files exist, and the second contains
+all three saved lines, reopened visibly in a capture. No test-text loss was
+observed. No personal document was read.
+
+An isolated reopening test with GSK_RENDERER=cairo was then active; the
+persistent launcher remained unchanged at that checkpoint. Opening passed,
+but crash cause and closure stability still needed testing. No available
+coredump established whether renderer or portal caused the crash.
+
+### Closure workaround: Cairo limited to Editor
+
+Two independent GSK_RENDERER=cairo units ended with Result=success and
+ExecMainStatus=0 after window closure. The second included saved-text
+reopening, actual Save As menu and cancellation before closing. The
+three-line file remains present. The durable helper now uses Cairo only
+for Editor; other applications and the global renderer remain unchanged.
+
+This is a workaround validated on that workflow, not a precise backtrace-based
+fault location or prolonged stability validation. Keyboard hiding and other
+menus remained open work at this checkpoint.
+
+## Editor keyboard and menus — October 3 follow-up
+
+Approximately 1.2 seconds holding the lower white bar hides the keyboard;
+a second hold shows it, with Visible=true read from the bus. A temporary
+uinput touchscreen produced the gesture without SetVisible; manual
+confirmation remains desirable. No keyboard layout or persistent preference
+was changed.
+
+Preferences: opened through the menu, visible X and simulated-touch closure,
+without changing options. Search: opened through the menu, Mobian entered,
+match highlighted in the document, then dismissed with X. Three-line document
+unchanged and Editor service active afterward. Replacement was not tested.
+
+Shortcuts: significant overflow confirmed in a capture; no visible return
+control. Remote Escape exits, which does not validate touch-only return.
+App-specific Phoc adjustment did not fix it; a brief global test reduced it
+without establishing usability. Global and Editor-specific settings were
+both restored to false then. Defect remained open; no size fix published in
+that batch.
+
+## Priority to overall functionality: Calculator
+
+The operator explicitly deferred menu optimization. Editor mobile-menu
+experimentation stopped: no menu overlay added to the durable launcher or
+builder. The Shortcuts defect remains documented.
+
+Calculator 48.1-2+b1: keyboard hidden by long press on lower bar, then
+2, +, 3 and = touched on actual keypad. Capture shows 2+3=5. Alt+F4 gave
+Result=success and ExecMainStatus=0; independent reopening remained active
+without initial errors. This validates elementary arithmetic/reopening,
+not every mathematical mode or prolonged stability. No Calculator setting
+or package was changed in this test.
+
+## Calculator: preventing automatic keyboard return
+
+The operator reported the keyboard still over Calculator after reopening.
+The earlier hide gesture was not a durable correction. lmi-calculator sets
+GTK_IM_MODULE=gtk-im-context-simple only for this process, keeping the native
+keypad visible. No global keyboard setting changes. Isolated test:
+Visible=false at startup and after touch-button 2+3=5; the field also accepts
+8/2 through wtype-injected keys. No actual physical keyboard was connected.
+Helper/desktop routing are integrated into installer and next-build staging;
+no heavy build ran. Manual confirmation was pending at this checkpoint.
+
+The simple context avoids this application's Wayland text-input activation.
+Complex input methods are unvalidated in Calculator; other applications
+retain their usual method.
+Source: [GTK 4.18.6 input-context selection](https://github.com/GNOME/gtk/blob/4.18.6/gtk/gtkimmodule.c).
+
+## Calculator confirmation and Clocks check
+
+After installation the operator confirmed the full keypad without a keyboard.
+This validates the corrected launcher's visual outcome, beyond the earlier
+temporary hide gesture.
+
+Clocks was already running in the background and presented through its
+overview. Stopwatch initially zero; start, progression, lap around 3.1 seconds,
+pause around 54.7 seconds and reset checked on captures. First pause attempt
+used the old position, which moved after a lap; pause succeeded at the current
+visible button. Returned to the initial World tab. No existing city or alarm
+was removed/changed. Timer, wake from suspend and audible alarm were not yet
+validated. Phosh overview stripes remain observed but untreated in this
+functional batch.
+
+Targeted camera check: Megapixels 1.8.3-1, qcom,kona-mtp compatible,
+without its configuration in the package listing. sysfs shows
+video0=cam-req-mgr and video1=cam_sync, with no standard capture node
+established. Device files alone do not prove an operational camera.
+Downstream-pipeline blockage remains open. No GStreamer enumeration,
+speculative configuration or kernel build in this follow-up.
+
+## Autonomous tests: Files, Papers, timer and Console
+
+October 3, 2026 afternoon, one application at a time. Captures, PDF and test
+data remain outside Git; no personal files changed. Gestures used uinput/wtype
+without operator confirmation during absence; they do not validate every
+application function.
+
+Files: New Folder opened in an empty test-only directory; name entered and
+Create touched. Disk presence and thumbnail verified. Selected folder opened
+with Enter; an initial single touch selected rather than opened it. Lower
+Back arrow worked, then Alt+F4 gave Result=success, ExecMainStatus=0.
+Copy, rename and delete were neither tested nor declared validated.
+
+Papers: synthetic two-page PDF created/checked on the host, then opened on
+phone. Both pages readable on captures, with swipe navigation. Test unit
+closed with status 0 and independent reopening passed. Search, annotation,
+printing and forms untested. Test process subsequently stopped.
+
+Clocks: Timer tab initially empty; one-minute shortcut started, capture at
+58 seconds, paused at 10 seconds. Only the test timer was removed, then
+returned to World. No existing city/alarm changed. Expiration, audio and
+wake from suspend unvalidated.
+
+Console 48.0.1 / GLib 2.84.4-3~deb13u5: test text and shell 2+3=5 visible.
+After exit, terminal shows read-only and status -1; journal reports
+waitid(P_PIDFD)=EINVAL. Current kernel is downstream 4.19.325; at this
+checkpoint the observation did not yet identify the incomplete backport.
+Official GLib opens a pidfd, uses waitid(P_PIDFD) and falls back to SIGCHLD
+only when pidfd_open fails.
+
+Two diagnostic units temporarily blocked pidfd_open using
+SystemCallFilter=~pidfd_open and SystemCallErrorNumber=ENOSYS. Shell exit 0
+then gives the normal blue termination banner, without -1. Shell exit 7
+shows 1792 (raw wait status, 7<<8), not -1; exit-status presentation is still
+incorrect. Both units were stopped; the filter is not in the launcher.
+This mechanism can enforce NoNewPrivileges and interfere with privilege
+elevation in a terminal; it is not a validated durable correction. No global
+library, kernel configuration or Console preference was replaced.
+
+Source: [GLib 2.84.4 gmain.c](https://github.com/GNOME/glib/blob/2.84.4/glib/gmain.c).
+Next priority: repair Console process monitoring without restricting its
+uses, then continue overall app functions. Presentation improvements remain
+secondary.
+
+### Console syscall incompatibility confirmed
+
+A Python probe independent of GTK/GLib created its own child exiting at 7,
+successfully opened its pidfd, then obtained errno=22/EINVAL from
+waitid(P_PIDFD). waitpid fallback reaped that child with exit=7. All
+descriptors closed; no test process remains. This confirms incompatibility
+of the two interfaces on the booted kernel beyond a GUI application trace.
+
+Preserved reference source a5b3099017ae contains SYSCALL_DEFINE2(pidfd_open)
+in kernel/pid.c. include/uapi/linux/wait.h defines only P_ALL, P_PID and P_PGID;
+kernel/exit.c has no P_PIDFD branch. Source inspection agrees with the
+hardware probe. Adding pidfd_open without waitid support matches GLib's
+observed failure. No kernel fix compiled or booted in this test. Next fix
+must make these interfaces coherent and validate normal and signaled exits
+before declaring Console repaired.
+
+Calendar started, but both captures failed with failed to copy output DSI-1.
+ScreenSaver.GetActive=true, USB online=1: screen was locked. Unit stopped
+without creating an event; visual functionality was unvalidated at that
+checkpoint. Do not count startup alone as checklist success.
+
+## Calendar local workflow — October 3, after quota reset
+
+gnome-calendar 48.1-2+b1: opening at October 3, navigation to November and
+Today return to October checked on captures. Personnel calendar uses a local
+backend; no remote account added. After explicit operator authorization,
+only dummy event TEST-LMI-AGENDA-20261003 was saved, with visible list title
+and matching SUMMARY in the ICS calendar. No participant, invitation or
+configured reminder. Preview opened; edit dialog exposed Delete Event.
+
+The first swipe started on the keyboard and inserted gt into the dialog
+title; this edit was not saved. Long press on lower bar hid the keyboard;
+swipe within content revealed Delete. Notification still offered Undo;
+closing it was followed by visual removal and zero test SUMMARY occurrences
+in the calendar file. Independent reopening showed no event/test leftover.
+
+Second unit used RemainAfterExit=yes to preserve metadata after closure:
+Result=success, ExecMainCode=1 (normal exit), ExecMainStatus=0,
+SubState=exited. Default values from a garbage-collected unit are not used
+as exit evidence. No Calendar launcher/package changes or renderer fix
+needed on this workflow. Synchronization, recurrence, invitations and audible
+reminders remain unvalidated.
+
+## Contacts deletion-crash workaround — October 3, 2026
+
+gnome-contacts 48.0-2+b1, local system address-book backend, initially empty.
+UI created TEST-LMI-CONTACT-20261003 without phone/email. Persistence after
+exit status 0 and reopening verified. Name search finds it; nonmatching name
+returns an empty list. No personal contact changed, remote account added,
+message sent or call placed.
+
+Delete left the window frozen, then service ended with Result=signal,
+ExecMainCode=2 and ExecMainStatus=11. Contact still existed after reopening;
+deletion was not validated. App-only GSK_RENDERER=cairo then allowed removal
+and normal closure: Result=success, ExecMainCode=1, ExecMainStatus=0.
+A second independent durable-helper cycle created and removed
+TEST-LMI-CONTACT-20261003-B with the same normal codes. Undo notifications
+were closed to finalize removals.
+
+lmi-contacts helper and desktop routing are installed. DBusActivatable=false
+prevents bypass through that launcher; upstream desktop translations remain.
+Installer and Phosh staging include the helper for the next build, not run.
+Global renderer unchanged. Without a backtrace this establishes neither
+precise SIGSEGV cause nor prolonged stability. Contact editing, photo,
+calls, messaging, import/export, merge and synchronization unvalidated.
+
+## Settings navigation — October 3, 2026
+
+Installed gnome-control-center 1:48.4-1~deb13u1. Back from the restored panel
+opens the overview. Mouse and Touchpad, Keyboard and System opened through
+simulated touch. Mouse/touchpad controls concern physical devices, not the
+phone touchscreen; their presence does not prove such a device is connected.
+No input-source, network, time or power setting changed in these tests.
+
+Test Your Settings opens a click/scroll dialog without visible Close.
+Two outside touches did not dismiss it; remote Escape did, then Back
+restored the list. Touch-only dismissal unvalidated. Mouse-test functions
+were not validated with a physical mouse.
+
+Two Alt+F4 closures observed with retained service results:
+Result=success, ExecMainCode=1, ExecMainStatus=0. No renderer change needed.
+Even closing after returning to the overview, reopening showed System.
+org.gnome.Settings last-panel remembers the last panel. Installed schema says
+an unknown value selects the first panel; [GNOME 48.4 source](https://github.com/GNOME/gnome-control-center/blob/48.4/shell/cc-window.c)
+confirms fallback in maybe_load_last_panel. Clearing that preference is not
+a demonstrated overview-on-launch fix. Preference not reset; no helper installed.
+
+Temporary services and USB-only screen inhibition stopped after testing.
+All panels/menus still require testing; Settings is not fully validated.
+
+## Geary, Calls and Close buttons — October 3, 2026
+
+Geary 46.0-7: startup/reopening without account, Add form and Back cancellation
+verified. Back from Accounts closes normally; another Alt+F4 closure also
+gave Result=success, ExecMainCode=1, ExecMainStatus=0. No account/message
+created. Mail functions and menus requiring login unvalidated.
+
+Calls 48.2-1: Recents and Keypad displayed; VoIP Accounts opened. Banner
+reports no available modem/VoIP account. No number, call or account created.
+Initial org.gnome.desktop.wm.preferences button-layout was appmenu:, omitting
+Close. appmenu:close exposed the button in observed GTK windows and VoIP
+dialog. A new instance verified simulated-touch dialog dismissal while Calls
+remained visible, then normal closure through its own button (status 0).
+Settings also closed normally through the restored button.
+
+Correction installed in the phone user preference and prepared as next-build
+schema default. Custom headers are not guaranteed: mouse Test Your Settings
+still has no dialog Close. That defect remains open. Other apps' Shortcuts
+had not been rechecked at this checkpoint. Test units stopped; no image build.
+
+Recipe validation: bash -n and git diff --check pass. Installed schema/enum XML
+and overrides copied to a temporary directory with the new override;
+glib-compile-schemas --strict passes. GSETTINGS_BACKEND=memory reads
+appmenu:close for generic, Phosh and Phosh:GNOME contexts. Temporary directory
+automatically removed. This does not rebuild a complete image.
+
+## Editor Shortcuts recheck — October 4, 2026
+
+button-layout=appmenu:close remains set. Editor 48.3-3 launched through
+lmi-text-editor; libadwaita 1.7.6-1~deb13u1. Actual Keyboard Shortcuts menu
+opens a view wider than display: left labels clipped and no accessible dialog
+Close. Long press on bottom bar hides keyboard and frees height without
+fixing horizontal overflow. Touch-only dismissal unvalidated; remote Escape
+returns to document.
+
+App-local Phoc scale-to-fit for org.gnome.TextEditor, initially false, was
+enabled and reverted after no visible improvement. No global scaling change
+in this initial recheck. Embedded help-overlay.ui declares GtkShortcutsWindow
+and GtkShortcutsSection max-height=15; unmodified. No resource patch/new
+helper installed. Test document unchanged. After Escape, main Close button
+gave normal termination (Result=success, ExecMainCode=1, ExecMainStatus=0).
+Test unit stopped. Restored buttons alone do not fix oversized shortcut windows.
+
+## Discussions shortcuts and Phoc adjustment — October 4, 2026
+
+Discussions launched through lmi-chatty-safe and a test unit limited to
+384 MiB with no swap. Without Phoc adjustment, Shortcuts overflows horizontally
+and its Close button is off-screen. Global Phoc scale-to-fit changed from
+false to true. Whole dialog then visible with accessible Close. Simulated-touch
+close, actual-menu reopen, second dialog close and normal Discussions closure
+verified: Result=success, ExecMainCode=1, ExecMainStatus=0 for the wrapper unit.
+No account/message created. Transient black lines appeared in the first
+post-toggle capture, absent in the reopened-dialog capture; this does not
+validate a general GPU fix.
+
+Editor retested separately: dialog shrinks but still clips on both sides.
+Touch-only dismissal remains unvalidated. Escape followed by main Close
+gave status 0. No test file changed; test units stopped. Global adjustment
+remains enabled for oversized windows; Editor-specific preference remains
+false as before its earlier test. No network/power preference changed.
+
+Next-build schema override and compiled-value check prepare this default;
+no image rebuilt. Amberol and other applications' shortcuts need rechecks.
+
+
+Recipe checks for window adjustment: bash -n and git diff --check pass.
+Installed schema/enum XML and overrides, with both lmi window overrides,
+compile with glib-compile-schemas --strict in a temporary directory.
+Memory-backend reads return scale-to-fit=true and button-layout=appmenu:close
+in generic, Phosh and Phosh:GNOME contexts. Temporary files are automatically
+removed. These checks do not build or boot an image.

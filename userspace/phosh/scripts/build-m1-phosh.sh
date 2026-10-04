@@ -161,6 +161,9 @@ install -D -o root -g root -m 0644 \
 install -D -o root -g root -m 0644 \
     "$phosh_files/92_lmi-window-controls.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/92_lmi-window-controls.gschema.override"
+install -D -o root -g root -m 0644 \
+    "$phosh_files/93_lmi-scale-to-fit.gschema.override" \
+    "$tree/usr/share/glib-2.0/schemas/93_lmi-scale-to-fit.gschema.override"
 chroot "$tree" /usr/bin/env M1_LOCALE="$m1_locale" M1_LANGUAGE="$m1_language" INSTALL_OPTIONAL_APPS="$optional_apps_enabled" INSTALL_DEBUG_TOOLS="$debug_tools_enabled" /bin/bash -eu <<'EOF'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
@@ -357,6 +360,10 @@ test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
     org.gnome.desktop.wm.preferences button-layout)" = "'appmenu:close'"
 test "$(chroot "$tree" env XDG_CURRENT_DESKTOP=Phosh GSETTINGS_BACKEND=memory gsettings get \
     org.gnome.desktop.wm.preferences button-layout)" = "'appmenu:close'"
+cmp -s "$phosh_files/93_lmi-scale-to-fit.gschema.override" \
+    "$tree/usr/share/glib-2.0/schemas/93_lmi-scale-to-fit.gschema.override"
+test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
+    sm.puri.phoc scale-to-fit)" = true
 test ! -e "$tree/home/mobian/.config/dconf/user"
 grep -qx 'unmanaged-devices=interface-name:usb0' "$tree/etc/NetworkManager/conf.d/10-m1-usb0-unmanaged.conf"
 test "$(chroot "$tree" systemctl is-enabled NetworkManager.service)" = enabled

@@ -654,3 +654,20 @@ The builder installs and checks the compiled default without starting a new
 image build. Existing per-user preferences take precedence over defaults;
 the override alone does not migrate an existing dconf database. Future
 reboot persistence and all applications' custom dialogs remain unvalidated.
+
+
+## Oversized-window adjustment — 2026-10-04
+
+The next build installs `93_lmi-scale-to-fit.gschema.override`, enabling
+Phoc's automatic adjustment of oversized windows. The live session's
+`sm.puri.phoc scale-to-fit` changed from false to true. Combined with the
+restored Close button, Chatty's shortcut dialog fits within the display
+and passed touch-simulated close/reopen checks. Text Editor's shortcut
+window shrinks but still clips content; it is not declared fixed. Text
+can become smaller in adjusted windows. Transient black line artifacts
+appeared immediately after the live toggle and were absent on the next
+Chatty dialog capture; broader GPU rendering stability is not established.
+
+This is a compositor preference, not a new application layout or a change
+to the display's base scale. Existing user preferences override schema
+defaults. No new image or reboot validation was performed.

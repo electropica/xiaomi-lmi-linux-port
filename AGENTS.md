@@ -97,3 +97,12 @@ The validated build reference is `docs/status/CURRENT-BUILD.md`; the
 authoritative layout is `docs/architecture/ARCHITECTURE.md`. Historical
 experiments must not override a current implementation or a later
 hardware-validated result merely because they contain more diagnostic detail.
+
+
+## Documentation language
+
+Write repository documentation, validation notes and new commit messages in
+English, following the project's original language. Operator conversations
+may remain in French. Preserve original UI labels and operator quotations
+where needed to identify a control or retain evidence. Do not translate
+technical identifiers, paths, versions or diagnostic output.

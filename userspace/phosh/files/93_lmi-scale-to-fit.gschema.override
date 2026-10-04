@@ -1,0 +1,3 @@
+# Fit oversized windows; custom dialogs can still need app-specific fixes.
+[sm.puri.phoc]
+scale-to-fit=true
