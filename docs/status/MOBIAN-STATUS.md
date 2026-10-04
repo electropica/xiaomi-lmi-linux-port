@@ -859,3 +859,9 @@ removal preserved the unselected third fixture; Trash and operator usability
 confirmation are not inferred from that result. The confirmation's poor icon
 and truncated label remain recorded. No new image or default-handler change.
 See the [checklist](../validation/lmi-app-checklist-2026-10-03.md#portfolio-native-touch-multiselection--2026-10-04).
+
+The operator subsequently rejected Portfolio as providing no useful
+improvement. Its next-build package addition was withdrawn; the trial remains
+historical evidence, not a completed fix. Existing Files touch selection is
+still open. After clarification that a second app was unnecessary, Portfolio
+was also uninstalled without autoremove; no user files were removed.
