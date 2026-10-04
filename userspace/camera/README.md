@@ -364,3 +364,12 @@ request diagnostic. Additional frames alone did not establish correct
 exposure. The next useful checks are public 3A/exposure result metadata,
 actual sensor exposure programming and the selected physical camera path,
 before preview or Megapixels integration. No camera-front mechanism was used.
+
+Public result-metadata telemetry then reported AE_STATE 1 (SEARCHING) for
+frames 1-3 and 2 (CONVERGED) for frames 4-5. Every frame reported exposure
+7,067,946 ns and ISO 50. All requests still produced valid JPEGs. This does
+not establish correct optical exposure: the visible images remained nearly
+black in the preceding lit-scene test. Waiting for AE convergence alone is
+not demonstrated as a fix. Sensor programming, scene/statistics consistency
+and the selected physical sensor remain to inspect. The capture source now
+logs only these public numeric metadata fields, not private calibration.

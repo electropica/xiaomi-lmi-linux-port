@@ -172,9 +172,19 @@ typedef struct camera3_callback_ops {
     void (*return_stream_buffers)(const struct camera3_callback_ops *, uint32_t,
                                   const struct camera3_stream_buffer *const *);
 } camera3_callback_ops_t;
+static find_metadata_fn result_find_entry;
 static void prepare_result_callback(const camera3_callback_ops_t *cb,
                                      const camera3_capture_result_t *result) {
     (void)cb;
+    if (result && result->result && result_find_entry) {
+        camera_metadata_ro_entry_t e = {0};
+        if (!result_find_entry(result->result, ACAMERA_CONTROL_AE_STATE, &e) && e.type == 0 && e.count == 1)
+            printf("ae_state frame=%u value=%u\n", result->frame_number, e.data.u8[0]);
+        if (!result_find_entry(result->result, ACAMERA_SENSOR_EXPOSURE_TIME, &e) && e.type == 3 && e.count == 1)
+            printf("exposure_ns frame=%u value=%lld\n", result->frame_number, (long long)e.data.i64[0]);
+        if (!result_find_entry(result->result, ACAMERA_SENSOR_SENSITIVITY, &e) && e.type == 1 && e.count == 1)
+            printf("sensitivity_iso frame=%u value=%d\n", result->frame_number, e.data.i32[0]);
+    }
     if (result) printf("callback=capture_result frame=%u output_buffers=%u partial=%u\n",
                        result->frame_number, result->num_output_buffers, result->partial_result);
     if (!result || !result->output_buffers || result->num_output_buffers > 16)
@@ -414,6 +424,7 @@ int main(int argc, char **argv) {
     void *metadata_handle = dlopen("/system/lib64/libcamera_metadata.so", RTLD_NOW | RTLD_LOCAL);
     if (!metadata_handle) { fprintf(stderr, "metadata dlopen: %s\n", dlerror()); diagnostic_exit(21); }
     find_metadata_fn find_entry = (find_metadata_fn)dlsym(metadata_handle, "find_camera_metadata_ro_entry");
+    result_find_entry = find_entry;
     if (!find_entry || !info.static_camera_characteristics) diagnostic_exit(22);
     camera_metadata_ro_entry_t entry = {0};
     int metadata_result = find_entry(info.static_camera_characteristics, PROBE_ANDROID_JPEG_MAX_SIZE, &entry);
