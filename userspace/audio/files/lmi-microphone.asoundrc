@@ -1,0 +1,25 @@
+pcm.lmi_microphone {
+    type hooks
+    slave.pcm {
+        type plug
+        slave {
+            pcm "hw:0,0"
+            format S16_LE
+            rate 48000
+            channels 1
+        }
+    }
+    hooks.0 {
+        type ctl_elems
+        hook_args [
+            { name "TX_CDC_DMA_TX_3 Channels" value 0 preserve true lock true }
+            { name "TX DEC0 MUX" value 1 preserve true lock true }
+            { name "TX SMIC MUX0" value 4 preserve true lock true }
+            { name "TX_AIF1_CAP Mixer DEC0" value 1 preserve true lock true }
+            { name "ADC4_MIXER Switch" value 1 preserve true lock true }
+            { name "ADC4 MUX" value 0 preserve true lock true }
+            { name "ADC4 Volume" value 6 preserve true lock true }
+            { name "MultiMedia1 Mixer TX_CDC_DMA_TX_3" value [1 0] preserve true lock true }
+        ]
+    }
+}

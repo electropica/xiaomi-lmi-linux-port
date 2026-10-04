@@ -27,7 +27,7 @@ labels are retained where useful to identify controls on the test phone.
 | lmi Flashlight | On/off confirmed before reboot; recheck pending. | No additional menu tested. | French interface present; no multilingual validation. |
 | Amberol | MP3 playback and volume confirmed before reboot; no ALSA card detected after reboot. | Pending. | Pending. |
 | Showtime | MP4 playback confirmed before reboot; audio needs restoration. | Pending. | Pending. |
-| Recorder | Startup/reopening and two normal closes passed. Microphone blocked: no physical audio source in this runtime. | Configuration and empty Audio Input chooser opened; unwanted keyboard remains. Recording/codec operations untested. | Configuration labels French; complete coverage untested. |
+| Recorder | Diagnostic-boot microphone capture recognized through native ALSA preview; two complete KRecorder WAV saves measured. Application recording confirmed good by the operator after replay. | Microphone chooser, WAV/PCM saving and persisted `0:08` after normal relaunch passed with opt-in audio fixes. Other codecs and every menu untested. | Configuration labels French; complete coverage untested. |
 | Megapixels | Blocked: no established standard capture pipeline. | Unvalidated. | Not the priority before functional capture. |
 | Calls | Startup, reopening, Keypad tab and normal exit status 0 verified. UI reports no modem/VoIP account; no number entered or call placed. | VoIP Accounts opened; session preference restores Close, and simulated touch dismisses the dialog while Calls stays open. | French labels on examined screens; complete coverage unvalidated. |
 | Web | Pending; Internet DNS failed at the last check. | Pending. | Pending. |
@@ -713,3 +713,15 @@ Capture data exists, but recognition of the recorded video sound and app-level
 recording still require validation. Audio fixtures/recordings remain private,
 outside Git. A preview amplified eight times was prepared without clipping;
 listening confirmation is pending at this checkpoint.
+
+## Microphone and Recorder result — 2026-10-04
+
+Native eight-second capture was operator-recognized after amplified playback.
+An opt-in PipeWire microphone source and numeric KRecorder WAV/PCM settings
+then produced two complete 8.96-second recordings. The final saved trial
+survived normal close/relaunch and displayed `0:08`. After replaying it,
+the operator confirmed that the application-produced recording was good. Both hardware PCMs
+closed at idle. This supersedes earlier no-source/microphone-unvalidated
+observations on this diagnostic boot only. Full UCM2, headset/earpiece and
+durable boot deployment remain pending. See the
+[audio integration record](../../userspace/audio/README.md#microphone-and-recorder-capture--2026-10-04).

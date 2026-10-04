@@ -60,3 +60,50 @@ capture produced eight seconds of data with all tested controls restored;
 recognizable microphone sound and application integration remain unvalidated.
 No kernel was installed durably and no microphone source was installed.
 See the [application checklist](../../docs/validation/lmi-app-checklist-2026-10-03.md).
+
+## Microphone and Recorder capture — 2026-10-04
+
+On the same temporary reset-GPIO diagnostic boot, standard ALSA recording
+captured 384,000 mono S16_LE frames at 48 kHz (eight seconds). The operator
+recognized the recorded video sound during playback of an amplified preview
+(gain eight, without clipping). This validates microphone capture, not the
+earpiece or headset. Unamplified capture remains quiet.
+
+The opt-in `lmi-microphone.asoundrc` fragment retains/restores eight mixer
+controls and selects the OEM static `speaker-mic` route (ADC4/INP5).
+Merge the fragment with the active user's existing ALSA configuration;
+do not replace the speaker fragment or unrelated configuration. Install
+`91-lmi-microphone.conf` alongside the speaker adapter in the user's
+`pipewire.conf.d` directory. It uses mono S16_LE, 48 kHz, 1024-frame periods,
+four periods, disabled mmap and a suggested `node.latency = 1024/48000`.
+The latency setting is essential for the tested Qt/PulseAudio recording
+path: without it, a saved test contained only 4096 frames (0.085 seconds)
+despite eight seconds of UI recording. Direct `pw-record` had succeeded.
+This is a tested workaround; the exact downstream scheduling defect has
+not been established. No global quantum override is installed.
+
+KRecorder 25.04.0-2 with Qt 6.8.2 needs numeric settings for this tested
+WAV/PCM combination: `containerFormat=12`, `audioCodec=8`. The optional
+`lmi-krecorder.conf` contains those two settings only. Merge them into the
+active user's `kde.org/krecorder.conf` while KRecorder is closed; retain
+other settings. Selecting the displayed `Wave File` description had instead
+persisted an incompatible string and produced WMV. Other formats are not
+validated. These values are version-specific; review before upgrading.
+
+With both changes, two KRecorder trials produced 430,080 mono S16_LE frames
+at 48 kHz: 8.96 seconds each. After saving and closing normally, the final
+trial persisted and displayed `0:08` on relaunch. Old failed trials still
+display `0:00`; the fix cannot recover their missing audio. The final trial
+had peak 1463 and RMS 90.16. The initial listening reply was too weak/no
+sound, but after replaying the recording the operator confirmed it was good.
+An additional source-gain experiment was discarded and source volume restored
+to 1.00; speaker volume remains 0.70. Earlier recognition concerned an
+amplified native ALSA capture; this later confirmation concerns KRecorder. Playback and capture PCMs were both closed at idle.
+
+The source is nonfatal when its adapter cannot open; idle suspension remains
+five seconds. This is not a complete UCM2 profile and does not establish
+headset, earpiece, simultaneous playback/capture, durable boot deployment,
+or a rebuilt image. Remove only the microphone fragment, adapter and the
+two added recorder preferences to roll back; restart user audio services.
+Private recordings, screenshots, firmware and generated images stay out of
+Git. The files are opt-in, not automatically added to the image builder.

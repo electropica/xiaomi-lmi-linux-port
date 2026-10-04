@@ -16,7 +16,9 @@ a temporary reset-GPIO diagnostic boot, not a replacement for the durable
 original boot. WCD938x and TFA9874 now bind, ALSA registers, and direct S16_LE
 and S24_LE playback completes. Later S32_LE frontend tests produced clear
 music, confirmed through a local PipeWire speaker route on 2026-10-03.
-UCM2, microphone/headset routing and durable boot deployment remain pending.
+Microphone capture and KRecorder WAV saving were subsequently tested on
+2026-10-04 (see the audio integration record below). Full UCM2, headset/earpiece
+routing and durable boot deployment remain pending.
 
 The proprietary TFA firmware is external and is never tracked. Neither the
 diagnostic boot nor any userdata image is stored in Git. Kernel and userdata
@@ -789,3 +791,15 @@ capture produced eight seconds of data with all tested controls restored;
 recognizable microphone sound and application integration remain unvalidated.
 No kernel was installed durably and no microphone source was installed.
 See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
+## Microphone and Recorder result — 2026-10-04
+
+Native eight-second capture was operator-recognized after amplified playback.
+An opt-in PipeWire microphone source and numeric KRecorder WAV/PCM settings
+then produced two complete 8.96-second recordings. The final saved trial
+survived normal close/relaunch and displayed `0:08`. After replaying it,
+the operator confirmed that the application-produced recording was good. Both hardware PCMs
+closed at idle. This supersedes earlier no-source/microphone-unvalidated
+observations on this diagnostic boot only. Full UCM2, headset/earpiece and
+durable boot deployment remain pending. See the
+[audio integration record](../../userspace/audio/README.md#microphone-and-recorder-capture--2026-10-04).

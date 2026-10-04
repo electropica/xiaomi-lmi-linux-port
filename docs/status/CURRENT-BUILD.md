@@ -57,7 +57,8 @@ boot remain external and must never be added to Git.
 
 The WCD938x/TFA9874 path now supports clear speaker music through direct
 S32_LE ALSA and an installed opt-in PipeWire route (2026-10-03). A complete
-UCM2 profile and microphone/headset validation remain pending; see
+UCM2 profile and headset/earpiece validation remain pending; microphone
+capture and KRecorder saving were subsequently tested on 2026-10-04; see
 [`archi-validation-02` audio progress](../validation/archi-validation-02-audio-progress-2026-09-29.md).
 
 ## Earlier build: `archi-validation-01` (superseded as current pointer)
@@ -248,3 +249,15 @@ capture produced eight seconds of data with all tested controls restored;
 recognizable microphone sound and application integration remain unvalidated.
 No kernel was installed durably and no microphone source was installed.
 See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
+## Microphone and Recorder result — 2026-10-04
+
+Native eight-second capture was operator-recognized after amplified playback.
+An opt-in PipeWire microphone source and numeric KRecorder WAV/PCM settings
+then produced two complete 8.96-second recordings. The final saved trial
+survived normal close/relaunch and displayed `0:08`. After replaying it,
+the operator confirmed that the application-produced recording was good. Both hardware PCMs
+closed at idle. This supersedes earlier no-source/microphone-unvalidated
+observations on this diagnostic boot only. Full UCM2, headset/earpiece and
+durable boot deployment remain pending. See the
+[audio integration record](../../userspace/audio/README.md#microphone-and-recorder-capture--2026-10-04).
