@@ -833,3 +833,12 @@ See the [checklist](../validation/lmi-app-checklist-2026-10-03.md#papers-search-
 Papers Save As also created an identical test PDF through the mobile chooser;
 the Save control remained visible above OSK. Keyboard dismissal and normal
 closure passed, and only the disposable copy was removed after comparison.
+
+## Keyboard home-bar gesture — 2026-10-04
+
+A two-second simulated hold centered on the bottom white bar toggled OSK in
+Text Editor and Files, with DBus visibility checks. No preference or launcher
+was changed. The Files rename replay hid OSK automatically in this attempt,
+so the earlier persistent-keyboard symptom was not reproduced. Operator
+gesture confirmation and other dialogs remain pending. See the
+[checklist](../validation/lmi-app-checklist-2026-10-03.md#keyboard-home-bar-gesture--2026-10-04).

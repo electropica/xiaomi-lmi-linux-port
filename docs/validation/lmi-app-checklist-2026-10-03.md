@@ -15,7 +15,7 @@ labels are retained where useful to identify controls on the test phone.
 |---|---|---|---|
 | Discussions (Chatty) | Startup and reopening confirmed after the workaround; actual 384 MiB limit, zero swap and no new OOM in the checked scope. SMS/MMS unvalidated; no modem detected. | Shortcuts initially too wide. With Phoc window adjustment and Close restored, the whole dialog and touch-simulated close/reopen were verified on October 4. Other menus need further checks. | Settings still contain English despite the French locale; partial catalog. Local correction prepared but not fully validated; low priority. |
 | Calculator | Touch-button arithmetic includes 2+3=5 and 9²=81. App-only simple GTK input context keeps the keypad visible without OSK; operator confirmation and normal close/reopening retained. Current menu test closed with status 0. | Basic → Advanced → Conversion → Basic navigation passed. Touch entry of 180 degrees produced 3.141592654 radians. Preferences opened and closed using the visible Close button. Shortcuts remain horizontally clipped, without a visible Close; outside touch failed, injected Escape dismissed them. | Examined labels French; full coverage unvalidated. |
-| Files | Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled test continuation, not a user-facing fix. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
+| Files | Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled that initial test continuation. A later two-second hold centered on the home bar toggled OSK on/off in Files; operator gesture confirmation remains pending. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
 | Text Editor | Input, creation/save, reopening and modification/save verified on test files. Initial renderer teardown produced SIGSEGV; two normal closures obtained with app-only Cairo. Operator confirmed touch usability of Save As with the final launcher. | Save As through the actual menu creates a separate file with identical contents; GNOME chooser fits the display. Preferences and search opened and closed through simulated touch. Shortcuts still clip; touch-only dismissal unvalidated. Printing, replacement and other actions pending. | Operator previously reported French preferences; translation is not the priority. |
 | Papers | Two-page synthetic PDF displayed; swipe navigation and reopening retained. Search for Xiaomi returns one hit per page; absent-term search reports no results. Touching the second hit opens page two with the word highlighted and OSK hidden. Normal closure status 0. | Sidebar/search navigation and Save As usable through simulated touch. Save As created an identical 2,273-byte test copy; chooser and Save fit above OSK, which hid afterwards. Test copy removed after comparison and normal app close. Annotation, forms, printing and remaining menus unvalidated. Pixman invalid-rectangle warning observed during navigation, without a crash in this test. | Examined search labels French; full coverage unvalidated. |
 | Photos (Koko) | Operator opened and zoomed a test image; thumbnail visible in a capture after the KIO cache workaround. No camera capture validated. | Return to gallery and hidden keyboard confirmed after correction. Sliding menu accessible; Images bar and labels remain poorly adapted. Search/editing/video unvalidated. | French labels visible; complete coverage unvalidated. |
@@ -809,3 +809,26 @@ above the keyboard. A distinct temporary PDF name created a 2,273-byte copy
 identical to the original. The chooser closed and OSK hid after saving.
 Normal application close returned status 0. Only the new copy was removed
 after another content comparison; the original PDF fixture remains intact.
+
+## Keyboard home-bar gesture — 2026-10-04
+
+With Phosh 0.46.0 and Squeekboard 1.43.1, a simulated two-second hold centered
+on the bottom white home bar hid the keyboard in Text Editor. Repeating the
+gesture showed it, then another hold hid it. DBus Visible values and captures
+confirmed the transitions. The editor restored its existing test document;
+no text was entered or saved. Normal close returned status 0.
+
+In Files, a new isolated 29-byte fixture was renamed. This attempt hid OSK
+automatically after Rename, unlike the earlier observation. The same home-bar
+hold then showed OSK, and another hold hid it. The fixture was removed only
+after exact content comparison and its empty directory removed. Files was
+quit normally after its window closed. No layout, accessibility preference,
+delay setting or application wrapper was modified.
+
+Practical instruction: hold the center of the bottom white home bar for about
+two seconds to toggle the keyboard. This is simulated-touch validation in
+these two apps, not operator confirmation or proof for every dialog. The
+installed Phosh schema describes osk-unfold-delay as a long-press delay factor;
+its existing value 1.0 was retained. Shorter earlier failed holds remain
+recorded and do not establish that the two-second gesture is universally
+required. A visible, discoverable Hide control remains desirable.

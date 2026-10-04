@@ -46,3 +46,11 @@ Files Copy/Rename/Trash passed on disposable fixtures, but the keyboard stayed
 open after Rename. The Settings last-panel reset trial was reverted because
 it did not open an overview. These checks introduced no new launch wrappers.
 Full details and remaining functions are in the application checklist above.
+
+### Keyboard gesture
+
+Hold the center of Phosh's bottom white home bar for about two seconds to
+toggle the keyboard. Simulated-touch checks showed hide/show/hide in Text
+Editor and show/hide in Files on October 4, without a settings change.
+Operator confirmation and other dialogs remain pending; see the checklist's
+keyboard home-bar gesture record. A visible Hide control remains desirable.
