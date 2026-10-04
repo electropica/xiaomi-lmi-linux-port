@@ -943,3 +943,16 @@ Camera work needs a demonstrated capture backend compatible with this
 downstream stack, or a provenance-matched standard driver pipeline. Adding
 another camera app or inventing only an INI does not establish that backend.
 See the [camera blocker](archi-validation-02-camera-blocker-2026-09-27.md).
+
+### Camera backend feasibility follow-up
+
+A read-only, bounded metadata probe confirms OEM camera objects and the
+Android loader exist, but the required service environment is incomplete.
+Binder is enabled in the current kernel; its device nodes and Android property
+service are absent, and the HIDL manager symlink is unresolved. No proprietary
+binary was executed and no camera stream, service or mount was started.
+An alternate source already describes CAMSS/OV13B10, but its camera is not
+validated and it is not the running kernel. The reproducible inspection and
+backend acceptance gates are in the [camera README](../../userspace/camera/README.md#oem-backend-feasibility--2026-10-04).
+Camera capture remains blocked; this is progress on identifying prerequisites,
+not a working camera or a replacement app installation.

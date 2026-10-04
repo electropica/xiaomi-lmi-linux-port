@@ -875,3 +875,9 @@ status 1 due to the absent lmi-compatible configuration. Targeted source
 review supports the downstream/private-interface blocker, without establishing
 a usable capture backend. No camera configuration or image was changed.
 See the [functional recheck](../validation/lmi-app-checklist-2026-10-03.md#functional-priority-and-camera-recheck--2026-10-04).
+
+The camera follow-up found OEM HAL objects and a usable Android loader already
+present, but missing Binder nodes/properties and a broken HIDL-manager target.
+A read-only probe is now preserved; no Android service or capture was started.
+The alternate CAMSS/OV13B10 source is distinct from the running kernel and is
+not a validated camera. See the [backend prerequisites](../../userspace/camera/README.md#oem-backend-feasibility--2026-10-04).
