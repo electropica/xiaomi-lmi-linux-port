@@ -302,3 +302,15 @@ are the next allocation candidates. A production capture must size the
 buffer from the JPEG maximum metadata and honor the HAL-returned usage;
 the 16 MiB failed allocator test is not a valid capture-buffer recipe.
 Megapixels still has no working preview or photo capture.
+
+A subsequent [direct Qualcomm allocation diagnostic](diagnostics/camera-qti-allocate.cpp)
+used the public `BufferDescriptor` layout, verified against the installed
+`libgralloccore.so`: Android libc++ string prefix 24 bytes; descriptor 64
+bytes with dimension, format, layer, usage, ID and reserved-size offsets
+asserted. The small client linked against the existing system `libc++.so`.
+`BufferManager::GetInstance` succeeded; allocation of a 32,572,808 x 1 BLOB
+with usage 0x20003 returned 0 and a real vendor handle. Releasing that
+handle also returned 0. No image data was read and no camera request was
+submitted by this allocation-only test. The installed libraries remain
+external inputs; neither their binaries nor any photo belongs in Git.
+This verifies an allocation route, not yet full CamX buffer compatibility.
