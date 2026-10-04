@@ -851,3 +851,16 @@ tested and should not be inferred from this selection-only check. A native
 mobile checkbox/selection mode remains preferable to this keyboard-assisted
 workaround. See the official
 [GNOME selection behavior](https://help.gnome.org/gnome-help/nautilus-behavior.html).
+
+## Mobile multiselection requirement remains open
+
+The operator rejected the Terminal/Ctrl sequence as too complicated for a
+phone. Its technical validation does not meet the usability requirement.
+The next solution must provide direct touch selection, preferably checkboxes
+and a clear selection mode, without exposing keyboard modifiers.
+
+Initial availability checks found no index-fm candidate in the phone's
+current APT lists; Portfolio was also unavailable. This does not prove their
+absence from other repositories or distribution formats. Neither app was
+installed, no package lists were refreshed, and Nautilus remains available.
+No alternative manager or native multiselection fix is claimed validated.
