@@ -846,7 +846,6 @@ gesture confirmation and other dialogs remain pending. See the
 ## Files touch multiselection — 2026-10-04
 
 The deletion report was clarified as difficulty selecting multiple files.
-Terminal OSK's latched Ctrl plus touches selected three folders; Ctrl and
-selection were then cleared. No data was deleted and grouped Trash remains
+Terminal OSK's latched Ctrl plus touches selected three folders; Ctrl was then released and the grouped selection reduced to one item. No data was deleted and grouped Trash remains
 untested. The keyboard-assisted workaround is recorded in the
 [checklist](../validation/lmi-app-checklist-2026-10-03.md#files-touch-multiselection--2026-10-04).

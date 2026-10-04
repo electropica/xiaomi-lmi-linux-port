@@ -841,7 +841,7 @@ OSK through the home-bar hold, selecting Terminal from the globe menu and
 tapping Ctrl latched the modifier. Touching two additional folder tiles kept
 the original selection, showing three selected folders. No file was opened,
 moved, copied or deleted during this selection check. Ctrl was subsequently
-released and the selection cleared. The Terminal layout remains available
+released; the grouped selection ended with one item still selected. The Terminal layout remains available
 for the operator; no system-wide default or keyboard configuration changed.
 
 Practical sequence: show OSK, globe → Terminal, tap Ctrl, then tap each wanted
