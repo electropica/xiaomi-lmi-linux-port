@@ -19,7 +19,7 @@ labels are retained where useful to identify controls on the test phone.
 | Text Editor | Input, creation/save, reopening and modification/save verified on test files. Initial renderer teardown produced SIGSEGV; two normal closures obtained with app-only Cairo. Operator confirmed touch usability of Save As with the final launcher. | Save As through the actual menu creates a separate file with identical contents; GNOME chooser fits the display. Preferences and search opened and closed through simulated touch. Shortcuts still clip; touch-only dismissal unvalidated. Printing, replacement and other actions pending. | Operator previously reported French preferences; translation is not the priority. |
 | Papers | Two-page test PDF displayed; swipe to page two, exit status 0 and reopening verified. Search and annotation unvalidated. | Pending. | Pending. |
 | Photos (Koko) | Operator opened and zoomed a test image; thumbnail visible in a capture after the KIO cache workaround. No camera capture validated. | Return to gallery and hidden keyboard confirmed after correction. Sliding menu accessible; Images bar and labels remain poorly adapted. Search/editing/video unvalidated. | French labels visible; complete coverage unvalidated. |
-| Clocks | Stopwatch start, progression, lap, pause and reset checked with simulated touch. One-minute timer start, countdown, pause and removal of only the test timer verified. Expiration and audible alarms unvalidated; audio needs restoration. | Pending. | Pending. |
+| Clocks | Stopwatch start, progression, lap, pause and reset checked with simulated touch. One-minute timer start, countdown, pause and removal of only the test timer verified. Five-second timer expiration and audible alert confirmed on October 4 after installing Feedback and its PulseAudio backend. Alarm wakeup/delivery unvalidated. | Pending. | Pending. |
 | Calendar | Month navigation and Today, explicitly authorized local dummy-event creation, reading and removal verified. Reopening without a leftover and normal exit status 0 confirmed. Synchronization and reminders unvalidated. | Creation/edit dialog and Delete usable after hiding the keyboard; other menus unvalidated. | French labels visible; complete coverage unvalidated. |
 | Contacts | Local dummy contact without contact details, persistence after reopening and positive/negative search verified. Initial deletion caused SIGSEGV; two removal/exit-status-0 cycles passed with app-only Cairo. Launcher installed and next build prepared. | Add form and Delete menu tested; editing, import/export and merging unvalidated. | French labels visible; complete coverage unvalidated. |
 | Settings | Overview and Mouse and Touchpad, Keyboard and System pages accessible through simulated touch; two normal exits with status 0. Last-panel restoration confirmed; overview-on-launch unresolved. No system settings changed in that navigation test. | Mouse-test dialog opens without a visible Close button; outside touches did not dismiss it, Escape did. Touch-only dismissal unresolved; other submenus unvalidated. | Examined pages mostly French; complete coverage unvalidated. |
@@ -27,7 +27,7 @@ labels are retained where useful to identify controls on the test phone.
 | lmi Flashlight | On/off confirmed before reboot; recheck pending. | No additional menu tested. | French interface present; no multilingual validation. |
 | Amberol | MP3 playback and volume confirmed before reboot; no ALSA card detected after reboot. | Pending. | Pending. |
 | Showtime | MP4 playback confirmed before reboot; audio needs restoration. | Pending. | Pending. |
-| Recorder | Diagnostic-boot microphone capture recognized through native ALSA preview; two complete KRecorder WAV saves measured. Application recording confirmed good by the operator after replay. | Microphone chooser, WAV/PCM saving and persisted `0:08` after normal relaunch passed with opt-in audio fixes. Other codecs and every menu untested. | Configuration labels French; complete coverage untested. |
+| Recorder | Diagnostic-boot microphone capture recognized through native ALSA preview; two complete KRecorder WAV saves measured. Application recording confirmed good by the operator after replay. | Microphone chooser, WAV/PCM saving and persisted `0:08` after normal relaunch passed with opt-in audio fixes. Rename and Delete tested on our temporary recording; confirmed recording preserved. Other codecs/export unvalidated. | Configuration labels French; complete coverage untested. |
 | Megapixels | Blocked: no established standard capture pipeline. | Unvalidated. | Not the priority before functional capture. |
 | Calls | Startup, reopening, Keypad tab and normal exit status 0 verified. UI reports no modem/VoIP account; no number entered or call placed. | VoIP Accounts opened; session preference restores Close, and simulated touch dismisses the dialog while Calls stays open. | French labels on examined screens; complete coverage unvalidated. |
 | Web | Pending; Internet DNS failed at the last check. | Pending. | Pending. |
@@ -747,3 +747,12 @@ dialog with visible icons, save a WAV, and close using the visible window
 button. Playback reached the fixture's eight-second duration; Back returned
 to the list. Other codecs, export destinations and every edit operation
 remain unvalidated. No new image was built and no session-wide theme changed.
+
+## Timer feedback and clock offset — 2026-10-04
+
+Timer sound is now operator-confirmed after installing the missing Feedback
+service and PulseAudio backend. Test timers were removed. The reported clock
+offset was measured while NTP had no Internet route; the system clock was
+aligned from Windows and saved without changing Wi-Fi. Recorder Rename and
+Delete passed on a temporary test file. See the
+[scoped validation record](lmi-clock-feedback-2026-10-04.md).

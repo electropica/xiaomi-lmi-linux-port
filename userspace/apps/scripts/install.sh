@@ -16,6 +16,8 @@ apt-get install -y --no-install-recommends \
     showtime \
     amberol \
     gnome-clocks \
+    feedbackd \
+    libcanberra-pulse \
     gnome-contacts \
     gnome-weather \
     gnome-calls \
