@@ -17,7 +17,7 @@ labels are retained where useful to identify controls on the test phone.
 | Calculator | Touch-button arithmetic includes 2+3=5 and 9²=81. App-only simple GTK input context keeps the keypad visible without OSK; operator confirmation and normal close/reopening retained. Current menu test closed with status 0. | Basic → Advanced → Conversion → Basic navigation passed. Touch entry of 180 degrees produced 3.141592654 radians. Preferences opened and closed using the visible Close button. Shortcuts remain horizontally clipped, without a visible Close; outside touch failed, injected Escape dismissed them. | Examined labels French; full coverage unvalidated. |
 | Files | Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled test continuation, not a user-facing fix. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
 | Text Editor | Input, creation/save, reopening and modification/save verified on test files. Initial renderer teardown produced SIGSEGV; two normal closures obtained with app-only Cairo. Operator confirmed touch usability of Save As with the final launcher. | Save As through the actual menu creates a separate file with identical contents; GNOME chooser fits the display. Preferences and search opened and closed through simulated touch. Shortcuts still clip; touch-only dismissal unvalidated. Printing, replacement and other actions pending. | Operator previously reported French preferences; translation is not the priority. |
-| Papers | Two-page test PDF displayed; swipe to page two, exit status 0 and reopening verified. Search and annotation unvalidated. | Pending. | Pending. |
+| Papers | Two-page synthetic PDF displayed; swipe navigation and reopening retained. Search for Xiaomi returns one hit per page; absent-term search reports no results. Touching the second hit opens page two with the word highlighted and OSK hidden. Normal closure status 0. | Sidebar/search navigation and Save As usable through simulated touch. Save As created an identical 2,273-byte test copy; chooser and Save fit above OSK, which hid afterwards. Test copy removed after comparison and normal app close. Annotation, forms, printing and remaining menus unvalidated. Pixman invalid-rectangle warning observed during navigation, without a crash in this test. | Examined search labels French; full coverage unvalidated. |
 | Photos (Koko) | Operator opened and zoomed a test image; thumbnail visible in a capture after the KIO cache workaround. No camera capture validated. | Return to gallery and hidden keyboard confirmed after correction. Sliding menu accessible; Images bar and labels remain poorly adapted. Search/editing/video unvalidated. | French labels visible; complete coverage unvalidated. |
 | Clocks | Stopwatch start, progression, lap, pause and reset checked with simulated touch. One-minute timer start, countdown, pause and removal of only the test timer verified. Five-second timer expiration and audible alert confirmed on October 4 after installing Feedback and its PulseAudio backend. Alarm wakeup/delivery unvalidated. | Pending. | Pending. |
 | Calendar | Month navigation and Today, explicitly authorized local dummy-event creation, reading and removal verified. Reopening without a leftover and normal exit status 0 confirmed. Synchronization and reminders unvalidated. | Creation/edit dialog and Delete usable after hiding the keyboard; other menus unvalidated. | French labels visible; complete coverage unvalidated. |
@@ -786,3 +786,26 @@ preference was restored to `mouse`, and the app closed normally with status 0.
 No persistent Settings fix was installed and no Wi-Fi switch was changed.
 Overview-on-launch and touch-only dismissal of the mouse-test dialog remain
 open issues. Screenshots stay private and outside Git.
+
+## Papers search — 2026-10-04
+
+The existing synthetic two-page PDF was opened without modifying it. Through
+simulated touch, the sidebar and its search control opened. Injected text
+`Xiaomi` returned two results, one per page; `TEST-LMI-NOT-PRESENT` displayed
+`Aucun résultat trouvé`. Touching the second positive result opened page two
+and highlighted the matching word. The keyboard hid when the result opened,
+without a remote OSK hide command in this test. Normal closure returned
+Result=success and ExecMainStatus=0. This does not validate annotation,
+printing, forms or arbitrary document formats.
+
+The app journal emitted `pixman_region32_init_rect: Invalid rectangle passed`
+during navigation. No crash occurred in this scoped test; the warning's cause
+and broader rendering impact remain unestablished. Screenshots and the PDF
+fixture remain private, outside Git. No persistent app change was installed.
+
+Save As was also checked from the actual document menu. After loading, the
+chooser displayed Documents and an editable name field; Save remained visible
+above the keyboard. A distinct temporary PDF name created a 2,273-byte copy
+identical to the original. The chooser closed and OSK hid after saving.
+Normal application close returned status 0. Only the new copy was removed
+after another content comparison; the original PDF fixture remains intact.

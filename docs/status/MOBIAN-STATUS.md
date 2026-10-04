@@ -822,3 +822,14 @@ Files keyboard dismissal and Calculator's clipped Shortcuts dialog remain
 unresolved. Resetting Settings' last-panel preference did not provide the
 requested overview; the original value was restored and no fix installed.
 See the [checklist](../validation/lmi-app-checklist-2026-10-03.md#files-operations-calculator-menus-and-settings-trial--2026-10-04).
+
+## Papers search — 2026-10-04
+
+Positive/negative PDF text search and touch navigation to the second result
+passed on the synthetic fixture, with keyboard dismissal and normal exit.
+A Pixman invalid-rectangle warning remains recorded; no crash was observed.
+See the [checklist](../validation/lmi-app-checklist-2026-10-03.md#papers-search--2026-10-04).
+
+Papers Save As also created an identical test PDF through the mobile chooser;
+the Save control remained visible above OSK. Keyboard dismissal and normal
+closure passed, and only the disposable copy was removed after comparison.
