@@ -750,3 +750,32 @@ external public key can be explicitly selected with `M1_SSH_PUBLIC_KEY_FILE`.
 Private keys and multi-key inputs are rejected. Existing phone access and input
 rootfs trees are unchanged. Isolated tests cover defaults, explicit access and
 invalid inputs; no complete image build or deployment was performed.
+
+## Recorder and missing-card audio startup — 2026-10-04
+
+KRecorder 25.04.0-2 opened, navigated to Configuration and returned to its
+recording list. The Audio Input chooser was empty. Two simulated-touch
+main-window closes, including a reopening after the service correction,
+returned Result=success, ExecMainCode=1, ExecMainStatus=0. No recording was
+started, no existing recording was changed and temporary test units stopped.
+Configuration labels were French in the captures; full translation untested.
+The on-screen keyboard appeared in Configuration without a text-entry action;
+that usability defect remains open. Codec, container and recording operations
+have not been validated.
+
+This runtime had no ALSA card: /proc/asound/cards reported no soundcards and
+/dev/snd contained only timer. The installed speaker adapter failed to open
+lmi_speaker; PipeWire terminated with exit status 234 and WirePlumber stopped.
+This does not overturn earlier clear-speaker validation on the separate
+temporary diagnostic boot, nor identify the currently loaded boot image by
+hash. The displayed kernel release alone cannot distinguish those images.
+
+The adapter now declares flags = [ nofail ], as specified by the
+[PipeWire configuration documentation](https://docs.pipewire.org/page_man_pipewire_conf_5.html).
+After installation of this single configuration change and an audio-service
+restart, PipeWire 1.4.2, pipewire-pulse and WirePlumber stayed active through
+the recorder reopening/close test. wpctl showed only Dummy Output and no
+audio source. The correction restores server availability when the card is
+absent; it does not restore physical speaker or microphone operation. The
+missing-card warning remains expected. Physical-card playback with the new
+flag awaits the diagnostic boot retest. No kernel/image build or flash ran.

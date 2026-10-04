@@ -40,3 +40,13 @@ the first raw-file PipeWire attempt did not and is not counted as validation.
 This is not a full UCM2 profile. Microphone/headset, volume range, and durable
 kernel installation still need validation. To roll back this opt-in, remove
 only these two added user files and restart the user's audio services.
+
+## Missing-card startup handling — 2026-10-04
+
+The speaker adapter uses `flags = [ nofail ]`: an absent ALSA card must not
+prevent the entire PipeWire server from starting. Tested on the phone with
+no ALSA card: PipeWire, its PulseAudio service and WirePlumber remain active,
+but only Dummy Output exists and no microphone source is exposed. This is
+startup recovery, not speaker/microphone validation. Re-test physical playback
+on the known diagnostic boot before claiming it for this revised configuration.
+See the [application checklist](../../docs/validation/lmi-app-checklist-2026-10-03.md).

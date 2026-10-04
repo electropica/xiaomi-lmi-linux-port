@@ -27,7 +27,7 @@ labels are retained where useful to identify controls on the test phone.
 | lmi Flashlight | On/off confirmed before reboot; recheck pending. | No additional menu tested. | French interface present; no multilingual validation. |
 | Amberol | MP3 playback and volume confirmed before reboot; no ALSA card detected after reboot. | Pending. | Pending. |
 | Showtime | MP4 playback confirmed before reboot; audio needs restoration. | Pending. | Pending. |
-| Recorder | Pending; microphone unvalidated. | Pending. | Pending. |
+| Recorder | Startup/reopening and two normal closes passed. Microphone blocked: no physical audio source in this runtime. | Configuration and empty Audio Input chooser opened; unwanted keyboard remains. Recording/codec operations untested. | Configuration labels French; complete coverage untested. |
 | Megapixels | Blocked: no established standard capture pipeline. | Unvalidated. | Not the priority before functional capture. |
 | Calls | Startup, reopening, Keypad tab and normal exit status 0 verified. UI reports no modem/VoIP account; no number entered or call placed. | VoIP Accounts opened; session preference restores Close, and simulated touch dismisses the dialog while Calls stays open. | French labels on examined screens; complete coverage unvalidated. |
 | Web | Pending; Internet DNS failed at the last check. | Pending. | Pending. |
@@ -651,3 +651,32 @@ compile with glib-compile-schemas --strict in a temporary directory.
 Memory-backend reads return scale-to-fit=true and button-layout=appmenu:close
 in generic, Phosh and Phosh:GNOME contexts. Temporary files are automatically
 removed. These checks do not build or boot an image.
+
+## Recorder and missing-card audio startup — 2026-10-04
+
+KRecorder 25.04.0-2 opened, navigated to Configuration and returned to its
+recording list. The Audio Input chooser was empty. Two simulated-touch
+main-window closes, including a reopening after the service correction,
+returned Result=success, ExecMainCode=1, ExecMainStatus=0. No recording was
+started, no existing recording was changed and temporary test units stopped.
+Configuration labels were French in the captures; full translation untested.
+The on-screen keyboard appeared in Configuration without a text-entry action;
+that usability defect remains open. Codec, container and recording operations
+have not been validated.
+
+This runtime had no ALSA card: /proc/asound/cards reported no soundcards and
+/dev/snd contained only timer. The installed speaker adapter failed to open
+lmi_speaker; PipeWire terminated with exit status 234 and WirePlumber stopped.
+This does not overturn earlier clear-speaker validation on the separate
+temporary diagnostic boot, nor identify the currently loaded boot image by
+hash. The displayed kernel release alone cannot distinguish those images.
+
+The adapter now declares flags = [ nofail ], as specified by the
+[PipeWire configuration documentation](https://docs.pipewire.org/page_man_pipewire_conf_5.html).
+After installation of this single configuration change and an audio-service
+restart, PipeWire 1.4.2, pipewire-pulse and WirePlumber stayed active through
+the recorder reopening/close test. wpctl showed only Dummy Output and no
+audio source. The correction restores server availability when the card is
+absent; it does not restore physical speaker or microphone operation. The
+missing-card warning remains expected. Physical-card playback with the new
+flag awaits the diagnostic boot retest. No kernel/image build or flash ran.

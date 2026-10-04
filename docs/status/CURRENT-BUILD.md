@@ -230,3 +230,11 @@ portal routing and a per-app launcher now give an accessible Save button.
 Remote tests passed create/save, reopen, Save As, edit/save and normal close;
 the operator also confirmed the Save As dialog usable by touch. Recipe and
 builder staging include these userspace fixes; no new image was built.
+
+## Runtime audio checkpoint — 2026-10-04
+
+The inspected phone runtime exposed no ALSA card. The earlier speaker result
+remains specific to the temporary diagnostic boot. Its installed opt-in
+PipeWire adapter now tolerates a missing card, allowing the server to start;
+Dummy Output is not physical audio. Diagnostic-boot speaker and microphone
+retesting is pending. See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
