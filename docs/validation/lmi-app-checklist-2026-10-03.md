@@ -667,3 +667,26 @@ temporaire, avec le nouvel override ; glib-compile-schemas --strict passe.
 La lecture GSETTINGS_BACKEND=memory retourne appmenu:close pour le contexte
 générique, Phosh et Phosh:GNOME. Le répertoire temporaire a été retiré
 automatiquement. Cette vérification ne reconstruit pas une image complète.
+
+
+## Raccourcis de l’Éditeur — reprise du 4 octobre 2026
+
+Le réglage button-layout=appmenu:close est toujours présent à la reprise.
+Éditeur 48.3-3 lancé via lmi-text-editor, libadwaita 1.7.6-1~deb13u1.
+Le menu réel Raccourcis clavier ouvre une vue trop large pour l’écran :
+libellés tronqués à gauche et absence de bouton Fermer accessible pour le
+dialogue. Masquer le clavier par appui long sur la barre inférieure libère
+la hauteur, mais ne résout pas ce débordement horizontal. La fermeture de
+ce dialogue au toucher n’est pas validée ; Échap injecté à distance permet
+de revenir au document.
+
+L’essai Phoc scale-to-fit limité à org.gnome.TextEditor, initialement false,
+a été activé puis retiré faute d’amélioration visible. Aucun réglage global
+de mise à l’échelle n’a été changé. La ressource embarquée help-overlay.ui
+déclare un GtkShortcutsWindow et une GtkShortcutsSection max-height=15 ;
+elle n’a pas été modifiée. Aucun patch de ressource ni nouveau helper n’a
+été installé. Le document de test est resté inchangé. Après sortie par
+Échap, la croix de la fenêtre principale a fermé l’application normalement
+(Result=success, ExecMainCode=1, ExecMainStatus=0). L’unité de test a été
+arrêtée. Ce résultat précise la limite du correctif général de boutons :
+il ne corrige pas les fenêtres de raccourcis surdimensionnées.

@@ -715,3 +715,16 @@ Geary passed empty-account startup, add-form cancellation, reopening and
 normal closure; no mail account or message was created. Calls has no usable
 modem/VoIP account in its UI; no actual call was attempted. See the
 [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
+
+## Editor shortcut dialog recheck — 2026-10-04
+
+The restored Close layout persists in the live session, but Text Editor's
+shortcut dialog is still wider than the display and lacks a touch-accessible
+dialog close control. Hiding the keyboard does not fix its width. App-local
+Phoc scale-to-fit did not visibly help and was returned to false; global
+scaling and embedded resources were not changed. Escape exits the dialog,
+then the main window's Close button gives retained exit status 0. No test
+document was changed. Other apps' shortcut dialogs remain unverified after
+the layout change. See the
+[application checklist](../validation/lmi-app-checklist-2026-10-03.md).
