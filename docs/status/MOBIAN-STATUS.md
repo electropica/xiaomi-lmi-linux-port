@@ -812,3 +812,13 @@ The timer test was removed; no rebuilt image is claimed. The phone clock was
 aligned from Windows and saved using the existing seed service, because NTP
 had no Internet route. Wi-Fi and battery settings were unchanged. See the
 [validation and remaining limits](../validation/lmi-clock-feedback-2026-10-04.md).
+
+## Files and Calculator functional checks — 2026-10-04
+
+Simulated touch validated Files Copy/Rename/Trash on disposable fixtures and
+Calculator arithmetic, angle conversion and Preferences closure. Both apps
+closed normally; file/trash fixtures were removed after exact scoped checks.
+Files keyboard dismissal and Calculator's clipped Shortcuts dialog remain
+unresolved. Resetting Settings' last-panel preference did not provide the
+requested overview; the original value was restored and no fix installed.
+See the [checklist](../validation/lmi-app-checklist-2026-10-03.md#files-operations-calculator-menus-and-settings-trial--2026-10-04).

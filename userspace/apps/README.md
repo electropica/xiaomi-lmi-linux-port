@@ -36,3 +36,13 @@ mail synchronization or every menu.
 
 Repository documentation is written in English. Original UI labels and
 operator quotations may remain in their original language for identification.
+
+### Files and Calculator scope — October 4
+
+The current launcher supports the tested Calculator arithmetic, angle
+conversion and Preferences closure without OSK overlap. Its Shortcuts dialog
+still clips and required injected Escape; no touch-only fix is claimed.
+Files Copy/Rename/Trash passed on disposable fixtures, but the keyboard stayed
+open after Rename. The Settings last-panel reset trial was reverted because
+it did not open an overview. These checks introduced no new launch wrappers.
+Full details and remaining functions are in the application checklist above.

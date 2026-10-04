@@ -14,8 +14,8 @@ labels are retained where useful to identify controls on the test phone.
 | Application | Overall functionality | Menu functionality | Translation |
 |---|---|---|---|
 | Discussions (Chatty) | Startup and reopening confirmed after the workaround; actual 384 MiB limit, zero swap and no new OOM in the checked scope. SMS/MMS unvalidated; no modem detected. | Shortcuts initially too wide. With Phoc window adjustment and Close restored, the whole dialog and touch-simulated close/reopen were verified on October 4. Other menus need further checks. | Settings still contain English despite the French locale; partial catalog. Local correction prepared but not fully validated; low priority. |
-| Calculator | 2+3=5 obtained through touch buttons; exit status 0 and reopening checked remotely. Initial reopening brought back the keyboard; an app-only simple GTK input-context helper prevents its automatic appearance. Keypad and injected physical-key input checked; operator confirmed the full keypad without an overlaid keyboard. | Further checks pending after the keyboard correction. | Pending. |
-| Files | Test folder created through the menu and Create button; disk presence, opening and return checked; service exited with status 0. Chinese names confirmed only before reboot. Copy/rename/delete unvalidated. | Pending. | Pending; Chinese filename rendering is validated separately from menu language. |
+| Calculator | Touch-button arithmetic includes 2+3=5 and 9²=81. App-only simple GTK input context keeps the keypad visible without OSK; operator confirmation and normal close/reopening retained. Current menu test closed with status 0. | Basic → Advanced → Conversion → Basic navigation passed. Touch entry of 180 degrees produced 3.141592654 radians. Preferences opened and closed using the visible Close button. Shortcuts remain horizontally clipped, without a visible Close; outside touch failed, injected Escape dismissed them. | Examined labels French; full coverage unvalidated. |
+| Files | Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled test continuation, not a user-facing fix. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
 | Text Editor | Input, creation/save, reopening and modification/save verified on test files. Initial renderer teardown produced SIGSEGV; two normal closures obtained with app-only Cairo. Operator confirmed touch usability of Save As with the final launcher. | Save As through the actual menu creates a separate file with identical contents; GNOME chooser fits the display. Preferences and search opened and closed through simulated touch. Shortcuts still clip; touch-only dismissal unvalidated. Printing, replacement and other actions pending. | Operator previously reported French preferences; translation is not the priority. |
 | Papers | Two-page test PDF displayed; swipe to page two, exit status 0 and reopening verified. Search and annotation unvalidated. | Pending. | Pending. |
 | Photos (Koko) | Operator opened and zoomed a test image; thumbnail visible in a capture after the KIO cache workaround. No camera capture validated. | Return to gallery and hidden keyboard confirmed after correction. Sliding menu accessible; Images bar and labels remain poorly adapted. Search/editing/video unvalidated. | French labels visible; complete coverage unvalidated. |
@@ -756,3 +756,33 @@ offset was measured while NTP had no Internet route; the system clock was
 aligned from Windows and saved without changing Wi-Fi. Recorder Rename and
 Delete passed on a temporary test file. See the
 [scoped validation record](lmi-clock-feedback-2026-10-04.md).
+
+## Files operations, Calculator menus and Settings trial — 2026-10-04
+
+These checks used simulated touch on the existing diagnostic boot, one app
+at a time. They do not represent a new image or additional operator listening.
+
+Files: a dedicated test directory contained one 39-byte text fixture. Copy
+created an identical second file; Rename changed that copy's filename. Trash
+removed it from the directory and recorded the expected original path.
+The source stayed intact. After normal app closure (status 0), cleanup checked
+the exact source contents, trash contents and origin metadata, then removed
+only those fixtures and their empty directory. No general trash cleanup ran.
+The keyboard remained visible after Rename; the tested bottom long press did
+not hide it. The globe menu offered layouts and keyboard settings, without a
+Hide action. Remote DBus hiding allowed continuation but is not a UI solution.
+
+Calculator: touch buttons produced 9²=81; mode selection reached Advanced and
+Conversion. Entering 180 degrees produced 3.141592654 radians. Returning to
+Basic and opening/closing Preferences through its visible Close button passed,
+without an overlaid keyboard. Shortcuts remained horizontally clipped and
+without a visible Close; an outside touch failed to dismiss them. Injected
+Escape dismissed the dialog, then normal app closure returned status 0.
+Financial/programming calculations and other conversions remain unvalidated.
+
+Settings: resetting the last-panel preference did not open a general overview;
+it opened Wi-Fi. The installed help exposes no overview option. The original
+preference was restored to `mouse`, and the app closed normally with status 0.
+No persistent Settings fix was installed and no Wi-Fi switch was changed.
+Overview-on-launch and touch-only dismissal of the mouse-test dialog remain
+open issues. Screenshots stay private and outside Git.
