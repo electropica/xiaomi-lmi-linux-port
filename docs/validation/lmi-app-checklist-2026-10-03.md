@@ -15,7 +15,7 @@ labels are retained where useful to identify controls on the test phone.
 |---|---|---|---|
 | Discussions (Chatty) | Startup and reopening confirmed after the workaround; actual 384 MiB limit, zero swap and no new OOM in the checked scope. SMS/MMS unvalidated; no modem detected. | Shortcuts initially too wide. With Phoc window adjustment and Close restored, the whole dialog and touch-simulated close/reopen were verified on October 4. Other menus need further checks. | Settings still contain English despite the French locale; partial catalog. Local correction prepared but not fully validated; low priority. |
 | Calculator | Touch-button arithmetic includes 2+3=5 and 9²=81. App-only simple GTK input context keeps the keypad visible without OSK; operator confirmation and normal close/reopening retained. Current menu test closed with status 0. | Basic → Advanced → Conversion → Basic navigation passed. Touch entry of 180 degrees produced 3.141592654 radians. Preferences opened and closed using the visible Close button. Shortcuts remain horizontally clipped, without a visible Close; outside touch failed, injected Escape dismissed them. | Examined labels French; full coverage unvalidated. |
-| Files | Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled that initial test continuation. A later two-second hold centered on the home bar toggled OSK on/off in Files; operator gesture confirmation remains pending. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
+| Files | Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled that initial test continuation. A later two-second hold centered on the home bar toggled OSK on/off in Files; operator gesture confirmation remains pending. Terminal OSK → latched Ctrl → touch items selected three folders. Ctrl was released and selection cleared; no grouped deletion tested. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
 | Text Editor | Input, creation/save, reopening and modification/save verified on test files. Initial renderer teardown produced SIGSEGV; two normal closures obtained with app-only Cairo. Operator confirmed touch usability of Save As with the final launcher. | Save As through the actual menu creates a separate file with identical contents; GNOME chooser fits the display. Preferences and search opened and closed through simulated touch. Shortcuts still clip; touch-only dismissal unvalidated. Printing, replacement and other actions pending. | Operator previously reported French preferences; translation is not the priority. |
 | Papers | Two-page synthetic PDF displayed; swipe navigation and reopening retained. Search for Xiaomi returns one hit per page; absent-term search reports no results. Touching the second hit opens page two with the word highlighted and OSK hidden. Normal closure status 0. | Sidebar/search navigation and Save As usable through simulated touch. Save As created an identical 2,273-byte test copy; chooser and Save fit above OSK, which hid afterwards. Test copy removed after comparison and normal app close. Annotation, forms, printing and remaining menus unvalidated. Pixman invalid-rectangle warning observed during navigation, without a crash in this test. | Examined search labels French; full coverage unvalidated. |
 | Photos (Koko) | Operator opened and zoomed a test image; thumbnail visible in a capture after the KIO cache workaround. No camera capture validated. | Return to gallery and hidden keyboard confirmed after correction. Sliding menu accessible; Images bar and labels remain poorly adapted. Search/editing/video unvalidated. | French labels visible; complete coverage unvalidated. |
@@ -832,3 +832,22 @@ installed Phosh schema describes osk-unfold-delay as a long-press delay factor;
 its existing value 1.0 was retained. Shorter earlier failed holds remain
 recorded and do not establish that the two-second gesture is universally
 required. A visible, discoverable Hide control remains desirable.
+
+## Files touch multiselection — 2026-10-04
+
+The operator clarified the deletion report: individual deletion was found;
+the remaining difficulty was selecting several files. On the phone, opening
+OSK through the home-bar hold, selecting Terminal from the globe menu and
+tapping Ctrl latched the modifier. Touching two additional folder tiles kept
+the original selection, showing three selected folders. No file was opened,
+moved, copied or deleted during this selection check. Ctrl was subsequently
+released and the selection cleared. The Terminal layout remains available
+for the operator; no system-wide default or keyboard configuration changed.
+
+Practical sequence: show OSK, globe → Terminal, tap Ctrl, then tap each wanted
+item. Tap Ctrl again after selecting to release it. The normal file context
+menu can then act on the selection, but grouped Trash itself has not been
+tested and should not be inferred from this selection-only check. A native
+mobile checkbox/selection mode remains preferable to this keyboard-assisted
+workaround. See the official
+[GNOME selection behavior](https://help.gnome.org/gnome-help/nautilus-behavior.html).

@@ -842,3 +842,11 @@ was changed. The Files rename replay hid OSK automatically in this attempt,
 so the earlier persistent-keyboard symptom was not reproduced. Operator
 gesture confirmation and other dialogs remain pending. See the
 [checklist](../validation/lmi-app-checklist-2026-10-03.md#keyboard-home-bar-gesture--2026-10-04).
+
+## Files touch multiselection — 2026-10-04
+
+The deletion report was clarified as difficulty selecting multiple files.
+Terminal OSK's latched Ctrl plus touches selected three folders; Ctrl and
+selection were then cleared. No data was deleted and grouped Trash remains
+untested. The keyboard-assisted workaround is recorded in the
+[checklist](../validation/lmi-app-checklist-2026-10-03.md#files-touch-multiselection--2026-10-04).

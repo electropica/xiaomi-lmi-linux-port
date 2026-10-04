@@ -54,3 +54,11 @@ toggle the keyboard. Simulated-touch checks showed hide/show/hide in Text
 Editor and show/hide in Files on October 4, without a settings change.
 Operator confirmation and other dialogs remain pending; see the checklist's
 keyboard home-bar gesture record. A visible Hide control remains desirable.
+
+### Files touch multiselection
+
+Show the keyboard with the home-bar hold, choose globe → Terminal, tap Ctrl,
+then touch the wanted items. Tap Ctrl again to release it after selecting.
+Three-folder selection was checked by simulated touch; no grouped deletion
+was performed. This uses the existing terminal keyboard, without a new
+launcher or preference. Details are in the checklist above.
