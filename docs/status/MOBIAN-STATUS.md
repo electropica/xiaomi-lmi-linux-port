@@ -897,3 +897,12 @@ request triggers Android 16's missing-caller-context assertion. All test
 processes/mounts were removed; no camera provider or physical capture was
 started. Megapixels remains nonfunctional. See the [measured results and
 remaining runtime prerequisite](../../userspace/camera/README.md#readiness-spin-resolved-client-ipc-blocked--2026-10-04).
+
+
+Camera OEM follow-up (2026-10-04): the private runtime can now query HIDL
+interfaces and load CamX with the real qcom/kona properties. Correcting the
+private ICP firmware lookup produced a kernel-confirmed firmware download;
+several real candidate EEPROM probes succeeded. The direct camera module
+now returns eight OEM IDs when the unavailable NCS/IMU service is disabled privately. These are backend
+milestones, not a working photo application. See the [sensor progress and
+capture gates](../../userspace/camera/README.md#oem-module-and-sensor-probe-progress--2026-10-04).

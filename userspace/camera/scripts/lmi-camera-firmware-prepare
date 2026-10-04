@@ -1,0 +1,24 @@
+#!/bin/sh
+# Prepare an external ICP firmware reference; never copies a vendor binary.
+set -eu
+
+stock=/vendor/firmware/CAMERA_ICP.elf
+loader=/lib/firmware/postmarketos
+link=$loader/CAMERA_ICP.elf
+
+test -r "$stock"
+test "$(cat /sys/module/firmware_class/parameters/path)" = "$loader"
+findmnt -n -o OPTIONS -T "$stock" | tr ',' '\n' | grep -qx ro
+test "$(od -An -tx1 -N4 "$stock" | tr -d ' \n')" = 7f454c46
+
+if [ -e "$link" ] || [ -L "$link" ]; then
+    test -L "$link" || { echo "Refusing to replace $link" >&2; exit 1; }
+    test "$(readlink -f "$link")" = "$(readlink -f "$stock")" || {
+        echo "Refusing a different firmware reference at $link" >&2; exit 1;
+    }
+else
+    mkdir -p "$loader"
+    ln -s "$stock" "$link"
+fi
+test -r "$link"
+echo LMI_CAMERA_ICP_FIRMWARE_REFERENCE_READY

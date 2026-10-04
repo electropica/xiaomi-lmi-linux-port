@@ -168,3 +168,119 @@ separately validated native capture backend. A readiness token and synthetic
 manager label do not satisfy that requirement. Full properties, provider
 initialization, sensor enumeration, preview and still capture remain unvalidated.
 No camera provider was started in these experiments.
+
+## OEM module and sensor-probe progress — 2026-10-04
+
+This follow-up advances beyond the IPC failure above; photo capture still
+does not work. A supervisor-selected client PID, recorded before its stopped
+process was continued, received a synthetic diagnostic caller label. Unknown
+peers retained the original behavior. The original `selinux_check_access`
+function returned 0 for the observed list/find checks; the diagnostic only
+logged its result. The empty-service `lshal` query then returned 0 and the
+manager remained idle. Self-registration required the same synthetic label
+for the manager's own `getpidcon` call, never for arbitrary PIDs.
+
+Registered non-context-manager Binder objects also requested unsupported
+security contexts. A private diagnostic gate now copies bounded outbound
+Binder command/transaction buffers and clears only that request on local
+Binder objects. The read buffer and consumed counters are preserved. This
+removed `FAILED_TRANSACTION` from the observed manager/token interface
+queries. `lshal` still returned 72 with a debug PID metadata warning, so this
+is working interface-query evidence, not a clean complete lshal validation.
+These synthetic identities and context adaptations are not a production
+security model. No global kernel or Android security policy was changed.
+
+The OEM provider initially exited 1 because the Android hardware-selection
+properties were unavailable. The real boot parameter says
+`androidboot.hardware=qcom`; vendor build properties say `ro.board.platform`
+and `ro.product.board` are `kona`. Passing these checked values selected and
+loaded the existing external `camera.qcom.so` and CamX implementation.
+Symphony's platform check still exited 1 because it explicitly obtains the
+property getter from a libc handle, bypassing ordinary preload lookup.
+The diagnostic bridges only that explicit property-getter lookup to the
+same checked values; it does not override the platform acceptance result.
+With it, the Snapdragon refusal disappeared. The
+[Bionic dlsym/dlvsym implementation](https://android.googlesource.com/platform/bionic/+/a026108ec10c0b711add1e5fb920710ced4a9046/libdl/libdl.cpp)
+supports the nonrecursive real-symbol lookup used by this private hook.
+
+The first hardware-exposing variant allowed ION, camera media/subdevices,
+`cam-req-mgr` and `cam_sync`, while excluding block devices, input, DRM,
+codec video nodes and host Binder. System/vendor/runtime remained read-only;
+networking was isolated and temporary data belonged to the private root.
+CamX reached real EEPROM probing. Successful candidate probes included
+`lmi_sunny_imx686_mp_gt24p64b`, `lmi_sunny_s5k3t2_gt24p64`,
+`lmi_ofilm_gc02m1`, `lmi_sunny_ov13b10_gt24p64` and
+`lmi_sunny_s5k5e9yx04_gt24p64`. Alternative candidates also failed.
+Candidate EEPROM results do not establish a count of physical cameras,
+preview capability, camera IDs, or successful image capture.
+
+The `cam-icp` open failure was traced to missing `CAMERA_ICP.elf` at the
+kernel firmware lookup path. The external vendor file is 3,888,984 bytes,
+SHA-256 `e9fcbd80f63e8a0475b2621e4adef89dfed37cfa2ecf6636837b2154776441c7`.
+The local source's `a5_core.c` calls `request_firmware` with that exact name.
+A host firmware reference alone did not fix the chrooted call. Binding the
+file read-only at the private runtime's `/lib/firmware/postmarketos/` path
+did: the kernel reported `FW download done successfully` and CamX's ICP
+open error disappeared. The [reference preparation helper](scripts/lmi-camera-firmware-prepare)
+was syntax-checked and ran successfully on the phone's existing link.
+It refuses replacement of regular files or different references, requires
+the expected loader path/read-only external source, and never copies the
+firmware into Git. A private runtime must separately expose that lookup path.
+This helper is not automatically enabled by any image recipe yet.
+
+The [direct-module enumeration source](diagnostics/camera-module-enumerate.c)
+was compiled as a small bionic client with ABI layout assertions. It
+recognized `HWMT/camera`, module API 2.5 and HAL API 1.0, and module `init()`
+returned 0. Before the NCS override, `get_number_of_cameras()` did not finish within the 35-second
+observed bound. A two-second thread snapshot placed the calling thread in
+`cam_cci_core_cfg`; this alone does not prove the final timeout cause.
+The direct client performs no stream setup or capture. HAL3 buffer allocation, a still capture and native application
+integration remain the next acceptance gates.
+
+A later 25-second user-space backtrace identified the final wait in
+`CamX::SSCConnection`, reached through `SuidLookup`, `NCSIntfQSEE`,
+`NCSService::Initialize`, `ChiOpenContext` and the CHI override constructor.
+The vendor override file enabled `enableNCSService=TRUE`. Qualcomm documents
+`enableNCSService=FALSE` for systems without an IMU in the
+[QIM SDK Reference, section 5.1](https://docs.qualcomm.com/doc/80-50450-50/80-50450-50_REV_AC_Qualcomm_Intelligent_Multimedia_SDK__QIM_SDK__Reference.pdf).
+A read-only private bind of the existing settings with only this key changed,
+together with vendor tags and callbacks registered in the
+[AOSP provider order](https://android.googlesource.com/platform/hardware/interfaces/+/5fa14c4bce/camera/provider/2.4/default/LegacyCameraProviderImpl_2_4.cpp),
+returned `set_callbacks_result=0`, `camera_count=8` and IDs 0 through 7.
+These include OEM logical/auxiliary IDs; they do not establish eight physical
+camera sensors. No host vendor settings were modified.
+The first probe aborted during normal process shutdown with Scudo's invalid
+chunk-state error. Its revised diagnostic uses `_Exit` to avoid vendor exit
+handlers; this is a diagnostic lifecycle restriction, not a production fix.
+
+The hardware-probe units used 384 MiB memory, zero swap and 64 tasks, with
+bounded supervisor deadlines; all completed runtimes were stopped/unmounted
+and their loop mappings detached. Missing generated linker configuration,
+an optional component's `libandroidicu.so` dependency and display-config
+service warnings remain. No preview, JPEG, public camera service, new
+kernel or userdata image was produced; Megapixels is still nonfunctional.
+
+A follow-up enumerator queried all eight IDs successfully. Each returned
+HAL device version 3.5 and non-null static metadata; rear-facing IDs used
+orientation 90 and front-facing IDs 1 and 7 used orientation 270. The
+revised `_Exit` probe avoided the observed vendor shutdown abort. These
+characteristics remain enumeration evidence, not image-capture validation.
+The only gralloc module present, `gralloc.default.so`, advertised the
+legacy gralloc0 ABI. Opening `gpu0` and closing the allocator returned 0;
+no buffer allocation was attempted in that inspection.
+
+The bounded [private enumeration supervisor](diagnostics/camera-test-module-no-ncs.py)
+and [late-backtrace variant](diagnostics/camera-test-module-backtrace.py)
+are source-only diagnostics requiring the existing phone partitions,
+metadata inspector and manually compiled temporary binaries. Run only
+under the documented private namespaces and resource-limited test unit;
+these are not unattended services or image build entry points.
+
+The primary rear camera (ID 0) subsequently opened, initialized with stable
+HAL3 callbacks and returned non-null `STILL_CAPTURE` defaults. Its close
+returned 0 after initialization; closing before initialization had returned
+-22. The [HAL3 preparation probe](diagnostics/camera-module-prepare.c) submits
+no stream or capture request. The private mount settings and process-lifetime
+limitations above still apply. Temporary supervisor paths refer to the
+metadata inspector installed as `/tmp/lmi-camera-super-metadata.py`, from
+[the source-only super metadata inspector](diagnostics/inspect-system-ext-metadata.py).
