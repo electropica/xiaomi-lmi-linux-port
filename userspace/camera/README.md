@@ -373,3 +373,21 @@ black in the preceding lit-scene test. Waiting for AE convergence alone is
 not demonstrated as a fix. Sensor programming, scene/statistics consistency
 and the selected physical sensor remain to inspect. The capture source now
 logs only these public numeric metadata fields, not private calibration.
+
+A 1280 x 720 comparison selected that advertised BLOB size in the same
+five-frame client. Configuration, requests, CPU access and teardown all
+succeeded; the fifth JPEG was 31,078 bytes and decoded at 1280 x 720 but
+was still nearly black. AE again reported SEARCHING then CONVERGED with
+7,067,946 ns / ISO 50. Low output resolution alone does not explain the
+observed darkness. The comparison changed only the advertised-size filter
+in the metadata enumeration loop to require width 1280 and height 720.
+
+Kernel logs confirmed acquisition/start/stop/release of sensor 0x686 at
+slave address 0x34 (IMX686) and successful IFE acquisition/release. GPIO
+"No GPIO data"/"Input Parameters are not proper" messages were also present;
+their causal significance is unproven. No explicit CSI overflow/fatal error
+was observed in the bounded selected log tail; this is not an exhaustive
+sensor-register or raw-pixel validation. Next investigations should compare
+actual exposure/gain programming and raw/statistics data with the reported
+AE result, and verify the OEM tuning/physical sensor path. No camera test
+runtime was left active after this comparison.
