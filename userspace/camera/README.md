@@ -391,3 +391,13 @@ sensor-register or raw-pixel validation. Next investigations should compare
 actual exposure/gain programming and raw/statistics data with the reported
 AE result, and verify the OEM tuning/physical sensor path. No camera test
 runtime was left active after this comparison.
+
+The [metadata-only manual-capability probe](diagnostics/camera-metadata-ranges.c)
+reported MANUAL_SENSOR support, exposure range 9,470 to 32,110,118,400 ns
+and sensitivity range ISO 50 to 6400 for rear ID 0. It exited before opening
+a camera device; no exposure setting was changed and no image was captured.
+A future bounded comparison can clone the immutable default request and
+request AE OFF with 50 ms / ISO 800, only after checking frame-duration and
+request-key constraints. This would distinguish unchanged/ignored sensor
+settings from an automatic-3A issue; it is proposed, not yet tested.
+The private metadata runtime was removed successfully.
