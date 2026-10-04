@@ -849,3 +849,13 @@ The deletion report was clarified as difficulty selecting multiple files.
 Terminal OSK's latched Ctrl plus touches selected three folders; Ctrl was then released and the grouped selection reduced to one item. No data was deleted and grouped Trash remains
 untested. The keyboard-assisted workaround is recorded in the
 [checklist](../validation/lmi-app-checklist-2026-10-03.md#files-touch-multiselection--2026-10-04).
+
+## Portfolio mobile selection — 2026-10-04
+
+The official Debian `portfolio-filemanager` package is installed on the test
+phone and added alongside Nautilus to the next app recipe. Long press followed
+by taps selects multiple disposable files without OSK. Grouped permanent
+removal preserved the unselected third fixture; Trash and operator usability
+confirmation are not inferred from that result. The confirmation's poor icon
+and truncated label remain recorded. No new image or default-handler change.
+See the [checklist](../validation/lmi-app-checklist-2026-10-03.md#portfolio-native-touch-multiselection--2026-10-04).

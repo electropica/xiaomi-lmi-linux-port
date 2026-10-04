@@ -9,6 +9,7 @@ of the upstream applications. The original system binaries remain in use.
 | Application or feature | Implementation | Purpose and limits |
 |---|---|---|
 | Text Editor | [lmi-text-editor](files/lmi-text-editor), [portal routing](files/phosh-portals.conf) | GNOME file chooser routing and app-only Cairo workaround. Shortcut dialog remains clipped. |
+| Portfolio | [package recipe](scripts/install.sh), [validation](../../docs/validation/lmi-app-checklist-2026-10-03.md#portfolio-native-touch-multiselection--2026-10-04) | Native long-press/tap multiselection without OSK. Installed alongside Nautilus; deletion confirmation distinguishes permanent removal and Trash. |
 | Calculator | [lmi-calculator](files/lmi-calculator) | Simple app-only input context keeps the native keypad visible. |
 | Contacts | [lmi-contacts](files/lmi-contacts) | App-only Cairo workaround for deletion/teardown crash. |
 | Discussions (Chatty) | [lmi-chatty-safe](files/lmi-chatty-safe), [diagnosis and installation scope](CHATTY-LMI.md) | Isolated GStreamer plugin view and bounded memory scope. SMS/MMS and modem remain unvalidated. |
@@ -57,8 +58,11 @@ keyboard home-bar gesture record. A visible Hide control remains desirable.
 
 ### Files touch multiselection
 
-Show the keyboard with the home-bar hold, choose globe → Terminal, tap Ctrl,
-then touch the wanted items. Tap Ctrl again to release it after selecting.
-Three-folder selection was checked by simulated touch; no grouped deletion
-was performed. This uses the existing terminal keyboard, without a new
-launcher or preference. Details are in the checklist above.
+Portfolio provides a native touch alternative: hold the first file, then tap
+additional files. No keyboard modifier is required. The next image's app
+recipe now includes `portfolio-filemanager` alongside Nautilus, which remains
+needed for the tested GNOME file chooser. No default directory handler is
+changed. See the checklist for the tested operations and remaining limits.
+
+The earlier Nautilus Terminal/Ctrl sequence was rejected by the operator as
+too complicated. It is historical evidence, not the recommended mobile flow.

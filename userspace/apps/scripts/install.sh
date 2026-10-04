@@ -9,6 +9,7 @@ apt-get install -y --no-install-recommends \
     gnome-calculator \
     gnome-text-editor \
     nautilus \
+    portfolio-filemanager \
     xdg-desktop-portal \
     xdg-desktop-portal-gnome \
     dbus-bin \

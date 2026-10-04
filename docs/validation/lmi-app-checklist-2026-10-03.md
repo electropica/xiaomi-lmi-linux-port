@@ -16,6 +16,7 @@ labels are retained where useful to identify controls on the test phone.
 | Discussions (Chatty) | Startup and reopening confirmed after the workaround; actual 384 MiB limit, zero swap and no new OOM in the checked scope. SMS/MMS unvalidated; no modem detected. | Shortcuts initially too wide. With Phoc window adjustment and Close restored, the whole dialog and touch-simulated close/reopen were verified on October 4. Other menus need further checks. | Settings still contain English despite the French locale; partial catalog. Local correction prepared but not fully validated; low priority. |
 | Calculator | Touch-button arithmetic includes 2+3=5 and 9²=81. App-only simple GTK input context keeps the keypad visible without OSK; operator confirmation and normal close/reopening retained. Current menu test closed with status 0. | Basic → Advanced → Conversion → Basic navigation passed. Touch entry of 180 degrees produced 3.141592654 radians. Preferences opened and closed using the visible Close button. Shortcuts remain horizontally clipped, without a visible Close; outside touch failed, injected Escape dismissed them. | Examined labels French; full coverage unvalidated. |
 | Files | Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled that initial test continuation. A later two-second hold centered on the home bar toggled OSK on/off in Files; operator gesture confirmation remains pending. Terminal OSK → latched Ctrl → touch items selected three folders. Ctrl was released and selection cleared; no grouped deletion tested. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
+| Portfolio | Debian `portfolio-filemanager` 1.0.2-1 installed. Long press then tap selects multiple files without OSK, checked by simulated touch. Operator confirmation pending. | Grouped permanent removal tested on two disposable files, leaving the third intact. Trash and normal closure/reopening still being checked; do not infer them from removal alone. | French labels observed; complete coverage unvalidated. |
 | Text Editor | Input, creation/save, reopening and modification/save verified on test files. Initial renderer teardown produced SIGSEGV; two normal closures obtained with app-only Cairo. Operator confirmed touch usability of Save As with the final launcher. | Save As through the actual menu creates a separate file with identical contents; GNOME chooser fits the display. Preferences and search opened and closed through simulated touch. Shortcuts still clip; touch-only dismissal unvalidated. Printing, replacement and other actions pending. | Operator previously reported French preferences; translation is not the priority. |
 | Papers | Two-page synthetic PDF displayed; swipe navigation and reopening retained. Search for Xiaomi returns one hit per page; absent-term search reports no results. Touching the second hit opens page two with the word highlighted and OSK hidden. Normal closure status 0. | Sidebar/search navigation and Save As usable through simulated touch. Save As created an identical 2,273-byte test copy; chooser and Save fit above OSK, which hid afterwards. Test copy removed after comparison and normal app close. Annotation, forms, printing and remaining menus unvalidated. Pixman invalid-rectangle warning observed during navigation, without a crash in this test. | Examined search labels French; full coverage unvalidated. |
 | Photos (Koko) | Operator opened and zoomed a test image; thumbnail visible in a capture after the KIO cache workaround. No camera capture validated. | Return to gallery and hidden keyboard confirmed after correction. Sliding menu accessible; Images bar and labels remain poorly adapted. Search/editing/video unvalidated. | French labels visible; complete coverage unvalidated. |
@@ -864,3 +865,34 @@ current APT lists; Portfolio was also unavailable. This does not prove their
 absence from other repositories or distribution formats. Neither app was
 installed, no package lists were refreshed, and Nautilus remains available.
 No alternative manager or native multiselection fix is claimed validated.
+
+## Portfolio native touch multiselection — 2026-10-04
+
+The earlier availability check queried the wrong package name (`portfolio`).
+The phone's existing Debian trixie/main index offers `portfolio-filemanager`
+1.0.2-1. Its 58,184-byte package was downloaded from Debian, checked against
+the APT SHA-256 (`f6d9e75db0ce1440fd7536d5c1ebad8cbdeecbef5381a9f3fb62305fb1ad9a50`)
+and installed without additional dependencies, upgrades or removals.
+`dpkg --audit` was empty. No package-list refresh or phone network change
+was made. Its upstream launcher advertises `X-Purism-FormFactor=Mobile`.
+
+Simulated touch held the first disposable text file, then tapped the second;
+both rows remained highlighted, the third unselected, and OSK stayed hidden.
+The bottom action bar was available. This meets the input requirement without
+Terminal/Ctrl, but operator usability confirmation remains pending.
+
+Deletion opens an inline confirmation with three buttons, left to right:
+permanent confirmation (`emblem-ok-symbolic`), Cancel, and Trash
+(`user-trash-symbolic`). The first icon rendered poorly and the description
+was ellipsized on this phone. The initial test tapped the left button:
+both selected fixtures were permanently removed, not sent to Trash; the third
+file remained intact. No user file was selected or deleted. Do not treat this
+as a verified corbeille operation. The source and UI resource confirm the
+rightmost button is the separate Trash action.
+
+Portfolio is added to the app recipe alongside Nautilus. No wrapper, desktop
+default change, upstream source patch or image build is included. The old
+Terminal keyboard was restored to French and hidden after the earlier trial;
+its visible state was test residue, not evidence of an automatic dismissal
+fix. General menus, copy/move, storage handling and complete translation
+remain outside this selection test.
