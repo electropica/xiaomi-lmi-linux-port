@@ -15,7 +15,7 @@ labels are retained where useful to identify controls on the test phone.
 |---|---|---|---|
 | Discussions (Chatty) | Startup and reopening confirmed after the workaround; actual 384 MiB limit, zero swap and no new OOM in the checked scope. SMS/MMS unvalidated; no modem detected. | Shortcuts initially too wide. With Phoc window adjustment and Close restored, the whole dialog and touch-simulated close/reopen were verified on October 4. Other menus need further checks. | Settings still contain English despite the French locale; partial catalog. Local correction prepared but not fully validated; low priority. |
 | Calculator | Touch-button arithmetic includes 2+3=5 and 9²=81. App-only simple GTK input context keeps the keypad visible without OSK; operator confirmation and normal close/reopening retained. Current menu test closed with status 0. | Basic → Advanced → Conversion → Basic navigation passed. Touch entry of 180 degrees produced 3.141592654 radians. Preferences opened and closed using the visible Close button. Shortcuts remain horizontally clipped, without a visible Close; outside touch failed, injected Escape dismissed them. | Examined labels French; full coverage unvalidated. |
-| Files | Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled that initial test continuation. A later two-second hold centered on the home bar toggled OSK on/off in Files; operator gesture confirmation remains pending. Terminal OSK → latched Ctrl → touch items selected three folders. Ctrl was released and selection cleared; no grouped deletion tested. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
+| Files | Operator explicitly confirmed that Files was already functional on October 4; do not repeat its passed basic operations merely to extend the checklist. Test-folder creation/opening/return retained. On October 4, touch-driven Copy created an identical 39-byte file, Rename changed its path, and Trash removed only that copy with the correct original-path metadata. Normal exit status 0; fixtures cleaned. Chinese names confirmed only before reboot. | Copy/Rename/Trash contextual actions and rename dialog usable. OSK remained after Rename; tested bottom long press did not hide it and the globe menu had no Hide action. Remote DBus hiding enabled that initial test continuation. A later two-second hold centered on the home bar toggled OSK on/off in Files; operator gesture confirmation remains pending. Terminal OSK → latched Ctrl → touch items selected three folders. Ctrl was released and selection cleared; no grouped deletion tested. Other actions unvalidated. | Pending; Chinese filename rendering is validated separately from menu language. |
 | Portfolio | Debian `portfolio-filemanager` 1.0.2-1 trial subsequently uninstalled. Long press then tap selects multiple files without OSK, checked by simulated touch. Operator rejected the candidate as providing no useful improvement; next-build package addition withdrawn. | Grouped permanent removal tested on two disposable files, leaving the third intact. Trash and normal closure/reopening still being checked; do not infer them from removal alone. | French labels observed; complete coverage unvalidated. |
 | Text Editor | Input, creation/save, reopening and modification/save verified on test files. Initial renderer teardown produced SIGSEGV; two normal closures obtained with app-only Cairo. Operator confirmed touch usability of Save As with the final launcher. | Save As through the actual menu creates a separate file with identical contents; GNOME chooser fits the display. Preferences and search opened and closed through simulated touch. Shortcuts still clip; touch-only dismissal unvalidated. Printing, replacement and other actions pending. | Operator previously reported French preferences; translation is not the priority. |
 | Papers | Two-page synthetic PDF displayed; swipe navigation and reopening retained. Search for Xiaomi returns one hit per page; absent-term search reports no results. Touching the second hit opens page two with the word highlighted and OSK hidden. Normal closure status 0. | Sidebar/search navigation and Save As usable through simulated touch. Save As created an identical 2,273-byte test copy; chooser and Save fit above OSK, which hid afterwards. Test copy removed after comparison and normal app close. Annotation, forms, printing and remaining menus unvalidated. Pixman invalid-rectangle warning observed during navigation, without a crash in this test. | Examined search labels French; full coverage unvalidated. |
@@ -29,7 +29,7 @@ labels are retained where useful to identify controls on the test phone.
 | Amberol | MP3 playback and volume confirmed before reboot. The later diagnostic boot restored ALSA and operator-confirmed PipeWire speaker playback; Amberol-specific playback on this boot still needs recheck. | Pending. | Pending. |
 | Showtime | MP4 playback confirmed before reboot. Speaker audio was later restored on the diagnostic boot; this does not establish a fresh Showtime playback/video check. | Pending. | Pending. |
 | Recorder | Diagnostic-boot microphone capture recognized through native ALSA preview; two complete KRecorder WAV saves measured. Application recording confirmed good by the operator after replay. | Microphone chooser, WAV/PCM saving and persisted `0:08` after normal relaunch passed with opt-in audio fixes. Rename and Delete tested on our temporary recording; confirmed recording preserved. Other codecs/export unvalidated. | Configuration labels French; complete coverage untested. |
-| Megapixels | Blocked: no established standard capture pipeline. | Unvalidated. | Not the priority before functional capture. |
+| Megapixels | Blocked: bounded current launch exits with status 1 because `qcom,kona-mtp.ini` is absent; no established standard capture pipeline. | Unvalidated. | Not the priority before functional capture. |
 | Calls | Startup, reopening, Keypad tab and normal exit status 0 verified. UI reports no modem/VoIP account; no number entered or call placed. | VoIP Accounts opened; session preference restores Close, and simulated touch dismisses the dialog while Calls stays open. | French labels on examined screens; complete coverage unvalidated. |
 | Web | Pending; Internet DNS failed at the last check. | Pending. | Pending. |
 | Maps | Pending; network and position unvalidated. | Pending. | Pending. |
@@ -906,3 +906,40 @@ package was removed from the next app recipe and uninstalled from the phone
 without autoremove. `dpkg --audit` remained empty. No user data was removed
 as part of this rollback. Native touch selection in the existing
 Files application remains an open requirement.
+
+## Functional priority and camera recheck — 2026-10-04
+
+The operator confirmed Files was functional and rejected adding another file
+manager. Basic operation takes priority, followed by essential menus;
+translation and additional features are last. Already accepted basic functions
+must not be repeatedly tested instead of addressing a nonfunctional app.
+Touch multiselection remains a recorded limitation, not grounds to reopen
+the entire Files validation.
+
+A fresh Megapixels 1.8.3-1 launch used a bounded user service (256 MiB memory,
+zero swap, maximum 15 seconds). It exited immediately with status 1 and:
+
+```text
+Could not find any config file
+/usr/share/megapixels/config/qcom,kona-mtp.ini not found
+```
+
+The current sysfs names still identify video0 as `cam-req-mgr` and video1 as
+`cam_sync`. This repeats the existing blocker, not a capture success. No
+GStreamer device enumeration, camera stream, speculative INI or build was
+started; the diagnostic service was stopped and no Megapixels process remained.
+
+Targeted review of the preserved a5b3099017ae source found that
+`techpack/camera/drivers/cam_req_mgr/cam_req_mgr_dev.c` supplies event
+subscription and a private ioctl accepting `VIDIOC_CAM_CONTROL`, not a
+standard capture-format/buffer/stream ioctl table. The sensor driver at
+`techpack/camera/drivers/cam_sensor_module/cam_sensor/cam_sensor_dev.c`
+registers core ioctl/power operations, with no pad operation table there.
+These source observations support the earlier standard-query failures; they
+do not establish individual sensor detection or prove that every runtime
+camera component has been identified.
+
+Camera work needs a demonstrated capture backend compatible with this
+downstream stack, or a provenance-matched standard driver pipeline. Adding
+another camera app or inventing only an INI does not establish that backend.
+See the [camera blocker](archi-validation-02-camera-blocker-2026-09-27.md).

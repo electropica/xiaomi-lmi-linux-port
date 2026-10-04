@@ -865,3 +865,13 @@ improvement. Its next-build package addition was withdrawn; the trial remains
 historical evidence, not a completed fix. Existing Files touch selection is
 still open. After clarification that a second app was unnecessary, Portfolio
 was also uninstalled without autoremove; no user files were removed.
+
+## Core app priority and camera blocker — 2026-10-04
+
+The operator confirmed Files as functional. Additional features are last,
+after basic operation, essential menus and translation; no second file manager
+is required. Megapixels remains nonfunctional: a bounded launch exited with
+status 1 due to the absent lmi-compatible configuration. Targeted source
+review supports the downstream/private-interface blocker, without establishing
+a usable capture backend. No camera configuration or image was changed.
+See the [functional recheck](../validation/lmi-app-checklist-2026-10-03.md#functional-priority-and-camera-recheck--2026-10-04).
