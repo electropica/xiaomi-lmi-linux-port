@@ -741,3 +741,12 @@ test applications closed normally and test units were stopped. Transient
 black line artifacts after the preference toggle were absent on the next
 Chatty capture, without establishing GPU stability. See the
 [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
+## Root SSH build policy (2026-10-04)
+
+The Phosh image recipe no longer embeds the workstation diagnostic public key.
+It clears inherited root authorizations in the derived image by default; an
+external public key can be explicitly selected with `M1_SSH_PUBLIC_KEY_FILE`.
+Private keys and multi-key inputs are rejected. Existing phone access and input
+rootfs trees are unchanged. Isolated tests cover defaults, explicit access and
+invalid inputs; no complete image build or deployment was performed.

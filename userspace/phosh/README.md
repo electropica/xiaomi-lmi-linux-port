@@ -63,11 +63,16 @@ child processes run, passed only to `chpasswd` over standard input, and cleared
 from the build shell immediately afterwards. Neither the password nor its
 hash may be stored in Git or a temporary file.
 
-Fresh development images also install the tracked public diagnostic key
-`codex-lmi.pub` in root's `authorized_keys`. Existing authorized keys are
-preserved, duplicate key material is rejected, and the build verifies modes
-`0700` and `0600`. Only the public key is tracked; this diagnostic access must
-be removed or replaced before any real-world deployment.
+New images have an empty root `authorized_keys` by default: the recipe replaces
+inherited root authorizations in the derived image tree and embeds no diagnostic
+key. The input M0 tree and already installed phones are unchanged.
+
+For explicit development access, set `M1_SSH_PUBLIC_KEY_FILE` to an external
+single-line OpenSSH public-key file. The builder validates it, installs only that
+key, and checks directory/file modes `0700`/`0600`. This authorizes its private-key
+holder to connect as root if the SSH server policy permits it. Never supply a
+private key or commit an operator's key to this repository. This policy concerns
+root SSH authorizations; it is not a general sanitization of the input rootfs.
 
 The session deliberately uses wlroots Pixman rendering. The D-v43 display DRM
 node does not implement the MSM GPU UAPI needed by Freedreno, while Phoc with

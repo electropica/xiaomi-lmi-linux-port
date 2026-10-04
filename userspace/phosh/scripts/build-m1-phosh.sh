@@ -13,6 +13,8 @@ work=$5
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 repo_dir=$(CDPATH= cd -- "$script_dir/../../.." && pwd)
 phosh_files="$repo_dir/userspace/phosh/files"
+source "$script_dir/image-root-ssh.sh"
+load_image_root_ssh_key "${M1_SSH_PUBLIC_KEY_FILE:-}"
 apps_dir="$repo_dir/userspace/apps"
 gpu_dir="$repo_dir/userspace/gpu/files"
 wifi_dir="$repo_dir/userspace/wifi"
@@ -125,26 +127,7 @@ if [[ ${INSTALL_OPTIONAL_APPS:-} == 1 ]]; then
     optional_apps_enabled=1
 fi
 
-codex_public_key_file="$phosh_files/ssh/codex-lmi.pub"
-codex_public_key=$(cat "$codex_public_key_file")
-[[ $codex_public_key == 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINMNlWauNPySl4GTaAOWJwP/dqrpJYflpFQzF58xbUUq codex-lmi' ]]
-[[ ! -L $tree/root/.ssh ]]
-install -d -o root -g root -m 0700 "$tree/root/.ssh"
-[[ ! -L $tree/root/.ssh/authorized_keys ]]
-touch "$tree/root/.ssh/authorized_keys"
-chown root:root "$tree/root/.ssh/authorized_keys"
-chmod 0600 "$tree/root/.ssh/authorized_keys"
-if [[ -s $tree/root/.ssh/authorized_keys &&
-      $(tail -c 1 "$tree/root/.ssh/authorized_keys" | od -An -tx1 | tr -d ' \n') != 0a ]]; then
-    printf '\n' >>"$tree/root/.ssh/authorized_keys"
-fi
-codex_key_matches=$(awk '{ for (i=1; i<NF; i++) if ($i == "ssh-ed25519" && $(i+1) == "AAAAC3NzaC1lZDI1NTE5AAAAINMNlWauNPySl4GTaAOWJwP/dqrpJYflpFQzF58xbUUq") count++ } END { print count+0 }' \
-    "$tree/root/.ssh/authorized_keys")
-[[ $codex_key_matches -le 1 ]]
-if [[ $codex_key_matches == 0 ]]; then
-    printf '%s\n' "$codex_public_key" >>"$tree/root/.ssh/authorized_keys"
-fi
-unset codex_key_matches codex_public_key
+configure_image_root_ssh "$tree"
 
 cat >"$tree/usr/sbin/policy-rc.d" <<'EOF'
 #!/bin/sh
@@ -294,10 +277,8 @@ systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-
 }
 
 test "$(stat -c '%u:%g:%a' "$tree/var/lib/systemd/linger/mobian")" = 0:0:644
-test "$(stat -c '%u:%g:%a' "$tree/root/.ssh")" = 0:0:700
-test "$(stat -c '%u:%g:%a' "$tree/root/.ssh/authorized_keys")" = 0:0:600
-test "$(grep -Fxc 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINMNlWauNPySl4GTaAOWJwP/dqrpJYflpFQzF58xbUUq codex-lmi' "$tree/root/.ssh/authorized_keys")" = 1
-test "$(awk '{ for (i=1; i<NF; i++) if ($i == "ssh-ed25519" && $(i+1) == "AAAAC3NzaC1lZDI1NTE5AAAAINMNlWauNPySl4GTaAOWJwP/dqrpJYflpFQzF58xbUUq") count++ } END { print count+0 }' "$tree/root/.ssh/authorized_keys")" = 1
+verify_image_root_ssh "$tree"
+unset m1_ssh_public_key
 ! grep -RqsE -- '-----BEGIN ([A-Z0-9]+ )?PRIVATE KEY-----' "$tree/root/.ssh"
 ! find "$tree/root/.ssh" -maxdepth 1 -type f -name 'id_*' ! -name '*.pub' -print -quit | grep -q .
 ! grep -q '^ExecStartPre=.*run/user/1000' "$tree/etc/systemd/system/phosh-m0.service"
