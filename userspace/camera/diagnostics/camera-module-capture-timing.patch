@@ -1,24 +1,76 @@
 --- a/userspace/camera/diagnostics/camera-module-capture.c
 +++ b/userspace/camera/diagnostics/camera-module-capture.c
-@@ -543,7 +543,9 @@
+@@ -132,8 +132,10 @@
+     camera3_capture_request_t request;
+     uint32_t frame;
+     int received,error,status,fence;
++    int64_t sensor_ns,exposure_ns,duration_ns;
+ };
+ static struct pipeline_slot pipeline[PIPELINE_SLOTS];
++static int timing_timestamp_source=-1,timing_fps_min=-1,timing_fps_max=-1,timing_supports_30=-1;
+ static camera3_stream_buffer_t capture_output;
+ static camera3_capture_request_t capture_request;
+ static pthread_mutex_t capture_mutex = PTHREAD_MUTEX_INITIALIZER;
+@@ -202,6 +204,17 @@
+     }
+     if (result) printf("callback=capture_result frame=%u output_buffers=%u partial=%u\n",
+                        result->frame_number, result->num_output_buffers, result->partial_result);
++    if(preview_pipeline && result && result->result && result_find_entry) {
++        pthread_mutex_lock(&capture_mutex);
++        for(unsigned i=0;i<PIPELINE_SLOTS;i++) {
++            struct pipeline_slot *p=&pipeline[i];if(p->frame!=result->frame_number)continue;
++            camera_metadata_ro_entry_t e={0};
++            if(!result_find_entry(result->result,ACAMERA_SENSOR_TIMESTAMP,&e) && e.type==3 && e.count==1)p->sensor_ns=e.data.i64[0];
++            if(!result_find_entry(result->result,ACAMERA_SENSOR_EXPOSURE_TIME,&e) && e.type==3 && e.count==1)p->exposure_ns=e.data.i64[0];
++            if(!result_find_entry(result->result,ACAMERA_SENSOR_FRAME_DURATION,&e) && e.type==3 && e.count==1)p->duration_ns=e.data.i64[0];
++        }
++        pthread_mutex_unlock(&capture_mutex);
++    }
+     if (!result || !result->output_buffers || result->num_output_buffers > 16)
+         return;
+     pthread_mutex_lock(&capture_mutex);
+@@ -522,6 +535,7 @@
+                            uint32_t frame,const struct camera_metadata *settings) {
+     pthread_mutex_lock(&capture_mutex);
+     slot->frame=frame;slot->received=slot->error=slot->status=0;slot->fence=-1;
++    slot->sensor_ns=slot->exposure_ns=slot->duration_ns=0;
+     pthread_mutex_unlock(&capture_mutex);
+     slot->output=(camera3_stream_buffer_t){.stream=&probe_blob_stream,.buffer=&slot->handle,
+        .status=0,.acquire_fence=-1,.release_fence=-1};
+@@ -533,6 +547,10 @@
+     if (probe_blob_stream.max_buffers<PIPELINE_SLOTS)return 46;
+     const struct camera_metadata *settings=camera->ops->construct_default_request_settings(camera,1);
+     if (!settings)return 32;
++    camera_metadata_ro_entry_t fps={0};
++    if(!result_find_entry(settings,ACAMERA_CONTROL_AE_TARGET_FPS_RANGE,&fps) && fps.type==1 && fps.count==2) {
++        timing_fps_min=fps.data.i32[0];timing_fps_max=fps.data.i32[1];
++    }
+     for (unsigned i=0;i<PIPELINE_SLOTS;i++)pipeline[i].fence=-1;
+     for (unsigned i=0;i<PIPELINE_SLOTS;i++) {
+         int r=lmi_qti_allocate_yuv(probe_blob_stream.width,probe_blob_stream.height,probe_blob_stream.usage,&pipeline[i].handle);
+@@ -543,7 +561,10 @@
      }
      double begin=monotonic_seconds();
      uint32_t last=count;
 +    unsigned measured=0;double wait_sum=0,fence_sum=0,convert_sum=0;
++    unsigned exposure_count=0,duration_count=0,age_count=0;double exposure_sum=0,duration_sum=0,age_sum=0;
      for (uint32_t frame=1;frame<=last;frame++) {
 +        double wait_begin=monotonic_seconds();
          struct pipeline_slot *slot=&pipeline[(frame-1)%PIPELINE_SLOTS];
          struct timespec deadline;clock_gettime(CLOCK_REALTIME,&deadline);deadline.tv_sec+=5;
          pthread_mutex_lock(&capture_mutex);
-@@ -554,6 +556,7 @@
+@@ -552,8 +573,10 @@
+             if(r)break;
+         }
          int received=slot->received,error=slot->error,status=slot->status,fence=slot->fence;
++        int64_t exposure=slot->exposure_ns,duration=slot->duration_ns,sensor=slot->sensor_ns;
          if(slot->frame!=frame)error=1;
          pthread_mutex_unlock(&capture_mutex);
 +        double result_ready=monotonic_seconds();
          if(!received || error || status)return 34;
          if(fence>=0) {
              struct pollfd fd={.fd=fence,.events=POLLIN};
-@@ -561,6 +564,7 @@
+@@ -561,6 +584,7 @@
              if(r<=0 || !(fd.revents&POLLIN) || (fd.revents&(POLLERR|POLLNVAL)))return 35;
              close(fence);slot->fence=-1;
          }
@@ -26,20 +78,49 @@
          if(frame>=15) {
              void *address=NULL;
              int r=lmi_qti_lock_cpu(slot->handle,&address);if(r || !address)return 36;
-@@ -568,6 +572,16 @@
+@@ -568,6 +592,29 @@
              if(!r && rename("/data/vendor/camera/preview-next.ppm","/data/vendor/camera/preview.ppm"))r=39;
              int unlock=lmi_qti_unlock(slot->handle);
              if(r || unlock)return r ? r : 40;
 +            double converted=monotonic_seconds();
 +            measured++;wait_sum+=result_ready-wait_begin;fence_sum+=fence_ready-result_ready;convert_sum+=converted-fence_ready;
++            if(exposure>0){exposure_count++;exposure_sum+=exposure/1e6;}
++            if(duration>0){duration_count++;duration_sum+=duration/1e6;}
++            if(timing_timestamp_source==ACAMERA_SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME && sensor>0) {
++                struct timespec now;
++                if(!clock_gettime(CLOCK_BOOTTIME,&now)) {
++                    double age=(now.tv_sec*1e9+now.tv_nsec-sensor)/1e6;
++                    if(age>=0 && age<5000){age_count++;age_sum+=age;}
++                }
++            }
 +            if(measured%15==0) {
 +                FILE *metrics=fopen("/data/vendor/camera/timing.next.json","w");
 +                if(!metrics)return 39;
-+                int bad=fprintf(metrics,"{\"frames\":%u,\"wait_mean_ms\":%.3f,\"fence_mean_ms\":%.3f,\"convert_mean_ms\":%.3f}\n",
-+                    measured,1000*wait_sum/measured,1000*fence_sum/measured,1000*convert_sum/measured)<0;
++                int bad=fprintf(metrics,"{\"frames\":%u,\"wait_mean_ms\":%.3f,\"fence_mean_ms\":%.3f,\"convert_mean_ms\":%.3f,\"fps_min\":%d,\"fps_max\":%d,\"timestamp_source\":%d,\"exposure_mean_ms\":%.3f,\"duration_mean_ms\":%.3f,\"sensor_to_rgb_mean_ms\":%.3f,\"sensor_age_samples\":%u,\"supports_fixed_30fps\":%d}\n",
++                    measured,1000*wait_sum/measured,1000*fence_sum/measured,1000*convert_sum/measured,
++                    timing_fps_min,timing_fps_max,timing_timestamp_source,
++                    exposure_count?exposure_sum/exposure_count:-1,
++                    duration_count?duration_sum/duration_count:-1,
++                    age_count?age_sum/age_count:-1,age_count,timing_supports_30)<0;
 +                if(fclose(metrics))bad=1;
 +                if(bad || rename("/data/vendor/camera/timing.next.json","/data/vendor/camera/timing.json"))return 39;
 +            }
              printf("pipeline_frame=%u elapsed_seconds=%.3f\n",frame,monotonic_seconds()-begin);
          }
          // Stop queueing after 25 seconds, then drain the two already queued
+@@ -652,6 +699,15 @@
+           }
+         }
+     memset(&entry,0,sizeof(entry));
++    camera_metadata_ro_entry_t timestamp_entry={0};
++    if(!find_entry(info.static_camera_characteristics,ACAMERA_SENSOR_INFO_TIMESTAMP_SOURCE,&timestamp_entry) && timestamp_entry.type==0 && timestamp_entry.count==1)
++        timing_timestamp_source=timestamp_entry.data.u8[0];
++    camera_metadata_ro_entry_t fps_available={0};
++    if(!find_entry(info.static_camera_characteristics,ACAMERA_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES,&fps_available) && fps_available.type==1 && fps_available.count>0 && fps_available.count<=128 && !(fps_available.count%2)) {
++        timing_supports_30=0;
++        for(size_t i=0;i<fps_available.count;i+=2)
++            if(fps_available.data.i32[i]==30 && fps_available.data.i32[i+1]==30)timing_supports_30=1;
++    }
+     int metadata_result = find_entry(info.static_camera_characteristics, PROBE_ANDROID_JPEG_MAX_SIZE, &entry);
+     int32_t jpeg_max_size = 0;
+     printf("jpeg_max_size_lookup=%d\n", metadata_result);

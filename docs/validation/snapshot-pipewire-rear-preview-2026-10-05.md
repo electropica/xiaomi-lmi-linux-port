@@ -446,3 +446,29 @@ to the current source. Runtime validation is still pending operator readiness.
 The corresponding observer reads only live publication counters and never
 starts acquisition. Generated binaries and private preview images stay outside
 Git.
+
+
+## Backend stage profiling completed
+
+After explicit readiness, a 30-second preview-only timing trial completed.
+The private runtime reported aggregate means over 555 processed images:
+result wait 41.528 ms, release-fence wait 0.001 ms and lock/conversion/save/
+unlock 13.864 ms. The native producer measured 519 unique publications,
+17.542 fps, mean PPM age 36.021 ms and maximum 69.244 ms. Root publication
+counted 556 images over its longer interval. All units stopped and private
+runtime cleanup completed normally.
+
+The approximately 55.4 ms sum is consistent with the observed rate, but the
+result wait is not a pure sensor-exposure measurement: it includes waiting
+for the HAL result after earlier processing. Conversion remains a significant
+separate cost. No FPS, exposure or buffer-count setting was changed.
+
+The prepared timing patch is extended to report the default preview AE FPS
+range, whether a fixed 30/30 range is advertised, mean exposure/frame duration,
+and sensor-to-RGB age only when timestampSource is REALTIME and a valid positive
+CLOCK_BOOTTIME interval is observed. Unknown values remain explicitly unavailable.
+Per-frame metadata is matched to the active slot under the existing mutex.
+This extension compiles with warnings as errors but has not yet run on hardware.
+The public NDK r27d metadata documentation establishes REALTIME timestamps use
+elapsedRealtimeNanos; timestamps from an unknown timebase must not be subtracted
+from the Linux monotonic clock. This remains a temporary measurement variant.
