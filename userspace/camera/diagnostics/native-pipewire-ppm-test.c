@@ -1,9 +1,14 @@
 /* SPDX-License-Identifier: MIT
- * Synthetic-only native PipeWire source. No camera/microphone access.
+ * Native PPM-to-PipeWire diagnostic. Reads an explicitly supplied PPM path.
+ * Does not start camera acquisition or open any microphone.
  * Uses the public PipeWire stream API; terminates after 30 seconds.
  */
 #include <stdio.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <spa/param/video/format-utils.h>
 #include <pipewire/pipewire.h>
@@ -17,6 +22,11 @@ struct app {
     struct spa_source *tick;
     struct spa_video_info_raw format;
     unsigned frames;
+    const char *input;
+    unsigned char *rgb;
+    struct timespec last_stamp;
+    ino_t last_inode;
+    bool fresh;
 };
 static void quit(void *opaque, uint64_t expirations) {
     (void)expirations; struct app *a=opaque; pw_main_loop_quit(a->loop);
@@ -24,12 +34,32 @@ static void quit(void *opaque, uint64_t expirations) {
 static void interrupted(void *opaque, int sig) {
     (void)sig; struct app *a=opaque; pw_main_loop_quit(a->loop);
 }
+static bool read_new_frame(struct app *a);
 static void tick(void *opaque, uint64_t expirations) {
-    (void)expirations; struct app *a=opaque; pw_stream_trigger_process(a->stream);
+    (void)expirations; struct app *a=opaque;
+    if(read_new_frame(a)){a->fresh=true;pw_stream_trigger_process(a->stream);}
+}
+static bool read_new_frame(struct app *a) {
+    int fd=open(a->input,O_RDONLY|O_NOFOLLOW|O_NONBLOCK);
+    if(fd<0)return false;
+    struct stat st;bool valid=false;char header[16];size_t total=0;
+    if(fstat(fd,&st)<0 || !S_ISREG(st.st_mode) || st.st_size!=2764816)goto done;
+    if(st.st_ino==a->last_inode && st.st_mtim.tv_sec==a->last_stamp.tv_sec &&
+       st.st_mtim.tv_nsec==a->last_stamp.tv_nsec)goto done;
+    if(read(fd,header,sizeof(header))!=sizeof(header) || memcmp(header,"P6\n1280 720\n255\n",16))goto done;
+    while(total<2764800) {
+        ssize_t n=read(fd,a->rgb+total,2764800-total);
+        if(n<=0)goto done;
+        total+=(size_t)n;
+    }
+    a->last_inode=st.st_ino;a->last_stamp=st.st_mtim;valid=true;
+ done:close(fd);return valid;
 }
 static void process(void *opaque) {
-    struct app *a=opaque; struct pw_buffer *b=pw_stream_dequeue_buffer(a->stream);
+    struct app *a=opaque;if(!a->fresh)return;
+    struct pw_buffer *b=pw_stream_dequeue_buffer(a->stream);
     if (!b) return;
+    a->fresh=false;
     struct spa_buffer *buf=b->buffer;
     unsigned w=a->format.size.width,h=a->format.size.height,stride=w*4;
     if (!buf->n_datas || !buf->datas[0].data || !buf->datas[0].chunk ||
@@ -37,12 +67,11 @@ static void process(void *opaque) {
         pw_stream_queue_buffer(a->stream,b); return;
     }
     unsigned char *p=buf->datas[0].data;
-    for (unsigned y=0;y<h;y++) for (unsigned x=0;x<w;x++) {
-        unsigned i=y*stride+x*4;
-        p[i]=(unsigned char)(x+a->frames*3);
-        p[i+1]=(unsigned char)y;
-        p[i+2]=(unsigned char)(((x/32+y/32+a->frames/4)&1)?200:30);
-        p[i+3]=255;
+    /* Clockwise rotation: portrait (x,y) reads landscape (y,719-x). */
+    for(unsigned y=0;y<h;y++) for(unsigned x=0;x<w;x++) {
+        unsigned i=y*stride+x*4,source=((719-x)*1280+y)*3;
+        p[i]=a->rgb[source+2];p[i+1]=a->rgb[source+1];
+        p[i+2]=a->rgb[source];p[i+3]=255;
     }
     struct spa_meta_header *head=spa_buffer_find_meta_data(buf,SPA_META_Header,sizeof(*head));
     if (head) { head->pts=-1;head->flags=0;head->seq=a->frames;head->dts_offset=0; }
@@ -77,7 +106,10 @@ static void format(void *opaque,uint32_t id,const struct spa_pod *param) {
 static const struct pw_stream_events events={PW_VERSION_STREAM_EVENTS,
     .state_changed=state,.param_changed=format,.process=process};
 int main(int argc,char **argv) {
-    struct app a={0};pw_init(&argc,&argv);a.loop=pw_main_loop_new(NULL);
+    if(argc!=2){fprintf(stderr,"Usage: native-pipewire-ppm-test INPUT.ppm\n");return 2;}
+    struct app a={0};a.input=argv[1];a.rgb=malloc(2764800);
+    if(!a.rgb)return 1;
+    pw_init(&argc,&argv);a.loop=pw_main_loop_new(NULL);
     if(!a.loop)return 1;
     struct pw_loop *loop=pw_main_loop_get_loop(a.loop);
     pw_loop_add_signal(loop,SIGINT,interrupted,&a);pw_loop_add_signal(loop,SIGTERM,interrupted,&a);
@@ -86,11 +118,11 @@ int main(int argc,char **argv) {
     a.tick=pw_loop_add_timer(loop,tick,&a);
     struct spa_source *expiry=pw_loop_add_timer(loop,quit,&a);
     struct timespec limit={30,0};pw_loop_update_timer(loop,expiry,&limit,NULL,false);
-    a.stream=pw_stream_new(a.core,"LMI synthetic source",pw_properties_new(
+    a.stream=pw_stream_new(a.core,"LMI PPM diagnostic source",pw_properties_new(
         PW_KEY_MEDIA_CLASS,"Video/Source",PW_KEY_MEDIA_TYPE,"Video",
         PW_KEY_MEDIA_CATEGORY,"Capture",PW_KEY_MEDIA_ROLE,"Camera",
         PW_KEY_NODE_NAME,"lmi-camera-rear-pipewire-test",
-        PW_KEY_NODE_DESCRIPTION,"LMI-synthetic-no-camera",
+        PW_KEY_NODE_DESCRIPTION,"LMI-PPM-diagnostic",
         PW_KEY_NODE_SUPPORTS_REQUEST,"1",NULL));
     pw_stream_add_listener(a.stream,&a.listener,&events,&a);
     uint8_t storage[512];struct spa_pod_builder builder=SPA_POD_BUILDER_INIT(storage,sizeof(storage));
@@ -103,7 +135,7 @@ int main(int argc,char **argv) {
     int rc=pw_stream_connect(a.stream,PW_DIRECTION_OUTPUT,PW_ID_ANY,
         PW_STREAM_FLAG_DRIVER|PW_STREAM_FLAG_MAP_BUFFERS,&param,1);
     if(rc>=0)pw_main_loop_run(a.loop);
-    fprintf(stderr,"SYNTHETIC_FRAMES %u\n",a.frames);
+    fprintf(stderr,"UNIQUE_PPM_FRAMES %u\n",a.frames);
     pw_stream_destroy(a.stream);pw_core_disconnect(a.core);pw_context_destroy(a.context);
-    pw_main_loop_destroy(a.loop);pw_deinit();return rc<0?1:0;
+    pw_main_loop_destroy(a.loop);pw_deinit();free(a.rgb);return rc<0?1:0;
 }

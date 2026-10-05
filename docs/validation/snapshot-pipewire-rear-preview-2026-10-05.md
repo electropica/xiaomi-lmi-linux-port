@@ -309,3 +309,28 @@ WebM is temporary and must not be committed. Compile the C file using an ARM64
 Linux compiler, PipeWire and SPA 1.4.2 include directories, and the matched
 libpipewire-0.3 runtime library. The test source is not an installed application
 or a production camera service.
+
+
+## 25 fps synthetic target and PPM transport preparation
+
+The agreed preview target is 25 real, regularly delivered frames per second
+(40 ms intervals), not repeated display of an older image. The native
+synthetic source was retested at 25 fps: recording and teardown completed,
+with 152 decoded video frames over 6.08 seconds and 3,212,943 bytes.
+Its committed default is now 25 fps; the earlier 20 fps result remains
+historical validation of the previous revision.
+
+A separate `native-pipewire-ppm-test.c` reads an explicitly supplied atomic
+P6 1280 x 720 RGB file, rotates clockwise to portrait BGRx, and publishes
+only newly observed inode/timestamp pairs. It neither starts acquisition nor
+opens a microphone. Its source lifetime is bounded at 30 seconds.
+Using generated PPM updates and generated audio, the consumer completed a
+6.08-second recording (39,968 bytes) and clean teardown. The native source
+reported 277 unique PPM frames over the full preview/record/teardown test;
+this total must not be presented as a measured real-camera recording rate.
+
+The real camera has not been tested with this native PPM producer yet.
+An operator-confirmed, bounded preview-only test is prepared; camera
+acquisition will not start before readiness. Real acquisition cadence,
+Snapshot preview continuity, orientation, recording preservation and sound
+synchronization still require validation. No production bridge was replaced.
