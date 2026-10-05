@@ -334,3 +334,13 @@ A fresh PID/start-time/UID-checked lease and watchdog replace the normal session
 cap; the diagnostics retain their bounds. Background and GUI-exit cleanup tests
 passed after extending the firmware wrapper teardown wait. No kernel change.
 See [foreground continuous preview](../../userspace/camera/README.md#foreground-owned-continuous-preview--2026-10-05).
+
+
+### Existing camera application trial — 2026-10-05
+
+Debian Lomiri Camera 4.0.8+dfsg-5 was installed experimentally. Its Wayland/OpenGL
+interface launches, but the operator and a screenshot confirmed a black
+viewfinder. No photo/video was validated; the Android camera bridge is not
+installed. This is not a replacement for the validated rear HAL3 preview and is
+not added to the image recipe. See `docs/validation/lomiri-camera-app-installation-test-2026-10-05.md`
+(repository-root-relative) for installation findings and limitations.

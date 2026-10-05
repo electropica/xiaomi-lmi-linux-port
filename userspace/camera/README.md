@@ -823,3 +823,13 @@ service readiness before consuming frames from a new session, avoiding a stale
 end marker during a rapid focus change. All existing portrait/rear-only and
 preview-frame photo-quality limitations still apply. This change does not add
 video recording, full-resolution stills or standard-camera-app integration.
+
+
+### Existing camera application trial — 2026-10-05
+
+Debian Lomiri Camera 4.0.8+dfsg-5 was installed experimentally. Its Wayland/OpenGL
+interface launches, but the operator and a screenshot confirmed a black
+viewfinder. No photo/video was validated; the Android camera bridge is not
+installed. This is not a replacement for the validated rear HAL3 preview and is
+not added to the image recipe. See `docs/validation/lomiri-camera-app-installation-test-2026-10-05.md`
+(repository-root-relative) for installation findings and limitations.
