@@ -495,3 +495,26 @@ applies after the timing patch and checks cleanly against that intermediate
 source. The prepared native publisher uses its previously tested 40 ms timer
 for a 25 fps preview target with fresh-file checks. No installed service or
 firmware is modified. Hardware success, brightness and latency remain pending.
+
+
+## Supported fixed-FPS trial: reduced delay, cadence still below target
+
+After explicit operator readiness, a 30-second preview-only trial selected
+the advertised 30/30 AE FPS range while retaining automatic exposure. Across
+705 measured images, exposure averaged 30.000 ms and sensor frame duration
+33.333 ms. Mean sensor-to-RGB age fell from 115.107 to 86.495 ms; result wait
+was 29.484 ms, conversion 14.124 ms and fence wait 0.001 ms. These are separate
+trials, not a controlled simultaneous comparison.
+
+The native producer published 574 unique images at 19.342 fps, with mean PPM
+age 40.914 ms and maximum 77.457 ms. Root publication counted 711 over its
+longer interval. A reported 30 fps sensor frame duration does not establish
+30 fps delivery: the measured preview publication remains below the 25 fps
+target. The operator confirmed noticeably reduced delay and adequate brightness.
+The selected range is therefore a useful validated diagnostic change, not a
+complete cadence or recording fix. No production service was replaced.
+
+All three transient units stopped; root cleanup completed successfully. No
+video or microphone recording was requested. Remaining work includes conversion
+and delivery overhead, regular 25 fps preview delivery, foreground lifecycle
+integration and reliable recording finalization.

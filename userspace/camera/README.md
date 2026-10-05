@@ -854,8 +854,10 @@ file-to-sink delay on generated input only. The next real preview confirmed corr
 Its publication rate was 16.44 fps; the operator subsequently confirmed visible preview delay.
 A one-minute follow-up measured 16.68 fps at root publication and 16.90 fps
 at the native producer; sensor profiling identified 60 ms exposure in a default 12–30 fps range.
-A supported fixed-30 fps acquisition trial with a 25 fps preview is prepared,
-but brightness, cadence and delay still need hardware validation. Reliable real recording and 30 fps video also remain open.
+A supported fixed-30 fps trial reduced exposure to 30 ms and sensor-to-RGB
+age to 86.5 ms. The operator confirmed reduced delay and adequate brightness;
+unique preview publication reached only 19.34 fps, below the 25 fps target.
+This remains a private diagnostic trial; production integration is pending. Reliable real recording and 30 fps video also remain open.
 
 Native diagnostic sources and a small cross-compilation helper are under
 `diagnostics/`. No production bridge was replaced. All camera/microphone tests
