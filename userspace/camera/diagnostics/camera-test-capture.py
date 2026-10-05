@@ -2,10 +2,13 @@ import errno, fcntl, json, os, resource, signal, struct, subprocess, tempfile, t
 from pathlib import Path
 import argparse
 parser=argparse.ArgumentParser()
-parser.add_argument("--manual-exposure",action="store_true")
+mode=parser.add_mutually_exclusive_group()
+mode.add_argument("--manual-exposure",action="store_true")
+mode.add_argument("--ae-precapture",action="store_true")
 args=parser.parse_args()
 capture_command="kill -STOP $$; exec /private-camera-enumerate 0"
 if args.manual_exposure: capture_command += " --manual-exposure"
+if args.ae_precapture: capture_command += " --ae-precapture"
 
 def run(*args):
     return subprocess.run(args,check=True,timeout=5,stdout=subprocess.PIPE,text=True).stdout.strip()
@@ -189,3 +192,7 @@ finally:
         run('losetup','--detach',loop)
     root.rmdir()
     print('ISOLATED_RUNTIME_REMOVED',flush=True)
+
+# A cleaned-up runtime is not proof that its camera client succeeded.
+if provider_status != 0:
+    raise SystemExit(1)

@@ -438,3 +438,49 @@ A subsequent hardware run of that consolidated `--manual-exposure` option
 returned all five frames at the requested values, an 8,450-byte JPEG,
 successful buffer/device cleanup and unit exit 0 in 10.18 seconds.
 This is separate from the initial matched-scene pair described above.
+
+## AE precapture and YUV boundary — 2026-10-05
+
+An explicit automatic request copied STILL_CAPTURE defaults and set control
+mode AUTO, AE ON, AE unlocked and AE precapture START on frame one / IDLE on
+later frames. The original defaults already had AUTO/ON/unlocked/IDLE. Results
+entered PRECAPTURE (5) on frames one to three, then CONVERGED (2), but stayed
+at 7,067,946 ns and ISO 50. All five buffers returned OK; the last JPEG was
+4,736 bytes. Thus a missing precapture trigger does not explain the fixed
+exposure. The source diagnostic retains `--ae-precapture` as an explicit
+rear-only alternative to `--manual-exposure`, not as a fix. Trigger semantics:
+[Android CaptureRequest](https://developer.android.com/reference/android/hardware/camera2/CaptureRequest#CONTROL_AE_PRECAPTURE_TRIGGER).
+
+A configure-only mapping probe found the CHI override, CamX statscore,
+QTI AEC/wrapper, QTI static AEC and Vidhance AEC libraries loaded. This does
+not identify which algorithm instance supplies the exposure; the presence
+of a static library is not sufficient evidence of a static-AEC fallback.
+
+A private single-YUV-stream PREVIEW-template experiment selected advertised
+format 0x23 with SW_READ_OFTEN usage and unknown dataspace, first 176 x 144,
+then 1280 x 720. Both configure_streams calls returned -19 before submitting
+any frames. A first attempt also exposed an NDK __ndk1 versus Android __1
+libc++ linkage mismatch in the new allocation bridge; rebuilding with the
+already-inspected Android namespace fixed linkage, not configuration.
+A stale 176 x 144 binary was inadvertently retested after a 720p compilation
+error; it is not counted as a 720p result. The later successful 720p build
+and runtime explicitly reported 1280 x 720 and returned the same -19.
+No YUV frame, preview or AE behavior was validated by these failed configurations.
+
+The experimental YUV variants remain private, outside the supported capture
+path. The next gate is to inspect CHI stream/use-case selection and required
+preview resources, rather than changing exposure numbers blindly. All finite
+units ended and their private mounts/loop devices were cleaned up.
+
+The supervisor previously returned success after cleanup even when the camera
+client failed. It now propagates a nonzero client status or client timeout as
+a failed overall run, after cleanup; manager shutdown alone is not a capture
+success criterion. Hardware client failures in the YUV attempts remain failures
+even though their older outer supervisor units exited 0.
+
+The corrected supervisor was hardware-tested with intentionally incompatible
+manual/AE flags: the client exited 2 before opening the camera, all private
+resources were cleaned up, and the outer unit correctly exited 1 (failure).
+The final C source compiles with -Wall -Wextra -Werror; the supervisor parses
+with Python ast. The integrated AE option has not been re-run for a new photo;
+its earlier experimental AE measurements remain the evidence described above.

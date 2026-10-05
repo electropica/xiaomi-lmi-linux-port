@@ -10,7 +10,7 @@
  * https://source.android.com/reference/hal/structcamera3__device__ops
  * Run in the private bionic runtime, with the same property/runtime setup as
  * enumeration and an external timeout. Never run alongside the OEM provider.
- * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure]
+ * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure | --ae-precapture]
  */
 #define main enumeration_diagnostic_main
 #include "camera-module-enumerate.c"
@@ -322,10 +322,43 @@ static int prepare_manual_settings(void *library, const struct camera_metadata *
     return 0;
 }
 
+static int (*ae_update)(struct camera_metadata *,size_t,const void *,size_t,struct camera_metadata_entry *);
+static int prepare_auto_settings(void *library,const struct camera_metadata *defaults) {
+    struct camera_metadata *(*allocate)(size_t,size_t)=dlsym(library,"allocate_camera_metadata");
+    size_t (*entries)(const struct camera_metadata *)=dlsym(library,"get_camera_metadata_entry_count");
+    size_t (*bytes)(const struct camera_metadata *)=dlsym(library,"get_camera_metadata_data_count");
+    int (*append)(struct camera_metadata *,const struct camera_metadata *)=dlsym(library,"append_camera_metadata");
+    int (*add)(struct camera_metadata *,uint32_t,const void *,size_t)=dlsym(library,"add_camera_metadata_entry");
+    ae_update=dlsym(library,"update_camera_metadata_entry");
+    free_metadata=dlsym(library,"free_camera_metadata");
+    if(!allocate||!entries||!bytes||!append||!add||!ae_update||!free_metadata||!defaults)return 45;
+    size_t count=entries(defaults), data=bytes(defaults);
+    if(count>16384||data>1048576)return 45;
+    const uint32_t tags[]={ACAMERA_CONTROL_MODE,ACAMERA_CONTROL_AE_MODE,ACAMERA_CONTROL_AE_LOCK,ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER};
+    const uint8_t values[]={ACAMERA_CONTROL_MODE_AUTO,ACAMERA_CONTROL_AE_MODE_ON,0,ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER_START};
+    camera_metadata_ro_entry_t e={0};
+    for(size_t i=0;i<4;i++)if(!result_find_entry(defaults,tags[i],&e)&&e.type==0&&e.count==1)
+        printf("default_ae tag=0x%x value=%u\n",tags[i],e.data.u8[0]);
+    manual_settings=allocate(count+4,data+256);
+    if(!manual_settings||append(manual_settings,defaults))return 45;
+    for(size_t i=0;i<4;i++) {
+        int found=result_find_entry(manual_settings,tags[i],&e);
+        int r=found?add(manual_settings,tags[i],&values[i],1):ae_update(manual_settings,e.index,&values[i],1,NULL);
+        if(r)return 45;
+    }
+    return 0;
+}
+
 static int capture_one(camera3_device_t *camera, uint32_t capacity,
                        uint32_t frame_number, bool save_image) {
     if (!camera->ops->process_capture_request || capacity < 12) return 30;
     int r;
+    if (ae_update && manual_settings && frame_number > 1) {
+        camera_metadata_ro_entry_t e={0};
+        uint8_t idle=ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER_IDLE;
+        if(result_find_entry(manual_settings,ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER,&e) ||
+           ae_update(manual_settings,e.index,&idle,1,NULL)) return 45;
+    }
     if (!capture_handle) {
         printf("stage=qti_allocate capacity=%u usage=0x%x\n", capacity, probe_blob_stream.usage);
         r = lmi_qti_allocate(capacity, probe_blob_stream.usage, &capture_handle);
@@ -432,21 +465,22 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
 
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 5) {
-        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure]\n", argv[0]);
+        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure | --ae-precapture]\n", argv[0]);
         diagnostic_exit(2);
     }
     char *end = NULL;
     long camera_id = strtol(argv[1], &end, 10);
     if (!end || *end || camera_id < 0 || camera_id > 15) diagnostic_exit(2);
     const char *path = "/vendor/lib64/hw/camera.qcom.so";
-    int do_configure = 1, manual_exposure = 0;
+    int do_configure = 1, manual_exposure = 0, ae_precapture = 0;
     for (int i = 2; i < argc; ++i) {
         if (!strcmp(argv[i], "--configure")) do_configure = 1;
         else if (!strcmp(argv[i], "--manual-exposure")) manual_exposure = 1;
+        else if (!strcmp(argv[i], "--ae-precapture")) ae_precapture=1;
         else if (i == 2) path = argv[i];
         else diagnostic_exit(2);
     }
-    if (manual_exposure && camera_id != 0) diagnostic_exit(2);
+    if ((manual_exposure && ae_precapture) || ((manual_exposure || ae_precapture) && camera_id != 0)) diagnostic_exit(2);
     setvbuf(stdout, NULL, _IONBF, 0);
     printf("stage=dlopen path=%s\n", path);
     void *handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
@@ -543,6 +577,10 @@ int main(int argc, char **argv) {
     if (manual_exposure) {
         settings_status = prepare_manual_settings(metadata_handle, still_settings, info.static_camera_characteristics);
         printf("manual_settings_result=%d\n", settings_status);
+    }
+    if (ae_precapture) {
+        settings_status=prepare_auto_settings(metadata_handle,still_settings);
+        printf("ae_precapture_settings_result=%d\n",settings_status);
     }
     if (do_configure) {
         if (!chosen_width || !chosen_height || jpeg_max_size <= 0 || !camera->ops->configure_streams)
