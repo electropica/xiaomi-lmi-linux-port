@@ -27,6 +27,7 @@ struct app {
     struct timespec last_stamp;
     ino_t last_inode;
     bool fresh;
+    double first_frame,last_frame,age_sum,age_max;
 };
 static void quit(void *opaque, uint64_t expirations) {
     (void)expirations; struct app *a=opaque; pw_main_loop_quit(a->loop);
@@ -77,6 +78,11 @@ static void process(void *opaque) {
     if (head) { head->pts=-1;head->flags=0;head->seq=a->frames;head->dts_offset=0; }
     buf->datas[0].chunk->offset=0;buf->datas[0].chunk->size=stride*h;
     buf->datas[0].chunk->stride=stride;buf->datas[0].chunk->flags=0;
+    struct timespec now,wall;clock_gettime(CLOCK_MONOTONIC,&now);clock_gettime(CLOCK_REALTIME,&wall);
+    double when=now.tv_sec+now.tv_nsec/1e9;
+    double age=(wall.tv_sec-a->last_stamp.tv_sec)*1000.0+(wall.tv_nsec-a->last_stamp.tv_nsec)/1e6;
+    if(!a->frames)a->first_frame=when;
+    a->last_frame=when;a->age_sum+=age;if(age>a->age_max)a->age_max=age;
     b->size=1; a->frames++; pw_stream_queue_buffer(a->stream,b);
 }
 static void state(void *opaque, enum pw_stream_state old, enum pw_stream_state now,const char *error) {
@@ -84,7 +90,7 @@ static void state(void *opaque, enum pw_stream_state old, enum pw_stream_state n
     fprintf(stderr,"STATE %s %s\n",pw_stream_state_as_string(now),error?error:"");
     if (now==PW_STREAM_STATE_ERROR) {pw_main_loop_quit(a->loop);return;}
     if (now==PW_STREAM_STATE_STREAMING) {
-        struct timespec first={0,1},period={0,40000000};
+        struct timespec first={0,1},period={0,10000000};
         pw_loop_update_timer(pw_main_loop_get_loop(a->loop),a->tick,&first,&period,false);
     } else pw_loop_update_timer(pw_main_loop_get_loop(a->loop),a->tick,NULL,NULL,false);
 }
@@ -123,6 +129,7 @@ int main(int argc,char **argv) {
         PW_KEY_MEDIA_CATEGORY,"Capture",PW_KEY_MEDIA_ROLE,"Camera",
         PW_KEY_NODE_NAME,"lmi-camera-rear-pipewire-test",
         PW_KEY_NODE_DESCRIPTION,"LMI-PPM-diagnostic",
+        "api.libcamera.location","back",
         PW_KEY_NODE_SUPPORTS_REQUEST,"1",NULL));
     pw_stream_add_listener(a.stream,&a.listener,&events,&a);
     uint8_t storage[512];struct spa_pod_builder builder=SPA_POD_BUILDER_INIT(storage,sizeof(storage));
@@ -136,6 +143,9 @@ int main(int argc,char **argv) {
         PW_STREAM_FLAG_DRIVER|PW_STREAM_FLAG_MAP_BUFFERS,&param,1);
     if(rc>=0)pw_main_loop_run(a.loop);
     fprintf(stderr,"UNIQUE_PPM_FRAMES %u\n",a.frames);
+    if(a.frames>1 && a.last_frame>a.first_frame)
+        fprintf(stderr,"PUBLICATION_FPS %.3f FILE_AGE_MEAN_MS %.3f FILE_AGE_MAX_MS %.3f\n",
+                (a.frames-1)/(a.last_frame-a.first_frame),a.age_sum/a.frames,a.age_max);
     pw_stream_destroy(a.stream);pw_core_disconnect(a.core);pw_context_destroy(a.context);
     pw_main_loop_destroy(a.loop);pw_deinit();free(a.rgb);return rc<0?1:0;
 }

@@ -353,3 +353,39 @@ the native source and root acquisition all stopped; root cleanup completed
 successfully. The operator feedback establishes an improved preview, not
 25 fps acquisition or corrected orientation. Real recording has not yet
 been retested on this producer. Orientation and preview latency remain open.
+
+
+## Rear-camera identity and synthetic latency preparation
+
+The operator clarified the real-preview defects as left/right mirroring and
+movement-to-preview delay. Inspection of the official Snapshot 48.0.1 source
+found that `aperture/src/viewfinder.rs` treats any location other than Back as
+front-facing for its preview transform. `camera.rs` reads
+`api.libcamera.location`; `enums.rs` accepts `back`. The native node did not
+supply this property. The prepared source now does. A PipeWire-only GStreamer
+device-provider check confirmed both the node and the GstDevice expose `back`.
+This supports the expected mirror correction, but operator confirmation in
+Snapshot is still pending. No compensating mirror was applied to pixel data.
+
+Official versioned source: [Snapshot 48.0.1](https://download.gnome.org/sources/snapshot/48/snapshot-48.0.1.tar.xz).
+
+The prepared native PPM source polls for new files every 10 ms, rather than
+40 ms, retaining unique inode/timestamp checks. It reports publication rate
+and source-file age; neither metric includes sensor exposure or UI rendering.
+A generated-file recording still completed normally (6.04 seconds, 39,866
+bytes). A separate non-rendering PipeWire/GStreamer receiver test measured
+175 unique samples, 25.04 frames/s, mean file-publication-to-sink delay 30.12 ms,
+p95 33.51 ms and maximum 40.65 ms. The final property-verification run measured
+174 unique samples, 25.05 frames/s, mean 25.85 ms, p95 30.81 ms and max 42.44 ms.
+These are synthetic transport results, not real-camera latency validation.
+
+An initial broad GstDeviceMonitor probe blocked while discovering providers;
+it was terminated. The preserved latency diagnostic uses only
+`pipewiredeviceprovider`, avoiding broad hardware discovery. All synthetic
+processes finished or were stopped. No further real acquisition was started
+while the operator was away.
+
+`build-native-pipewire-test.sh` accepts the C source, matched include root,
+matched ARM64 libpipewire library and output path. The compiled binary is a
+private generated artifact. Sources compile with warnings as errors; the
+launcher remains an experimental temporary test, not an installed replacement.

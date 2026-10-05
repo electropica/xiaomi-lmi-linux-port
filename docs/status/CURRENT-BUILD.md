@@ -346,81 +346,15 @@ not added to the image recipe. See `docs/validation/lomiri-camera-app-installati
 (repository-root-relative) for installation findings and limitations.
 
 
-### Snapshot / PipeWire rear-camera proof — 2026-10-05
+### Current camera status — 2026-10-05
 
-Native Debian `gnome-snapshot 48.0.1-1` displays a real rear preview through an
-experimental userspace PipeWire publisher (operator-confirmed). Five JPEGs
-decode successfully. A second explicitly stopped video is a valid 6.58-second
-WebM, portrait 720 x 1280 at 10 fps, with mono audio; the operator confirmed video image but reported choppy sound. Gallery and GPU issues remain. Capture trials are bounded, and a
-foreground-owned Snapshot launcher/image integration is not implemented. See
-`docs/validation/snapshot-pipewire-rear-preview-2026-10-05.md`
-(repository-root-relative).
-
-
-### PipeWire timestamp correction — 2026-10-05
-
-The experimental appsrc publisher now uses `format=time`, correcting byte/time
-segment errors. An automatic real-camera camerabin start/stop test then produced
-a valid 5.68-second video with audio; decoded audio timestamps had no gaps over
-10 ms. The operator again reported choppy sound, but the retained Snapshot file was
-empty; recording completion and audible playback remain unvalidated. This remains a bounded
-diagnostic, not a permanent Snapshot launcher or completed audio fix.
-
-
-### Snapshot recording follow-up — 2026-10-05
-
-A process-local `ORC_CODE=backup` trial finalized a Snapshot video after an
-intermittent camerabin crash was reproduced under GDB. The operator still
-reported choppy sound. Decoded audio has continuous timestamps; isolated audio
-playback assessment remains pending. No permanent camera launcher or global ORC
-setting was installed. See the Snapshot rear-preview validation for evidence
-and the bounded camerabin recording probe for reproduction.
-
-
-### Camera audio isolation — 2026-10-05
-
-The Snapshot soundtrack still sounded choppy when played without video or
-active camera acquisition. A separate native PipeWire microphone-only recording
-was operator-confirmed recognizable and fluent after amplifying a temporary
-listen copy. Video/audio capture remains unresolved; a PulseAudio/GStreamer
-microphone-only comparison is pending.
-
-
-### Buffered audio / camera clock diagnostic — 2026-10-05
-
-The operator validated microphone-only PulseAudio capture with 48 kHz and
-larger buffers; the previous 44.1 kHz control sounded choppy. A real-video
-diagnostic then finalized 5.8 seconds with 48 kHz audio using copied input
-buffers and an explicit system clock. The operator confirmed correct soundtrack playback from this diagnostic.
-Full-video playback with these settings in Snapshot remains unvalidated. `ORC_CODE=backup` did not reliably prevent capture crashes.
-These are process-local diagnostic settings, not a deployed Snapshot fix.
-
-
-### Snapshot tuning preparation / application cleanup — 2026-10-05
-
-Megapixels was uninstalled from the test phone; the lmi-camera prototype remains
-provisionally available. A small process-local tuning diagnostic was prepared
-for Snapshot and its settings verified on inactive GStreamer objects, without
-opening microphone or camera. Snapshot recording with that adaptation remains
-unvalidated and awaits explicit operator readiness. No global audio or preload
-configuration was changed.
-
-
-### Tuned Snapshot audio passed / quality pending — 2026-10-05
-
-The operator confirmed correct audio in the first tuned Snapshot video, but
-reported missing frames and heavy compression blocks. The test file became
-empty after stopping the camera bridge while Snapshot remained open; safe
-session shutdown and file preservation remain unresolved. The next diagnostic
-is prepared for 20 fps and 4 Mbit/s VP8. Inactive encoder verification passed;
-no capture was started. 30 fps and acceptable video quality are not validated.
-
-
-### Higher-quality camera trial failed — 2026-10-05
-
-The authorized 20 fps / 4 Mbit/s Snapshot trial lost preview and produced an
-empty recording; the operator also reported horizontal mirroring. The phone
-remained reachable and returned to its application grid after stopping the
-test. Higher-quality video, stable preview and reliable file preservation
-remain unvalidated. All camera test units are stopped; no further capture
-without explicit operator readiness.
+Snapshot rear preview is experimental. The operator found the native PipeWire
+preview fluid but mirrored and delayed; its measured publication rate was about
+18.8 fps. The preview target is 25 real images/s. A rear-identity and fresh-file
+polling correction is prepared and passes synthetic tests at about 25 fps;
+real orientation/latency confirmation remains pending. Real recording has
+unresolved preservation and quality defects. Megapixels was removed and the
+lmi-camera prototype remains provisional. No camera test or recording is active.
+See the [camera implementation status](../../userspace/camera/README.md) and
+[complete validation record](../validation/snapshot-pipewire-rear-preview-2026-10-05.md)
+for distinct operator, hardware and synthetic results.
