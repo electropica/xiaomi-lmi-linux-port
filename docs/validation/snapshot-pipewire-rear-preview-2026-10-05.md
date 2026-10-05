@@ -334,3 +334,22 @@ An operator-confirmed, bounded preview-only test is prepared; camera
 acquisition will not start before readiness. Real acquisition cadence,
 Snapshot preview continuity, orientation, recording preservation and sound
 synchronization still require validation. No production bridge was replaced.
+
+
+## First real-camera native PPM preview
+
+After explicit operator readiness, Snapshot displayed the native PPM source
+for approximately 20 seconds, with no requested audio/video recording.
+The operator reported fluid movement, but an inverted image and an offset
+or delay; the meaning of the latter report still needs clarification.
+The source journal shows streaming from 17:47:59 to 17:48:19 local time,
+376 unique PPM publications, then clean source shutdown. This corresponds
+to approximately 18.8 unique publications per second in that interval,
+not the negotiated 25 fps. It is not a measured rendered-frame rate.
+
+Root acquisition published 762 frames over its longer, separate lifetime;
+that total must not be divided by the 20-second Snapshot interval. Snapshot,
+the native source and root acquisition all stopped; root cleanup completed
+successfully. The operator feedback establishes an improved preview, not
+25 fps acquisition or corrected orientation. Real recording has not yet
+been retested on this producer. Orientation and preview latency remain open.
