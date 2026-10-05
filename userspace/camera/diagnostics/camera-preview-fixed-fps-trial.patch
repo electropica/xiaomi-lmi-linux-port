@@ -1,0 +1,32 @@
+--- a/userspace/camera/diagnostics/camera-module-capture.c
++++ b/userspace/camera/diagnostics/camera-module-capture.c
+@@ -551,6 +551,29 @@
+     if(!result_find_entry(settings,ACAMERA_CONTROL_AE_TARGET_FPS_RANGE,&fps) && fps.type==1 && fps.count==2) {
+         timing_fps_min=fps.data.i32[0];timing_fps_max=fps.data.i32[1];
+     }
++    /* Private trial: reject fixed-rate selection unless advertised by this camera. */
++    if(timing_supports_30!=1)return 45;
++    void *meta=dlopen("libcamera_metadata.so",RTLD_NOW|RTLD_LOCAL);
++    if(!meta)return 45;
++    struct camera_metadata *(*allocate)(size_t,size_t)=dlsym(meta,"allocate_camera_metadata");
++    size_t (*entries)(const struct camera_metadata *)=dlsym(meta,"get_camera_metadata_entry_count");
++    size_t (*bytes)(const struct camera_metadata *)=dlsym(meta,"get_camera_metadata_data_count");
++    int (*append)(struct camera_metadata *,const struct camera_metadata *)=dlsym(meta,"append_camera_metadata");
++    int (*add)(struct camera_metadata *,uint32_t,const void *,size_t)=dlsym(meta,"add_camera_metadata_entry");
++    int (*update)(struct camera_metadata *,size_t,const void *,size_t,struct camera_metadata_entry *)=dlsym(meta,"update_camera_metadata_entry");
++    free_metadata=dlsym(meta,"free_camera_metadata");
++    if(!allocate||!entries||!bytes||!append||!add||!update||!free_metadata)return 45;
++    size_t count_entries=entries(settings),count_bytes=bytes(settings);
++    if(count_entries>16384 || count_bytes>1048576)return 45;
++    manual_settings=allocate(count_entries+1,count_bytes+16);
++    if(!manual_settings || append(manual_settings,settings))return 45;
++    const int32_t fixed_fps[2]={30,30};camera_metadata_ro_entry_t fps_entry={0};
++    int found=result_find_entry(manual_settings,ACAMERA_CONTROL_AE_TARGET_FPS_RANGE,&fps_entry);
++    if(!found && (fps_entry.type!=1 || fps_entry.count!=2))return 45;
++    int changed=found?add(manual_settings,ACAMERA_CONTROL_AE_TARGET_FPS_RANGE,fixed_fps,2):
++        update(manual_settings,fps_entry.index,fixed_fps,2,NULL);
++    if(changed)return 45;
++    settings=manual_settings;timing_fps_min=timing_fps_max=30;
+     for (unsigned i=0;i<PIPELINE_SLOTS;i++)pipeline[i].fence=-1;
+     for (unsigned i=0;i<PIPELINE_SLOTS;i++) {
+         int r=lmi_qti_allocate_yuv(probe_blob_stream.width,probe_blob_stream.height,probe_blob_stream.usage,&pipeline[i].handle);

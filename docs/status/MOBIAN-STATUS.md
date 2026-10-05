@@ -996,7 +996,8 @@ preview fluid but mirrored and delayed; its measured publication rate was about
 18.8 fps. The preview target is 25 real images/s. A rear-identity and fresh-file
 polling correction is prepared and passes synthetic tests at about 25 fps;
 rear orientation is now operator-confirmed, while visible preview delay is now confirmed. A one-minute follow-up measured
-16.68 fps upstream and 16.90 fps at the native producer; backend timing is next. Real recording has
+16.68 fps upstream and 16.90 fps at the native producer; sensor profiling found 60 ms exposure with a 12–30 fps range. A supported
+fixed-30 fps acquisition trial is prepared and still requires validation. Real recording has
 unresolved preservation and quality defects. Megapixels was removed and the
 lmi-camera prototype remains provisional. No camera test or recording is active.
 See the [camera implementation status](../../userspace/camera/README.md) and

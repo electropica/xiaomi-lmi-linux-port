@@ -472,3 +472,26 @@ This extension compiles with warnings as errors but has not yet run on hardware.
 The public NDK r27d metadata documentation establishes REALTIME timestamps use
 elapsedRealtimeNanos; timestamps from an unknown timebase must not be subtracted
 from the Linux monotonic clock. This remains a temporary measurement variant.
+
+
+## Sensor timing identifies variable-rate exposure as a primary limitation
+
+The operator authorized the extended 30-second preview measurement.
+Across 510 measured images, default AE target range was 12–30 fps,
+mean exposure 60.000 ms and reported frame duration 60.606 ms (about
+16.5 fps). The source published 489 unique images at 16.533 fps.
+The static metadata advertised fixed 30/30 fps support. Timestamp source
+was REALTIME; 510 valid CLOCK_BOOTTIME comparisons gave mean sensor-to-RGB
+age 115.107 ms. Result wait averaged 44.789 ms, conversion 14.359 ms and
+fence wait 0.001 ms. Root publication counted 520 over its separate lifetime.
+This establishes exposure/frame cadence as a primary limit in this scene;
+it does not exclude conversion and downstream display latency.
+
+All test units stopped and cleanup completed. No video/audio recording was
+requested. A private fixed-rate trial is compiled: copy the default preview
+metadata, require advertised 30/30 support, then set only the AE FPS range to
+30/30. AE remains enabled; no manual gain or exposure is written. The patch
+applies after the timing patch and checks cleanly against that intermediate
+source. The prepared native publisher uses its previously tested 40 ms timer
+for a 25 fps preview target with fresh-file checks. No installed service or
+firmware is modified. Hardware success, brightness and latency remain pending.

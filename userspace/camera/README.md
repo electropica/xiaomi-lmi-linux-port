@@ -853,7 +853,9 @@ fresh PPM files more frequently. It reached about 25 fps and 26–30 ms mean
 file-to-sink delay on generated input only. The next real preview confirmed corrected left/right orientation.
 Its publication rate was 16.44 fps; the operator subsequently confirmed visible preview delay.
 A one-minute follow-up measured 16.68 fps at root publication and 16.90 fps
-at the native producer; upstream timing is the next diagnostic. Reliable real recording and 30 fps video also remain open.
+at the native producer; sensor profiling identified 60 ms exposure in a default 12–30 fps range.
+A supported fixed-30 fps acquisition trial with a 25 fps preview is prepared,
+but brightness, cadence and delay still need hardware validation. Reliable real recording and 30 fps video also remain open.
 
 Native diagnostic sources and a small cross-compilation helper are under
 `diagnostics/`. No production bridge was replaced. All camera/microphone tests
