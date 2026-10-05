@@ -994,8 +994,17 @@ not added to the image recipe. See `docs/validation/lomiri-camera-app-installati
 Native Debian `gnome-snapshot 48.0.1-1` displays a real rear preview through an
 experimental userspace PipeWire publisher (operator-confirmed). Five JPEGs
 decode successfully. A second explicitly stopped video is a valid 6.58-second
-WebM, portrait 720 x 1280 at 10 fps, with mono audio; playback assessment is
-pending. Gallery and GPU issues remain. Capture trials are bounded, and a
+WebM, portrait 720 x 1280 at 10 fps, with mono audio; the operator confirmed video image but reported choppy sound. Gallery and GPU issues remain. Capture trials are bounded, and a
 foreground-owned Snapshot launcher/image integration is not implemented. See
 `docs/validation/snapshot-pipewire-rear-preview-2026-10-05.md`
 (repository-root-relative).
+
+
+### PipeWire timestamp correction — 2026-10-05
+
+The experimental appsrc publisher now uses `format=time`, correcting byte/time
+segment errors. An automatic real-camera camerabin start/stop test then produced
+a valid 5.68-second video with audio; decoded audio timestamps had no gaps over
+10 ms. The operator again reported choppy sound, but the retained Snapshot file was
+empty; recording completion and audible playback remain unvalidated. This remains a bounded
+diagnostic, not a permanent Snapshot launcher or completed audio fix.

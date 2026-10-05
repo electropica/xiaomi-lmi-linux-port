@@ -9,7 +9,7 @@ for _ in range(40):
  time.sleep(.2)
 assert f.exists() and time.time()-f.stat().st_mtime<2,'rear preview is not live'
 header=b'P6\n1280 720\n255\n';size=1280*720*3
-p=Gst.parse_launch('appsrc name=source is-live=true do-timestamp=true block=false max-buffers=2 leaky-type=downstream caps="video/x-raw,format=RGB,width=1280,height=720,framerate=10/1" ! queue max-size-buffers=2 leaky=downstream ! pipewiresink mode=provide sync=false use-bufferpool=false stream-properties="props,media.type=Video,media.category=Capture,media.class=Video/Source,media.role=Camera,node.name=lmi-camera-bridge-test,node.description=LMI-rear-camera-test"')
+p=Gst.parse_launch('appsrc name=source format=time is-live=true do-timestamp=true block=false max-buffers=2 leaky-type=downstream caps="video/x-raw,format=RGB,width=1280,height=720,framerate=10/1" ! queue max-size-buffers=2 leaky=downstream ! pipewiresink mode=provide sync=false use-bufferpool=false stream-properties="props,media.type=Video,media.category=Capture,media.class=Video/Source,media.role=Camera,node.name=lmi-camera-bridge-test,node.description=LMI-rear-camera-test"')
 c=None;stop=threading.Event();sent=set();published=[0];errors=[];thread=None
 source=p.get_by_name('source')
 def feed():

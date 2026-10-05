@@ -25,8 +25,8 @@ The first video file was empty and is not a successful recording. In a second
 trial, the operator explicitly started and stopped recording. GstPbutils
 Discoverer reports a valid WebM file of 266,391 bytes, duration 6.582002498 s,
 720 x 1280 at 10/1 fps, with one-channel 44,100 Hz audio. The second publisher
-rotates preview pixels clockwise to portrait before delivery. User assessment
-of playback image and sound remains pending at this commit.
+rotates preview pixels clockwise to portrait before delivery. The operator subsequently confirmed correct video image but reported choppy
+sound. That recording is not a successful audio playback validation.
 
 ## Scope and lifetime
 
@@ -73,3 +73,38 @@ settings were not changed.
 - [GNOME Camera](https://apps.gnome.org/Snapshot/)
 - [PipeWire GStreamer sink implementation](https://github.com/PipeWire/pipewire/blob/master/src/gst/gstpipewiresink.c)
 - [GTK renderer and feature controls](https://docs.gtk.org/gtk4/running.html)
+
+## Temporal segment correction and follow-up
+
+A later Snapshot trial created an empty file and reported PipeWire buffer
+allocation failure. A controlled automatic camerabin trial also stalled at
+stop-capture. Audio-only PulseAudio/PipeWire capture succeeded, and the same
+camerabin setup recorded a 6.1-second synthetic video with audio, isolating the
+problem to the real bridge path rather than proving microphone failure.
+
+The appsrc publisher was incorrectly using its default byte-format segment even
+though it supplies timestamped live video. GStreamer logged
+`gst_segment_to_stream_time: assertion segment->format == format failed`.
+Explicit `format=time` corrected this defect. The retained publisher uses
+portrait BGRx output and buffer copying (`use-bufferpool=false`). The automated
+camerabin diagnostic fixes portrait 720 x 1280 / 10 fps caps, waits for at least
+five viewfinder frames before starting, and uses a non-synchronizing fake
+viewfinder sink to avoid testing display timing as a recording precondition.
+
+After the correction, 19 viewfinder frames arrived before recording. The
+six-second start/stop trial completed and produced a valid 123,001-byte WebM
+with 5.68-second duration and one audio track. Audio-only decoding produced
+91,092 samples at 16 kHz, peak 0.01129 and RMS 0.000449, with no decoded timestamp
+gaps exceeding 10 ms. This numerical result does not prove audible continuity
+or adequate level in all conditions. The operator reported choppy sound again in the follow-up. The only retained
+Snapshot file from that trial was empty (0 bytes), so that report cannot yet be
+attributed to a decoded recording. The bounded camera source stopped at its
+five-minute deadline; Snapshot then reported target-not-found and not-negotiated.
+Recording completion and audible playback remain unvalidated.
+
+The scoped Snapshot launch disables GL/Vulkan/dmabuf through `GDK_DISABLE` in
+addition to Cairo rendering to investigate previously observed GPU faults.
+No global GPU configuration or kernel setting was changed. All automatic
+acquisition/publisher trials stop their units in a finally block and retain
+hard systemd timeout limits. Neither a permanent foreground-owned Snapshot
+launcher nor image integration is implemented yet.
