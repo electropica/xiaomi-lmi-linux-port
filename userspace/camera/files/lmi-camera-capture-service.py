@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Fixed rear capture only. No caller-controlled path or camera ID."""
-import os,re,shutil,stat,subprocess,tempfile
+import json,os,re,shutil,stat,subprocess,tempfile
 from pathlib import Path
 
 assert os.getuid()==0
@@ -22,6 +22,9 @@ try:
         output=candidate
     if result.returncode or output is None:
         raise RuntimeError('Bounded rear camera backend failed')
+    angles=re.findall(r'^sensor_orientation_degrees=(\d+)$',(output/'capture.log').read_text(),re.M)
+    assert len(angles)==1 and int(angles[0]) in (0,90,180,270)
+    orientation=int(angles[0])
     image=output/'preview.ppm'
     assert image.is_file() and not image.is_symlink() and image.stat().st_uid==0
     assert image.stat().st_size==2764816
@@ -38,6 +41,17 @@ try:
             os.replace(temp,destination/'latest.ppm')
         finally:
             if os.path.exists(temp):os.unlink(temp)
+    fd,temp=tempfile.mkstemp(prefix='.metadata-',dir=destination)
+    try:
+        with os.fdopen(fd,'w') as target:
+            json.dump({'sensor_orientation':orientation,'width':1280,'height':720},target)
+            target.flush();os.fsync(target.fileno())
+            os.fchmod(target.fileno(),0o640)
+            os.fchown(target.fileno(),0,destination.stat().st_gid)
+        os.replace(temp,destination/'latest.json')
+    finally:
+        if os.path.exists(temp):os.unlink(temp)
+    print('REAR_SENSOR_ORIENTATION='+str(orientation),flush=True)
     print('REAR_CAPTURE_SAVED',flush=True)
 finally:
     if output is not None:

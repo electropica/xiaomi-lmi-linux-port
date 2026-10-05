@@ -285,5 +285,8 @@ An opt-in GTK rear snapshot app is now installed on this exact diagnostic boot.
 Two automated end-to-end app runs saved user-owned 1280 x 720 PNGs in Images/
 Camera. The app runs unprivileged; a fixed demand-started backend service has
 bounded execution and a narrowly scoped local-user rule. No generic-image or
-Megapixels support is claimed. The app is open for operator button/save/open
-validation, which is still pending. See [application and validation scope](../../userspace/camera/README.md#opt-in-rear-snapshot-application--2026-10-05).
+Megapixels support is claimed. Operator capture and upright portrait display
+are confirmed; opening the saved photo in Photos remains pending. The HAL-based
+rotation saves 720 x 1280 portrait pixels. Explicit private-manager shutdown
+reduced one full UI trial from 14.610 to 10.048 seconds; per-shot initialization
+and live preview remain unresolved. See [application and validation scope](../../userspace/camera/README.md#opt-in-rear-snapshot-application--2026-10-05).

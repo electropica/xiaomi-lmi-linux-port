@@ -201,13 +201,18 @@ try:
         provider_status='running until bounded enumeration stop'
     print('PROVIDER_ENUMERATION_RESULT '+str(provider_status)+'\n'+provider_output[:6000]+'\nPROVIDER_LOG_TAIL\n'+provider_output[-6000:],flush=True)
     (output/'capture.log').write_text(provider_output)
+    # This private manager is a daemon, not a finite capture worker. The camera
+    # client has now exited and released its device/buffer. Stop only our manager
+    # process group immediately instead of waiting for a guaranteed timeout.
+    if child.poll() is None:
+        os.killpg(child.pid,signal.SIGTERM)
     try:
-        output,_=child.communicate(timeout=4)
+        output,_=child.communicate(timeout=1)
         status=child.returncode
     except subprocess.TimeoutExpired:
         os.killpg(child.pid,signal.SIGKILL)
         output,_=child.communicate(timeout=2)
-        status='running until test stop'
+        status='stopped after graceful-shutdown timeout'
     print('HIDL_MANAGER_TEST_RESULT '+str(status),flush=True)
     print(output[:12000],flush=True)
 finally:

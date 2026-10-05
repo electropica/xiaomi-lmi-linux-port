@@ -596,7 +596,7 @@ seconds, printed PHOTO_SAVED and exited successfully. Their saved PNGs were
 final volatile intermediate and a no-password service invocation. The fixed
 service then reported success/inactive, with no CVP links left behind.
 These checks exercise the same capture handler as the button, but operator
-touch/save/open validation remains pending. Screen-copy inspection while the
+touch/save validation is now operator-confirmed; opening in Photos remains pending. Screen-copy inspection while the
 display was off failed and is not counted as visual UI validation. There was no default PNG handler in the session, so the Open button now
 invokes the existing validated `lmi-photos` launcher directly with the saved
 filename, rather than relying on MIME association. Operator opening validation
@@ -617,3 +617,24 @@ The build recipe was executed successfully on the host. The installer requires
 an explicit user and diagnostic-boot opt-in and checks the exact measured
 kernel release before deploying. It does not change the generic Mobian image
 or the optional-app installer. A portable camera recipe needs later work.
+
+
+### Portrait orientation and shorter teardown — 2026-10-05
+
+The fixed backend now exports the rear sensor orientation from the HAL's
+static metadata (90 degrees), rather than guessing from the image dimensions.
+The unprivileged UI rotates the actual pixels clockwise before saving: the
+portrait PNG is 720 x 1280. Decoded pixels matched the rotated raw frame, and
+the operator confirmed the photograph is upright with the phone held vertically.
+This corrects natural portrait orientation only; accelerometer-driven landscape
+rotation remains unimplemented. Existing photos are unchanged.
+
+After the capture client closes its device, the supervisor now explicitly stops
+its own private manager process group. Previously it waited four seconds for
+that permanent daemon to exit naturally. A full UI smoke trial, including its
+startup and exit delays, completed successfully in 10.048 seconds, compared with
+14.610 seconds in the preceding orientation trial. These are individual trials,
+not a latency benchmark. The service was inactive with a success result after
+capture; no private HIDL runtime or temporary CVP firmware links remained.
+Capture still initializes the OEM runtime for each shot and has no live preview;
+this improvement does not establish normal instant-camera responsiveness.

@@ -527,6 +527,10 @@ int main(int argc, char **argv) {
     result_find_entry = find_entry;
     if (!find_entry || !info.static_camera_characteristics) diagnostic_exit(22);
     camera_metadata_ro_entry_t entry = {0};
+    int orientation_status=find_entry(info.static_camera_characteristics,ACAMERA_SENSOR_ORIENTATION,&entry);
+    if (!orientation_status && entry.type==1 && entry.count==1 && entry.data.i32)
+        printf("sensor_orientation_degrees=%d\n",entry.data.i32[0]);
+    memset(&entry,0,sizeof(entry));
     int metadata_result = find_entry(info.static_camera_characteristics, PROBE_ANDROID_JPEG_MAX_SIZE, &entry);
     int32_t jpeg_max_size = 0;
     printf("jpeg_max_size_lookup=%d\n", metadata_result);

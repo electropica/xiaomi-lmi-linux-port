@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Opt-in rear snapshot UI; privileged work belongs to one fixed service."""
-import os
+import json,os
 from pathlib import Path
 import subprocess
 import sys
@@ -83,6 +83,13 @@ class Camera(Gtk.Application):
             pixbuf=GdkPixbuf.Pixbuf.new_from_file(str(source))
             if (pixbuf.get_width(),pixbuf.get_height())!=(1280,720):
                 raise RuntimeError('Format de photo inattendu.')
+            metadata=json.loads(Path('/run/lmi-camera/latest.json').read_text())
+            orientation=metadata['sensor_orientation']
+            rotations={0:GdkPixbuf.PixbufRotation.NONE,90:GdkPixbuf.PixbufRotation.CLOCKWISE,
+                       180:GdkPixbuf.PixbufRotation.UPSIDEDOWN,270:GdkPixbuf.PixbufRotation.COUNTERCLOCKWISE}
+            if orientation not in rotations:raise RuntimeError('Orientation du capteur inconnue.')
+            pixbuf=pixbuf.rotate_simple(rotations[orientation])
+            if pixbuf is None:raise RuntimeError('Impossible de redresser la photo.')
             folder=self.photo_folder()
             folder.mkdir(mode=0o700,parents=True,exist_ok=True)
             name='LMI-'+datetime.now().strftime('%Y%m%d-%H%M%S-%f')+'.png'
