@@ -73,3 +73,27 @@ phase-B service completion. The preserved collector increases only that
 restoration timeout to 45 seconds; that revision is syntax-checked, not a
 repeated A/B trial. Raw private logs stay outside Git. Phone settings are
 restored; no charge, thermal, gauge-learning or regulator setting was changed.
+
+
+## Follow-up power-source review — 2026-10-05
+
+Read-only sysfs inspection while charging found vdd_boost_vreg enabled with
+one user, but vdd_hap_boost disabled with zero users. Both DT declarations use
+PM8150B GPIO 5; the separate AW8697 activate/duration attributes were zero.
+The common DTS connects vdd_hap_boost to PM8150B haptics, not directly to the
+AW8697 I2C driver. These facts do not establish the boost's external load or
+its current draw; no GPIO/regulator was overridden.
+
+CNSS reports successful PCIe DRV runtime suspend. The Wi-Fi endpoint is
+runtime-suspended, while the root-port runtime attribute says active/on.
+The exact pci-msm.c DRV path delegates through rpmsg, gates unsuppressible
+clocks and drops regulator/bus votes, but does not use the same full teardown
+as classic suspend. Root-port runtime status alone cannot measure the domain.
+The keep_resources_on module option reads zero; it applies to failed link
+training/linkdown rather than normal DRV suspend. CNSS exposes DISABLE_DRV
+through its debugfs control-parameter interface, not a verified writable
+sysfs switch. A private read-only debugfs mount failed because this running
+kernel does not support that filesystem; its temporary directory was removed.
+No alternate PCIe suspend mode was exercised or installed, and no residual
+power consumer has yet been proven. Testing non-DRV mode requires a separately
+reviewed diagnostic kernel/interface and Wi-Fi resume validation.
