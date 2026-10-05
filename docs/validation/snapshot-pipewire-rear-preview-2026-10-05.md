@@ -171,7 +171,9 @@ Adding an explicit GstSystemClock to camerabin and `do-timestamp=true` on
 pipewiresrc allowed 19 viewfinder frames before capture and successful
 start/stop finalization: 168,116-byte WebM, duration 5.8 seconds, 48 kHz audio.
 The decoded soundtrack contained 5.812 seconds, peak 964 and RMS 47.39 in
-S16_LE units. Operator listening of this video's soundtrack remains pending.
+S16_LE units. The operator confirmed correct sound from an amplified isolated playback of
+this video's soundtrack, with camera acquisition stopped. Full-video playback
+in Snapshot with these settings remains unvalidated.
 This proves one combined diagnostic configuration, not reliable Snapshot
 integration or a single identified root cause.
 
@@ -181,3 +183,10 @@ A permanent Snapshot audio/camera launcher has not been installed.
 
 Upstream references: [PipeWire 1.4.2 source properties](https://github.com/PipeWire/pipewire/blob/1.4.2/src/gst/gstpipewiresrc.c)
 and [GStreamer camerabin capture properties](https://gstreamer.freedesktop.org/documentation/camerabin/camerabin.html).
+
+## Operator capture coordination
+
+After this trial, the operator requested no autonomous ambient recording.
+Every further microphone or video capture must wait for explicit readiness,
+with capture and playback announced as separate steps. Technical preparation
+and read-only diagnosis can proceed without starting acquisition.
