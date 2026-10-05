@@ -413,3 +413,36 @@ The PPM diagnostic now accepts an optional lifetime from 1 to 90 seconds
 (default 30), so an operator can have a longer bounded preview to assess delay.
 This changes only the temporary diagnostic lifetime, not an installed service.
 No new capture was started while preparing it.
+
+
+## One-minute preview: upstream rate and visible delay
+
+The operator authorized a one-minute preview-only trial and subsequently
+confirmed clearly visible movement-to-preview delay. During a 49.990-second
+observation window, the root publisher advanced by 834 frames: 16.683 fps.
+Observed update gaps averaged 59.94 ms, with p95 76.02 ms and max 114.77 ms.
+These polling observations are publication intervals, not exact sensor timing.
+
+Over its own streaming window the native source counted 1,009 publications,
+16.895 fps, mean PPM age 37.950 ms and maximum 74.555 ms. Root acquisition
+reported 1,037 frames across its longer lifetime. Thus low publication rate
+already occurs upstream of the native PipeWire producer. The synthetic 25 fps
+result does not establish 25 fps camera capture. Clocked preview, metadata
+orientation and user-visible latency remain distinct validation dimensions.
+
+During the trial all three CPU policies reported performance governors and
+frequencies at their configured hardware maxima; sampled CPU thermal values
+were approximately 39.5–46.5 degrees C. This snapshot does not exclude short
+scheduling stalls, exposure limitations, conversion cost or downstream UI lag.
+Snapshot, the native source and root acquisition stopped normally; root cleanup
+completed successfully. No video or microphone recording was requested.
+
+A temporary backend timing patch is prepared and cross-compiles with warnings
+as errors. It adds aggregate means for result waiting, release-fence waiting,
+and lock/conversion/save/unlock work, written every 15 published frames to a
+small JSON inside the existing private capture directory. It does not change
+camera settings, buffer count or installed services. The patch applies cleanly
+to the current source. Runtime validation is still pending operator readiness.
+The corresponding observer reads only live publication counters and never
+starts acquisition. Generated binaries and private preview images stay outside
+Git.

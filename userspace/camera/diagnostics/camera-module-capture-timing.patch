@@ -1,0 +1,45 @@
+--- a/userspace/camera/diagnostics/camera-module-capture.c
++++ b/userspace/camera/diagnostics/camera-module-capture.c
+@@ -543,7 +543,9 @@
+     }
+     double begin=monotonic_seconds();
+     uint32_t last=count;
++    unsigned measured=0;double wait_sum=0,fence_sum=0,convert_sum=0;
+     for (uint32_t frame=1;frame<=last;frame++) {
++        double wait_begin=monotonic_seconds();
+         struct pipeline_slot *slot=&pipeline[(frame-1)%PIPELINE_SLOTS];
+         struct timespec deadline;clock_gettime(CLOCK_REALTIME,&deadline);deadline.tv_sec+=5;
+         pthread_mutex_lock(&capture_mutex);
+@@ -554,6 +556,7 @@
+         int received=slot->received,error=slot->error,status=slot->status,fence=slot->fence;
+         if(slot->frame!=frame)error=1;
+         pthread_mutex_unlock(&capture_mutex);
++        double result_ready=monotonic_seconds();
+         if(!received || error || status)return 34;
+         if(fence>=0) {
+             struct pollfd fd={.fd=fence,.events=POLLIN};
+@@ -561,6 +564,7 @@
+             if(r<=0 || !(fd.revents&POLLIN) || (fd.revents&(POLLERR|POLLNVAL)))return 35;
+             close(fence);slot->fence=-1;
+         }
++        double fence_ready=monotonic_seconds();
+         if(frame>=15) {
+             void *address=NULL;
+             int r=lmi_qti_lock_cpu(slot->handle,&address);if(r || !address)return 36;
+@@ -568,6 +572,16 @@
+             if(!r && rename("/data/vendor/camera/preview-next.ppm","/data/vendor/camera/preview.ppm"))r=39;
+             int unlock=lmi_qti_unlock(slot->handle);
+             if(r || unlock)return r ? r : 40;
++            double converted=monotonic_seconds();
++            measured++;wait_sum+=result_ready-wait_begin;fence_sum+=fence_ready-result_ready;convert_sum+=converted-fence_ready;
++            if(measured%15==0) {
++                FILE *metrics=fopen("/data/vendor/camera/timing.next.json","w");
++                if(!metrics)return 39;
++                int bad=fprintf(metrics,"{\"frames\":%u,\"wait_mean_ms\":%.3f,\"fence_mean_ms\":%.3f,\"convert_mean_ms\":%.3f}\n",
++                    measured,1000*wait_sum/measured,1000*fence_sum/measured,1000*convert_sum/measured)<0;
++                if(fclose(metrics))bad=1;
++                if(bad || rename("/data/vendor/camera/timing.next.json","/data/vendor/camera/timing.json"))return 39;
++            }
+             printf("pipeline_frame=%u elapsed_seconds=%.3f\n",frame,monotonic_seconds()-begin);
+         }
+         // Stop queueing after 25 seconds, then drain the two already queued

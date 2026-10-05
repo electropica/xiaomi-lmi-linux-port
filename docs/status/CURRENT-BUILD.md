@@ -352,8 +352,8 @@ Snapshot rear preview is experimental. The operator found the native PipeWire
 preview fluid but mirrored and delayed; its measured publication rate was about
 18.8 fps. The preview target is 25 real images/s. A rear-identity and fresh-file
 polling correction is prepared and passes synthetic tests at about 25 fps;
-rear orientation is now operator-confirmed, while real preview latency
-remains unverified. The latest real publication rate was 16.44 fps. Real recording has
+rear orientation is now operator-confirmed, while visible preview delay is now confirmed. A one-minute follow-up measured
+16.68 fps upstream and 16.90 fps at the native producer; backend timing is next. Real recording has
 unresolved preservation and quality defects. Megapixels was removed and the
 lmi-camera prototype remains provisional. No camera test or recording is active.
 See the [camera implementation status](../../userspace/camera/README.md) and
