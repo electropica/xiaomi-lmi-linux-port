@@ -125,7 +125,7 @@ typedef struct camera3_capture_request {
     const struct camera_metadata **physcam_settings;
 } camera3_capture_request_t;
 enum { PIPELINE_SLOTS=3 };
-static int preview_pipeline;
+static int preview_pipeline, preview_foreground;
 struct pipeline_slot {
     const void *handle;
     camera3_stream_buffer_t output;
@@ -572,7 +572,7 @@ static int capture_pipeline(camera3_device_t *camera,uint32_t count) {
         }
         // Stop queueing after 25 seconds, then drain the two already queued
         // requests. A hard frame cap and outer service timeout remain in place.
-        if(last==count && monotonic_seconds()-begin>=25.0) {
+        if(!preview_foreground && last==count && monotonic_seconds()-begin>=25.0) {
             uint32_t drain=frame+PIPELINE_SLOTS-1;
             if(drain<last)last=drain;
         }
@@ -600,6 +600,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--preview")) preview_mode=1;
         else if (!strcmp(argv[i], "--preview-sequence")) { preview_mode=1; preview_sequence=1; }
         else if (!strcmp(argv[i], "--preview-live")) { preview_mode=1; preview_sequence=1; preview_live=1; preview_pipeline=1; }
+        else if (!strcmp(argv[i], "--preview-foreground")) { preview_mode=1; preview_live=1; preview_pipeline=1; preview_foreground=1; }
         else if (!strcmp(argv[i], "--preview-pipeline")) { preview_mode=1; preview_sequence=1; preview_live=1; preview_pipeline=1; }
         else if (i == 2) path = argv[i];
         else diagnostic_exit(2);
@@ -739,7 +740,7 @@ int main(int argc, char **argv) {
     /* Actual sensor frames condition exposure; an idle pause does not run 3A.
      * Reuse one genuine buffer only after previous result/fence/unlock completed.
      * Save only the last frame, with no intermediate image files. */
-    uint32_t frame_count=preview_pipeline ? 900 : (preview_live ? 120 : (preview_sequence ? 45 : (preview_mode ? 15 : 5)));
+    uint32_t frame_count=preview_foreground ? UINT32_MAX-PIPELINE_SLOTS : (preview_pipeline ? 900 : (preview_live ? 120 : (preview_sequence ? 45 : (preview_mode ? 15 : 5))));
     struct timespec sequence_start;
     clock_gettime(CLOCK_MONOTONIC,&sequence_start);
     if (preview_pipeline && !settings_status)settings_status=capture_pipeline(camera,frame_count);

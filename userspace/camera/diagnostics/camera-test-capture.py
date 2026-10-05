@@ -9,6 +9,7 @@ mode.add_argument("--ae-precapture",action="store_true")
 mode.add_argument("--preview",action="store_true")
 mode.add_argument("--preview-sequence",action="store_true")
 mode.add_argument("--preview-live",action="store_true")
+mode.add_argument("--preview-foreground",action="store_true")
 args=parser.parse_args()
 def interrupted(signum,frame):
     signal.signal(signum,signal.SIG_IGN)
@@ -18,7 +19,10 @@ signal.signal(signal.SIGINT,interrupted)
 capture_command="kill -STOP $$; exec /private-camera-enumerate 0"
 if args.manual_exposure: capture_command += " --manual-exposure"
 if args.ae_precapture: capture_command += " --ae-precapture"
-if args.preview_live:
+if args.preview_foreground:
+    args.preview=True
+    capture_command += " --preview-foreground"
+elif args.preview_live:
     args.preview=True
     capture_command += " --preview-live"
 elif args.preview_sequence:
@@ -210,7 +214,15 @@ try:
         print('MODULE_THREAD_WAITS '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc',str(provider.pid),'task').iterdir()}),flush=True)
         print('MANAGER_THREAD_WAITS '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc',str(child.pid),'task').iterdir()}),flush=True)
     try:
-        provider_output,_=provider.communicate(timeout=35)
+        if args.preview_foreground:
+            # Keep bounded diagnostic context instead of accumulating a live
+            # stream's stdout for the entire lifetime of the application.
+            from collections import deque
+            tail=deque(provider.stdout,maxlen=160)
+            provider.wait(timeout=2)
+            provider_output=''.join(tail)
+        else:
+            provider_output,_=provider.communicate(timeout=35)
         provider_status=provider.returncode
     except subprocess.TimeoutExpired:
         print('MODULE_FINAL_THREAD_WAITS '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc',str(provider.pid),'task').iterdir()}),flush=True)

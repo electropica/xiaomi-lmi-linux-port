@@ -967,3 +967,13 @@ outstanding requests, under the existing outer timeout. Normal and early-stop
 cleanup passed; the original snapshot path still succeeds. No kernel change.
 Full-resolution stills, autofocus, video and standard-app integration remain
 pending. See [queued rear preview](../../userspace/camera/README.md#queued-three-buffer-rear-preview--2026-10-05).
+
+
+Foreground-preview follow-up (2026-10-05): the normal app no longer requires a
+restart every 25 seconds. Preview runs while its GTK window is active, pauses
+in the background and resumes automatically on return; the operator confirmed
+the return path. A real session ran 137.8 seconds and published 3,034 images.
+A fresh PID/start-time/UID-checked lease and watchdog replace the normal session
+cap; the diagnostics retain their bounds. Background and GUI-exit cleanup tests
+passed after extending the firmware wrapper teardown wait. No kernel change.
+See [foreground continuous preview](../../userspace/camera/README.md#foreground-owned-continuous-preview--2026-10-05).

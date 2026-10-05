@@ -19,14 +19,21 @@ class Camera(Gtk.Application):
         self.live_pixbuf=None
         self.live_stamp=None
         self.live_running=False
+        self.preview_starting=False
+        self.last_preview_log=0
         self.once='--capture-once' in sys.argv
         self.capture_exit=1
+        self.want_preview=False
+        self.preview_generation=0
+        self.control_lock=threading.Lock()
+        self.closed=False
         self.connect('activate',self.activate)
+        self.connect('shutdown',self.shutdown_camera)
 
     def activate(self,app):
         if hasattr(self,'window'):
             self.window.present()
-            if not self.once and not self.live_running:self.start_preview(None)
+            if not self.once:self.foreground_changed()
             return
         self.window=Gtk.ApplicationWindow(application=self,title='Appareil photo lmi')
         self.window.set_default_size(360,640)
@@ -54,9 +61,6 @@ class Camera(Gtk.Application):
         self.capture.set_size_request(-1,52)
         self.capture.connect('clicked',self.take_photo)
         box.append(self.capture)
-        self.preview_button=Gtk.Button(label='Relancer l’aperçu')
-        self.preview_button.connect('clicked',self.start_preview)
-        box.append(self.preview_button)
         self.open=Gtk.Button(label='Ouvrir la photo')
         self.open.set_sensitive(False)
         self.open.set_size_request(-1,44)
@@ -71,41 +75,81 @@ class Camera(Gtk.Application):
             self.status.set_text('Dernière photo — prête pour une nouvelle prise.')
         self.window.present()
         self.window.connect('close-request',self.close_camera)
+        self.window.connect('notify::is-active',self.foreground_changed)
+        self.window.connect('notify::visible',self.foreground_changed)
         if not self.once:
             GLib.timeout_add(33,self.poll_preview)
-            self.start_preview(None)
+            GLib.timeout_add(1000,self.foreground_changed)
+            self.foreground_changed()
         if self.once:
             GLib.timeout_add(500,lambda: (self.take_photo(None),False)[1])
 
     def start_preview(self,button):
-        if self.live_running:return
+        if self.live_running or not self.want_preview:return
         self.live_pixbuf=None;self.live_stamp=None;self.live_running=True
+        self.preview_starting=True
         self.live_started=time.time_ns()
-        self.capture.set_sensitive(False);self.preview_button.set_sensitive(False)
+        self.preview_started_monotonic=time.monotonic()
+        self.capture.set_sensitive(False)
         self.picture.set_paintable(None)
         self.status.set_text('Démarrage de la caméra arrière…')
         threading.Thread(target=self.launch_preview,daemon=True).start()
 
+    def foreground_changed(self,*unused):
+        active=not self.closed and self.window.get_visible() and self.window.is_active()
+        folder=Path(GLib.get_user_runtime_dir())/'lmi-camera'
+        folder.mkdir(mode=0o700,exist_ok=True)
+        self.lease_path=folder/'foreground.json'
+        start=Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]
+        state={'active':active,'pid':os.getpid(),'start_ticks':start,'updated_ns':time.monotonic_ns()}
+        temporary=folder/('foreground-'+str(os.getpid())+'.tmp')
+        fd=os.open(temporary,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
+        with os.fdopen(fd,'w') as f:json.dump(state,f)
+        os.replace(temporary,self.lease_path)
+        if active!=self.want_preview:
+            self.want_preview=active;self.preview_generation+=1
+            if active:self.start_preview(None)
+            else:
+                self.live_running=False;self.capture.set_sensitive(False)
+                self.status.set_text('Aperçu en pause — application en arrière-plan.')
+                threading.Thread(target=self.launch_preview,daemon=True).start()
+        return not self.closed
+
     def launch_preview(self):
-        try:
-            result=subprocess.run(['/usr/bin/systemctl','--no-ask-password','start','lmi-camera-preview.service'],capture_output=True,timeout=5)
-            if result.returncode:raise RuntimeError('Impossible de démarrer l’aperçu.')
-        except Exception as error:GLib.idle_add(self.preview_failed,str(error))
+        with self.control_lock:
+            desired=self.want_preview
+            generation=self.preview_generation
+            try:
+                result=subprocess.run(['/usr/bin/systemctl','--no-ask-password',
+                    'start' if desired else 'stop','lmi-camera-preview.service'],capture_output=True,timeout=15)
+                if result.returncode and desired:raise RuntimeError('Impossible de démarrer l’aperçu.')
+                GLib.idle_add(self.preview_control_ready,generation,desired)
+            except Exception as error:
+                if desired:GLib.idle_add(self.preview_failed,str(error))
+            if generation!=self.preview_generation:
+                threading.Thread(target=self.launch_preview,daemon=True).start()
+
+    def preview_control_ready(self,generation,desired):
+        if generation==self.preview_generation and desired and self.want_preview:
+            self.preview_starting=False
+            self.live_started=time.time_ns()-1000000000
+        return False
 
     def preview_failed(self,error):
-        self.live_running=False;self.preview_button.set_sensitive(True)
+        self.live_running=False
         self.capture.set_sensitive(False);self.status.set_text(error)
         return False
 
     def poll_preview(self):
-        if not self.live_running:return True
+        if not self.live_running or self.preview_starting:return True
         try:
             source=Path('/run/lmi-camera/live.ppm')
             meta=Path('/run/lmi-camera/live.json')
             if meta.stat().st_mtime_ns<=self.live_started:return True
             metadata=json.loads(meta.read_text())
             if metadata.get('ended'):
-                self.preview_failed('Aperçu arrêté. Touche Relancer l’aperçu pour continuer.')
+                if time.monotonic()-self.preview_started_monotonic<4:return True
+                self.preview_failed('Aperçu interrompu. Reviens dans l’application pour le reprendre.')
                 return True
             stamp=metadata['sequence']
             if stamp==self.live_stamp:return True
@@ -118,16 +162,24 @@ class Camera(Gtk.Application):
             self.picture.set_paintable(Gdk.Texture.new_for_pixbuf(self.live_pixbuf))
             self.capture.set_sensitive(True)
             self.status.set_text('Aperçu arrière — touche Prendre une photo.')
-            print('PREVIEW_FRAME '+str(stamp),flush=True)
+            if time.monotonic()-self.last_preview_log>=1:
+                self.last_preview_log=time.monotonic()
+                print('PREVIEW_PROGRESS source_frame='+str(stamp),flush=True)
         except FileNotFoundError:pass
         except Exception as error:self.preview_failed(str(error))
         return True
 
     def close_camera(self,window):
+        self.closed=True
         if not self.once:
+            self.foreground_changed()
             try:subprocess.run(['/usr/bin/systemctl','--no-ask-password','--no-block','stop','lmi-camera-preview.service'],timeout=3,capture_output=True)
             except subprocess.TimeoutExpired:pass
         return False
+
+    def shutdown_camera(self,app):
+        self.closed=True
+        if not self.once and hasattr(self,'window'):self.foreground_changed()
 
     def take_photo(self,button):
         if self.busy:return

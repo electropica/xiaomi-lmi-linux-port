@@ -1,8 +1,8 @@
 # Explicit rear-only diagnostic; use a bounded control-group service.
 # Existing OEM firmware stays external. Ordinary exit/handled signals clean links.
 import os, re, signal, struct, subprocess, sys
-assert sys.argv[1:] in ([],["--sequence"],["--live"])
-mode={"--sequence":"--preview-sequence","--live":"--preview-live"}.get(sys.argv[1] if sys.argv[1:] else "", "--preview")
+assert sys.argv[1:] in ([],["--sequence"],["--live"],["--foreground"])
+mode={"--sequence":"--preview-sequence","--live":"--preview-live","--foreground":"--preview-foreground"}.get(sys.argv[1] if sys.argv[1:] else "", "--preview")
 os.umask(0o077)
 from pathlib import Path
 
@@ -43,7 +43,7 @@ try:
         created.append((link,str(part)))
     print('TEMPORARY_HOST_CVP_LINKS '+str(len(created)),flush=True)
     process=subprocess.Popen(['unshare','--mount','--net','--propagation','private','python3','/tmp/camera-test-capture.py',mode])
-    result=process.wait(timeout=44)
+    result=process.wait(timeout=None if mode=="--preview-foreground" else 44)
 finally:
     for link,destination in reversed(created):
         assert link.is_symlink() and os.readlink(link)==destination

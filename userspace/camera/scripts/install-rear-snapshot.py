@@ -46,7 +46,7 @@ group=grp.getgrgid(account.pw_gid).gr_name
 assert re.fullmatch(r'[a-z_][a-z0-9_-]{0,30}',group)
 service=(source/'lmi-camera-capture.service').read_text().replace('__CAMERA_GROUP__',group)
 install('lmi-camera-capture.service','/etc/systemd/system/lmi-camera-capture.service',text=service)
-preview=(source/'lmi-camera-preview.service').read_text().replace('__CAMERA_GROUP__',group)
+preview=(source/'lmi-camera-preview.service').read_text().replace('__CAMERA_GROUP__',group).replace('__CAMERA_UID__',str(account.pw_uid))
 install('lmi-camera-preview.service','/etc/systemd/system/lmi-camera-preview.service',text=preview)
 state=Path('/run/lmi-camera')
 state.mkdir(mode=0o750,exist_ok=True)

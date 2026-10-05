@@ -782,3 +782,44 @@ Preview is still bounded, rear-only, 1280 x 720 with portrait pixel rotation.
 The app saves the displayed preview frame, not a full-resolution sensor still.
 Continuous autofocus, landscape auto-rotation, generic-image integration,
 Megapixels/PipeWire compatibility and video recording remain unvalidated.
+
+
+### Foreground-owned continuous preview — 2026-10-05
+
+The normal preview no longer stops every 25 seconds and the manual restart
+button is removed. GTK window activation/visibility now determines whether the
+camera should run. Bringing the app forward starts it; leaving for another app
+or closing it stops it. The operator confirmed automatic resume after leaving
+and returning through the desktop icon. SSH activation alone did not always
+receive compositor focus and was not counted as a foreground-return success.
+
+The dedicated foreground mode keeps the three-buffer queue running without a
+per-session time cap. The 25-second/frame-capped live diagnostic, serial sequence
+and single-shot paths remain available separately. Long-running vendor output
+is drained into a 160-line tail rather than accumulated without limit. The UI
+also reports progress at most once per second instead of logging every frame.
+
+The unprivileged UI atomically renews a small mode-0600 lease in its user runtime
+directory every second. The fixed root publisher checks freshness (under four
+seconds), active state, owner UID, real GUI PID, process start ticks and expected
+GUI command. A stale lease, hidden/inactive window or disappearing GUI causes
+shutdown. No caller-selected command, camera ID or root output path is accepted.
+The notify service has a ten-second watchdog and retains memory/swap/task limits;
+its publisher also rejects an eight-second gap without a new frame. A session
+cap is therefore replaced by ownership/liveness checks, not an unattended
+background camera daemon. Foreground UID is supplied by the explicit installer.
+
+A real foreground session ran for 137.8 seconds and published 3,034 images,
+without a restart at 25 seconds. Opening the Calculator changed the window lease
+to inactive and stopped the stream. Initial teardown testing found that a
+three-second publisher wait could kill the firmware wrapper before its own
+cleanup finished; increasing that wait to eight seconds and the unit stop limit
+to twelve corrected it. Subsequent background teardown and a separate GUI-exit
+trial removed both private runtime directories and temporary CVP links. The
+operator validated returning from another app resumes automatically.
+
+Start/stop commands are serialized off the GTK event thread. The UI waits for
+service readiness before consuming frames from a new session, avoiding a stale
+end marker during a rapid focus change. All existing portrait/rear-only and
+preview-frame photo-quality limitations still apply. This change does not add
+video recording, full-resolution stills or standard-camera-app integration.
