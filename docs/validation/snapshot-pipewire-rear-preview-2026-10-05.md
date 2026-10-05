@@ -132,5 +132,21 @@ continuous captured sound or successful audible playback.
 
 The bounded Snapshot, source and root acquisition units were stopped before
 extracting that recording's audio to a temporary WAV for an isolated playback
-comparison. Operator assessment of this isolated comparison remains pending.
+comparison. The operator confirmed that this extracted soundtrack remained choppy when
+played alone, with camera acquisition stopped. This does not isolate the cause
+to Snapshot playback: capture defects or the retained audio itself remain possible.
 No media, raw logs, core dump or device-specific runtime entered Git.
+
+## Microphone-only control
+
+With camera acquisition stopped, native `pw-record` captured 378,880 mono
+S16_LE frames at 48 kHz (7.893 seconds). Peak was 631 and RMS 30.89. An isolated
+playback copy was amplified by eight after checking that it would not clip.
+The operator confirmed recognizable, fluent sound. The original capture and
+source/sink gains were unchanged; the temporary listen copy alone was amplified.
+
+This validates a microphone-only native PipeWire control, not simultaneous
+video/audio recording. A separate microphone-only GStreamer `pulsesrc` control
+was subsequently recorded at 44.1 kHz and finalized with 7.55 seconds of audio;
+its operator listening assessment remains pending. No global rate, quantum,
+latency, or gain setting was changed.

@@ -864,3 +864,12 @@ reported choppy sound. Decoded audio has continuous timestamps; isolated audio
 playback assessment remains pending. No permanent camera launcher or global ORC
 setting was installed. See the Snapshot rear-preview validation for evidence
 and the bounded camerabin recording probe for reproduction.
+
+
+### Camera audio isolation — 2026-10-05
+
+The Snapshot soundtrack still sounded choppy when played without video or
+active camera acquisition. A separate native PipeWire microphone-only recording
+was operator-confirmed recognizable and fluent after amplifying a temporary
+listen copy. Video/audio capture remains unresolved; a PulseAudio/GStreamer
+microphone-only comparison is pending.
