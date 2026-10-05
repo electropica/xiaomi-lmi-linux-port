@@ -854,3 +854,13 @@ a valid 5.68-second video with audio; decoded audio timestamps had no gaps over
 10 ms. The operator again reported choppy sound, but the retained Snapshot file was
 empty; recording completion and audible playback remain unvalidated. This remains a bounded
 diagnostic, not a permanent Snapshot launcher or completed audio fix.
+
+
+### Snapshot recording follow-up — 2026-10-05
+
+A process-local `ORC_CODE=backup` trial finalized a Snapshot video after an
+intermittent camerabin crash was reproduced under GDB. The operator still
+reported choppy sound. Decoded audio has continuous timestamps; isolated audio
+playback assessment remains pending. No permanent camera launcher or global ORC
+setting was installed. See the Snapshot rear-preview validation for evidence
+and the bounded camerabin recording probe for reproduction.

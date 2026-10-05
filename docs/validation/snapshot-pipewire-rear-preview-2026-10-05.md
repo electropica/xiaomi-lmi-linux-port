@@ -108,3 +108,29 @@ No global GPU configuration or kernel setting was changed. All automatic
 acquisition/publisher trials stop their units in a finally block and retain
 hard systemd timeout limits. Neither a permanent foreground-owned Snapshot
 launcher nor image integration is implemented yet.
+
+## Intermittent recording crash and isolated audio trial
+
+A repeated real-source camerabin recording crashed with SIGSEGV. GDB reproduced
+the failure in the `queue1:src` streaming thread during the capture/stop interval;
+the program counter was unresolved and the stack could not be unwound reliably.
+This does not identify a specific defective library or prove a kernel cause.
+
+A scoped `ORC_CODE=backup` experiment then completed one automated recording:
+103,600 bytes, 5.72 seconds, one audio track. Decoding produced 91,835 samples
+at 16 kHz, peak 0.05377, RMS 0.001500, and no timestamp gaps over 10 ms.
+This single success is insufficient to establish a reliable crash workaround.
+The diagnostic `probe-camerabin-rear-recording.py` retains the bounded six-second
+start/stop test; it requires the experimental source to be running already.
+
+Snapshot was subsequently launched with the same process-local ORC setting.
+The retained operator recording was 179,320 bytes with duration 4.499 seconds
+and Vorbis audio. The operator still reported choppy playback in Snapshot.
+Audio decoding produced 66,340 samples at 16 kHz, peak 0.01866, RMS 0.001243,
+and no timestamp gaps over 10 ms. Continuous timestamps do not establish
+continuous captured sound or successful audible playback.
+
+The bounded Snapshot, source and root acquisition units were stopped before
+extracting that recording's audio to a temporary WAV for an isolated playback
+comparison. Operator assessment of this isolated comparison remains pending.
+No media, raw logs, core dump or device-specific runtime entered Git.
