@@ -389,3 +389,27 @@ while the operator was away.
 matched ARM64 libpipewire library and output path. The compiled binary is a
 private generated artifact. Sources compile with warnings as errors; the
 launcher remains an experimental temporary test, not an installed replacement.
+
+
+## Rear identity confirmed on the phone
+
+After explicit readiness, the next real-camera Snapshot preview exposed
+`api.libcamera.location=back`. The operator confirmed that left/right
+mirroring was corrected, but could not verify movement-to-preview delay.
+The native source measured 314 unique publications, 16.443 fps, mean source
+file age 38.174 ms and maximum 90.692 ms. This rate is below the 25 fps target;
+it must not be equated with the 25 fps synthetic result. Lighting and scene
+were not controlled between the two real trials, so a cadence regression from
+the polling change has not been established.
+
+The root publisher counted 578 frames over its separate, longer lifetime.
+Its configured runtime limit stopped the test and cleanup completed; a systemd
+`timeout` result here denotes the intentional lifetime cap, not a proven
+capture crash. All preview units stopped. A later idle CPU check showed
+performance governors with hardware maximum frequency limits and modest
+temperatures; it does not establish CPU scheduling or exposure during capture.
+
+The PPM diagnostic now accepts an optional lifetime from 1 to 90 seconds
+(default 30), so an operator can have a longer bounded preview to assess delay.
+This changes only the temporary diagnostic lifetime, not an installed service.
+No new capture was started while preparing it.

@@ -112,7 +112,10 @@ static void format(void *opaque,uint32_t id,const struct spa_pod *param) {
 static const struct pw_stream_events events={PW_VERSION_STREAM_EVENTS,
     .state_changed=state,.param_changed=format,.process=process};
 int main(int argc,char **argv) {
-    if(argc!=2){fprintf(stderr,"Usage: native-pipewire-ppm-test INPUT.ppm\n");return 2;}
+    if(argc<2 || argc>3){fprintf(stderr,"Usage: native-pipewire-ppm-test INPUT.ppm [SECONDS:1..90]\n");return 2;}
+    long seconds=30;
+    if(argc==3){char *end=NULL;seconds=strtol(argv[2],&end,10);
+        if(!end || *end || seconds<1 || seconds>90)return 2;}
     struct app a={0};a.input=argv[1];a.rgb=malloc(2764800);
     if(!a.rgb)return 1;
     pw_init(&argc,&argv);a.loop=pw_main_loop_new(NULL);
@@ -123,7 +126,7 @@ int main(int argc,char **argv) {
     if(!a.core){fprintf(stderr,"No user PipeWire core\n");return 1;}
     a.tick=pw_loop_add_timer(loop,tick,&a);
     struct spa_source *expiry=pw_loop_add_timer(loop,quit,&a);
-    struct timespec limit={30,0};pw_loop_update_timer(loop,expiry,&limit,NULL,false);
+    struct timespec limit={seconds,0};pw_loop_update_timer(loop,expiry,&limit,NULL,false);
     a.stream=pw_stream_new(a.core,"LMI PPM diagnostic source",pw_properties_new(
         PW_KEY_MEDIA_CLASS,"Video/Source",PW_KEY_MEDIA_TYPE,"Video",
         PW_KEY_MEDIA_CATEGORY,"Capture",PW_KEY_MEDIA_ROLE,"Camera",

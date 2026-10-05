@@ -850,8 +850,8 @@ The first real native preview was reported fluid, but mirrored and delayed;
 25 fps real capture. The agreed preview target is 25 real, regularly delivered
 images/s. The prepared revision declares rear-camera identity and polls for
 fresh PPM files more frequently. It reached about 25 fps and 26–30 ms mean
-file-to-sink delay on generated input only. Real orientation and latency remain
-unvalidated. Reliable real recording and 30 fps video also remain open.
+file-to-sink delay on generated input only. The next real preview confirmed corrected left/right orientation.
+Its publication rate was 16.44 fps; movement-to-preview delay remains unverified. Reliable real recording and 30 fps video also remain open.
 
 Native diagnostic sources and a small cross-compilation helper are under
 `diagnostics/`. No production bridge was replaced. All camera/microphone tests
