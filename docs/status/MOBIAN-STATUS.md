@@ -1037,3 +1037,13 @@ diagnostic then finalized 5.8 seconds with 48 kHz audio using copied input
 buffers and an explicit system clock. The operator confirmed correct soundtrack playback from this diagnostic.
 Full-video playback with these settings in Snapshot remains unvalidated. `ORC_CODE=backup` did not reliably prevent capture crashes.
 These are process-local diagnostic settings, not a deployed Snapshot fix.
+
+
+### Snapshot tuning preparation / application cleanup — 2026-10-05
+
+Megapixels was uninstalled from the test phone; the lmi-camera prototype remains
+provisionally available. A small process-local tuning diagnostic was prepared
+for Snapshot and its settings verified on inactive GStreamer objects, without
+opening microphone or camera. Snapshot recording with that adaptation remains
+unvalidated and awaits explicit operator readiness. No global audio or preload
+configuration was changed.

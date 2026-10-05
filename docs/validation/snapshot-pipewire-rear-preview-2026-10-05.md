@@ -190,3 +190,30 @@ After this trial, the operator requested no autonomous ambient recording.
 Every further microphone or video capture must wait for explicit readiness,
 with capture and playback announced as separate steps. Technical preparation
 and read-only diagnosis can proceed without starting acquisition.
+
+## Snapshot process-local tuning preparation
+
+The installed Snapshot schema exposes capture format and audio on/off, but
+not microphone rate, pulsesrc latency, or pipeline clock selection. A small
+experimental `lmi-snapshot-tuning.c` interposer applies the combined diagnostic
+settings to newly constructed GstPulseSrc, GstPipeWireSrc and GstCameraBin
+objects only when `LMI_SNAPSHOT_TUNING=1` is explicitly set. It is loaded through
+LD_PRELOAD in a scoped test process; no system-wide preload or library
+replacement is installed. This is a temporary adaptation, not an upstream
+Snapshot patch or stable public plugin API. It relies on 64-bit GLib/GStreamer
+runtime ABI and is currently restricted to the tested aarch64 environment.
+
+The source was built with Clang targeting aarch64 Linux. The binary was placed
+in the phone's temporary directory, outside Git. An inactive-object test
+confirmed pulsesrc latency 50,000 us and buffer 500,000 us; pipewiresrc copying
+mode and timestamping; mono 48 kHz camerabin audio caps; and GstSystemClock.
+No pipeline was started during this verification. Actual Snapshot recording
+and full-video playback with this interposer remain pending operator readiness.
+
+## Application cleanup
+
+At the operator's request, Megapixels 1.8.3-1 was removed from the test phone.
+The package-manager simulation and actual removal affected only megapixels;
+no dependency autoremove was performed. The lmi-camera prototype remains
+provisionally available until Snapshot has replaced its validated functions.
+The camera bridge/backend must be preserved independently of the prototype UI.

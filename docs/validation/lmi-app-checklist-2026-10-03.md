@@ -1056,3 +1056,13 @@ A fresh PID/start-time/UID-checked lease and watchdog replace the normal session
 cap; the diagnostics retain their bounds. Background and GUI-exit cleanup tests
 passed after extending the firmware wrapper teardown wait. No kernel change.
 See [foreground continuous preview](../../userspace/camera/README.md#foreground-owned-continuous-preview--2026-10-05).
+
+
+### Snapshot tuning preparation / application cleanup — 2026-10-05
+
+Megapixels was uninstalled from the test phone; the lmi-camera prototype remains
+provisionally available. A small process-local tuning diagnostic was prepared
+for Snapshot and its settings verified on inactive GStreamer objects, without
+opening microphone or camera. Snapshot recording with that adaptation remains
+unvalidated and awaits explicit operator readiness. No global audio or preload
+configuration was changed.
