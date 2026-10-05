@@ -344,3 +344,15 @@ viewfinder. No photo/video was validated; the Android camera bridge is not
 installed. This is not a replacement for the validated rear HAL3 preview and is
 not added to the image recipe. See `docs/validation/lomiri-camera-app-installation-test-2026-10-05.md`
 (repository-root-relative) for installation findings and limitations.
+
+
+### Snapshot / PipeWire rear-camera proof — 2026-10-05
+
+Native Debian `gnome-snapshot 48.0.1-1` displays a real rear preview through an
+experimental userspace PipeWire publisher (operator-confirmed). Five JPEGs
+decode successfully. A second explicitly stopped video is a valid 6.58-second
+WebM, portrait 720 x 1280 at 10 fps, with mono audio; playback assessment is
+pending. Gallery and GPU issues remain. Capture trials are bounded, and a
+foreground-owned Snapshot launcher/image integration is not implemented. See
+`docs/validation/snapshot-pipewire-rear-preview-2026-10-05.md`
+(repository-root-relative).
