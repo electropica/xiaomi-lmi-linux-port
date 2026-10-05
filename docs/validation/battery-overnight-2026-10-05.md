@@ -36,3 +36,40 @@ Conclusion: charging and system deep suspend work, but approximately
 idle-phone target. Battery consumption is not fixed. Remaining questions
 include periodic wake source, residual hardware power and gauge consistency.
 No personally identifying battery fields or raw private logs are published.
+
+## Matched Wi-Fi radio comparison — 2026-10-05
+
+The user performed two unplug/replug cycles. Both phases used the same boot,
+CPU-idle setting N, screen off, no music/torch and a 300-second RTC-requested
+deep suspend. USB online was 0 at both measurement endpoints. No Wi-Fi AP
+was connected; this compares the enabled but unassociated radio with the
+radio disabled, not Android connected-network/background-traffic behavior.
+
+| Phase | Endpoint elapsed | Counter loss | Derived mean | CPU-awake monotonic delta | Deep suspends / failures |
+|---|---:|---:|---:|---:|---:|
+| Wi-Fi enabled | 302.058 s | 8,059 uAh | 96.05 mA | 0.539 s | 1 / 0 |
+| Wi-Fi disabled | 301.297 s | 7,839 uAh | 93.66 mA | 0.524 s | 1 / 0 |
+
+The difference is 2.39 mA, about 2.5%, for one sequential pair. Temperature
+fell from 26.0 to 25.2 C in phase A and 25.2 to 24.7 C in phase B. Percentage
+stayed 71 in both phases, illustrating why the counter was used instead.
+The wake IRQ was 323 pm8xxx_rtc_alarm in both cases. Rates are fuel-gauge
+reported counter differences, not measurements with an external power meter.
+This short pair does not establish a statistically significant Wi-Fi effect,
+and the residual approximately 94 mA is not explained by radio enablement.
+
+The kernel night log repeatedly identifies IRQ 438 msoc-delta and WLAN logs
+explicitly say Non-WLAN triggered wakeup. In the inspected qpnp-fg-gen4.c,
+fg_delta_msoc_irq_handler services fuel-gauge capacity changes; the default
+DELTA_SOC threshold is 5 (0.5%). Such wakes can follow discharge and do not
+by themselves prove its root cause. Their additional power cost is unresolved.
+
+Phase A completed and restored its radio state. Phase B finished measurement
+but nmcli radio wifi on timed out after ten seconds during restoration;
+the service exited 1. Follow-up verified enabled radio, disconnected Wi-Fi,
+charging and no active collection/alarm. This restoration failure does not
+invalidate already-completed endpoint samples; it prevents claiming a clean
+phase-B service completion. The preserved collector increases only that
+restoration timeout to 45 seconds; that revision is syntax-checked, not a
+repeated A/B trial. Raw private logs stay outside Git. Phone settings are
+restored; no charge, thermal, gauge-learning or regulator setting was changed.
