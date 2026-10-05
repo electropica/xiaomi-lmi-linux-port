@@ -267,3 +267,45 @@ The operator can continue listening tests but is fatigued after the session.
 Further capture still requires an explicit, clearly announced readiness
 signal. Read-only diagnosis and offline preparation may continue; playback
 and capture must never be conflated in operator instructions.
+
+
+## Synthetic transport isolation and native producer
+
+These tests used generated video and audio only. No camera acquisition,
+microphone recording or speaker playback was started.
+
+Direct GStreamer camerabin with videotestsrc and audiotestsrc completed a
+20 fps recording. Routing a synthetic producer through GStreamer pipewiresink
+with copied buffers instead reproduced a blocked stop-capture. A bounded GDB
+inspection found the main thread waiting in a GstBaseSrc mutex during event
+handling. Shared-buffer mode delivered 40 viewfinder frames over two seconds,
+but stopping capture produced a gst_buffer_is_writable assertion and a
+segmentation fault. These establish a transport failure without the OEM camera;
+they do not identify the exact faulty source line or prove an upstream fix.
+
+The experimental native producer `native-pipewire-synthetic.c` uses the public
+PipeWire stream API with matched PipeWire/SPA 1.4.2 headers. It supplies BGRx
+720 x 1280 at 20 fps, terminates after 30 seconds, and has no hardware-input
+mode. With the copied-buffer camerabin consumer and generated mono 48 kHz
+audio, the bounded run completed start, stop and teardown successfully:
+
+- 40 viewfinder frames before recording;
+- 6.1 seconds of WebM with one audio stream and 2,762,047 bytes;
+- 122 decoded video frames, consistent with 20 fps over that duration;
+- consumer and producer exit status zero; 221 total producer frames.
+
+The existing scoped Snapshot tuning library was enabled for the consumer.
+This is automated synthetic validation, not real-camera or Snapshot UI
+validation. The native producer has not yet replaced the installed camera
+bridge. Mirroring, real-camera quality, safe Snapshot shutdown and 30 fps
+capture remain unresolved.
+
+Source API reference: [PipeWire 1.4.2 video source example](https://github.com/PipeWire/pipewire/blob/1.4.2/src/examples/video-src.c).
+
+The diagnostic launcher expects the binary, consumer and scoped tuning library
+under `/tmp` on the phone, runs as the regular desktop user with its existing
+PipeWire runtime, and stops its producer in a finally block. Its generated
+WebM is temporary and must not be committed. Compile the C file using an ARM64
+Linux compiler, PipeWire and SPA 1.4.2 include directories, and the matched
+libpipewire-0.3 runtime library. The test source is not an installed application
+or a production camera service.
