@@ -217,3 +217,29 @@ The package-manager simulation and actual removal affected only megapixels;
 no dependency autoremove was performed. The lmi-camera prototype remains
 provisionally available until Snapshot has replaced its validated functions.
 The camera bridge/backend must be preserved independently of the prototype UI.
+
+## First tuned Snapshot recording and video quality
+
+The first Snapshot recording using the scoped tuning adaptation was initially
+valid: 683,383 bytes, 13.810896 seconds, portrait 720 x 1280 at negotiated
+10 fps, with mono 48 kHz audio. The operator confirmed correct sound during
+video playback but reported missing frames and visible block artifacts in
+paused video. A private screenshot showed pronounced compression blocks.
+This is an audio success, not acceptable video-quality validation.
+
+After the camera bridge was stopped while Snapshot remained open, the same
+recording path unexpectedly became a zero-byte file. Causality is not fully
+isolated; the session shutdown sequence is a suspected contributor. A later
+quality probe therefore selected the older surviving recording, not the
+13.81-second tuned trial: that older file had 43 encoded frames across
+4.399 seconds and about 262 kbit/s of video. These numbers must not be used
+as tuned-trial frame-loss measurements.
+
+The next experimental publisher is prepared for 20 fps, closer to the measured
+approximately 22.5 fps backend delivery. The scoped VP8 setting is prepared
+for 4,000,000 bit/s, realtime deadline and two threads. Inactive-object checks
+confirm those encoder values; no new capture was started for that check.
+The next bounded test launcher closes Snapshot at 270 seconds, before the
+300-second camera/publisher cutoff, as an experimental shutdown mitigation.
+Its effect on recording preservation remains unvalidated. 30 fps capture,
+acceptable quality at 20 fps and reliable saving remain open.

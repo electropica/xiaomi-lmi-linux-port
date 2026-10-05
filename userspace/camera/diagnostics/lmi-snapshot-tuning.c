@@ -25,7 +25,7 @@ void *g_object_new_with_properties(unsigned long object_type, guint n,
     if (!element || !enabled || strcmp(enabled, "1")) return element;
     const char *type = g_type_name_from_instance(element);
     if (!type) return element;
-    if (!strcmp(type, "GstPulseSrc")) {
+    if (!strcmp(type, "GstVP8Enc")) { g_object_set(element, "target-bitrate", 4000000, "deadline", (long long)1, "threads", 2, (void *)0); } else if (!strcmp(type, "GstPulseSrc")) {
         g_object_set(element, "latency-time", (long long)50000,
                      "buffer-time", (long long)500000, (void *)0);
     } else if (!strcmp(type, "GstPipeWireSrc")) {

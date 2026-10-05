@@ -404,3 +404,13 @@ for Snapshot and its settings verified on inactive GStreamer objects, without
 opening microphone or camera. Snapshot recording with that adaptation remains
 unvalidated and awaits explicit operator readiness. No global audio or preload
 configuration was changed.
+
+
+### Tuned Snapshot audio passed / quality pending — 2026-10-05
+
+The operator confirmed correct audio in the first tuned Snapshot video, but
+reported missing frames and heavy compression blocks. The test file became
+empty after stopping the camera bridge while Snapshot remained open; safe
+session shutdown and file preservation remain unresolved. The next diagnostic
+is prepared for 20 fps and 4 Mbit/s VP8. Inactive encoder verification passed;
+no capture was started. 30 fps and acceptable video quality are not validated.
