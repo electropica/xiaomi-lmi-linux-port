@@ -1027,3 +1027,13 @@ active camera acquisition. A separate native PipeWire microphone-only recording
 was operator-confirmed recognizable and fluent after amplifying a temporary
 listen copy. Video/audio capture remains unresolved; a PulseAudio/GStreamer
 microphone-only comparison is pending.
+
+
+### Buffered audio / camera clock diagnostic — 2026-10-05
+
+The operator validated microphone-only PulseAudio capture with 48 kHz and
+larger buffers; the previous 44.1 kHz control sounded choppy. A real-video
+diagnostic then finalized 5.8 seconds with 48 kHz audio using copied input
+buffers and an explicit system clock. Its soundtrack listening assessment
+remains pending. `ORC_CODE=backup` did not reliably prevent capture crashes.
+These are process-local diagnostic settings, not a deployed Snapshot fix.

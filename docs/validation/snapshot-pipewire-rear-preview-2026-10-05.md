@@ -150,3 +150,34 @@ video/audio recording. A separate microphone-only GStreamer `pulsesrc` control
 was subsequently recorded at 44.1 kHz and finalized with 7.55 seconds of audio;
 its operator listening assessment remains pending. No global rate, quantum,
 latency, or gain setting was changed.
+
+## Buffered audio and explicit camera clock control
+
+The operator reported that the microphone-only GStreamer/PulseAudio control
+at 44.1 kHz was choppy. A new control used 48 kHz mono, `latency-time=50000`
+and `buffer-time=500000` on pulsesrc. Its final repeated capture contained
+7.9 seconds; the operator confirmed correct sound from its amplified listen
+copy. The rate and buffering were changed together: their individual causal
+effects have not been isolated. No global PipeWire setting was changed.
+
+A subsequent video test with these audio settings still crashed with SIGSEGV
+despite `ORC_CODE=backup`. Therefore that ORC experiment is not an established
+crash fix. Disabling the consumer pipewiresrc buffer pool and enabling
+`always-copy` then yielded only one viewfinder frame, so recording was aborted
+before start. In PipeWire 1.4.2 those two properties select the same no-pool
+mode; they are not independent fixes.
+
+Adding an explicit GstSystemClock to camerabin and `do-timestamp=true` on
+pipewiresrc allowed 19 viewfinder frames before capture and successful
+start/stop finalization: 168,116-byte WebM, duration 5.8 seconds, 48 kHz audio.
+The decoded soundtrack contained 5.812 seconds, peak 964 and RMS 47.39 in
+S16_LE units. Operator listening of this video's soundtrack remains pending.
+This proves one combined diagnostic configuration, not reliable Snapshot
+integration or a single identified root cause.
+
+The retained recording probe now reflects this combined test configuration.
+Camera, publisher and recording units were stopped before isolated listening.
+A permanent Snapshot audio/camera launcher has not been installed.
+
+Upstream references: [PipeWire 1.4.2 source properties](https://github.com/PipeWire/pipewire/blob/1.4.2/src/gst/gstpipewiresrc.c)
+and [GStreamer camerabin capture properties](https://gstreamer.freedesktop.org/documentation/camerabin/camerabin.html).
