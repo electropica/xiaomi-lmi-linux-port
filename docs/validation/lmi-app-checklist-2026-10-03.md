@@ -1010,5 +1010,7 @@ bounded execution and a narrowly scoped local-user rule. No generic-image or
 Megapixels support is claimed. Operator capture and upright portrait display
 are confirmed; opening the saved photo in Photos remains pending. The HAL-based
 rotation saves 720 x 1280 portrait pixels. Explicit private-manager shutdown
-reduced one full UI trial from 14.610 to 10.048 seconds; per-shot initialization
+reduced one full UI trial from 14.610 to 10.048 seconds. Replacing fixed
+startup/result pauses then yielded two successful trials at 8.625 and 8.623
+seconds, including smoke-mode startup/exit delays. Per-shot initialization
 and live preview remain unresolved. See [application and validation scope](../../userspace/camera/README.md#opt-in-rear-snapshot-application--2026-10-05).

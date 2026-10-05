@@ -136,17 +136,24 @@ try:
         os.chdir('/')
     os.environ['LMI_PRIVATE_BINDER_NO_SECCTX']='1'
     child=subprocess.Popen(['/system/bin/bootstrap/linker64','/system_ext/bin/hwservicemanager'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True,preexec_fn=limits,env={'PATH':'/system/bin','ANDROID_ROOT':'/system','ANDROID_DATA':'/data','LD_PRELOAD':'/private-context-test.so','LMI_PRIVATE_CONTEXT_ACTIVE':'1','LMI_PRIVATE_BINDER_NO_SECCTX':'1','LMI_PRIVATE_PEER_CHECK':'1'})
-    time.sleep(2)
     registered=False
-    with (root/'dev/hwbinder').open('rb',buffering=0) as f:
-        try:
-            fcntl.ioctl(f.fileno(),0x40046207,struct.pack('<I',0))
-            print('HWBINDER_CONTEXT_WAS_UNOWNED_PROBE_FD_CLOSED',flush=True)
-        except OSError as error:
-            print('HWBINDER_CONTEXT_PROBE_ERRNO '+str(error.errno),flush=True)
-            if error.errno == errno.EBUSY:
-                print('HWBINDER_CONTEXT_MANAGER_ALREADY_REGISTERED',flush=True)
+    deadline=time.monotonic()+2
+    while time.monotonic()<deadline:
+        if child.poll() is not None:
+            raise RuntimeError('private manager exited before registration')
+        # Each probe uses a fresh descriptor. An unowned context is released
+        # when it closes; EBUSY proves the manager already owns this private bus.
+        with (root/'dev/hwbinder').open('rb',buffering=0) as f:
+            try:
+                fcntl.ioctl(f.fileno(),0x40046207,struct.pack('<I',0))
+            except OSError as error:
+                if error.errno != errno.EBUSY:
+                    raise
                 registered=True
+        if registered:
+            print('HWBINDER_CONTEXT_MANAGER_ALREADY_REGISTERED',flush=True)
+            break
+        time.sleep(0.02)
     assert registered, 'private manager registration missing'
     print('THREAD_WAIT_STATES '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc').joinpath(str(child.pid),'task').iterdir()}),flush=True)
     client=subprocess.Popen(['/system/bin/sh','-c','kill -STOP $$; exec /system/bin/lshal list --types=binderized --neat --interface'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True,preexec_fn=limits,env={'PATH':'/system/bin','ANDROID_ROOT':'/system','ANDROID_DATA':'/data','LD_PRELOAD':'/private-context-test.so','LMI_PRIVATE_CONTEXT_ACTIVE':'1','LMI_PRIVATE_BINDER_NO_SECCTX':'1','LMI_PRIVATE_HIDL_READY_CHECKED':'1'})
@@ -186,7 +193,6 @@ try:
         raise RuntimeError('provider did not stop at identity gate')
     (root/'checked-client.pid').write_text(str(provider.pid)+'\n')
     os.kill(provider.pid,signal.SIGCONT)
-    time.sleep(2)
     if provider.poll() is None:
         print('MODULE_THREAD_WAITS '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc',str(provider.pid),'task').iterdir()}),flush=True)
         print('MANAGER_THREAD_WAITS '+json.dumps({t.name:(t/'wchan').read_text().strip() for t in Path('/proc',str(child.pid),'task').iterdir()}),flush=True)

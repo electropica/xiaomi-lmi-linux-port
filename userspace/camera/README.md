@@ -638,3 +638,15 @@ not a latency benchmark. The service was inactive with a success result after
 capture; no private HIDL runtime or temporary CVP firmware links remained.
 Capture still initializes the OEM runtime for each shot and has no live preview;
 this improvement does not establish normal instant-camera responsiveness.
+
+
+The next change removes two fixed two-second pauses. Private manager readiness
+is now polled for at most two seconds using fresh private-hwbinder descriptors:
+EBUSY confirms an existing context owner; an unowned probe is released on close.
+An early manager exit or a different ioctl error fails the capture. The existing
+IPC prerequisite query still follows this gate. The camera client result is
+collected immediately, without a diagnostic sleep beforehand.
+Two complete UI trials succeeded in 8.625 and 8.623 seconds, including the smoke
+mode's 0.5-second startup and one-second exit delays. Both saved photographs;
+the service was inactive afterwards and its temporary runtime/firmware links
+were absent. This is still an on-demand, per-shot runtime, not live preview.
