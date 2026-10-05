@@ -1066,3 +1066,13 @@ for Snapshot and its settings verified on inactive GStreamer objects, without
 opening microphone or camera. Snapshot recording with that adaptation remains
 unvalidated and awaits explicit operator readiness. No global audio or preload
 configuration was changed.
+
+
+### Higher-quality camera trial failed — 2026-10-05
+
+The authorized 20 fps / 4 Mbit/s Snapshot trial lost preview and produced an
+empty recording; the operator also reported horizontal mirroring. The phone
+remained reachable and returned to its application grid after stopping the
+test. Higher-quality video, stable preview and reliable file preservation
+remain unvalidated. All camera test units are stopped; no further capture
+without explicit operator readiness.

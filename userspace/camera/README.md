@@ -903,3 +903,13 @@ empty after stopping the camera bridge while Snapshot remained open; safe
 session shutdown and file preservation remain unresolved. The next diagnostic
 is prepared for 20 fps and 4 Mbit/s VP8. Inactive encoder verification passed;
 no capture was started. 30 fps and acceptable video quality are not validated.
+
+
+### Higher-quality camera trial failed — 2026-10-05
+
+The authorized 20 fps / 4 Mbit/s Snapshot trial lost preview and produced an
+empty recording; the operator also reported horizontal mirroring. The phone
+remained reachable and returned to its application grid after stopping the
+test. Higher-quality video, stable preview and reliable file preservation
+remain unvalidated. All camera test units are stopped; no further capture
+without explicit operator readiness.

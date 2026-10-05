@@ -243,3 +243,27 @@ The next bounded test launcher closes Snapshot at 270 seconds, before the
 300-second camera/publisher cutoff, as an experimental shutdown mitigation.
 Its effect on recording preservation remains unvalidated. 30 fps capture,
 acceptable quality at 20 fps and reliable saving remain open.
+
+## Higher-quality Snapshot trial failed
+
+The operator authorized the next preview and manually initiated recording.
+The 20 fps / 4 Mbit/s trial lost its live preview; the operator reported an
+apparent freeze and horizontal mirroring. The phone remained reachable over
+SSH, with about 5.9 GiB available memory. No matching OOM/GPU fault was found
+in the inspected kernel window. Snapshot and acquisition were stopped; a
+post-stop screenshot showed the responsive Phosh application grid.
+
+The publisher logged 1,139 frames and root acquisition 1,144 frames during
+the approximately 68-second source interval. This establishes continued
+upstream delivery, not successful Snapshot reception or rendering. Snapshot
+logged no explicit capture error in the inspected interval; the attempted
+recording was zero bytes. This configuration is failed and must not be
+described as functional higher-quality video. Preview freeze, mirroring,
+recording finalization and safe shutdown remain unresolved. The last valid
+operator recording established audio functionality only before its file was
+subsequently truncated.
+
+The operator can continue listening tests but is fatigued after the session.
+Further capture still requires an explicit, clearly announced readiness
+signal. Read-only diagnosis and offline preparation may continue; playback
+and capture must never be conflated in operator instructions.
