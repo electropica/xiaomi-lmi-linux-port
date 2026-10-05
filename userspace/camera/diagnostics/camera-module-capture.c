@@ -352,10 +352,15 @@ static int prepare_auto_settings(void *library,const struct camera_metadata *def
     return 0;
 }
 
+static double monotonic_seconds(void) {
+    struct timespec now; clock_gettime(CLOCK_MONOTONIC,&now);
+    return now.tv_sec+now.tv_nsec/1e9;
+}
 static int capture_one(camera3_device_t *camera, uint32_t capacity,
                        uint32_t frame_number, bool save_image) {
     if (!camera->ops->process_capture_request || capacity < 12) return 30;
     int r;
+    double frame_begin=monotonic_seconds();
     if (ae_update && manual_settings && frame_number > 1) {
         camera_metadata_ro_entry_t e={0};
         uint8_t idle=ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER_IDLE;
@@ -407,10 +412,12 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
         if (r <= 0 || !(poll_fence.revents & POLLIN) || (poll_fence.revents & (POLLERR | POLLNVAL))) return 35;
         close(fence); capture_release_fence = -1;
     }
+    double result_ready=monotonic_seconds();
     void *address = NULL;
     r = lmi_qti_lock_cpu(capture_handle, &address);
     printf("qti_lock_cpu_result=%d address_present=%d\n", r, address != NULL);
     if (r || !address) return 36;
+    double lock_ready=monotonic_seconds();
     int output_status=0;
     if (preview_mode) {
         if(save_image) {
@@ -470,7 +477,11 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
         }
         if (!output_status && !save_image) printf("warmup_frame_discarded=%u\n", frame_number);
     }
+    double render_ready=monotonic_seconds();
     r = lmi_qti_unlock(capture_handle); printf("qti_unlock_result=%d\n", r);
+    if (preview_mode) printf("frame_timing frame=%u save=%d request_wait_ms=%.3f lock_ms=%.3f render_ms=%.3f unlock_ms=%.3f\n",
+       frame_number,save_image,1000*(result_ready-frame_begin),1000*(lock_ready-result_ready),
+       1000*(render_ready-lock_ready),1000*(monotonic_seconds()-render_ready));
     return output_status ? output_status : (r ? 40 : 0);
 }
 
@@ -633,7 +644,7 @@ int main(int argc, char **argv) {
     struct timespec sequence_start;
     clock_gettime(CLOCK_MONOTONIC,&sequence_start);
     for (uint32_t frame_number = 1; frame_number <= frame_count && !settings_status; ++frame_number) {
-        bool save=preview_sequence ? (frame_number>=15 && frame_number%3==0) : frame_number==frame_count;
+        bool save=preview_live ? frame_number>=15 : (preview_sequence ? (frame_number>=15 && frame_number%3==0) : frame_number==frame_count);
         settings_status = capture_one(camera, (uint32_t)jpeg_max_size, frame_number, save);
         if (save && !settings_status) {
             struct timespec now; clock_gettime(CLOCK_MONOTONIC,&now);

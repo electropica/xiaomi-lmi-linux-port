@@ -708,3 +708,37 @@ bridge remains required before testing another frontend. The operator reported
 that the current live preview is too slow; it remains a diagnostic prototype,
 not an acceptable normal camera implementation. One operator-triggered save was
 observed in the UI log, but perceived save latency is not yet confirmed.
+
+
+### Preview cadence measurement and automatic reactivation — 2026-10-05
+
+Per-frame monotonic timings separate request/result/fence wait, CPU lock,
+conversion/write and unlock. In a 45-frame dark-scene trial, frames after warmup
+without image publication averaged 234.633 ms waiting, 0.042 ms locking,
+0.011 ms in the discard path and 0.023 ms unlocking. Published frames averaged
+241.746 ms waiting, 0.052 ms locking, 13.667 ms conversion/write and 0.064 ms
+unlocking. Thus RGB conversion is not the dominant measured delay.
+
+The live prototype also deliberately published only every third frame, which
+added a further factor of three to the visible interval. Live mode now publishes
+every completed frame after its 15-frame warmup; the sequence diagnostic retains
+its original every-third-frame sampling for comparison. The GTK poll interval
+is reduced from 250 to 50 ms. A complete live run displayed all 106 eligible
+frames with a mean UI-log interval of 0.242 seconds. The stream completed with
+no private runtime directory or CVP firmware links left behind.
+
+Fresh-window activation already started preview automatically. Re-activating
+an existing window after its preview ended previously only presented the stale
+last image. That path now starts preview too, and the stale picture is cleared
+during initialization. A real same-application activation after automatic
+completion produced a new stream without pressing the restart button.
+Operator visual confirmation is pending.
+
+The current client submits a single request and waits for its returned buffer
+before submitting the next. This serial design and the measured HAL-result
+wait cap the current preview around four frames per second. The timing alone
+does not distinguish sensor exposure from internal processing/pipeline latency;
+a queued multi-buffer client is the next diagnostic, not a proven fix yet.
+No kernel rebuild was needed for these changes. Mainline has an SM8250 CAMSS
+implementation, but that alone does not establish IMX686/lmi/Megapixels support
+on this downstream kernel or a ready-to-use replacement kernel.

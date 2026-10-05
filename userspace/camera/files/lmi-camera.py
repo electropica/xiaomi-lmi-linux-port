@@ -26,6 +26,7 @@ class Camera(Gtk.Application):
     def activate(self,app):
         if hasattr(self,'window'):
             self.window.present()
+            if not self.once and not self.live_running:self.start_preview(None)
             return
         self.window=Gtk.ApplicationWindow(application=self,title='Appareil photo lmi')
         self.window.set_default_size(360,640)
@@ -71,7 +72,7 @@ class Camera(Gtk.Application):
         self.window.present()
         self.window.connect('close-request',self.close_camera)
         if not self.once:
-            GLib.timeout_add(250,self.poll_preview)
+            GLib.timeout_add(50,self.poll_preview)
             self.start_preview(None)
         if self.once:
             GLib.timeout_add(500,lambda: (self.take_photo(None),False)[1])
@@ -81,6 +82,7 @@ class Camera(Gtk.Application):
         self.live_pixbuf=None;self.live_stamp=None;self.live_running=True
         self.live_started=time.time_ns()
         self.capture.set_sensitive(False);self.preview_button.set_sensitive(False)
+        self.picture.set_paintable(None)
         self.status.set_text('Démarrage de la caméra arrière…')
         threading.Thread(target=self.launch_preview,daemon=True).start()
 

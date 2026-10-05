@@ -1025,3 +1025,13 @@ The fixed early-stop action now leaves no runtime directory or CVP links.
 The operator reports that preview is too slow for normal use; no PipeWire
 video source is currently exposed for an alternative standard frontend. Preview is slow and limited to about 30 seconds per launch.
 See [bounded rear live preview](../../userspace/camera/README.md#bounded-rear-live-preview--2026-10-05).
+
+
+Preview follow-up (2026-10-05): automatic preview now works on fresh launch and
+reactivation of an existing window after completion. Publishing every live
+frame yielded 106 displayed frames with a mean 0.242-second interval, versus
+about 0.725 seconds with every-third-frame sampling. Instrumentation measured
+about 235–242 ms request/result wait and 14 ms conversion/write for published
+frames. The client still submits requests serially; queued-buffer capture is
+not yet validated. Operator confirmation of the visual improvement is pending.
+See [cadence measurement](../../userspace/camera/README.md#preview-cadence-measurement-and-automatic-reactivation--2026-10-05).
