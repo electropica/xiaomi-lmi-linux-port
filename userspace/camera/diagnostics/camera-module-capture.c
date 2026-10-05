@@ -1,6 +1,6 @@
 /*
- * Bounded five-frame HAL3 JPEG diagnostic, using actual OEM QTI buffers.
- * First four frames condition 3A; only the fifth frame is saved.
+ * Bounded HAL3 JPEG / rear YUV diagnostic using actual OEM QTI buffers.
+ * Earlier frames condition 3A; only the last frame is saved.
  * Output /data/vendor/camera/test.jpg must resolve inside the private runtime.
  * Requires an external process timeout: vendor configure/flush/close calls can
  * block despite this client's bounded result and release-fence waits.
@@ -10,7 +10,7 @@
  * https://source.android.com/reference/hal/structcamera3__device__ops
  * Run in the private bionic runtime, with the same property/runtime setup as
  * enumeration and an external timeout. Never run alongside the OEM provider.
- * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure | --ae-precapture]
+ * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure | --ae-precapture | --preview]
  */
 #define main enumeration_diagnostic_main
 #include "camera-module-enumerate.c"
@@ -25,6 +25,8 @@
 #include <fcntl.h>
 
 extern int lmi_qti_allocate(uint32_t bytes, uint64_t usage, const void **handle);
+extern int lmi_qti_allocate_yuv(uint32_t,uint32_t,uint64_t,const void **);
+extern int lmi_qti_save_ppm(const void *,uint32_t,uint32_t,const char *);
 extern int lmi_qti_release(const void *handle);
 extern int lmi_qti_lock_cpu(const void *handle, void **address);
 extern int lmi_qti_unlock(const void *handle);
@@ -99,6 +101,7 @@ typedef struct camera3_stream_configuration {
     uint32_t operation_mode;
     const struct camera_metadata *session_parameters;
 } camera3_stream_configuration_t;
+static int preview_mode;
 static camera3_stream_t probe_blob_stream;
 static camera3_stream_t *probe_streams[] = { &probe_blob_stream };
 static camera3_stream_configuration_t probe_configuration;
@@ -361,12 +364,12 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
     }
     if (!capture_handle) {
         printf("stage=qti_allocate capacity=%u usage=0x%x\n", capacity, probe_blob_stream.usage);
-        r = lmi_qti_allocate(capacity, probe_blob_stream.usage, &capture_handle);
+        r = preview_mode ? lmi_qti_allocate_yuv(probe_blob_stream.width,probe_blob_stream.height,probe_blob_stream.usage,&capture_handle) : lmi_qti_allocate(capacity, probe_blob_stream.usage, &capture_handle);
         printf("qti_allocate_result=%d handle_present=%d\n", r, capture_handle != NULL);
         if (r || !capture_handle) return 31;
     }
     const struct camera_metadata *settings = manual_settings ? manual_settings :
-        camera->ops->construct_default_request_settings(camera, 2);
+        camera->ops->construct_default_request_settings(camera, preview_mode ? 1 : 2);
     if (!settings) return 32;
     capture_output = (camera3_stream_buffer_t){ .stream = &probe_blob_stream,
         .buffer = &capture_handle, .status = 0, .acquire_fence = -1, .release_fence = -1 };
@@ -408,64 +411,71 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
     r = lmi_qti_lock_cpu(capture_handle, &address);
     printf("qti_lock_cpu_result=%d address_present=%d\n", r, address != NULL);
     if (r || !address) return 36;
-    struct jpeg_footer { uint16_t id; uint32_t size; } footer;
-    _Static_assert(sizeof(struct jpeg_footer) == 8, "camera3 JPEG footer ABI");
-    const uint8_t *bytes = address;
-    memcpy(&footer, bytes + capacity - sizeof(footer), sizeof(footer));
-    printf("image_signature=%02x%02x%02x%02x\n", bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("jpeg_footer_id=0x%x jpeg_size=%u\n", footer.id, footer.size);
-    uint32_t footer_offset = capacity - (uint32_t)sizeof(footer);
-    int output_status = 0;
-    int expected_footer_valid = footer.id == 0xff && footer.size >= 4 &&
-        footer.size <= footer_offset && bytes[0] == 0xff && bytes[1] == 0xd8 &&
-        bytes[footer.size - 2] == 0xff && bytes[footer.size - 1] == 0xd9;
-    if (!expected_footer_valid) {
-        /* HAL may place its footer at a smaller negotiated JPEG buffer end.
-         * Search only the capacity of the real allocated/locked buffer. Require
-         * a unique aligned footer with a plausible size, JPEG SOI, and EOI.
-         * Never infer extra mapped bytes from vendor-private handle fields. */
-        uint32_t candidates = 0;
-        struct jpeg_footer candidate;
-        if (bytes[0] == 0xff && bytes[1] == 0xd8) {
-            for (uint32_t offset = 0; offset <= capacity - sizeof(candidate); offset += 4) {
-                memcpy(&candidate, bytes + offset, sizeof(candidate));
-                if (candidate.id != 0xff || candidate.size < 4 || candidate.size > offset)
-                    continue;
-                if (bytes[candidate.size - 2] != 0xff || bytes[candidate.size - 1] != 0xd9)
-                    continue;
-                ++candidates;
-                if (candidates > 1) break;
-                footer = candidate;
-                footer_offset = offset;
+    int output_status=0;
+    if (preview_mode) {
+        if(save_image) {
+            output_status=lmi_qti_save_ppm(capture_handle,probe_blob_stream.width,probe_blob_stream.height,"/data/vendor/camera/preview.ppm");
+            printf("preview_image_result=%d\n",output_status);
+        } else printf("warmup_frame_discarded=%u\n",frame_number);
+    } else {
+        struct jpeg_footer { uint16_t id; uint32_t size; } footer;
+        _Static_assert(sizeof(struct jpeg_footer) == 8, "camera3 JPEG footer ABI");
+        const uint8_t *bytes = address;
+        memcpy(&footer, bytes + capacity - sizeof(footer), sizeof(footer));
+        printf("image_signature=%02x%02x%02x%02x\n", bytes[0], bytes[1], bytes[2], bytes[3]);
+        printf("jpeg_footer_id=0x%x jpeg_size=%u\n", footer.id, footer.size);
+        uint32_t footer_offset = capacity - (uint32_t)sizeof(footer);
+        int expected_footer_valid = footer.id == 0xff && footer.size >= 4 &&
+            footer.size <= footer_offset && bytes[0] == 0xff && bytes[1] == 0xd8 &&
+            bytes[footer.size - 2] == 0xff && bytes[footer.size - 1] == 0xd9;
+        if (!expected_footer_valid) {
+            /* HAL may place its footer at a smaller negotiated JPEG buffer end.
+             * Search only the capacity of the real allocated/locked buffer. Require
+             * a unique aligned footer with a plausible size, JPEG SOI, and EOI.
+             * Never infer extra mapped bytes from vendor-private handle fields. */
+            uint32_t candidates = 0;
+            struct jpeg_footer candidate;
+            if (bytes[0] == 0xff && bytes[1] == 0xd8) {
+                for (uint32_t offset = 0; offset <= capacity - sizeof(candidate); offset += 4) {
+                    memcpy(&candidate, bytes + offset, sizeof(candidate));
+                    if (candidate.id != 0xff || candidate.size < 4 || candidate.size > offset)
+                        continue;
+                    if (bytes[candidate.size - 2] != 0xff || bytes[candidate.size - 1] != 0xd9)
+                        continue;
+                    ++candidates;
+                    if (candidates > 1) break;
+                    footer = candidate;
+                    footer_offset = offset;
+                }
+            }
+            printf("jpeg_footer_search_candidates=%u\n", candidates);
+            if (candidates != 1) output_status = 37;
+        }
+        if (!output_status) printf("accepted_jpeg_footer_offset=%u jpeg_size=%u\n", footer_offset, footer.size);
+        if (!output_status && save_image) {
+            int fd = open("/data/vendor/camera/test.jpg", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+            if (fd < 0) output_status = 38;
+            else {
+                size_t written = 0;
+                while (written < footer.size) {
+                    ssize_t n = write(fd, bytes + written, footer.size - written);
+                    if (n < 0 && errno == EINTR) continue;
+                    if (n <= 0) { output_status = 39; break; }
+                    written += (size_t)n;
+                }
+                if (close(fd) && !output_status) output_status = 39;
+                if (!output_status) printf("jpeg_written=/data/vendor/camera/test.jpg bytes=%u\n", footer.size);
             }
         }
-        printf("jpeg_footer_search_candidates=%u\n", candidates);
-        if (candidates != 1) output_status = 37;
+        if (!output_status && !save_image) printf("warmup_frame_discarded=%u\n", frame_number);
     }
-    if (!output_status) printf("accepted_jpeg_footer_offset=%u jpeg_size=%u\n", footer_offset, footer.size);
-    if (!output_status && save_image) {
-        int fd = open("/data/vendor/camera/test.jpg", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
-        if (fd < 0) output_status = 38;
-        else {
-            size_t written = 0;
-            while (written < footer.size) {
-                ssize_t n = write(fd, bytes + written, footer.size - written);
-                if (n < 0 && errno == EINTR) continue;
-                if (n <= 0) { output_status = 39; break; }
-                written += (size_t)n;
-            }
-            if (close(fd) && !output_status) output_status = 39;
-            if (!output_status) printf("jpeg_written=/data/vendor/camera/test.jpg bytes=%u\n", footer.size);
-        }
-    }
-    if (!output_status && !save_image) printf("warmup_frame_discarded=%u\n", frame_number);
     r = lmi_qti_unlock(capture_handle); printf("qti_unlock_result=%d\n", r);
     return output_status ? output_status : (r ? 40 : 0);
 }
 
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 5) {
-        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure | --ae-precapture]\n", argv[0]);
+        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure | --ae-precapture | --preview]\n", argv[0]);
         diagnostic_exit(2);
     }
     char *end = NULL;
@@ -477,10 +487,11 @@ int main(int argc, char **argv) {
         if (!strcmp(argv[i], "--configure")) do_configure = 1;
         else if (!strcmp(argv[i], "--manual-exposure")) manual_exposure = 1;
         else if (!strcmp(argv[i], "--ae-precapture")) ae_precapture=1;
+        else if (!strcmp(argv[i], "--preview")) preview_mode=1;
         else if (i == 2) path = argv[i];
         else diagnostic_exit(2);
     }
-    if ((manual_exposure && ae_precapture) || ((manual_exposure || ae_precapture) && camera_id != 0)) diagnostic_exit(2);
+    if ((manual_exposure + ae_precapture + preview_mode > 1) || ((manual_exposure || ae_precapture || preview_mode) && camera_id != 0)) diagnostic_exit(2);
     setvbuf(stdout, NULL, _IONBF, 0);
     printf("stage=dlopen path=%s\n", path);
     void *handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
@@ -533,12 +544,12 @@ int main(int argc, char **argv) {
     size_t blob_count = 0;
     for (size_t i = 0; i < entry.count; i += 4) {
         const int32_t *configuration = entry.data.i32 + i;
-        if (configuration[0] != 0x21 || configuration[3] != 0 || configuration[1] <= 0 || configuration[2] <= 0)
+        if (configuration[0] != (preview_mode ? 0x23 : 0x21) || configuration[3] != 0 || configuration[1] <= 0 || configuration[2] <= 0)
             continue;
         if (blob_count < 32) printf("blob_output width=%d height=%d\n", configuration[1], configuration[2]);
         ++blob_count;
         uint64_t area = (uint64_t)(uint32_t)configuration[1] * (uint32_t)configuration[2];
-        if (area < chosen_area) { chosen_area = area; chosen_width = configuration[1]; chosen_height = configuration[2]; }
+        if ((!preview_mode || (configuration[1]==1280 && configuration[2]==720)) && area < chosen_area) { chosen_area = area; chosen_width = configuration[1]; chosen_height = configuration[2]; }
     }
     printf("blob_output_count=%zu blob_output_reported=%zu\n", blob_count, blob_count < 32 ? blob_count : 32);
     printf("selected_blob width=%u height=%u\n", chosen_width, chosen_height);
@@ -568,10 +579,10 @@ int main(int argc, char **argv) {
         if (device->close) device->close(device);
         diagnostic_exit(19);
     }
-    printf("stage=construct_default_request_settings template=STILL_CAPTURE\n");
+    printf("stage=construct_default_request_settings (STILL_CAPTURE or explicit PREVIEW)\n");
     /* CAMERA3_TEMPLATE_STILL_CAPTURE == 2; HAL owns immutable metadata. */
     const struct camera_metadata *still_settings =
-        camera->ops->construct_default_request_settings(camera, 2);
+        camera->ops->construct_default_request_settings(camera, preview_mode ? 1 : 2);
     printf("still_capture_defaults_present=%d\n", still_settings != NULL);
     int settings_status = still_settings ? 0 : 20;
     if (manual_exposure) {
@@ -587,8 +598,8 @@ int main(int argc, char **argv) {
             diagnostic_exit(24);
         probe_blob_stream = (camera3_stream_t){
             .stream_type = 0, .width = chosen_width, .height = chosen_height,
-            .format = 0x21, .usage = 3, /* gralloc0 SW_READ_OFTEN consumer usage */
-            .data_space = ADATASPACE_JFIF, .rotation = 0, .physical_camera_id = ""
+            .format = preview_mode ? 0x23 : 0x21, .usage = 3, /* gralloc0 SW_READ_OFTEN consumer usage */
+            .data_space = preview_mode ? ADATASPACE_UNKNOWN : ADATASPACE_JFIF, .rotation = 0, .physical_camera_id = ""
         };
         probe_configuration = (camera3_stream_configuration_t){
             .num_streams = 1, .streams = probe_streams, .operation_mode = 0,
@@ -603,9 +614,10 @@ int main(int argc, char **argv) {
     }
     /* Actual sensor frames condition exposure; an idle pause does not run 3A.
      * Reuse one genuine buffer only after previous result/fence/unlock completed.
-     * Save only the fifth frame, with no intermediate image files. */
-    for (uint32_t frame_number = 1; frame_number <= 5 && !settings_status; ++frame_number)
-        settings_status = capture_one(camera, (uint32_t)jpeg_max_size, frame_number, frame_number == 5);
+     * Save only the last frame, with no intermediate image files. */
+    uint32_t frame_count=preview_mode ? 15 : 5;
+    for (uint32_t frame_number = 1; frame_number <= frame_count && !settings_status; ++frame_number)
+        settings_status = capture_one(camera, (uint32_t)jpeg_max_size, frame_number, frame_number == frame_count);
     if (device->close) {
         printf("stage=device_close\n"); int close_result = device->close(device);
         printf("device_close_result=%d\n", close_result);

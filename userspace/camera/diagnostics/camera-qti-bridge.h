@@ -11,6 +11,10 @@ extern "C" {
  * No release while camera owns the handle or while CPU locked.
  */
 int lmi_qti_allocate(uint32_t bytes, uint64_t usage, const void **handle);
+/* YUV diagnostic only: query the vendor's layout, validate every plane span,
+ * render one BT.601-limited PPM while locked. No calibrated color guarantee. */
+int lmi_qti_allocate_yuv(uint32_t width,uint32_t height,uint64_t usage,const void **handle);
+int lmi_qti_save_ppm(const void *handle,uint32_t width,uint32_t height,const char *path);
 int lmi_qti_release(const void *handle);
 int lmi_qti_lock(const void *handle, void **address);
 int lmi_qti_lock_cpu(const void *handle, void **address); /* Same as lock. */

@@ -272,9 +272,12 @@ had no Internet route. Wi-Fi and battery settings were unchanged. See the
 [validation and remaining limits](../validation/lmi-clock-feedback-2026-10-04.md).
 
 
-Rear camera diagnostic update (2026-10-05): manual exposure (50 ms, ISO 800)
-produced a visible scene, while the same-scene automatic request remained
-nearly black despite AE CONVERGED. This is a private HAL3 diagnostic milestone,
-not a working Megapixels application, camera-preview integration or generic
-image change. The source-only opt-in and validation limits are in the
-[camera record](../../userspace/camera/README.md#manual-exposure-versus-automatic--2026-10-05).
+Rear camera update (2026-10-05): the isolated PREVIEW backend now captures
+1280 x 720 rear images with adaptive automatic exposure. The verified CVP/synx
+interfaces and temporary host-visible OEM firmware segments resolve the prior
+configuration failure; three fifteen-frame runs completed, including the final
+consolidated sources. A privately inspected image shows the scene correctly.
+The helper cleans up its links/runtime and is not installed persistently.
+An interactive photo/preview application and Megapixels integration remain
+pending; video, focus quality and generic-image support are not validated.
+See [automatic rear preview capture](../../userspace/camera/README.md#automatic-rear-preview-capture--2026-10-05).

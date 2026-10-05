@@ -915,8 +915,12 @@ This does not make Megapixels functional. Sources and limits are documented
 in [first rear JPEG diagnostic](../../userspace/camera/README.md#first-rear-jpeg-diagnostic--2026-10-04).
 
 
-Rear camera update (2026-10-05): explicit 50 ms / ISO 800 capture produced a
-visible rear-camera scene. A matched automatic capture stayed nearly black
-despite AE CONVERGED. Manual sensor/ISP/JPEG operation is demonstrated;
-automatic exposure, preview and Megapixels integration remain unresolved.
-See [paired exposure diagnostic](../../userspace/camera/README.md#manual-exposure-versus-automatic--2026-10-05).
+Rear camera update (2026-10-05): the isolated PREVIEW backend now captures
+1280 x 720 rear images with adaptive automatic exposure. The verified CVP/synx
+interfaces and temporary host-visible OEM firmware segments resolve the prior
+configuration failure; three fifteen-frame runs completed, including the final
+consolidated sources. A privately inspected image shows the scene correctly.
+The helper cleans up its links/runtime and is not installed persistently.
+An interactive photo/preview application and Megapixels integration remain
+pending; video, focus quality and generic-image support are not validated.
+See [automatic rear preview capture](../../userspace/camera/README.md#automatic-rear-preview-capture--2026-10-05).

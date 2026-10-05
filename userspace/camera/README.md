@@ -467,9 +467,8 @@ error; it is not counted as a 720p result. The later successful 720p build
 and runtime explicitly reported 1280 x 720 and returned the same -19.
 No YUV frame, preview or AE behavior was validated by these failed configurations.
 
-The experimental YUV variants remain private, outside the supported capture
-path. The next gate is to inspect CHI stream/use-case selection and required
-preview resources, rather than changing exposure numbers blindly. All finite
+Those failed YUV variants were private experiments. Their resource failure
+was subsequently resolved in the automatic rear-preview milestone below. All finite
 units ended and their private mounts/loop devices were cleaned up.
 
 The supervisor previously returned success after cleanup even when the camera
@@ -484,3 +483,72 @@ resources were cleaned up, and the outer unit correctly exited 1 (failure).
 The final C source compiles with -Wall -Wextra -Werror; the supervisor parses
 with Python ast. The integrated AE option has not been re-run for a new photo;
 its earlier experimental AE measurements remain the evidence described above.
+
+## Automatic rear preview capture — 2026-10-05
+
+The previous YUV configuration failure was traced through bounded private
+CamX logs to Preview_CVP0: `/dev/synx_device` and `/dev/cvp` were absent from
+the isolated runtime. Both are existing character devices with matching sysfs
+DEVNAME identities and integrated kernel drivers. Making them visible advanced
+initialization, but CVP firmware loading then failed with ENOENT for all ten
+nonempty loadable segments. The MDT header was accessible inside the private
+runtime; the segment files were not accessible to the kernel worker threads.
+
+The matching kernel peripheral-loader source queues each segment on `pil_wq`
+and calls `request_firmware_into_buf` there. Its error index is an entry index,
+not necessarily a `.bNN` filename: segment[13] here requested `cvpss.b19`.
+All required pieces already existed in the mounted OEM firmware partition.
+The diagnostic validates their sizes against the ELF32 MDT program headers,
+refuses to overwrite any existing host firmware path, and temporarily links
+the existing cvpss files into the host firmware search directory. It removes
+only those exact symlinks in its cleanup path. No OEM firmware is copied,
+published or written to a partition. The private runtime also binds the
+existing OEM calibration and firmware directories read-only. Calibration
+warnings remain; this is not proof of complete tuning/calibration coverage.
+
+With these resources available, three bounded 1280 x 720 PREVIEW-template runs
+completed fifteen rear-ID-0 requests, returned OK buffers and closed/released
+the device and allocation successfully. In the first run automatic exposure
+progressed from 7,067,946 ns / ISO 50 to 30,000,000 ns / ISO 949, reaching
+CONVERGED on frame eleven. The image-rendering and consolidated-source runs
+converged near ISO 936. Thus the previous fixed-exposure STILL-only diagnostic
+does not establish broken OEM AE; the realtime preview path runs adaptive AE.
+
+The renderer calls the actual installed `GetYUVPlaneInfo` function rather
+than assuming tightly packed NV12. The inspected public LP64 android_ycbcr
+layout is 80 bytes. This allocation reported Y stride 1280, chroma stride
+1280, chroma step 2, Y offset 0, Cb offset 983041 and Cr offset 983040 within
+a 1,474,560-byte allocation. Every plane span is bounded before reading.
+The Cb/Cr ordering is therefore NV21-like, not guessed NV12. One final frame
+was rendered as a 2,764,816-byte PPM and independently inspected as a visible
+ceiling, moulding and light fixture at 1280 x 720. The BT.601 limited-range
+conversion is diagnostic; accurate colorimetry, focus and photo quality are
+not validated. Images and full vendor logs remain private, outside Git.
+
+The existing source diagnostic now has an explicit rear-only `--preview`
+mode, mutually exclusive with manual exposure and AE precapture. It keeps
+the JPEG path and common buffer bridge. The opt-in host wrapper is
+[camera-test-rear-preview.py](diagnostics/camera-test-rear-preview.py), which
+runs the existing supervisor with `--preview` in private mount/network
+namespaces. It needs the matching diagnostic binaries, metadata inspector,
+mounted OEM inputs and context shim already documented here. It must be run
+under a finite service (48 seconds, 640 MiB, no swap, 128 tasks), with no
+concurrent camera client. Ordinary cleanup and handled interruption remove
+the temporary links; an uncatchable SIGKILL or host failure still requires
+checking for them before another trial. This is not installed persistently.
+
+Both final C and C++ sources compile with `-Wall -Wextra -Werror`, Android
+`__1` libc++ namespace and the inspected matching system libc++. The final
+consolidated hardware trial exited 0 in 10.874 seconds, saved a mode-0600 PPM,
+and removed its isolated runtime and all thirteen temporary CVP links.
+The helper retains nonzero result propagation. A five-frame manual JPEG
+regression trial of these same binaries also exited 0 in 10.139 seconds,
+returned valid JPEG buffers and closed/released the device successfully. No kernel/rootfs rebuild,
+reboot, front-camera request or motor movement was used.
+
+This is a working automatic rear capture backend, not yet an interactive
+preview or functional Megapixels integration. Next: connect this bounded
+backend to the photo application's capture/preview flow, retaining isolation,
+resource cleanup and rear-only selection. It does not validate video recording,
+other camera IDs, flash photography, continuous AF or a generic image recipe.
+Public layout reference: [Qualcomm gralloc YUV layout source](https://android.googlesource.com/platform/hardware/qcom/sm7250/display/+/refs/heads/android12-s2-release/gralloc/gr_utils.cpp).

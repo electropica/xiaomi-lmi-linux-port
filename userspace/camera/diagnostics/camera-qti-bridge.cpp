@@ -153,10 +153,10 @@ struct Guard {
 };
 }
 
-extern "C" int lmi_qti_allocate(uint32_t bytes, uint64_t usage, const void **handle) {
+static int allocate_format(uint32_t width,uint32_t height,int format,uint64_t usage,const void **handle) {
     if (!handle) return -EINVAL;
     *handle = nullptr;
-    if (!bytes || bytes > INT_MAX) return -EINVAL;
+    if (!width || !height || width>INT_MAX || height>INT_MAX) return -EINVAL;
     Guard guard;
     Entry *free_entry = nullptr;
     for (auto &entry : entries) if (!entry.handle) { free_entry = &entry; break; }
@@ -164,8 +164,8 @@ extern "C" int lmi_qti_allocate(uint32_t bytes, uint64_t usage, const void **han
     int result = initialize();
     if (result) return result;
     gralloc::BufferDescriptor descriptor;
-    descriptor.SetDimensions(static_cast<int>(bytes), 1);
-    descriptor.SetColorFormat(0x21);
+    descriptor.SetDimensions(static_cast<int>(width),static_cast<int>(height));
+    descriptor.SetColorFormat(format);
     descriptor.SetLayerCount(1);
     descriptor.SetUsage(usage);
     descriptor.SetReservedSize(0);
@@ -177,6 +177,14 @@ extern "C" int lmi_qti_allocate(uint32_t bytes, uint64_t usage, const void **han
     free_entry->locked = false;
     *handle = vendor_handle;
     return 0;
+}
+
+extern "C" int lmi_qti_allocate(uint32_t bytes,uint64_t usage,const void **handle) {
+    return allocate_format(bytes,1,0x21,usage,handle);
+}
+extern "C" int lmi_qti_allocate_yuv(uint32_t width,uint32_t height,uint64_t usage,const void **handle) {
+    if(width>4096 || height>4096)return -EINVAL;
+    return allocate_format(width,height,0x23,usage,handle);
 }
 
 extern "C" int lmi_qti_release(const void *handle) {
@@ -239,4 +247,58 @@ extern "C" int lmi_qti_get_capacity(const void *handle, uint32_t *capacity) {
     if (offset || !size || size > 128U * 1024U * 1024U) return -EPROTO;
     *capacity = size;
     return 0;
+}
+
+// Public Android LP64 android_ycbcr ABI; inspected OEM grallocutils symbol.
+struct android_ycbcr {
+    void *y, *cb, *cr;
+    size_t ystride, cstride, chroma_step;
+    uint32_t reserved[8];
+};
+static_assert(sizeof(android_ycbcr)==80, "Android LP64 YCbCr ABI");
+extern "C" int lmi_qti_save_ppm(const void *handle,uint32_t width,uint32_t height,const char *path) {
+    if (!path || !width || !height || width>4096 || height>4096 || width%2 || height%2) return -EINVAL;
+    Guard guard;
+    Entry *entry=find_entry(handle);
+    if (!entry || !entry->locked || !valid_handle_header(handle)) return -EINVAL;
+    using Layout=int (*)(const private_handle_t *,android_ycbcr *);
+    auto layout=reinterpret_cast<Layout>(dlsym(core_library,"_ZN7gralloc15GetYUVPlaneInfoEPK16private_handle_tP13android_ycbcr"));
+    if (!layout) return -ENOSYS;
+    android_ycbcr planes[2]={};
+    int result=layout(static_cast<const private_handle_t *>(handle),planes);
+    if(result)return result;
+    uint32_t capacity=0; uint64_t base=0;
+    std::memcpy(&capacity,static_cast<const unsigned char *>(handle)+72,4);
+    std::memcpy(&base,static_cast<const unsigned char *>(handle)+84,8);
+    auto &p=planes[0];
+    if(!capacity || capacity>128U*1024U*1024U || !base || p.ystride<width ||
+       p.cstride<(width/2-1)*p.chroma_step+1 || (p.chroma_step!=1 && p.chroma_step!=2))return -EPROTO;
+    auto span=[&](void *pointer,size_t stride,uint32_t rows,uint64_t columns){
+        uint64_t start=reinterpret_cast<uintptr_t>(pointer);
+        return start>=base && start-base<capacity && stride<=capacity &&
+               (uint64_t)(rows-1)*stride+columns<=capacity-(start-base);
+    };
+    uint64_t columns=(uint64_t)(width/2-1)*p.chroma_step+1;
+    if(!span(p.y,p.ystride,height,width)||!span(p.cb,p.cstride,height/2,columns)||!span(p.cr,p.cstride,height/2,columns))return -EPROTO;
+    printf("yuv_layout width=%u height=%u ystride=%zu cstride=%zu step=%zu yoffset=%llu cboffset=%llu croffset=%llu\n",width,height,p.ystride,p.cstride,p.chroma_step,
+       (unsigned long long)(reinterpret_cast<uintptr_t>(p.y)-base),(unsigned long long)(reinterpret_cast<uintptr_t>(p.cb)-base),(unsigned long long)(reinterpret_cast<uintptr_t>(p.cr)-base));
+    FILE *file=fopen(path,"wb"); if(!file)return -errno;
+    fprintf(file,"P6\n%u %u\n255\n",width,height);
+    auto clamp=[](int x){return (unsigned char)(x<0?0:(x>255?255:x));};
+    auto *row=static_cast<unsigned char *>(std::malloc((size_t)width*3));
+    if(!row){fclose(file);return -ENOMEM;}
+    // Diagnostic BT.601 limited-range rendering; colorimetry is not calibrated.
+    for(uint32_t y=0;y<height && !result;y++){
+        for(uint32_t x=0;x<width;x++){
+            int l=static_cast<unsigned char *>(p.y)[y*p.ystride+x]-16;
+            int u=static_cast<unsigned char *>(p.cb)[(y/2)*p.cstride+(x/2)*p.chroma_step]-128;
+            int v=static_cast<unsigned char *>(p.cr)[(y/2)*p.cstride+(x/2)*p.chroma_step]-128;
+            row[3*x]=clamp((298*l+409*v+128)>>8);
+            row[3*x+1]=clamp((298*l-100*u-208*v+128)>>8);
+            row[3*x+2]=clamp((298*l+516*u+128)>>8);
+        }
+        if(fwrite(row,3,width,file)!=width)result=-EIO;
+    }
+    std::free(row); if(fclose(file) && !result)result=-EIO;
+    return result;
 }

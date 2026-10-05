@@ -1,14 +1,17 @@
 import errno, fcntl, json, os, resource, signal, struct, subprocess, tempfile, time
 from pathlib import Path
+import stat,re
 import argparse
 parser=argparse.ArgumentParser()
 mode=parser.add_mutually_exclusive_group()
 mode.add_argument("--manual-exposure",action="store_true")
 mode.add_argument("--ae-precapture",action="store_true")
+mode.add_argument("--preview",action="store_true")
 args=parser.parse_args()
 capture_command="kill -STOP $$; exec /private-camera-enumerate 0"
 if args.manual_exposure: capture_command += " --manual-exposure"
 if args.ae_precapture: capture_command += " --ae-precapture"
+if args.preview: capture_command += " --preview"
 
 def run(*args):
     return subprocess.run(args,check=True,timeout=5,stdout=subprocess.PIPE,text=True).stdout.strip()
@@ -52,6 +55,23 @@ try:
     firmware.touch()
     run('mount','--bind','/vendor/firmware/CAMERA_ICP.elf',str(firmware)); mounts.append(firmware)
     run('mount','-o','remount,bind,ro',str(firmware))
+    if args.preview:
+        # Existing OEM calibration/firmware only, mounted read-only in this runtime.
+        for source,target_name in [('/mnt/vendor/persist','mnt/vendor/persist'),('/mnt/vendor/firmware_mnt','vendor/firmware_mnt')]:
+            target=root/target_name
+            target.mkdir(parents=True,exist_ok=True)
+            run('mount','--bind',source,str(target)); mounts.append(target)
+            run('mount','-o','remount,bind,ro',str(target))
+        firmware_dir=Path('/mnt/vendor/firmware_mnt/image')
+        parts=[p for p in firmware_dir.glob('cvpss.*') if re.fullmatch(r'cvpss\.(mdt|b[0-9]{2})',p.name)]
+        assert any(p.name=='cvpss.mdt' for p in parts)
+        for part in parts:
+            target=root/'lib/firmware/postmarketos'/part.name
+            target.touch()
+            run('mount','--bind',str(part),str(target)); mounts.append(target)
+            run('mount','-o','remount,bind,ro',str(target))
+        print('PRIVATE_CVP_FIRMWARE_PARTS '+str(len(parts)),flush=True)
+
     output=Path(tempfile.mkdtemp(prefix='lmi-camera-capture-',dir='/tmp'))
     print('PRIVATE_CAPTURE_DIRECTORY '+str(output),flush=True)
     destination=root/'data/vendor/camera'
@@ -71,6 +91,17 @@ try:
     for name in ['null','urandom','ashmem']:
         dst=root/'dev'/name; dst.touch()
         run('mount','--bind','/dev/'+name,str(dst)); mounts.append(dst)
+    if args.preview:
+        for name in ['cvp','synx_device']:
+            original=Path('/dev')/name
+            device_stat=original.stat()
+            assert stat.S_ISCHR(device_stat.st_mode)
+            identification=Path('/sys/dev/char',str(os.major(device_stat.st_rdev))+':'+str(os.minor(device_stat.st_rdev)),'uevent').read_text().splitlines()
+            assert 'DEVNAME='+name in identification
+            dst=root/'dev'/name; dst.touch()
+            run('mount','--bind',str(original),str(dst)); mounts.append(dst)
+        print('PRIVATE_CVP_SYNX_CHAR_INTERFACES_CHECKED',flush=True)
+
     assert Path('/sys/class/video4linux/video0/name').read_text().strip() == 'cam-req-mgr'
     assert Path('/sys/class/video4linux/video1/name').read_text().strip() == 'cam_sync'
     devices=[Path('/dev/ion'),Path('/dev/video0'),Path('/dev/video1')]
