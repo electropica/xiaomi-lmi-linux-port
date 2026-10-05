@@ -313,3 +313,14 @@ about 235–242 ms request/result wait and 14 ms conversion/write for published
 frames. The client still submits requests serially; queued-buffer capture is
 not yet validated. Operator confirmation of the visual improvement is pending.
 See [cadence measurement](../../userspace/camera/README.md#preview-cadence-measurement-and-automatic-reactivation--2026-10-05).
+
+
+Queued-preview follow-up (2026-10-05): automatic startup and noticeably smoother
+preview are operator-confirmed. Three genuine buffers now keep requests in
+flight instead of waiting serially. A rear diagnostic yielded 106 images at a
+mean 0.0444-second interval; the final real-UI run displayed 423 images at a mean
+0.0581-second interval (about 17 fps). Queueing stops after 25 seconds and drains
+outstanding requests, under the existing outer timeout. Normal and early-stop
+cleanup passed; the original snapshot path still succeeds. No kernel change.
+Full-resolution stills, autofocus, video and standard-app integration remain
+pending. See [queued rear preview](../../userspace/camera/README.md#queued-three-buffer-rear-preview--2026-10-05).

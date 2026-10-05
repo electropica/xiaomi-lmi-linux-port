@@ -742,3 +742,43 @@ a queued multi-buffer client is the next diagnostic, not a proven fix yet.
 No kernel rebuild was needed for these changes. Mainline has an SM8250 CAMSS
 implementation, but that alone does not establish IMX686/lmi/Megapixels support
 on this downstream kernel or a ready-to-use replacement kernel.
+
+
+### Queued three-buffer rear preview — 2026-10-05
+
+The operator confirmed automatic preview, but still found the serial path too
+slow. A separate rear-only queued-buffer diagnostic then returned 106 published
+images with a mean 0.0444-second interval, versus about 0.24 seconds for serial
+requests. Device close and release of all three buffers returned zero. The
+operator subsequently confirmed the displayed preview was clearly smoother.
+
+Live mode now maintains three real QTI buffers and stable request/handle storage
+in a ring. Result callbacks match frame number, stream and returned handle.
+Each buffer is reused only after its result is complete, its release fence has
+signalled and closed, and CPU conversion/unlock has finished. The negotiated
+stream must allow at least three buffers. The single-shot and 45-frame serial
+sequence remain separate paths. This follows the HAL request model allowing
+multiple requests in flight; no kernel or firmware change was needed.
+[Android HAL request model](https://source.android.com/docs/core/camera/camera3_requests_hal).
+
+Queueing stops after 25 seconds, then drains already submitted requests. A
+900-frame hard cap, bounded result/fence waits and existing service limits also
+remain in force. In a full final UI run, the publisher delivered 553 images;
+the real active application displayed 423, with a mean displayed interval of
+0.0581 seconds (about 17 frames/s). This is not a controlled lighting benchmark
+or a claim of 30 fps: earlier backend and UI trials used different scenes and
+exposure. The root publisher polls every 20 ms and the GTK UI every 33 ms,
+retaining only the latest image rather than accumulating a frame backlog.
+
+Automatic completion removed all private runtime directories and temporary
+CVP links. Early-stop testing also left neither behind. The original fixed
+snapshot service still saved an orientation-90 frame and ended successfully.
+The complete small userspace source bundle compiled with warnings as errors.
+The existing window automatically restarts preview on reactivation after
+completion. Operator confirmation covers startup and improved smoothness;
+a fresh saved-photo responsiveness confirmation remains pending.
+
+Preview is still bounded, rear-only, 1280 x 720 with portrait pixel rotation.
+The app saves the displayed preview frame, not a full-resolution sensor still.
+Continuous autofocus, landscape auto-rotation, generic-image integration,
+Megapixels/PipeWire compatibility and video recording remain unvalidated.

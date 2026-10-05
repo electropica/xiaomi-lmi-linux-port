@@ -10,7 +10,7 @@
  * https://source.android.com/reference/hal/structcamera3__device__ops
  * Run in the private bionic runtime, with the same property/runtime setup as
  * enumeration and an external timeout. Never run alongside the OEM provider.
- * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure | --ae-precapture | --preview | --preview-sequence | --preview-live]
+ * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure | --ae-precapture | --preview | --preview-sequence | --preview-live | --preview-pipeline]
  */
 #define main enumeration_diagnostic_main
 #include "camera-module-enumerate.c"
@@ -124,6 +124,16 @@ typedef struct camera3_capture_request {
     const char **physcam_id;
     const struct camera_metadata **physcam_settings;
 } camera3_capture_request_t;
+enum { PIPELINE_SLOTS=3 };
+static int preview_pipeline;
+struct pipeline_slot {
+    const void *handle;
+    camera3_stream_buffer_t output;
+    camera3_capture_request_t request;
+    uint32_t frame;
+    int received,error,status,fence;
+};
+static struct pipeline_slot pipeline[PIPELINE_SLOTS];
 static camera3_stream_buffer_t capture_output;
 static camera3_capture_request_t capture_request;
 static pthread_mutex_t capture_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -195,6 +205,23 @@ static void prepare_result_callback(const camera3_callback_ops_t *cb,
     if (!result || !result->output_buffers || result->num_output_buffers > 16)
         return;
     pthread_mutex_lock(&capture_mutex);
+    if (preview_pipeline) {
+        for (unsigned slot=0;slot<PIPELINE_SLOTS;slot++) {
+            struct pipeline_slot *p=&pipeline[slot];
+            if (p->frame!=result->frame_number)continue;
+            for (uint32_t i=0;i<result->num_output_buffers;i++) {
+                const camera3_stream_buffer_t *buffer=result->output_buffers+i;
+                if (buffer->stream!=&probe_blob_stream)continue;
+                if (!p->received) {
+                    p->received=1;p->status=buffer->status;p->fence=buffer->release_fence;
+                    if (!buffer->buffer || *buffer->buffer!=p->handle)p->error=1;
+                }
+            }
+        }
+        pthread_cond_broadcast(&capture_cond);
+        pthread_mutex_unlock(&capture_mutex);
+        return;
+    }
     if (result->frame_number != capture_expected_frame) {
         pthread_mutex_unlock(&capture_mutex);
         return;
@@ -220,6 +247,12 @@ static void prepare_notify_callback(const camera3_callback_ops_t *cb,
                                msg->message.error.frame_number, msg->message.error.error_code);
     if (msg->type == 1) {
         pthread_mutex_lock(&capture_mutex);
+        if (preview_pipeline) {
+            for (unsigned slot=0;slot<PIPELINE_SLOTS;slot++)
+                if (pipeline[slot].frame==msg->message.error.frame_number || msg->message.error.error_code==1)
+                    pipeline[slot].error=1;
+            pthread_cond_broadcast(&capture_cond);
+        }
         if (msg->message.error.frame_number == capture_expected_frame || msg->message.error.error_code == 1) {
             capture_error = 1;
             pthread_cond_broadcast(&capture_cond);
@@ -485,9 +518,74 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
     return output_status ? output_status : (r ? 40 : 0);
 }
 
+static int pipeline_submit(camera3_device_t *camera, struct pipeline_slot *slot,
+                           uint32_t frame,const struct camera_metadata *settings) {
+    pthread_mutex_lock(&capture_mutex);
+    slot->frame=frame;slot->received=slot->error=slot->status=0;slot->fence=-1;
+    pthread_mutex_unlock(&capture_mutex);
+    slot->output=(camera3_stream_buffer_t){.stream=&probe_blob_stream,.buffer=&slot->handle,
+       .status=0,.acquire_fence=-1,.release_fence=-1};
+    slot->request=(camera3_capture_request_t){.frame_number=frame,.settings=settings,
+       .num_output_buffers=1,.output_buffers=&slot->output};
+    return camera->ops->process_capture_request(camera,&slot->request) ? 33 : 0;
+}
+static int capture_pipeline(camera3_device_t *camera,uint32_t count) {
+    if (probe_blob_stream.max_buffers<PIPELINE_SLOTS)return 46;
+    const struct camera_metadata *settings=camera->ops->construct_default_request_settings(camera,1);
+    if (!settings)return 32;
+    for (unsigned i=0;i<PIPELINE_SLOTS;i++)pipeline[i].fence=-1;
+    for (unsigned i=0;i<PIPELINE_SLOTS;i++) {
+        int r=lmi_qti_allocate_yuv(probe_blob_stream.width,probe_blob_stream.height,probe_blob_stream.usage,&pipeline[i].handle);
+        if (r || !pipeline[i].handle)return 31;
+    }
+    for (unsigned i=0;i<PIPELINE_SLOTS;i++) {
+        int r=pipeline_submit(camera,&pipeline[i],i+1,settings);if(r)return r;
+    }
+    double begin=monotonic_seconds();
+    uint32_t last=count;
+    for (uint32_t frame=1;frame<=last;frame++) {
+        struct pipeline_slot *slot=&pipeline[(frame-1)%PIPELINE_SLOTS];
+        struct timespec deadline;clock_gettime(CLOCK_REALTIME,&deadline);deadline.tv_sec+=5;
+        pthread_mutex_lock(&capture_mutex);
+        while (!slot->received && !slot->error) {
+            int r=pthread_cond_timedwait(&capture_cond,&capture_mutex,&deadline);
+            if(r)break;
+        }
+        int received=slot->received,error=slot->error,status=slot->status,fence=slot->fence;
+        if(slot->frame!=frame)error=1;
+        pthread_mutex_unlock(&capture_mutex);
+        if(!received || error || status)return 34;
+        if(fence>=0) {
+            struct pollfd fd={.fd=fence,.events=POLLIN};
+            int r=poll(&fd,1,1000);
+            if(r<=0 || !(fd.revents&POLLIN) || (fd.revents&(POLLERR|POLLNVAL)))return 35;
+            close(fence);slot->fence=-1;
+        }
+        if(frame>=15) {
+            void *address=NULL;
+            int r=lmi_qti_lock_cpu(slot->handle,&address);if(r || !address)return 36;
+            r=lmi_qti_save_ppm(slot->handle,probe_blob_stream.width,probe_blob_stream.height,"/data/vendor/camera/preview-next.ppm");
+            if(!r && rename("/data/vendor/camera/preview-next.ppm","/data/vendor/camera/preview.ppm"))r=39;
+            int unlock=lmi_qti_unlock(slot->handle);
+            if(r || unlock)return r ? r : 40;
+            printf("pipeline_frame=%u elapsed_seconds=%.3f\n",frame,monotonic_seconds()-begin);
+        }
+        // Stop queueing after 25 seconds, then drain the two already queued
+        // requests. A hard frame cap and outer service timeout remain in place.
+        if(last==count && monotonic_seconds()-begin>=25.0) {
+            uint32_t drain=frame+PIPELINE_SLOTS-1;
+            if(drain<last)last=drain;
+        }
+        if(frame+PIPELINE_SLOTS<=last) {
+            int r=pipeline_submit(camera,slot,frame+PIPELINE_SLOTS,settings);if(r)return r;
+        }
+    }
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 5) {
-        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure | --ae-precapture | --preview | --preview-sequence | --preview-live]\n", argv[0]);
+        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure | --ae-precapture | --preview | --preview-sequence | --preview-live | --preview-pipeline]\n", argv[0]);
         diagnostic_exit(2);
     }
     char *end = NULL;
@@ -501,7 +599,8 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--ae-precapture")) ae_precapture=1;
         else if (!strcmp(argv[i], "--preview")) preview_mode=1;
         else if (!strcmp(argv[i], "--preview-sequence")) { preview_mode=1; preview_sequence=1; }
-        else if (!strcmp(argv[i], "--preview-live")) { preview_mode=1; preview_sequence=1; preview_live=1; }
+        else if (!strcmp(argv[i], "--preview-live")) { preview_mode=1; preview_sequence=1; preview_live=1; preview_pipeline=1; }
+        else if (!strcmp(argv[i], "--preview-pipeline")) { preview_mode=1; preview_sequence=1; preview_live=1; preview_pipeline=1; }
         else if (i == 2) path = argv[i];
         else diagnostic_exit(2);
     }
@@ -640,10 +739,11 @@ int main(int argc, char **argv) {
     /* Actual sensor frames condition exposure; an idle pause does not run 3A.
      * Reuse one genuine buffer only after previous result/fence/unlock completed.
      * Save only the last frame, with no intermediate image files. */
-    uint32_t frame_count=preview_live ? 120 : (preview_sequence ? 45 : (preview_mode ? 15 : 5));
+    uint32_t frame_count=preview_pipeline ? 900 : (preview_live ? 120 : (preview_sequence ? 45 : (preview_mode ? 15 : 5)));
     struct timespec sequence_start;
     clock_gettime(CLOCK_MONOTONIC,&sequence_start);
-    for (uint32_t frame_number = 1; frame_number <= frame_count && !settings_status; ++frame_number) {
+    if (preview_pipeline && !settings_status)settings_status=capture_pipeline(camera,frame_count);
+    for (uint32_t frame_number = 1; !preview_pipeline && frame_number <= frame_count && !settings_status; ++frame_number) {
         bool save=preview_live ? frame_number>=15 : (preview_sequence ? (frame_number>=15 && frame_number%3==0) : frame_number==frame_count);
         settings_status = capture_one(camera, (uint32_t)jpeg_max_size, frame_number, save);
         if (save && !settings_status) {
@@ -662,6 +762,14 @@ int main(int argc, char **argv) {
         int release_result = lmi_qti_release(capture_handle);
         printf("qti_release_result=%d\n", release_result);
         if (release_result && !settings_status) settings_status = 41;
+    }
+    if(preview_pipeline)for (unsigned i=0;i<PIPELINE_SLOTS;i++) {
+        if(pipeline[i].fence>=0)close(pipeline[i].fence);
+        if(pipeline[i].handle) {
+            int r=lmi_qti_release(pipeline[i].handle);
+            printf("pipeline_release slot=%u result=%d\n",i,r);
+            if(r && !settings_status)settings_status=41;
+        }
     }
     if (manual_settings && free_metadata) free_metadata(manual_settings);
     diagnostic_exit(settings_status);

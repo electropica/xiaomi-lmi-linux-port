@@ -72,7 +72,7 @@ class Camera(Gtk.Application):
         self.window.present()
         self.window.connect('close-request',self.close_camera)
         if not self.once:
-            GLib.timeout_add(50,self.poll_preview)
+            GLib.timeout_add(33,self.poll_preview)
             self.start_preview(None)
         if self.once:
             GLib.timeout_add(500,lambda: (self.take_photo(None),False)[1])

@@ -52,7 +52,7 @@ try:
       publish('live.json',json.dumps({'sensor_orientation':angle,'sequence':published}).encode())
       previous=stamp
   if child.poll() is not None:break
-  time.sleep(.05)
+  time.sleep(.02)
  if not stopped and (child.poll() is None or child.returncode or not published):
   raise RuntimeError('Bounded rear preview did not complete successfully')
  print('REAR_PREVIEW_FRAMES='+str(published),flush=True)
