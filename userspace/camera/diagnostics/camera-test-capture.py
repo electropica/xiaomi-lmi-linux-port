@@ -7,11 +7,24 @@ mode=parser.add_mutually_exclusive_group()
 mode.add_argument("--manual-exposure",action="store_true")
 mode.add_argument("--ae-precapture",action="store_true")
 mode.add_argument("--preview",action="store_true")
+mode.add_argument("--preview-sequence",action="store_true")
+mode.add_argument("--preview-live",action="store_true")
 args=parser.parse_args()
+def interrupted(signum,frame):
+    signal.signal(signum,signal.SIG_IGN)
+    raise InterruptedError('private runtime interrupted')
+signal.signal(signal.SIGTERM,interrupted)
+signal.signal(signal.SIGINT,interrupted)
 capture_command="kill -STOP $$; exec /private-camera-enumerate 0"
 if args.manual_exposure: capture_command += " --manual-exposure"
 if args.ae_precapture: capture_command += " --ae-precapture"
-if args.preview: capture_command += " --preview"
+if args.preview_live:
+    args.preview=True
+    capture_command += " --preview-live"
+elif args.preview_sequence:
+    args.preview=True
+    capture_command += " --preview-sequence"
+elif args.preview: capture_command += " --preview"
 
 def run(*args):
     return subprocess.run(args,check=True,timeout=5,stdout=subprocess.PIPE,text=True).stdout.strip()

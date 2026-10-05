@@ -650,3 +650,61 @@ Two complete UI trials succeeded in 8.625 and 8.623 seconds, including the smoke
 mode's 0.5-second startup and one-second exit delays. Both saved photographs;
 the service was inactive afterwards and its temporary runtime/firmware links
 were absent. This is still an on-demand, per-shot runtime, not live preview.
+
+
+### Bounded rear live preview — 2026-10-05
+
+The rear client now supports an explicit 45-frame sequence diagnostic and a
+120-frame bounded live mode. Both open and configure camera ID 0 once, reuse the
+same real buffer after result/fence/unlock completion, and save every third
+frame from frame 15 onwards. PPM publication uses a temporary filename followed
+by rename, so a reader never observes a partially written image. The original
+single-shot mode remains available.
+
+The 45-frame hardware trial returned eleven preview images, from 2.805 to
+10.057 seconds after the request loop began: subsequent images were about
+0.725 seconds apart in that dark-scene trial. Device close and buffer release
+returned zero. A separate fixed preview service then published 36 images during
+a 120-frame run; the unprivileged GTK interface decoded successive frames and
+displayed upright portrait images. Automatic completion and repeated operator
+relaunches were observed. This is a slow live view, not video-rate preview.
+
+The normal UI now saves its current rotated preview buffer when the photo
+button is pressed, without a new HAL initialization or privileged capture
+request. Operator confirmation of the save responsiveness remains pending.
+The original end-to-end single-shot smoke mode is retained. The preview stops
+automatically after its bounded run (about 30 seconds in the observed scene);
+use Relancer l’aperçu to resume. Normal window closure requests its fixed stop
+action. The fixed stop action was separately tested while frames were arriving: the
+service became inactive with no private runtime directory or CVP links left.
+The first early-stop trial left an empty host directory; forwarding termination
+and waiting for the private supervisor cleanup corrected that failure.
+
+The preview service exports only an atomic image and minimal orientation/frame
+metadata under /run/lmi-camera, root-owned and group-readable. Vendor logs,
+calibration and runtime state remain private and are removed on completion.
+It has a 48-second runtime limit, six-second stop limit, 640 MiB memory limit,
+no swap and control-group cleanup. It conflicts with the single-shot service.
+The scoped rule permits start/stop of this preview unit only, alongside the
+existing snapshot-start permission. Live-app PID/start-time/UID policy checks
+allowed preview start/stop and required separate authentication for restart
+and another unit's start; no other unit was started.
+
+Sources: [preview publisher](files/lmi-camera-preview-service.py) and
+[bounded unit](files/lmi-camera-preview.service). The explicit installer and
+small userspace builder include these sources. Exact diagnostic-kernel gating,
+rear-only scope and external OEM inputs remain unchanged. This is not generic
+image integration, Megapixels support, calibrated photography, autofocus,
+landscape auto-rotation, or video recording.
+
+
+Application interoperability check: the current Mobian PipeWire graph exposes
+no Video/* nodes, and no v4l2loopback module was found in the installed module
+tree. Megapixels 1.8.3-1 is installed; Snapshot has no candidate in the configured
+APT repositories. These observations do not prove all camera applications are
+unsupported; they show that installing another UI alone does not connect the
+private OEM runtime to a standard camera source. A standards-compatible stream
+bridge remains required before testing another frontend. The operator reported
+that the current live preview is too slow; it remains a diagnostic prototype,
+not an acceptable normal camera implementation. One operator-triggered save was
+observed in the UI log, but perceived save latency is not yet confirmed.

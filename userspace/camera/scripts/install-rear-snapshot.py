@@ -39,21 +39,25 @@ wrapper=(source/'camera-test-rear-preview.py').read_text().replace('/tmp/camera-
 ast.parse(wrapper)
 install('camera-test-rear-preview.py',base/'camera-test-rear-preview.py',text=wrapper)
 install('lmi-camera-capture-service.py',base/'capture-service.py')
+install('lmi-camera-preview-service.py',base/'preview-service.py')
 install('lmi-camera.py','/usr/local/bin/lmi-camera',0o755)
 install('lmi-camera.desktop','/usr/local/share/applications/lmi-camera.desktop')
 group=grp.getgrgid(account.pw_gid).gr_name
 assert re.fullmatch(r'[a-z_][a-z0-9_-]{0,30}',group)
 service=(source/'lmi-camera-capture.service').read_text().replace('__CAMERA_GROUP__',group)
 install('lmi-camera-capture.service','/etc/systemd/system/lmi-camera-capture.service',text=service)
+preview=(source/'lmi-camera-preview.service').read_text().replace('__CAMERA_GROUP__',group)
+install('lmi-camera-preview.service','/etc/systemd/system/lmi-camera-preview.service',text=preview)
 state=Path('/run/lmi-camera')
 state.mkdir(mode=0o750,exist_ok=True)
 assert not state.is_symlink() and state.stat().st_uid==0
 os.chown(state,0,account.pw_gid);os.chmod(state,0o750)
-rule='''// Only one fixed rear snapshot service; never arbitrary root commands.
+rule='''// Fixed rear snapshot/preview actions only; never arbitrary root commands.
 polkit.addRule(function(action, subject) {
     if (action.id == "org.freedesktop.systemd1.manage-units" &&
-        action.lookup("unit") == "lmi-camera-capture.service" &&
-        action.lookup("verb") == "start" &&
+        ((action.lookup("unit") == "lmi-camera-capture.service" && action.lookup("verb") == "start") ||
+         (action.lookup("unit") == "lmi-camera-preview.service" &&
+          (action.lookup("verb") == "start" || action.lookup("verb") == "stop"))) &&
         subject.user == "%s" && subject.local && subject.active) {
         return polkit.Result.YES;
     }
@@ -63,5 +67,5 @@ path=Path('/etc/polkit-1/rules.d/49-lmi-camera.rules')
 assert not path.is_symlink()
 path.write_text(rule);os.chown(path,0,0);os.chmod(path,0o644)
 subprocess.run(['systemctl','daemon-reload'],check=True,timeout=5)
-subprocess.run(['systemd-analyze','verify','/etc/systemd/system/lmi-camera-capture.service'],check=True,timeout=10)
+subprocess.run(['systemd-analyze','verify','/etc/systemd/system/lmi-camera-capture.service','/etc/systemd/system/lmi-camera-preview.service'],check=True,timeout=10)
 print('LMI_REAR_SNAPSHOT_INSTALLED_OPT_IN_NO_BOOT_ENABLE')

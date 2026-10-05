@@ -1014,3 +1014,14 @@ reduced one full UI trial from 14.610 to 10.048 seconds. Replacing fixed
 startup/result pauses then yielded two successful trials at 8.625 and 8.623
 seconds, including smoke-mode startup/exit delays. Per-shot initialization
 and live preview remain unresolved. See [application and validation scope](../../userspace/camera/README.md#opt-in-rear-snapshot-application--2026-10-05).
+
+
+A bounded rear live-preview prototype now displays successive rotated frames
+without reopening the sensor. A 45-frame diagnostic returned eleven images
+about 0.725 seconds apart after warmup; a separate 120-frame preview published
+36 frames and stopped automatically. The normal photo button saves the displayed
+frame directly; operator save-responsiveness confirmation remains pending.
+The fixed early-stop action now leaves no runtime directory or CVP links.
+The operator reports that preview is too slow for normal use; no PipeWire
+video source is currently exposed for an alternative standard frontend. Preview is slow and limited to about 30 seconds per launch.
+See [bounded rear live preview](../../userspace/camera/README.md#bounded-rear-live-preview--2026-10-05).

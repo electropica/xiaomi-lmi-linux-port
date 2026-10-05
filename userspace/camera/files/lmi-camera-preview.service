@@ -1,0 +1,20 @@
+[Unit]
+Description=Bounded lmi rear camera live preview
+Conflicts=lmi-camera-capture.service
+
+[Service]
+Type=simple
+Group=__CAMERA_GROUP__
+RuntimeDirectory=lmi-camera
+RuntimeDirectoryMode=0750
+RuntimeDirectoryPreserve=yes
+ExecStart=/usr/bin/python3 /usr/local/lib/lmi-camera/preview-service.py
+Environment=PATH=/usr/sbin:/usr/bin:/sbin:/bin
+UnsetEnvironment=PYTHONPATH PYTHONHOME LD_PRELOAD LD_LIBRARY_PATH
+MemoryMax=640M
+MemorySwapMax=0
+TasksMax=128
+RuntimeMaxSec=48
+TimeoutStopSec=6
+KillMode=control-group
+UMask=0077

@@ -19,6 +19,8 @@ mkdir -m 0700 -- "$output"
 cp -- "$camera_dir"/files/lmi-camera.py \
     "$camera_dir"/files/lmi-camera-capture-service.py \
     "$camera_dir"/files/lmi-camera-capture.service \
+    "$camera_dir"/files/lmi-camera-preview-service.py \
+    "$camera_dir"/files/lmi-camera-preview.service \
     "$camera_dir"/files/lmi-camera.desktop \
     "$script_dir/install-rear-snapshot.py" \
     "$camera_dir"/diagnostics/camera-test-capture.py \

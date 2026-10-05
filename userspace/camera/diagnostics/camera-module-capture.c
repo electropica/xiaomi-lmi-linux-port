@@ -10,7 +10,7 @@
  * https://source.android.com/reference/hal/structcamera3__device__ops
  * Run in the private bionic runtime, with the same property/runtime setup as
  * enumeration and an external timeout. Never run alongside the OEM provider.
- * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure | --ae-precapture | --preview]
+ * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure | --ae-precapture | --preview | --preview-sequence | --preview-live]
  */
 #define main enumeration_diagnostic_main
 #include "camera-module-enumerate.c"
@@ -414,7 +414,8 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
     int output_status=0;
     if (preview_mode) {
         if(save_image) {
-            output_status=lmi_qti_save_ppm(capture_handle,probe_blob_stream.width,probe_blob_stream.height,"/data/vendor/camera/preview.ppm");
+            output_status=lmi_qti_save_ppm(capture_handle,probe_blob_stream.width,probe_blob_stream.height,"/data/vendor/camera/preview-next.ppm");
+            if (!output_status && rename("/data/vendor/camera/preview-next.ppm","/data/vendor/camera/preview.ppm")) output_status=39;
             printf("preview_image_result=%d\n",output_status);
         } else printf("warmup_frame_discarded=%u\n",frame_number);
     } else {
@@ -475,19 +476,21 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
 
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 5) {
-        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure | --ae-precapture | --preview]\n", argv[0]);
+        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure | --ae-precapture | --preview | --preview-sequence | --preview-live]\n", argv[0]);
         diagnostic_exit(2);
     }
     char *end = NULL;
     long camera_id = strtol(argv[1], &end, 10);
     if (!end || *end || camera_id < 0 || camera_id > 15) diagnostic_exit(2);
     const char *path = "/vendor/lib64/hw/camera.qcom.so";
-    int do_configure = 1, manual_exposure = 0, ae_precapture = 0;
+    int do_configure = 1, manual_exposure = 0, ae_precapture = 0, preview_sequence = 0, preview_live = 0;
     for (int i = 2; i < argc; ++i) {
         if (!strcmp(argv[i], "--configure")) do_configure = 1;
         else if (!strcmp(argv[i], "--manual-exposure")) manual_exposure = 1;
         else if (!strcmp(argv[i], "--ae-precapture")) ae_precapture=1;
         else if (!strcmp(argv[i], "--preview")) preview_mode=1;
+        else if (!strcmp(argv[i], "--preview-sequence")) { preview_mode=1; preview_sequence=1; }
+        else if (!strcmp(argv[i], "--preview-live")) { preview_mode=1; preview_sequence=1; preview_live=1; }
         else if (i == 2) path = argv[i];
         else diagnostic_exit(2);
     }
@@ -529,7 +532,14 @@ int main(int argc, char **argv) {
     camera_metadata_ro_entry_t entry = {0};
     int orientation_status=find_entry(info.static_camera_characteristics,ACAMERA_SENSOR_ORIENTATION,&entry);
     if (!orientation_status && entry.type==1 && entry.count==1 && entry.data.i32)
-        printf("sensor_orientation_degrees=%d\n",entry.data.i32[0]);
+        { printf("sensor_orientation_degrees=%d\n",entry.data.i32[0]);
+          if (preview_live) {
+              FILE *orientation=fopen("/data/vendor/camera/sensor-orientation","w");
+              if (!orientation) diagnostic_exit(39);
+              fprintf(orientation,"%d\n",entry.data.i32[0]);
+              if (fclose(orientation)) diagnostic_exit(39);
+          }
+        }
     memset(&entry,0,sizeof(entry));
     int metadata_result = find_entry(info.static_camera_characteristics, PROBE_ANDROID_JPEG_MAX_SIZE, &entry);
     int32_t jpeg_max_size = 0;
@@ -619,9 +629,18 @@ int main(int argc, char **argv) {
     /* Actual sensor frames condition exposure; an idle pause does not run 3A.
      * Reuse one genuine buffer only after previous result/fence/unlock completed.
      * Save only the last frame, with no intermediate image files. */
-    uint32_t frame_count=preview_mode ? 15 : 5;
-    for (uint32_t frame_number = 1; frame_number <= frame_count && !settings_status; ++frame_number)
-        settings_status = capture_one(camera, (uint32_t)jpeg_max_size, frame_number, frame_number == frame_count);
+    uint32_t frame_count=preview_live ? 120 : (preview_sequence ? 45 : (preview_mode ? 15 : 5));
+    struct timespec sequence_start;
+    clock_gettime(CLOCK_MONOTONIC,&sequence_start);
+    for (uint32_t frame_number = 1; frame_number <= frame_count && !settings_status; ++frame_number) {
+        bool save=preview_sequence ? (frame_number>=15 && frame_number%3==0) : frame_number==frame_count;
+        settings_status = capture_one(camera, (uint32_t)jpeg_max_size, frame_number, save);
+        if (save && !settings_status) {
+            struct timespec now; clock_gettime(CLOCK_MONOTONIC,&now);
+            double elapsed=(now.tv_sec-sequence_start.tv_sec)+(now.tv_nsec-sequence_start.tv_nsec)/1e9;
+            printf("preview_sequence_frame=%u elapsed_seconds=%.3f\n",frame_number,elapsed);
+        }
+    }
     if (device->close) {
         printf("stage=device_close\n"); int close_result = device->close(device);
         printf("device_close_result=%d\n", close_result);

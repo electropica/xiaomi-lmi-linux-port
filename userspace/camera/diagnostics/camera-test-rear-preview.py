@@ -1,6 +1,8 @@
 # Explicit rear-only diagnostic; use a bounded control-group service.
 # Existing OEM firmware stays external. Ordinary exit/handled signals clean links.
-import os, re, signal, struct, subprocess
+import os, re, signal, struct, subprocess, sys
+assert sys.argv[1:] in ([],["--sequence"],["--live"])
+mode={"--sequence":"--preview-sequence","--live":"--preview-live"}.get(sys.argv[1] if sys.argv[1:] else "", "--preview")
 os.umask(0o077)
 from pathlib import Path
 
@@ -24,8 +26,14 @@ for i in range(phnum):
 print('CVP_ELF_SEGMENTS_MATCH '+str(required),flush=True)
 assert parts and all(not os.path.lexists(target/p.name) for p in parts)
 created=[]
+process=None
 def interrupted(signum,frame):
-    raise RuntimeError('bounded test interrupted '+str(signum))
+    signal.signal(signum,signal.SIG_IGN)
+    if process is not None and process.poll() is None:
+        process.terminate()
+        try:process.wait(timeout=5)
+        except subprocess.TimeoutExpired:process.kill();process.wait(timeout=2)
+    raise InterruptedError('bounded test interrupted '+str(signum))
 signal.signal(signal.SIGTERM,interrupted)
 signal.signal(signal.SIGINT,interrupted)
 try:
@@ -34,10 +42,11 @@ try:
         link.symlink_to(part)
         created.append((link,str(part)))
     print('TEMPORARY_HOST_CVP_LINKS '+str(len(created)),flush=True)
-    result=subprocess.run(['unshare','--mount','--net','--propagation','private','python3','/tmp/camera-test-capture.py','--preview'],timeout=44)
+    process=subprocess.Popen(['unshare','--mount','--net','--propagation','private','python3','/tmp/camera-test-capture.py',mode])
+    result=process.wait(timeout=44)
 finally:
     for link,destination in reversed(created):
         assert link.is_symlink() and os.readlink(link)==destination
         link.unlink()
     print('TEMPORARY_HOST_CVP_LINKS_REMOVED '+str(len(created)),flush=True)
-raise SystemExit(result.returncode)
+raise SystemExit(result)
