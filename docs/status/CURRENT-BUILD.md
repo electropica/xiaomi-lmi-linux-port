@@ -270,3 +270,11 @@ The timer test was removed; no rebuilt image is claimed. The phone clock was
 aligned from Windows and saved using the existing seed service, because NTP
 had no Internet route. Wi-Fi and battery settings were unchanged. See the
 [validation and remaining limits](../validation/lmi-clock-feedback-2026-10-04.md).
+
+
+Rear camera diagnostic update (2026-10-05): manual exposure (50 ms, ISO 800)
+produced a visible scene, while the same-scene automatic request remained
+nearly black despite AE CONVERGED. This is a private HAL3 diagnostic milestone,
+not a working Megapixels application, camera-preview integration or generic
+image change. The source-only opt-in and validation limits are in the
+[camera record](../../userspace/camera/README.md#manual-exposure-versus-automatic--2026-10-05).

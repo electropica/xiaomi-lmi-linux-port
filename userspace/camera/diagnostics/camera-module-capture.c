@@ -10,7 +10,7 @@
  * https://source.android.com/reference/hal/structcamera3__device__ops
  * Run in the private bionic runtime, with the same property/runtime setup as
  * enumeration and an external timeout. Never run alongside the OEM provider.
- * Usage: camera-module-prepare CAMERA_ID [camera.qcom.so path] [--configure]
+ * Usage: camera-module-capture CAMERA_ID [camera.qcom.so path] [--configure] [--manual-exposure]
  */
 #define main enumeration_diagnostic_main
 #include "camera-module-enumerate.c"
@@ -29,6 +29,8 @@ extern int lmi_qti_release(const void *handle);
 extern int lmi_qti_lock_cpu(const void *handle, void **address);
 extern int lmi_qti_unlock(const void *handle);
 static const void *capture_handle;
+static struct camera_metadata *manual_settings;
+static void (*free_metadata)(struct camera_metadata *);
 
 /* Public metadata ABI and tags:
  * https://android.googlesource.com/platform/system/media/+/refs/heads/main/camera/include/system/camera_metadata.h
@@ -270,6 +272,56 @@ _Static_assert(sizeof(hw_device_t) == 64, "AOSP ILP32 device ABI");
 _Static_assert(offsetof(camera3_device_t, ops) == 64, "AOSP ILP32 camera ops ABI");
 #endif
 
+
+/* Mutable copy only; the HAL owns immutable default request metadata.
+ * AOSP camera_metadata.h allocation/append/update ABI. */
+struct camera_metadata_entry;
+static int prepare_manual_settings(void *library, const struct camera_metadata *defaults,
+                                   const struct camera_metadata *characteristics) {
+    struct camera_metadata *(*allocate)(size_t,size_t) = dlsym(library,"allocate_camera_metadata");
+    size_t (*entries)(const struct camera_metadata *) = dlsym(library,"get_camera_metadata_entry_count");
+    size_t (*bytes)(const struct camera_metadata *) = dlsym(library,"get_camera_metadata_data_count");
+    int (*append)(struct camera_metadata *,const struct camera_metadata *) = dlsym(library,"append_camera_metadata");
+    int (*add)(struct camera_metadata *,uint32_t,const void *,size_t) = dlsym(library,"add_camera_metadata_entry");
+    int (*update)(struct camera_metadata *,size_t,const void *,size_t,struct camera_metadata_entry *) = dlsym(library,"update_camera_metadata_entry");
+    int (*validate)(const struct camera_metadata *,const size_t *) = dlsym(library,"validate_camera_metadata_structure");
+    free_metadata = dlsym(library,"free_camera_metadata");
+    if (!allocate || !entries || !bytes || !append || !add || !update || !validate || !free_metadata || !defaults)
+        return 42;
+    camera_metadata_ro_entry_t e = {0};
+    if (result_find_entry(characteristics,ACAMERA_REQUEST_AVAILABLE_CAPABILITIES,&e) || e.type!=0 || e.count>256) return 43;
+    bool supported=false;
+    for (size_t i=0;i<e.count;i++) if(e.data.u8[i]==ACAMERA_REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR) supported=true;
+    if (!supported) return 43;
+    const int64_t exposure=50000000, duration=66666667;
+    const int32_t sensitivity=800;
+    if(result_find_entry(characteristics,ACAMERA_SENSOR_INFO_EXPOSURE_TIME_RANGE,&e) || e.type!=3 || e.count!=2 || exposure<e.data.i64[0] || exposure>e.data.i64[1])return 43;
+    if(result_find_entry(characteristics,ACAMERA_SENSOR_INFO_SENSITIVITY_RANGE,&e) || e.type!=1 || e.count!=2 || sensitivity<e.data.i32[0] || sensitivity>e.data.i32[1])return 43;
+    if(result_find_entry(characteristics,ACAMERA_SENSOR_INFO_MAX_FRAME_DURATION,&e) || e.type!=3 || e.count!=1 || duration>e.data.i64[0])return 43;
+    const uint8_t ae=ACAMERA_CONTROL_AE_MODE_OFF;
+    const uint32_t tags[]={ACAMERA_CONTROL_AE_MODE,ACAMERA_SENSOR_EXPOSURE_TIME,ACAMERA_SENSOR_SENSITIVITY,ACAMERA_SENSOR_FRAME_DURATION};
+    const void *values[]={&ae,&exposure,&sensitivity,&duration};
+    if(result_find_entry(characteristics,ACAMERA_REQUEST_AVAILABLE_REQUEST_KEYS,&e) || e.type!=1 || e.count>16384)return 43;
+    for(size_t j=0;j<4;j++) {
+        bool present=false;
+        for(size_t i=0;i<e.count;i++)if((uint32_t)e.data.i32[i]==tags[j])present=true;
+        if(!present)return 43;
+    }
+    if(validate(defaults,NULL))return 44;
+    size_t count=entries(defaults), data=bytes(defaults);
+    if(count>16384 || data>1048576)return 44;
+    manual_settings=allocate(count+4,data+256);
+    if(!manual_settings || append(manual_settings,defaults))return 44;
+    for(size_t i=0;i<4;i++) {
+        int found=result_find_entry(manual_settings,tags[i],&e);
+        int status=found ? add(manual_settings,tags[i],values[i],1) : update(manual_settings,e.index,values[i],1,NULL);
+        if(status)return 44;
+    }
+    if(validate(manual_settings,NULL))return 44;
+    printf("requested_manual ae_mode=OFF exposure_ns=%lld sensitivity=%d frame_duration_ns=%lld\n",(long long)exposure,sensitivity,(long long)duration);
+    return 0;
+}
+
 static int capture_one(camera3_device_t *camera, uint32_t capacity,
                        uint32_t frame_number, bool save_image) {
     if (!camera->ops->process_capture_request || capacity < 12) return 30;
@@ -280,7 +332,8 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
         printf("qti_allocate_result=%d handle_present=%d\n", r, capture_handle != NULL);
         if (r || !capture_handle) return 31;
     }
-    const struct camera_metadata *settings = camera->ops->construct_default_request_settings(camera, 2);
+    const struct camera_metadata *settings = manual_settings ? manual_settings :
+        camera->ops->construct_default_request_settings(camera, 2);
     if (!settings) return 32;
     capture_output = (camera3_stream_buffer_t){ .stream = &probe_blob_stream,
         .buffer = &capture_handle, .status = 0, .acquire_fence = -1, .release_fence = -1 };
@@ -378,20 +431,22 @@ static int capture_one(camera3_device_t *camera, uint32_t capacity,
 }
 
 int main(int argc, char **argv) {
-    if (argc < 2 || argc > 4) {
-        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure]\n", argv[0]);
+    if (argc < 2 || argc > 5) {
+        fprintf(stderr, "usage: %s CAMERA_ID [camera HAL .so] [--configure] [--manual-exposure]\n", argv[0]);
         diagnostic_exit(2);
     }
     char *end = NULL;
     long camera_id = strtol(argv[1], &end, 10);
     if (!end || *end || camera_id < 0 || camera_id > 15) diagnostic_exit(2);
     const char *path = "/vendor/lib64/hw/camera.qcom.so";
-    int do_configure = 1;
+    int do_configure = 1, manual_exposure = 0;
     for (int i = 2; i < argc; ++i) {
         if (!strcmp(argv[i], "--configure")) do_configure = 1;
+        else if (!strcmp(argv[i], "--manual-exposure")) manual_exposure = 1;
         else if (i == 2) path = argv[i];
         else diagnostic_exit(2);
     }
+    if (manual_exposure && camera_id != 0) diagnostic_exit(2);
     setvbuf(stdout, NULL, _IONBF, 0);
     printf("stage=dlopen path=%s\n", path);
     void *handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
@@ -484,7 +539,11 @@ int main(int argc, char **argv) {
     const struct camera_metadata *still_settings =
         camera->ops->construct_default_request_settings(camera, 2);
     printf("still_capture_defaults_present=%d\n", still_settings != NULL);
-    int settings_status = still_settings != NULL ? 0 : 20;
+    int settings_status = still_settings ? 0 : 20;
+    if (manual_exposure) {
+        settings_status = prepare_manual_settings(metadata_handle, still_settings, info.static_camera_characteristics);
+        printf("manual_settings_result=%d\n", settings_status);
+    }
     if (do_configure) {
         if (!chosen_width || !chosen_height || jpeg_max_size <= 0 || !camera->ops->configure_streams)
             diagnostic_exit(24);
@@ -520,5 +579,6 @@ int main(int argc, char **argv) {
         printf("qti_release_result=%d\n", release_result);
         if (release_result && !settings_status) settings_status = 41;
     }
+    if (manual_settings && free_metadata) free_metadata(manual_settings);
     diagnostic_exit(settings_status);
 }

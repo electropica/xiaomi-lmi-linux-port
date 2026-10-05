@@ -401,3 +401,40 @@ request AE OFF with 50 ms / ISO 800, only after checking frame-duration and
 request-key constraints. This would distinguish unchanged/ignored sensor
 settings from an automatic-3A issue; it is proposed, not yet tested.
 The private metadata runtime was removed successfully.
+
+## Manual exposure versus automatic — 2026-10-05
+
+Two finite rear-ID-0 runs used the same phone orientation toward an illuminated
+scene. The manual run requested AE OFF, 50,000,000 ns, ISO 800 and frame duration
+66,666,667 ns after checking MANUAL_SENSOR, ranges and advertised request keys.
+It copied immutable HAL defaults into a separately allocated metadata packet;
+no vendor-owned metadata was edited. All five result frames reported 50 ms /
+ISO 800 and AE state INACTIVE. The saved fifth-frame 320 x 240 JPEG was 10,468
+bytes and visibly depicted the ceiling and lamp, with highlight clipping.
+
+The paired automatic run reported 7,067,946 ns and ISO 50 for all five frames,
+with AE CONVERGED on frames four/five. Its fifth JPEG was 4,752 bytes and nearly
+black on the same scene. Thus usable scene pixels and manual exposure application
+are demonstrated through the existing sensor/ISP/JPEG path. Automatic exposure
+or its application in this still-only client remains faulty; the pair does not
+identify whether the defect is CamX 3A tuning, client request/session setup or
+sensor-mode gain handling. A working automatic preview/3A session remains a gate.
+
+Both runtime units completed successfully in about ten seconds, with zero
+capture errors, OK buffers and successful lock/unlock/close/release. Private
+mounts and loop devices were removed. No front/pop-up camera was opened.
+Photos, firmware, binary diagnostics and raw OEM logs remain outside Git.
+
+The shared capture diagnostic now supports explicit `--manual-exposure` for
+rear ID 0 only, retaining automatic mode by default. The supervisor passes
+that opt-in and uses a fresh private output directory/log instead of overwriting
+the previous run. It is a diagnostic, not a Megapixels integration or an
+automatic camera fix. Metadata allocation/append/update ABI is from
+[AOSP camera_metadata.h](https://android.googlesource.com/platform/system/media/+/refs/heads/main/camera/include/system/camera_metadata.h).
+
+The consolidated opt-in source compiled with NDK r27d under
+`-Wall -Wextra -Werror`; its Python supervisor passed syntax parsing.
+A subsequent hardware run of that consolidated `--manual-exposure` option
+returned all five frames at the requested values, an 8,450-byte JPEG,
+successful buffer/device cleanup and unit exit 0 in 10.18 seconds.
+This is separate from the initial matched-scene pair described above.

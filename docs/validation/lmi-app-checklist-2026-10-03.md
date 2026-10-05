@@ -992,3 +992,10 @@ an OK buffer and a decodable JPEG via the verified Qualcomm allocation
 bridge. The first image was nearly black; scene/exposure remains unvalidated.
 This does not make Megapixels functional. Sources and limits are documented
 in [first rear JPEG diagnostic](../../userspace/camera/README.md#first-rear-jpeg-diagnostic--2026-10-04).
+
+
+Rear camera update (2026-10-05): explicit 50 ms / ISO 800 capture produced a
+visible rear-camera scene. A matched automatic capture stayed nearly black
+despite AE CONVERGED. Manual sensor/ISP/JPEG operation is demonstrated;
+automatic exposure, preview and Megapixels integration remain unresolved.
+See [paired exposure diagnostic](../../userspace/camera/README.md#manual-exposure-versus-automatic--2026-10-05).

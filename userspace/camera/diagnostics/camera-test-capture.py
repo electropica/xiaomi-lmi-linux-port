@@ -1,5 +1,11 @@
 import errno, fcntl, json, os, resource, signal, struct, subprocess, tempfile, time
 from pathlib import Path
+import argparse
+parser=argparse.ArgumentParser()
+parser.add_argument("--manual-exposure",action="store_true")
+args=parser.parse_args()
+capture_command="kill -STOP $$; exec /private-camera-enumerate 0"
+if args.manual_exposure: capture_command += " --manual-exposure"
 
 def run(*args):
     return subprocess.run(args,check=True,timeout=5,stdout=subprocess.PIPE,text=True).stdout.strip()
@@ -43,8 +49,8 @@ try:
     firmware.touch()
     run('mount','--bind','/vendor/firmware/CAMERA_ICP.elf',str(firmware)); mounts.append(firmware)
     run('mount','-o','remount,bind,ro',str(firmware))
-    output=Path('/tmp/lmi-camera-capture-20261004')
-    output.mkdir(mode=0o700,exist_ok=False)
+    output=Path(tempfile.mkdtemp(prefix='lmi-camera-capture-',dir='/tmp'))
+    print('PRIVATE_CAPTURE_DIRECTORY '+str(output),flush=True)
     destination=root/'data/vendor/camera'
     run('mount','--bind',str(output),str(destination)); mounts.append(destination)
     bridge=root/'liblmi_qti_bridge.so'; bridge.touch()
@@ -135,7 +141,7 @@ try:
         assert 'android.hidl.manager@1.2::IServiceManager/default' in client_output
         assert 'android.hidl.token@1.0::ITokenManager/default' in client_output
         print('CLIENT_SERVICE_QUERY_WORKS_DEBUG_PID_METADATA_WARNING',flush=True)
-    provider=subprocess.Popen(['/system/bin/sh','-c','kill -STOP $$; exec /private-camera-enumerate 0'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True,preexec_fn=limits,env={'PATH':'/system/bin','ANDROID_ROOT':'/system','ANDROID_DATA':'/data','LD_PRELOAD':'/private-context-test.so','LMI_PRIVATE_CONTEXT_ACTIVE':'1','LMI_PRIVATE_BINDER_NO_SECCTX':'1','LMI_PRIVATE_HIDL_READY_CHECKED':'1','LD_LIBRARY_PATH':'/','LMI_PRIVATE_BOOT_HARDWARE':'qcom','LMI_PRIVATE_BOOT_PLATFORM':'kona'})
+    provider=subprocess.Popen(['/system/bin/sh','-c',capture_command],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True,preexec_fn=limits,env={'PATH':'/system/bin','ANDROID_ROOT':'/system','ANDROID_DATA':'/data','LD_PRELOAD':'/private-context-test.so','LMI_PRIVATE_CONTEXT_ACTIVE':'1','LMI_PRIVATE_BINDER_NO_SECCTX':'1','LMI_PRIVATE_HIDL_READY_CHECKED':'1','LD_LIBRARY_PATH':'/','LMI_PRIVATE_BOOT_HARDWARE':'qcom','LMI_PRIVATE_BOOT_PLATFORM':'kona'})
     deadline=time.monotonic()+1
     while time.monotonic()<deadline:
         status_line=next(line for line in Path('/proc',str(provider.pid),'status').read_text().splitlines() if line.startswith('State:'))
@@ -160,7 +166,7 @@ try:
         provider_output,_=provider.communicate(timeout=2)
         provider_status='running until bounded enumeration stop'
     print('PROVIDER_ENUMERATION_RESULT '+str(provider_status)+'\n'+provider_output[:6000]+'\nPROVIDER_LOG_TAIL\n'+provider_output[-6000:],flush=True)
-    Path('/tmp/lmi-camera-module-full.log').write_text(provider_output)
+    (output/'capture.log').write_text(provider_output)
     try:
         output,_=child.communicate(timeout=4)
         status=child.returncode
