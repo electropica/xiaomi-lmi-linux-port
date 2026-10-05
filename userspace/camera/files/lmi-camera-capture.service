@@ -1,0 +1,19 @@
+[Unit]
+Description=Bounded lmi rear camera snapshot
+
+[Service]
+Type=oneshot
+Group=__CAMERA_GROUP__
+RuntimeDirectory=lmi-camera
+RuntimeDirectoryMode=0750
+RuntimeDirectoryPreserve=yes
+ExecStart=/usr/bin/python3 /usr/local/lib/lmi-camera/capture-service.py
+Environment=PATH=/usr/sbin:/usr/bin:/sbin:/bin
+UnsetEnvironment=PYTHONPATH PYTHONHOME LD_PRELOAD LD_LIBRARY_PATH
+MemoryMax=640M
+MemorySwapMax=0
+TasksMax=128
+TimeoutStartSec=50
+TimeoutStopSec=5
+KillMode=control-group
+UMask=0077

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Lmi Camera
+Name[fr]=Appareil photo lmi
+Comment=Take a rear-camera snapshot
+Comment[fr]=Prendre une photo avec la caméra arrière
+Exec=/usr/local/bin/lmi-camera
+Icon=camera-photo-symbolic
+Terminal=false
+Categories=Graphics;Photography;
+X-Purism-FormFactor=Workstation;Mobile;

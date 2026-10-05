@@ -1000,6 +1000,12 @@ interfaces and temporary host-visible OEM firmware segments resolve the prior
 configuration failure; three fifteen-frame runs completed, including the final
 consolidated sources. A privately inspected image shows the scene correctly.
 The helper cleans up its links/runtime and is not installed persistently.
-An interactive photo/preview application and Megapixels integration remain
-pending; video, focus quality and generic-image support are not validated.
+Live preview and Megapixels integration remain pending; video, focus quality and generic-image support are not validated.
 See [automatic rear preview capture](../../userspace/camera/README.md#automatic-rear-preview-capture--2026-10-05).
+
+An opt-in GTK rear snapshot app is now installed on this exact diagnostic boot.
+Two automated end-to-end app runs saved user-owned 1280 x 720 PNGs in Images/
+Camera. The app runs unprivileged; a fixed demand-started backend service has
+bounded execution and a narrowly scoped local-user rule. No generic-image or
+Megapixels support is claimed. The app is open for operator button/save/open
+validation, which is still pending. See [application and validation scope](../../userspace/camera/README.md#opt-in-rear-snapshot-application--2026-10-05).

@@ -1,10 +1,14 @@
 # Camera userspace status
 
-Megapixels is installed in the validated userspace, but its required
-`qcom,kona-mtp.ini` configuration is absent and the downstream camera media
-pipeline was not demonstrated. Sensor identities remain suggestions rather
-than confirmed node-to-device mappings. No speculative Megapixels
-configuration is included. See the
+Current diagnostic-boot result: automatic rear 720p capture works through the
+[opt-in snapshot app](#opt-in-rear-snapshot-application--2026-10-05).
+Operator button/open validation is pending. Megapixels remains incompatible.
+The following dated sections preserve the earlier blockers and their resolution.
+
+Megapixels is installed, but its required `qcom,kona-mtp.ini` is absent
+and its native media API is incompatible with this downstream stack. The
+rear IMX686 is now confirmed through the isolated OEM backend below. No
+speculative Megapixels configuration is included. See the
 [`camera blocker validation`](../../docs/validation/archi-validation-02-camera-blocker-2026-09-27.md).
 
 ## Current functional recheck — 2026-10-04
@@ -552,3 +556,64 @@ backend to the photo application's capture/preview flow, retaining isolation,
 resource cleanup and rear-only selection. It does not validate video recording,
 other camera IDs, flash photography, continuous AF or a generic image recipe.
 Public layout reference: [Qualcomm gralloc YUV layout source](https://android.googlesource.com/platform/hardware/qcom/sm7250/display/+/refs/heads/android12-s2-release/gralloc/gr_utils.cpp).
+
+## Opt-in rear snapshot application — 2026-10-05
+
+A small native GTK4 application now invokes the validated automatic rear
+capture backend. It runs as the normal desktop user and provides "Prendre
+une photo" and "Ouvrir la photo", displays the last saved image, and retains
+normal window close controls. It has no text-entry widget. The UI uses the
+existing Cairo renderer fallback and keeps work off the GTK event thread.
+This is a snapshot application, not a live viewfinder; exposure/focus/zoom,
+other lenses, video recording and flash photography are not app features.
+Megapixels itself remains incompatible with this downstream camera API.
+
+The privileged backend is a single fixed oneshot service. Installed helpers
+and binaries are root-owned at fixed paths, outside `/tmp`; the service accepts
+no caller-selected filename, command, library or camera ID. The dedicated
+Polkit rule permits only starting that unit from the selected active local
+user. Direct policy inspection using the live Mobian app's PID/start time/UID
+allowed that action; restart and another unit's start instead required separate
+authentication. No other service was started by that permission test.
+An earlier nonprivileged pkcheck probe could not pass action details under
+this Polkit version; it was not counted as a policy result.
+
+The service has a 50-second TimeoutStartSec, no swap, 640 MiB memory limit,
+128-task limit and control-group cleanup. RuntimeMaxSec was removed after
+systemd correctly reported it ineffective for a oneshot unit. The backend
+has its own shorter subprocess bounds. It validates the final PPM dimensions,
+header and size, atomically publishes a group-readable mode-0640 intermediate
+under `/run/lmi-camera`, and removes the newly created private diagnostic output
+directory. That intermediate is volatile and replaced on the next shot.
+The UI saves a distinct mode-0600 PNG in the user's XDG Pictures/Camera folder,
+owned by that user; firmware, calibration and logs are not exported to Images.
+The service is demand-started, not enabled at boot, and checks the exact
+validated kernel release again on every invocation.
+
+Two end-to-end UI trials launched under Mobian completed in 13.330 and 13.329
+seconds, printed PHOTO_SAVED and exited successfully. Their saved PNGs were
+939,274 and 941,222 bytes; decoding validated 1280 x 720. The latter used the
+final volatile intermediate and a no-password service invocation. The fixed
+service then reported success/inactive, with no CVP links left behind.
+These checks exercise the same capture handler as the button, but operator
+touch/save/open validation remains pending. Screen-copy inspection while the
+display was off failed and is not counted as visual UI validation. There was no default PNG handler in the session, so the Open button now
+invokes the existing validated `lmi-photos` launcher directly with the saved
+filename, rather than relying on MIME association. Operator opening validation
+remains pending. The UI smoke-test mode also propagates capture failure as a
+nonzero exit instead of equating clean window shutdown with a saved photo.
+The app has been left open for the operator check; no camera job is running at idle.
+
+Sources: [GTK interface](files/lmi-camera.py),
+[fixed service helper](files/lmi-camera-capture-service.py),
+[unit](files/lmi-camera-capture.service),
+[small diagnostic builder](scripts/build-rear-snapshot.sh), and
+[explicit installer](scripts/install-rear-snapshot.py).
+The builder requires an NDK toolchain bin directory, matching external Android
+libc++.so and a fresh output directory. It compiles three small userspace
+objects with warnings as errors and copies only project-authored helpers/UI;
+no proprietary library/firmware is included in the output bundle or Git.
+The build recipe was executed successfully on the host. The installer requires
+an explicit user and diagnostic-boot opt-in and checks the exact measured
+kernel release before deploying. It does not change the generic Mobian image
+or the optional-app installer. A portable camera recipe needs later work.
