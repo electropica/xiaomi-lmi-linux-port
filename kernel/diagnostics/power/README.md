@@ -332,3 +332,34 @@ The running kernel text itself was not hashed. USB SSH works; Charging, USB
 online, capacity 100% and temperature 26.7 C were observed. UPower and the CPU
 idle service are active; RTC wakealarm is empty. Tactile suspend/resume and
 consumption comparison remain pending. No persistent flashing is claimed.
+
+
+### Touch notification candidate: first unplugged trial
+
+The first unplugged candidate trial on 2026-10-06 completed with 181.407 seconds
+asleep and 0.676 seconds awake over 182.083 seconds. Independent L3 statistics
+recorded one success lasting 181.425 seconds. RTC IRQ 323 caused the planned
+wake; no early wake or nonzero device-PM callback result was observed. All
+11,702 trace entries were retained with zero buffer loss. The transient service
+finished successfully, its trace instance was removed and its owned RTC alarm
+was cleared. Charging resumed after USB reconnection; CPU idle remains enabled.
+
+The touch log now reports `FTS do suspend work by event POWER DOWN`, followed
+by `fts_ts_suspend`, IRQ disable and a disabled-gesture branch before machine
+suspend. The later `fts_ts_resume` resets the controller, reads chip ID 0x54/0x52,
+restores its state and enables the IRQ. This contrasts with the earlier trial's
+resume/Already-in-awake-state sequence and confirms that the candidate changes
+the observed touch suspend path. Log lines tagged Error that explicitly say
+register-write success are not evidence of failed writes. The operator subsequently confirmed
+normal touch response after unlocking, opening an application and scrolling.
+This validates one wake cycle, not repeated-cycle or gesture/fingerprint coverage.
+
+Charge counter fell from 2,774,941 to 2,770,200 uAh while USB was offline,
+giving 93.735 mA over the measured interval. Capacity remained 100%; initial
+instantaneous current was 145.019 mA and final current 92.773 mA. The earlier
+valid trace trial estimated 95.629 mA. This approximately 1.89 mA difference
+(about 2%) is a single, non-interleaved comparison across a reboot and different
+gauge state, not proof of an autonomy improvement. Wi-Fi conditions, battery
+temperature and gauge settling were not controlled as matched variables.
+The approximately 94-96 mA residual current remains unresolved. No production
+patch or permanent boot was installed, and raw logs remain private.

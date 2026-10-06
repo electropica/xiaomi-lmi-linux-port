@@ -412,6 +412,8 @@ diagnostic record for measurement limits and the invalidated earlier trial.
 
 A separate touch shutdown-notification candidate has now been manually built
 and temporarily started. Its live build banner and IKCONFIG match the verified
-candidate; USB SSH and charging work. Touch-sleep behavior and any autonomy
-improvement are not yet validated. The power diagnostic record gives its exact
+candidate; USB SSH and charging work. The first unplugged trial now shows
+the expected touch suspend/resume path and 181 seconds of deep sleep. The operator
+confirmed normal touch response after wake; an autonomy improvement is not
+established. This covers one suspend/resume cycle only. The power diagnostic record gives its exact
 identity and experimental scope; this is not a production boot update.
