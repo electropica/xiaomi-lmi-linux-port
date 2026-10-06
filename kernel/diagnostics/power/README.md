@@ -131,3 +131,43 @@ The directory `lpm_stats` cannot be read as a scalar file: future collection
 must read its specific read-only `suspend`/`stats` children, with compact parsed
 output. Raw logs remain private. After operator reconnection, status was
 Charging with USB online and no remaining RTC alarm.
+
+
+## Read-only consumer follow-up - 2026-10-06
+
+Wi-Fi runtime diagnostics report SUSPENDED, PM usage count zero,
+prevent_suspend_cnt zero, 1,663 runtime_get and 1,663 runtime_put, and zero
+suspend/runtime_get errors at the inspected instant. The radio interface was
+unassociated. This does not establish minimum radio power throughout the trial,
+but no outstanding host runtime-PM reference was found.
+
+Source `drivers/pci/controller/pci-msm.c:msm_pcie_drv_suspend` delegates link
+management through RPMsg, disables non-suppressible clocks and removes PCIe
+vreg/bandwidth votes. It does not take the same GDSC-off path as ordinary
+suspend. A retained PCIe GDSC use count under DRV therefore is not sufficient
+proof of failed sleep. CNSS `DISABLE_DRV` is enum bit 9 and is read from the
+control-params mask, but its debug control is unavailable because
+`CONFIG_CNSS2_DEBUG=n`. No quirk mask, PCIe config or driver binding was changed.
+Do not imitate a missing control with direct register/GPIO writes.
+
+UFS reported runtime suspended with `power/control=auto`, clock gating enabled
+and a 50 ms gating delay. Runtime/system PM levels are both 3: in this source
+that means device SLEEP plus link HIBERN8, rather than device POWERDOWN/link OFF.
+Its controller snapshot showed no outstanding requests/tasks or recorded UIC/
+lane/data-link errors. The live DT contains neither rpm-level nor spm-level,
+so the driver's defaults apply. None of the 12 inspected OEM-style overlays
+contains those properties; the uninspected OEM base DT prevents claiming full
+OEM equivalence. No storage power level was changed.
+
+The TFA9874 debug state is Stopped and firmware state Ok. Uncached regmap reads
+(`REGCACHE_NONE` in this driver) found control 0x00=0x0011: PWDN=1, AMPE=0,
+DCA configuration=1. Status reads found SWS=0, AMPS=0, CLKS=0, MANSTATE=0 and
+DCMODE=0. A configured DCA bit is not evidence that the converter is running.
+These awake idle snapshots corroborate an amplifier in powerdown; they do not
+measure current in the external always-on boost supply. Only debug reads were
+performed, with no sound, microphone capture, reset or register writes.
+
+The residual current is still unexplained. Retained shared supply use counts,
+static DDR residency fields and subsystem ONLINE/OFFLINING labels must not be
+turned into a hardware-fault diagnosis without meaningful residency/current
+measurements. No new power fix or production integration is claimed.

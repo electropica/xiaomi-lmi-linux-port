@@ -179,3 +179,11 @@ consumption remains approximately 96.4 mA; there is no demonstrated autonomy
 improvement. USB power votes drop after unplugging, while PCIe/shared rails
 require interpretation rather than forced shutdown. The transient trial ended,
 its RTC alarm was cleared, and charging resumed after reconnection.
+
+
+Follow-up found Wi-Fi runtime PM references balanced, UFS in runtime suspend
+with automatic clock gating, and the TFA9874 amplifier's hardware powerdown bit
+set with its output stage inactive. PCIe's DRV firmware delegation explains why
+an outstanding GDSC software use count alone is not proof of a leak. These
+read-only observations narrow the investigation but do not fix or explain the
+approximately 96 mA residual current; details are in the power diagnostic record.
