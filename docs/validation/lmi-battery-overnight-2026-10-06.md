@@ -22,3 +22,20 @@ The fuel gauge reports charge_full=2,845,000 uAh against a design value of
 4,700,000 uAh (about 60.5%). This is a reported estimate, not an independent
 battery-health measurement. Current charging status agrees between sysfs and
 UPower. No settings were changed and no camera or microphone was started.
+
+## Wake-source correlation
+
+Read-only follow-up again identifies IRQ 438, msoc-delta, for the repeated
+night wakes; the final 05:17 wake instead names the power-button IRQ. An
+inspected wake interval shows WLAN resume and a scan after the gauge wake,
+then suspend approximately 16 seconds later. Notification screen-wake triggers
+remain an empty list. This is consistent with the source review in the
+[previous night's record](battery-overnight-2026-10-05.md): the gauge delta
+interrupt can follow consumption and is not proof of its root cause. No gauge
+interrupt, thermal control or charge protection was disabled.
+
+The persisted 3.69 points/hour interval is similar to the previous night's
+approximately 3.67 points/hour. Conditions were not controlled closely enough
+to quantify a small change, and no autonomy improvement is established. The
+earlier approximately 94 mA Wi-Fi-disabled deep-suspend result remains the
+reference for investigating residual hardware power, separately from wake cost.
