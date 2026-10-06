@@ -168,8 +168,8 @@ Qualcomm idle statistics required by this source when debugfs is enabled, with
 optional Bluetooth/block debug interfaces disabled. The operator subsequently built the separate diagnostic boot successfully
 (54,652,928 bytes; identity in the linked record). Temporary hardware startup is confirmed by the matching live IKCONFIG hash
 and readable clock/regulator debugfs interfaces. USB SSH and existing CPU-idle
-service work. Suspend/current comparison remains pending; no hardware policy
-or durable boot was changed.
+service work. Short suspend/current results are documented below; no hardware
+power policy or durable boot was changed.
 Residual deep-suspend consumption remains unresolved.
 
 
@@ -187,3 +187,11 @@ set with its output stage inactive. PCIe's DRV firmware delegation explains why
 an outstanding GDSC software use count alone is not proof of a leak. These
 read-only observations narrow the investigation but do not fix or explain the
 approximately 96 mA residual current; details are in the power diagnostic record.
+
+
+The revised trace trial confirms 181.26 seconds of sleep with a complete,
+loss-free trace and approximately 95.63 mA gauge-derived consumption. Display,
+UFS and PCIe clock-disable transitions precede machine suspend, with no nonzero
+device-PM callback result. This narrows the diagnosis but provides no autonomy
+fix. The transient collector and RTC alarm are cleaned up; see the linked power
+diagnostic record for measurement limits and the invalidated earlier trial.

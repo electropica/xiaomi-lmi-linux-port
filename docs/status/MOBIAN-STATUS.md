@@ -1032,8 +1032,8 @@ Qualcomm idle statistics required by this source when debugfs is enabled, with
 optional Bluetooth/block debug interfaces disabled. The operator subsequently built the separate diagnostic boot successfully
 (54,652,928 bytes; identity in the linked record). Temporary hardware startup is confirmed by the matching live IKCONFIG hash
 and readable clock/regulator debugfs interfaces. USB SSH and existing CPU-idle
-service work. Suspend/current comparison remains pending; no hardware policy
-or durable boot was changed.
+service work. Short suspend/current results are documented below; no hardware
+power policy or durable boot was changed.
 Residual deep-suspend consumption remains unresolved.
 
 
@@ -1043,3 +1043,11 @@ consumption remains approximately 96.4 mA; there is no demonstrated autonomy
 improvement. USB power votes drop after unplugging, while PCIe/shared rails
 require interpretation rather than forced shutdown. The transient trial ended,
 its RTC alarm was cleared, and charging resumed after reconnection.
+
+
+The revised trace trial confirms 181.26 seconds of sleep with a complete,
+loss-free trace and approximately 95.63 mA gauge-derived consumption. Display,
+UFS and PCIe clock-disable transitions precede machine suspend, with no nonzero
+device-PM callback result. This narrows the diagnosis but provides no autonomy
+fix. The transient collector and RTC alarm are cleaned up; see the linked power
+diagnostic record for measurement limits and the invalidated earlier trial.

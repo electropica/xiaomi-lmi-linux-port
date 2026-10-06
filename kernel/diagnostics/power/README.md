@@ -215,4 +215,34 @@ events, uses 512 KiB per CPU, and stops on a wake occurring more than two second
 before the planned endpoint. The collector requests initial suspend itself;
 the operator should unplug without pressing the power key or touching the
 screen. This is a protocol correction, not a production power fix. Preparation
-has passed Python syntax checks; hardware validation remains pending.
+passed Python syntax checks; the following trial validates the revised protocol.
+
+
+## Complete suspend trace - 2026-10-06
+
+The revised three-minute unplugged trial completed with 181.262 seconds asleep
+and 0.678 seconds awake over 181.940 seconds, approximately 99.63% suspended.
+Qualcomm L3 suspend statistics independently increased by one success and
+181.281 seconds. The wake reason was the planned RTC alarm (IRQ 323), with no
+early-wake abort. The gauge-derived interval estimate was 95.63 mA, consistent
+with the earlier approximately 96.4 mA result; a short same-gauge estimate does
+not establish improved autonomy or independent current accuracy.
+
+All 11,704 trace entries were retained, with zero per-CPU overruns and dropped
+events. The initial marker, suspend phases and final marker are present. Trace
+timestamps stop advancing across machine suspend in this capture; use the
+boottime-minus-monotonic difference and L3 counters for sleep duration instead
+of subtracting the identical machine-suspend trace timestamps.
+
+Before machine suspend, the last observed transitions for the PCIe, display and
+UFS clocks were disable-complete events. Display panel VCI, PM8150 L14, UFS PHY
+GDSC and its L9/L17 supplies also had disable-complete events. No nonzero
+device-PM callback result was found. These events confirm driver transitions,
+not the physical current or voltage of every rail. Firmware-owned PCIe power,
+shared supplies and external boost current remain unresolved; no hardware
+power-policy change is justified by this trace alone.
+
+The transient service is inactive with Result=success, its private trace instance
+is removed and its owned RTC alarm is empty. Battery status returned to Charging
+after reconnection. No camera, microphone or playback was started. No production
+power fix or overnight alarm was installed. Raw logs remain outside Git.
