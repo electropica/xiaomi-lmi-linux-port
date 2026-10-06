@@ -1,26 +1,35 @@
 # Power-domain observation candidate
 
-The running D-repro configuration disables `CONFIG_DEBUG_FS`. This prevents
+The running D-repro configuration disables `CONFIG_DEBUG_FS`, preventing
 inspection of downstream clock and regulator debug summaries. The preparer
-creates a **private, unvalidated** reset-GPIO diagnostic boot recipe with just
-`CONFIG_DEBUG_FS=n -> y`; it does not change the canonical locked configuration
-or either canonical audio constructor. The historical source patches, audio
-instrumentation and functional reset-GPIO correction remain in the variant.
+creates a private reset-GPIO diagnostic boot recipe without changing the canonical
+locked configuration or either canonical audio constructor. Historical source
+patches, audio instrumentation and functional reset-GPIO correction are retained.
 No boost/GPIO, regulator policy, gauge calibration or thermal setting is changed.
 
-Debugfs also exposes writable controls: enabling it is not a read-only security
-boundary. The intended protocol reads only `clk/clk_summary` and
-`regulator/regulator_summary`, with no writes to debugfs controls. Reads may
-access hardware and affect the measured state. Awake snapshots after resume
-are not proof of domain residency during deep suspend. Diagnostic and original
-boots must be compared under the same conditions before interpreting current.
+## Reviewed Kconfig delta
 
-The preparer verifies the exact original recipe and config hashes, refuses an
-existing output directory and retains all original boot/input/toolchain checks.
-The derived builder still requires byte-identical configuration after
-`olddefconfig`; if enabling debugfs selects additional defaults, it fails closed.
-Review the resulting delta rather than bypassing that check. No Kconfig check,
-Image build, DTB build or boot validation has yet been performed for this candidate.
+The [config patch](power-debugfs-config.patch) enables debugfs. In this source,
+`MSM_PM` selects `MSM_IDLE_STATS` when debugfs is enabled; therefore the candidate
+also enables Qualcomm idle statistics with the four existing default bucket
+values. Other newly visible optional debug features, including block and
+Bluetooth debugfs, are explicitly disabled. Existing functional options stay
+unchanged. Enabling idle statistics may add observation overhead; this is a
+diagnostic kernel, not a claimed power-saving change.
+
+The preparer verifies the original constructor/config and reviewed delta hashes,
+refuses an existing generation directory and retains original input/toolchain
+checks. The derived builder still requires byte-identical configuration after
+`olddefconfig`. Unexpected changes stop the check rather than relaxing its gates.
+
+Debugfs exposes writable controls: enabling it is not a read-only security
+boundary. The intended protocol reads only `clk/clk_summary` and
+`regulator/regulator_summary`, with no writes to debugfs controls. Source review
+found that clock summary traversal takes transient bus votes when the clock
+provider implements them; regulator summary reads voltage/current information.
+Snapshots can affect measured state and awake snapshots after resume do not prove
+domain residency during deep suspend. Compare diagnostic and original boots
+under the same conditions before interpreting current.
 
 ## Manual stages
 
@@ -30,10 +39,10 @@ Prepare a new private directory; this stage writes text files only.
 
 ```sh
 python3 kernel/diagnostics/power/prepare-debugfs-variant.py \
-  --output-directory "$PWD/kernel/diagnostics/audio/state-power-debugfs-candidate"
+  --output-directory "$PWD/kernel/diagnostics/audio/state-power-debugfs-reviewed"
 ```
 
-Use the external inputs and native Alpine toolchain described in the
+Use external inputs and the native Alpine toolchain described in the
 [existing audio recipe](../audio/README.md). Set `AUDIO_DIAG_ROOT` to the generated
 directory and `AUDIO_DIAG_PROJECT_ROOT` to the canonical repository root; set
 input/source/tool paths explicitly. Invoke the generated reset-GPIO constructor
@@ -41,15 +50,18 @@ first with `--preflight`, then `--check-only`. The latter compiles only Kconfig
 host utilities/probes, not a kernel. A heavy build without an option is a
 separate manual user operation after those checks pass. It produces
 `D-repro-01-power-debugfs-reset-gpio-diagnostic-boot.img`, preserving the ramdisk
-and boot metadata. This candidate has not been built or booted and must not
-replace the durable boot. No flash or phone operation is included.
+and boot metadata. The candidate must not replace the durable boot. No flash or
+phone operation is included.
 
-## Host validation - 2026-10-06
+## Validation - 2026-10-06
 
-Private generation succeeded. Validation checked the exact single-symbol config
-delta, every reset-variant transformation anchor, Bash syntax of both generated
-constructors and the final derived reset constructor, preserved config/output
-gates, refusal to overwrite an existing generation directory, and new local
-links. Candidate config SHA-256 is
-`8ad8736c2e96b7d7edfd4ff53ea4d18c8b5836113384b3804eed672d6a553eda`.
-External-input preflight, native Kconfig and hardware validation remain pending.
+Initial generation passed exact one-symbol delta, Bash syntax, reset-variant
+transformation anchors, preserved output/config gates and overwrite refusal.
+External-input preflight then passed all checks, including strict sequential
+patch application. Native dynamic/static toolchain probes passed, but initial
+`olddefconfig` rejected the one-symbol configuration because newly visible defaults
+changed it. The reviewed config patch includes the obligatory Qualcomm statistics
+and disables optional Bluetooth/block defaults. Its candidate SHA-256 is
+`c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78`.
+The second native check passed both link probes and byte-identical
+`olddefconfig` validation. No kernel Image or DTB was built or booted.

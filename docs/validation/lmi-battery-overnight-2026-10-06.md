@@ -93,6 +93,10 @@ No profile was loaded, changed or published as binary data.
 
 A separate [debugfs configuration preparer](../../kernel/diagnostics/power/README.md)
 now preserves the reset-GPIO audio recipe while preparing power-domain observation.
-It changes only the debugfs configuration bit and retains strict post-Kconfig
-identity checks. Preparation is not Kconfig, build or hardware validation, and
-no additional power saving is claimed.
+It enables debugfs and the Qualcomm idle statistics obligatorily selected by
+MSM_PM in this source, while keeping optional Bluetooth/block debug interfaces
+disabled. Strict post-Kconfig identity checks remain. Initial preflight passed;
+the initial one-symbol Kconfig candidate was rejected for extra defaults.
+The reviewed candidate passes both native link probes and byte-identical
+olddefconfig validation; no kernel has been built
+or booted and no additional power saving is claimed.

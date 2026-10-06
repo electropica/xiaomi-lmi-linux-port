@@ -2,6 +2,8 @@
 """Prepare a private debugfs boot recipe; never compile or contact hardware."""
 import argparse
 import hashlib
+import subprocess
+import tempfile
 from pathlib import Path
 
 BASE_SHA = "c92da38b49b345ad996799af4d6de7319071f2822ff321affc763fb50241afdc"
@@ -38,8 +40,15 @@ def main():
     config = (root / "kernel/configs/dv43-qca6390-v2.config").read_bytes()
     if digest(base) != BASE_SHA or digest(config) != CONFIG_SHA:
         raise SystemExit("Locked base recipe/config identity mismatch")
-    candidate = replace_once(config.decode(), "# CONFIG_DEBUG_FS is not set\n",
-                             "CONFIG_DEBUG_FS=y\n").encode()
+    delta = (Path(__file__).resolve().parent / "power-debugfs-config.patch").read_bytes()
+    if digest(delta) != "97aa555bc14351f5e820eec053680299c5108c097ee905c550a6e0fac56cfca9":
+        raise SystemExit("Reviewed power config delta identity mismatch")
+    with tempfile.TemporaryDirectory(prefix="lmi-power-config-") as staging:
+        target = Path(staging) / "candidate.config"
+        target.write_bytes(config)
+        subprocess.run(["patch", "--batch", "--fuzz=0", "--silent", str(target)],
+                       input=delta, check=True)
+        candidate = target.read_bytes()
     cfgsha = digest(candidate)
     derived = replace_once(base.decode(), "EXPECTED_CONFIG=" + CONFIG_SHA,
                            "EXPECTED_CONFIG=" + cfgsha)
@@ -69,7 +78,7 @@ def main():
         digest(data) + "  " + name + "\n" for name, data in files.items()))
     print("PREPARED_ONLY=" + str(out))
     print("CONFIG_SHA256=" + cfgsha)
-    print("DELTA=CONFIG_DEBUG_FS:n->y; no build, Kconfig run or hardware action")
+    print("DELTA=reviewed debugfs + required MSM idle statistics; no build or hardware action")
 
 
 if __name__ == "__main__":

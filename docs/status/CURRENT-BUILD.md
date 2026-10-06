@@ -384,6 +384,8 @@ for distinct operator, hardware and synthetic results.
 The active 416-byte J11 battery-profile payload matches OEM-style DTBO entry 7
 exactly. This does not independently validate battery health or gauge calibration.
 A separate [power debugfs candidate](../../kernel/diagnostics/power/README.md) is prepared for inspecting
-clock/regulator summaries, retaining the reset-GPIO audio correction. It is not
-Kconfig-validated, built or booted; no hardware policy or durable boot was changed.
+clock/regulator summaries, retaining the reset-GPIO audio correction. External-input preflight and native Kconfig checks pass. It includes the
+Qualcomm idle statistics required by this source when debugfs is enabled, with
+optional Bluetooth/block debug interfaces disabled. No kernel was built or
+booted; no hardware policy or durable boot was changed.
 Residual deep-suspend consumption remains unresolved.
