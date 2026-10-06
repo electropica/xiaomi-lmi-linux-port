@@ -1,0 +1,22 @@
+--- a/techpack/display/msm/dsi/dsi_drm.c
++++ b/techpack/display/msm/dsi/dsi_drm.c
+@@ -323,6 +323,9 @@
+ 
+ 	if (mi_cfg->fod_dimlayer_enabled) {
+ 		power_mode = sde_connector_get_lp(c_bridge->display->drm_conn);
++		/* A normal LP property must not report ON during bridge shutdown. */
++		if (power_mode == MI_DRM_BLANK_UNBLANK)
++			power_mode = MI_DRM_BLANK_POWERDOWN;
+ 	} else {
+ 		power_mode = MI_DRM_BLANK_POWERDOWN;
+ 	}
+@@ -372,6 +375,9 @@
+ 
+ 	if (mi_cfg->fod_dimlayer_enabled) {
+ 		power_mode = sde_connector_get_lp(c_bridge->display->drm_conn);
++		/* A normal LP property must not report ON during bridge shutdown. */
++		if (power_mode == MI_DRM_BLANK_UNBLANK)
++			power_mode = MI_DRM_BLANK_POWERDOWN;
+ 	} else {
+ 		power_mode = MI_DRM_BLANK_POWERDOWN;
+ 	}

@@ -246,3 +246,59 @@ The transient service is inactive with Result=success, its private trace instanc
 is removed and its owned RTC alarm is empty. Battery status returned to Charging
 after reconnection. No camera, microphone or playback was started. No production
 power fix or overnight alarm was installed. Raw logs remain outside Git.
+
+
+## Touchscreen shutdown notification candidate - 2026-10-06
+
+The active touch device is I2C 4-0038 (`fts_ts`), with
+CONFIG_TOUCHSCREEN_FTS_MI=y and CONFIG_TOUCHSCREEN_FTS_FOD=y. A read of its
+gesture-mode attribute reports Off and register 0xD0=0. That awake read does not
+establish the controller's mode during suspend.
+
+In the complete trial's kernel-time window, the touch notifier runs during
+panel shutdown, followed by `FTS do resume work` and `Already in awake state`
+immediately before PM suspend entry. The retained boot log contains no
+`FTS do suspend` or `fts_ts_suspend` message. Source
+`drivers/input/touchscreen/focaltech_touch_mi/focaltech_core.c` distinguishes
+display-driven `fts_ts_suspend` (which handles gestures/FOD or writes the sleep
+mode) from `fts_pm_suspend` (which sets the device-PM flag, enables IRQ wake and
+resets a completion, without commanding controller sleep). A zero device-PM
+callback result therefore does not prove that this controller entered sleep.
+
+The source's `techpack/display/msm/dsi/dsi_drm.c` uses
+`sde_connector_get_lp()` for shutdown notifications when FOD dimlayer is
+enabled. `sde_connector_get_lp()` returns CONNECTOR_PROP_LP, not the complete
+DPMS state, and can return zero. Zero is MI_DRM_BLANK_UNBLANK, which sends the
+touch driver down its resume path even during bridge shutdown. The active
+panel selected by cmdline is j11_38_08_0a_fhd_cmd, and its live DT contains
+the FOD dimlayer property. This source mechanism is consistent with the logs;
+the runtime `mi_cfg` flag and LP value at shutdown have not been directly
+instrumented. Attempts to query connector properties with the available
+modetest failed to open the device, so they provide no LP-value evidence.
+
+The source-only candidate
+`kernel/patches/diagnostics/lmi-dsi-powerdown-notifier-unvalidated.patch`
+maps UNBLANK to POWERDOWN only within bridge disable/post-disable notifications.
+It preserves LP1/LP2, the startup path, touch gesture/FOD policy, supply controls
+and all charge/gauge settings. It is outside the production patch list. The
+patch passes `git apply --check` on exact a5b3099017ae source, without changing
+that source tree. This is not yet a compiled or hardware-validated fix and does
+not establish that the tactile accounts for the residual current.
+
+`prepare-touch-notifier-variant.py` derives a private boot constructor from the
+reviewed power debugfs/reset-GPIO recipe, locks the candidate patch hash, checks
+its target against the verified source archive and adds it to strict sequential
+patch validation/application. The prepared private state is
+`kernel/diagnostics/audio/state-power-touch-notifier-reviewed/`.
+Shell/Python syntax and external-input/patch-sequence preflight pass. The first
+preparation encountered an ambiguous transformation anchor and was rejected;
+the corrected preparation uses unique anchors and keeps that failed state.
+No kernel compilation, source-tree patch application, boot or flash occurred.
+
+The manual build will produce a separate
+`D-repro-01-power-touch-notifier-diagnostic-boot.img`; retain the current boot
+for recovery and use temporary Fastboot boot only. Required hardware checks
+are touch suspend/resume logging, usable touch after wake, display/USB/charging,
+and matched unplugged deep-suspend current measurements. Check wake/gesture
+behavior separately before any production integration. A current reduction
+must be measured rather than inferred from corrected notifications.
