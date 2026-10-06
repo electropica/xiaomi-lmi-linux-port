@@ -25,7 +25,7 @@ def interrupted(signum,frame):raise SystemExit('Trial interrupted')
 signal.signal(signal.SIGTERM,interrupted)
 signal.signal(signal.SIGINT,interrupted)
 os.umask(0o077)
-out=Path('/var/tmp/lmi-gauge-resuspend-20261006.jsonl')
+out=Path('/var/tmp/lmi-gauge-resuspend-20261006-corrected.jsonl')
 f=out.open('x')
 fds=[]
 for p in Path('/sys/class/input').glob('event*/device/name'):
