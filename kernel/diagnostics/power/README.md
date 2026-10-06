@@ -318,3 +318,17 @@ reset-GPIO-corrected DTB. The temporary boot is 54,652,928 bytes with SHA-256
 A separate Windows Downloads copy was verified with the same identity.
 No binary or raw build output is tracked. Hardware boot, tactile suspend/resume
 behavior and any current improvement remain unvalidated. No flashing occurred.
+
+
+### Touch notification candidate: temporary hardware startup
+
+After the operator's reported restart, /proc/version exactly matches the banner
+embedded in the verified candidate Image: 4.19.325-cip128-st12-perf-ga5b3099017ae-dirty,
+build #3 SMP PREEMPT, 2026-10-06 18:01:14 UTC. Live decompressed IKCONFIG SHA-256
+matches c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78.
+This operational build identity distinguishes it from the earlier #3 build at
+16:41:37 UTC; configuration alone would not distinguish the source-only patch.
+The running kernel text itself was not hashed. USB SSH works; Charging, USB
+online, capacity 100% and temperature 26.7 C were observed. UPower and the CPU
+idle service are active; RTC wakealarm is empty. Tactile suspend/resume and
+consumption comparison remain pending. No persistent flashing is claimed.

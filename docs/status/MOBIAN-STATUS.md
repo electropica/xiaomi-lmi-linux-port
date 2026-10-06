@@ -1051,3 +1051,10 @@ UFS and PCIe clock-disable transitions precede machine suspend, with no nonzero
 device-PM callback result. This narrows the diagnosis but provides no autonomy
 fix. The transient collector and RTC alarm are cleaned up; see the linked power
 diagnostic record for measurement limits and the invalidated earlier trial.
+
+
+A separate touch shutdown-notification candidate has now been manually built
+and temporarily started. Its live build banner and IKCONFIG match the verified
+candidate; USB SSH and charging work. Touch-sleep behavior and any autonomy
+improvement are not yet validated. The power diagnostic record gives its exact
+identity and experimental scope; this is not a production boot update.
