@@ -171,3 +171,22 @@ The residual current is still unexplained. Retained shared supply use counts,
 static DDR residency fields and subsystem ONLINE/OFFLINING labels must not be
 turned into a hardware-fault diagnosis without meaningful residency/current
 measurements. No new power fix or production integration is claimed.
+
+
+## DDR observation limits and next isolation step
+
+Source review of `drivers/soc/qcom/ddr_stats.c:ddr_stats_show` confirms that it
+maps the configured shared-memory table, validates its magic/count and reads
+entries; it sends no refresh request to firmware. The observed residency table
+sums to about 19.6 seconds even though an independently measured suspend alone
+lasted 181 seconds. It therefore is not a complete live residency record for
+this experiment. Static low-power counters must not be treated as evidence
+that DDR failed to sleep. The firmware table's update policy remains unknown.
+
+If the operator is available, a longer fully powered-off, unplugged interval
+can test whether similar reported charge loss persists without Mobian running.
+Record pre-shutdown and earliest post-startup gauge data and exact elapsed time,
+and account for shutdown/startup consumption, gauge state changes and any USB
+charging before comparing. A percentage-only off/on comparison is not independent
+current measurement and cannot alone assign a hardware or kernel fault. No
+shutdown is scheduled or performed without the operator's readiness.

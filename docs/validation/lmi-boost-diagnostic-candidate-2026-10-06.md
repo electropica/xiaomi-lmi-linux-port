@@ -70,3 +70,15 @@ enabled (link-control mask 2) at both root port and endpoint, with all four
 L1SS enable bits set (mask 15). These charging-time configuration bits show
 that low-power features are enabled, not proof of residence in those states
 while unplugged. No PCI register, link policy or Wi-Fi state was changed.
+
+
+## Remaining boundary after debugfs inspection
+
+The additional debugfs boot confirms that the TFA9874's own powerdown and
+output-stage state are inactive at awake idle. This does not establish the
+external load or quiescent current of PM8150B GPIO-5's boost converter.
+OEM-style overlays already contain the same always-on declaration and shared
+haptic GPIO, so no Linux-only wiring difference has been found. The stock
+base-DT artifact is not available at the previously named active-home paths;
+no source or backup was deleted by this follow-up. The essential-load
+prerequisite remains unresolved, and the candidate was not applied or booted.
