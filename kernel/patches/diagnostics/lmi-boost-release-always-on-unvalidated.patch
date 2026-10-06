@@ -1,0 +1,11 @@
+--- a/arch/arm64/boot/dts/vendor/qcom/xiaomi-sm8250-common.dtsi
++++ b/arch/arm64/boot/dts/vendor/qcom/xiaomi-sm8250-common.dtsi
+@@ -114,6 +114,7 @@
+ 		regulator-name = "vdd_boost_vreg";
+ 		startup-delay-us = <4000>;
+ 		enable-active-high;
+-		regulator-always-on;
++		/* Diagnostic only: permit unused-regulator cleanup. */
++		regulator-boot-on;
+ 		gpio = <&pm8150b_gpios 5 0>;
+ 	 };
