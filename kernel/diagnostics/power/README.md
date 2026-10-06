@@ -79,3 +79,23 @@ reset-GPIO-corrected DTB. The resulting temporary diagnostic boot has size
 A separate Windows Downloads copy was verified with the same hash. Neither
 binary nor raw build logs are tracked. No boot, flash or hardware validation
 has occurred yet; a successful build does not establish power improvement.
+
+
+## Hardware startup - 2026-10-06
+
+After the operator's temporary boot and USB reconnect, SSH reported
+`4.19.325-cip128-st12-perf-ga5b3099017ae-dirty`, build timestamp
+October 6 16:41:37 UTC. The live IKCONFIG SHA-256 matches the reviewed candidate
+`c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78`.
+Debugfs is mounted and both clock/regulator summaries are readable.
+CPU idle remains `sleep_disabled=N`; UPower and the existing CPU-idle opt-in
+service are active. Initial state was USB online, 97% charging, 27 C.
+The anticipated `/proc/msm_pm_stats` interface is absent, but debugfs
+`lpm_stats` is present. Interface names alone are not proof of counters' validity.
+
+An awake, USB-connected snapshot shows zero camera/GPU regulator use counts,
+active primary USB and PCIe-0 domain use counts, and the known always-on boost.
+These are software use counts under connected conditions, not direct power
+measurements or residency during suspend. No regulator/clock debugfs control
+was written. A separate bounded unplug/suspend observation is being prepared;
+no consumption improvement or diagnostic-kernel long-run validation is claimed.

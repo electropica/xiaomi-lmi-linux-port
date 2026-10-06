@@ -166,6 +166,8 @@ A separate [power debugfs candidate](../../kernel/diagnostics/power/README.md) i
 clock/regulator summaries, retaining the reset-GPIO audio correction. External-input preflight and native Kconfig checks pass. It includes the
 Qualcomm idle statistics required by this source when debugfs is enabled, with
 optional Bluetooth/block debug interfaces disabled. The operator subsequently built the separate diagnostic boot successfully
-(54,652,928 bytes; identity in the linked record). Hardware boot validation
-is pending; no hardware policy or durable boot was changed.
+(54,652,928 bytes; identity in the linked record). Temporary hardware startup is confirmed by the matching live IKCONFIG hash
+and readable clock/regulator debugfs interfaces. USB SSH and existing CPU-idle
+service work. Suspend/current comparison remains pending; no hardware policy
+or durable boot was changed.
 Residual deep-suspend consumption remains unresolved.
