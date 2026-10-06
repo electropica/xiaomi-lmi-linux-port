@@ -64,4 +64,18 @@ changed it. The reviewed config patch includes the obligatory Qualcomm statistic
 and disables optional Bluetooth/block defaults. Its candidate SHA-256 is
 `c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78`.
 The second native check passed both link probes and byte-identical
-`olddefconfig` validation. No kernel Image or DTB was built or booted.
+`olddefconfig` validation. The later manual build completed successfully; see below. Hardware boot
+validation remains pending.
+
+
+## Manual build - 2026-10-06
+
+The operator ran the heavy build. Both inner and wrapper states are COMPLETE;
+post-olddefconfig configuration is byte-identical to the reviewed candidate.
+The repacked ramdisk matches the original and the repacked DTB matches the
+reset-GPIO-corrected DTB. The resulting temporary diagnostic boot has size
+54,652,928 bytes and SHA-256
+`147258b2df751cbcdb3c0cb2a10d10f2b0bcacaeee1fe13fdf3bdc79e71e06b0`.
+A separate Windows Downloads copy was verified with the same hash. Neither
+binary nor raw build logs are tracked. No boot, flash or hardware validation
+has occurred yet; a successful build does not establish power improvement.

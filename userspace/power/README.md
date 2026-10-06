@@ -165,6 +165,7 @@ exactly. This does not independently validate battery health or gauge calibratio
 A separate [power debugfs candidate](../../kernel/diagnostics/power/README.md) is prepared for inspecting
 clock/regulator summaries, retaining the reset-GPIO audio correction. External-input preflight and native Kconfig checks pass. It includes the
 Qualcomm idle statistics required by this source when debugfs is enabled, with
-optional Bluetooth/block debug interfaces disabled. No kernel was built or
-booted; no hardware policy or durable boot was changed.
+optional Bluetooth/block debug interfaces disabled. The operator subsequently built the separate diagnostic boot successfully
+(54,652,928 bytes; identity in the linked record). Hardware boot validation
+is pending; no hardware policy or durable boot was changed.
 Residual deep-suspend consumption remains unresolved.

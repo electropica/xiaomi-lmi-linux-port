@@ -98,5 +98,6 @@ MSM_PM in this source, while keeping optional Bluetooth/block debug interfaces
 disabled. Strict post-Kconfig identity checks remain. Initial preflight passed;
 the initial one-symbol Kconfig candidate was rejected for extra defaults.
 The reviewed candidate passes both native link probes and byte-identical
-olddefconfig validation; no kernel has been built
-or booted and no additional power saving is claimed.
+olddefconfig validation. The subsequent manual diagnostic build completed,
+with preserved ramdisk and corrected DTB verified; its identity is in the
+linked recipe record. It has not been booted and no power saving is claimed.
