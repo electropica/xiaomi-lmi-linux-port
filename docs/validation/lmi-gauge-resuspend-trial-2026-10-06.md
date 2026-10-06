@@ -88,3 +88,17 @@ arming its ten-minute alarm and collecting the initial deep-suspend endpoint.
 This revision is syntax/guard-tested only, not another hardware trial.
 The earlier Wi-Fi A/B tests already used a 12-second settling delay; their
 94-96 mA endpoint results are unaffected by this protocol review.
+
+
+## Targeted OEM-style gauge configuration comparison
+
+The active FG-gen4 DT specifies cutoff 3400 mV, empty 3100 mV and
+fg-force-load-profile. The same targeted fields occur in on-phone DTBO entries
+0, 1, 7 and 10; entry 11 has empty 3000 mV, while other entries omit these
+fields and may inherit base-DT values. No rsense-select property was present
+in the inspected FG node for either the active DT or these overlays. This is
+not a full calibration/profile comparison: an absent overlay property does
+not establish the final merged value, and original OEM release/active overlay
+selection remain unknown. No learned capacity, cutoff, gauge IRQ or charging
+parameter was changed. The [boost comparison](lmi-boost-diagnostic-candidate-2026-10-06.md)
+records the bounded read method and artifact limitations.

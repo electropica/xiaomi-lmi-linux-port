@@ -149,3 +149,10 @@ occupancy and no reboot. Conditions were not a controlled Wi-Fi experiment.
 Autonomy is not fixed; the bounded gauge re-suspend trial is not permanently
 installed. See the [existing observation record](../../docs/validation/lmi-battery-overnight-2026-10-06.md)
 for sample boundaries, charge-at-inspection and remaining uncertainties.
+
+
+Read-only follow-up found the same always-on GPIO-5 boost declaration in all
+12 on-phone OEM-style DTBO entries, with that GPIO also assigned to the haptic
+supply. PCIe L1/L1SS enable bits are set; no simple disabled-ASPM configuration
+was found. These facts do not identify the residual current consumer or validate
+a hardware change. See the [existing boost candidate record](../../docs/validation/lmi-boost-diagnostic-candidate-2026-10-06.md).
