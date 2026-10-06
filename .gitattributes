@@ -1,3 +1,4 @@
 kernel/diagnostics/audio/patches/0001-lmi-wcd938x-rx-soundwire-diagnostic.patch whitespace=-blank-at-eol,-space-before-tab
 kernel/patches/audio/0001-lmi-wcd938x-reset-gpio-mux.patch whitespace=-blank-at-eol,-space-before-tab
 kernel/patches/diagnostics/lmi-boost-release-always-on-unvalidated.patch whitespace=-blank-at-eol,-space-before-tab
+userspace/camera/diagnostics/camera-qti-neon-trial.patch whitespace=-blank-at-eol,-space-before-tab

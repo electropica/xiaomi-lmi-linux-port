@@ -859,6 +859,10 @@ age to 86.5 ms. The operator confirmed reduced delay and adequate brightness;
 unique preview publication reached only 19.34 fps, below the 25 fps target.
 This remains a private diagnostic trial; production integration is pending. Reliable real recording and 30 fps video also remain open.
 
+A separate NEON conversion candidate passes scalar-output equivalence tests
+on emulated ARM64 and NDK compilation. Phone timing and validation are pending;
+the installed bridge is unchanged.
+
 Native diagnostic sources and a small cross-compilation helper are under
 `diagnostics/`. No production bridge was replaced. All camera/microphone tests
 are stopped; new hardware acquisition requires explicit operator readiness.

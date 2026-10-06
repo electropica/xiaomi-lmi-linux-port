@@ -518,3 +518,28 @@ All three transient units stopped; root cleanup completed successfully. No
 video or microphone recording was requested. Remaining work includes conversion
 and delivery overhead, regular 25 fps preview delivery, foreground lifecycle
 integration and reliable recording finalization.
+
+
+## NEON conversion candidate prepared on the host ? 2026-10-06
+
+While a separately authorized battery trial ran, no camera or microphone
+was opened. A temporary blocked-rotation candidate was checked against
+the existing rotation on generated pixels: output matched exactly, but
+it was slower on the x86 host, so it was not integrated or deployed.
+
+A separate ARM64 NEON candidate targets the approximately 14 ms measured
+YUV-to-RGB conversion stage. It preserves the existing integer BT.601
+limited-range coefficients, rounding, clipping, plane strides, chroma-step
+handling and file format. Eight-pixel rows use NEON; non-multiple-of-eight
+widths retain the scalar fallback. The existing bridge's handle, span,
+locking and output-file checks remain unchanged. Chroma samples are gathered
+individually, avoiding an eight-byte load from a seven-byte minimal plane span.
+
+Under QEMU ARM64, 200 deterministic random rows with chroma steps 1 and 2,
+125 clipping/boundary color combinations and a minimal-plane case produced
+byte-identical output to the scalar reference. The patched bridge compiles
+with NDK r27d for Android ARM64, -O2 and warnings as errors; patch dry-run
+applies to the current source. The generated object stays outside Git.
+This is correctness/compilation evidence only: no phone speed, frame cadence,
+brightness, recording or operator validation has been performed. The patch
+and public test/header are diagnostic assets, not a production replacement.
