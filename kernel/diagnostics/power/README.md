@@ -190,3 +190,29 @@ and account for shutdown/startup consumption, gauge state changes and any USB
 charging before comparing. A percentage-only off/on comparison is not independent
 current measurement and cannot alone assign a hardware or kernel fault. No
 shutdown is scheduled or performed without the operator's readiness.
+
+
+## Invalidated trace trial - 2026-10-06
+
+The second short unplugged test slept for only 4.122 seconds of a 180.135-second
+interval (176.013 seconds awake). The first observed resume reason was IRQ 311,
+`pon_kpdpwr_status`, the power-key status interrupt. The operator observed that
+the display remained on. This identifies the reported wake source, without
+establishing whether a deliberate press or an electrical event caused it.
+The resulting approximately 150.37 mA gauge estimate is not a suspend-current
+measurement and must not be compared with the previous deep-sleep result as a
+power regression.
+
+The trace retained 18,960 of 53,783 written entries, with 34,823 overwritten
+entries across three CPU buffers. The initial suspend phases were lost; no
+conclusion about rail or clock shutdown during deep sleep follows from this
+trace. The transient service finished successfully, its private trace instance
+was removed, the owned RTC alarm was cleared, and Charging resumed after USB
+reconnection. Raw trace and gauge logs remain private.
+
+The next bounded diagnostic removes high-volume RPMh and regulator-voltage
+events, uses 512 KiB per CPU, and stops on a wake occurring more than two seconds
+before the planned endpoint. The collector requests initial suspend itself;
+the operator should unplug without pressing the power key or touching the
+screen. This is a protocol correction, not a production power fix. Preparation
+has passed Python syntax checks; hardware validation remains pending.
