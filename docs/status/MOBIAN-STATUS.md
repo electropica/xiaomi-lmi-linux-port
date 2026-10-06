@@ -592,7 +592,11 @@ The full Debian ARM64 UPower `1.90.9-1+lmi1` package and phone-local activation
 are installed. Seven explicit ARM64 integration tests passed; the installed
 service tracked a real unplug/replug cycle correctly over 90 observations.
 Capacity accuracy and autonomy remain unresolved. Automatic battery suspend
-is locally enabled; frequent msoc-delta wakes remain under investigation.
+is locally enabled; frequent msoc-delta wakes remain under investigation. A bounded follow-up
+returned to deep suspend about six seconds after one gauge wake, but still
+measured about 106 mA over a ten-minute interval with 98.8% suspend occupancy.
+Autonomy remains unresolved; this diagnostic is not permanently enabled.
+See the [guarded wake trial](../validation/lmi-gauge-resuspend-trial-2026-10-06.md).
 
 Clear speaker music was operator-confirmed through an installed PipeWire
 route using the S32_LE frontend and S24_LE backend on the temporary GPIO
