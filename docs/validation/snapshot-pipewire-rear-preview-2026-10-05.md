@@ -520,7 +520,7 @@ and delivery overhead, regular 25 fps preview delivery, foreground lifecycle
 integration and reliable recording finalization.
 
 
-## NEON conversion candidate prepared on the host ? 2026-10-06
+## NEON conversion candidate prepared on the host - 2026-10-06
 
 While a separately authorized battery trial ran, no camera or microphone
 was opened. A temporary blocked-rotation candidate was checked against
@@ -543,3 +543,26 @@ applies to the current source. The generated object stays outside Git.
 This is correctness/compilation evidence only: no phone speed, frame cadence,
 brightness, recording or operator validation has been performed. The patch
 and public test/header are diagnostic assets, not a production replacement.
+
+
+## NEON hardware preview trial - 2026-10-06
+
+After fresh operator readiness, Snapshot displayed a bounded 30-second rear
+preview using the private NEON bridge and the same supported 30/30 AE range.
+No video or microphone recording was requested. Across 960 measured images,
+conversion averaged 9.256 ms, compared with 14.124 ms in the earlier scalar
+trial (about 34% less). Mean sensor-to-RGB age was 81.025 ms, result wait
+36.704 ms, fence wait 0.002 ms, exposure 30.000 ms and frame duration 33.333 ms.
+These are separate trials; scene and scheduling variation prevent attributing
+all timing differences to the converter.
+
+The native producer published 556 unique images at 18.806 fps, with mean PPM
+age 49.592 ms and maximum 79.903 ms. Root publication counted 965 over its
+longer lifetime. Thus the faster converter did not improve measured publication
+cadence over the earlier 19.342 fps scalar trial, and does not establish the
+25 real images/s target. The operator reported low delay and a usable preview.
+
+All bounded units stopped and root cleanup completed successfully. The installed
+production bridge remains unchanged. This validates the candidate's visible
+preview operation, not reliable video recording, foreground lifecycle integration
+or a sustained 25 fps pipeline.

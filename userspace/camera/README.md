@@ -860,8 +860,9 @@ unique preview publication reached only 19.34 fps, below the 25 fps target.
 This remains a private diagnostic trial; production integration is pending. Reliable real recording and 30 fps video also remain open.
 
 A separate NEON conversion candidate passes scalar-output equivalence tests
-on emulated ARM64 and NDK compilation. Phone timing and validation are pending;
-the installed bridge is unchanged.
+on emulated ARM64 and NDK compilation. A bounded phone preview reduced conversion from 14.1 to 9.3 ms; the operator
+reported low delay and a usable preview. Publication remained 18.81 fps, below
+the 25 fps target. The installed bridge is unchanged; recording is not validated.
 
 Native diagnostic sources and a small cross-compilation helper are under
 `diagnostics/`. No production bridge was replaced. All camera/microphone tests
