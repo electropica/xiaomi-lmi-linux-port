@@ -1,0 +1,39 @@
+--- a/userspace/camera/diagnostics/lmi-snapshot-tuning.c
++++ b/userspace/camera/diagnostics/lmi-snapshot-tuning.c
+@@ -45,3 +45,36 @@
+     }
+     return element;
+ }
++
++/* Preview-only experiment: bound only Snapshot's Aperture display branch.
++ * Do not change camerabin recording queues or the installed application.
++ */
++extern int snprintf(char *, unsigned long, const char *, ...);
++extern long write(int, const void *, unsigned long);
++extern void g_object_get(void *, const char *, ...);
++typedef int (*Add)(void *, void *);
++int gst_bin_add(void *bin, void *element)
++{
++    Add real = (Add)dlsym((void *)-1L, "gst_bin_add");
++    if (!real) return 0;
++    int result = real(bin, element);
++    const char *enabled = getenv("LMI_PREVIEW_QUEUE_TRIAL");
++    if (!result || !enabled || strcmp(enabled, "1")) return result;
++    const char *parent_type = g_type_name_from_instance(bin);
++    const char *type = g_type_name_from_instance(element);
++    if (!parent_type || !type || strcmp(parent_type, "AperturePipelineTee") ||
++        strcmp(type, "GstQueue")) return result;
++    guint buffers=0,bytes=0; unsigned long long ns=0; int leaky=0;
++    g_object_get(element, "max-size-buffers", &buffers, "max-size-bytes", &bytes,
++                 "max-size-time", &ns, "leaky", &leaky, (void *)0);
++    char log[200];
++    int n=snprintf(log,sizeof(log),"PREVIEW_QUEUE_BEFORE buffers=%u bytes=%u time_ns=%llu leaky=%d\n",buffers,bytes,ns,leaky);
++    if(n>0 && (unsigned)n<sizeof(log)) (void)write(2,log,(unsigned long)n);
++    g_object_set(element, "max-size-buffers", (guint)1, "max-size-bytes", (guint)0,
++                 "max-size-time", (unsigned long long)0, "leaky", 2, (void *)0);
++    g_object_get(element, "max-size-buffers", &buffers, "max-size-bytes", &bytes,
++                 "max-size-time", &ns, "leaky", &leaky, (void *)0);
++    n=snprintf(log,sizeof(log),"PREVIEW_QUEUE_AFTER buffers=%u bytes=%u time_ns=%llu leaky=%d\n",buffers,bytes,ns,leaky);
++    if(n>0 && (unsigned)n<sizeof(log)) (void)write(2,log,(unsigned long)n);
++    return result;
++}

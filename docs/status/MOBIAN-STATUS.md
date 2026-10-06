@@ -993,7 +993,7 @@ not added to the image recipe. See `docs/validation/lomiri-camera-app-installati
 (repository-root-relative) for installation findings and limitations.
 
 
-### Current camera status — 2026-10-05
+### Current camera status — 2026-10-06
 
 Snapshot rear preview is experimental. The operator found the native PipeWire
 preview fluid but mirrored and delayed; its measured publication rate was about
@@ -1005,7 +1005,10 @@ fixed-30 fps trial reduced sensor-to-RGB age to 86.5 ms; the operator confirmed
 reduced delay and adequate brightness. Preview publication reached only 19.34 fps
 and production integration remains pending. Real recording has
 unresolved preservation and quality defects. Megapixels was removed and the
-lmi-camera prototype remains provisional. No camera test or recording is active.
+lmi-camera prototype remains provisional. A private NEON trial reduced conversion
+to 9.3 ms, but delivered only 18.81 fps. The operator estimates remaining visible
+delay at 0.2-0.5 seconds; a preview queue experiment has no demonstrated gain.
+No camera test or recording is active.
 See the [camera implementation status](../../userspace/camera/README.md) and
 [complete validation record](../validation/snapshot-pipewire-rear-preview-2026-10-05.md)
 for distinct operator, hardware and synthetic results.

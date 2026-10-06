@@ -566,3 +566,53 @@ All bounded units stopped and root cleanup completed successfully. The installed
 production bridge remains unchanged. This validates the candidate's visible
 preview operation, not reliable video recording, foreground lifecycle integration
 or a sustained 25 fps pipeline.
+
+
+## Delay qualification and preview queue experiments - 2026-10-06
+
+The operator qualified the usable NEON preview: visible delay remained roughly
+0.2-0.5 seconds, with little obvious improvement. This is an operator estimate,
+not a measured sensor-to-panel timestamp. The earlier sensor-to-RGB measurements
+do not include Snapshot rendering or panel scanout.
+
+Snapshot 48.0.1's upstream aperture/src/pipeline_tee.rs adds an ordinary queue
+for its viewfinder branch. On the phone its defaults are 200 buffers, 10 MiB,
+1 second and non-leaky. These are capacity limits, not evidence that the queue
+was full or added one second of delay. A process-local candidate restricts only
+GstQueue children of AperturePipelineTee to one buffer with downstream leakage;
+recording queues are not targeted. A no-acquisition scope check confirmed the
+ordinary GstBin queue stayed unchanged and the candidate was inactive without
+its explicit environment flag. The diagnostic patch is not installed.
+
+In a bounded real preview trial, the operator reported possible improvement but
+could not confidently judge it. Publication was 18.201 fps (538 unique images),
+mean PPM age 37.763 ms, mean sensor-to-RGB age 80.254 ms and conversion 9.003 ms.
+This does not establish a cadence or end-to-end latency improvement.
+
+A subsequent instrumented trial displayed a frozen loading indicator. The HAL
+produced images, but the PipeWire source never entered streaming and published
+zero images. Therefore no pipeline latency samples were collected. An initial
+attribution to the GStreamer tracer was withdrawn: a later uninstrumented trial
+also did not stream, and inspection found LockedHint=yes, ScreenSaver active
+and backlight zero. Locking confounds the comparison; the tracer is not proven
+to cause the startup failure. All hardware helpers were stopped cleanly.
+
+After explicit unlocking, generated-color-only trials under a temporary idle
+inhibitor streamed normally. Four compositor screenshots per variant bounded
+the generated-file-to-compositor age by the start/end times of grim; captures
+still took 67-165 ms even without PNG compression. With the ordinary queue,
+the individual age ranges were 89-157, 45-160, 83-198 and 89-254 ms. With the
+one-buffer queue they were 56-221, 114-230, 123-190 and 65-181 ms. These broad,
+overlapping ranges and four samples do not demonstrate a gain. A separate
+process-local attempt to disable preview sink synchronization also showed no
+clear improvement (75-192, 71-186, 108-236 and 103-218 ms); it is not promoted.
+Generated publication was about 22.2-22.5 fps in these tests. No camera or
+microphone was opened by the generated-input tests, and no video was recorded.
+
+The visible real delay remains unresolved. Future trials must keep the session
+unlocked using a bounded idle inhibitor and distinguish camera acquisition,
+publication, application rendering and panel scanout. No persistent camera,
+recording or power policy was changed.
+
+Source: https://download.gnome.org/sources/snapshot/48/snapshot-48.0.1.tar.xz
+Queue semantics: https://gstreamer.freedesktop.org/documentation/coreelements/queue.html
