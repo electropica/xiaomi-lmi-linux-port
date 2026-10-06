@@ -139,3 +139,13 @@ after the peripheral-idle test. Its first sample showed Charging, USB online,
 95% capacity and `sleep_disabled=N`. This is an active observation, not a
 completed long-run validation. Samples spanning charging and unplugged use
 must be separated; coarse polling cannot locate every transition exactly.
+
+
+## Latest long unplugged observation - 2026-10-06
+
+The daytime charge-history interval fell from 97% to 55% in 10.97 hours,
+about 3.83 percentage points/hour, with approximately 95.9% deep-suspend
+occupancy and no reboot. Conditions were not a controlled Wi-Fi experiment.
+Autonomy is not fixed; the bounded gauge re-suspend trial is not permanently
+installed. See the [existing observation record](../../docs/validation/lmi-battery-overnight-2026-10-06.md)
+for sample boundaries, charge-at-inspection and remaining uncertainties.

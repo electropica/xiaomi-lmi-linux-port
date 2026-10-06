@@ -160,6 +160,12 @@ measured about 106 mA over a ten-minute interval with 98.8% suspend occupancy.
 Autonomy remains unresolved; this diagnostic is not permanently enabled.
 See the [guarded wake trial](../validation/lmi-gauge-resuspend-trial-2026-10-06.md).
 
+A subsequent October 6 unplugged history interval lost 42 percentage points
+(97% to 55%) in 10.97 hours, approximately 3.83 points/hour, despite about
+95.9% deep-suspend occupancy. No reboot occurred; autonomy remains unresolved.
+See the [October 6 observation](../validation/lmi-battery-overnight-2026-10-06.md).
+
+
 Clear speaker music was operator-confirmed through an installed PipeWire
 route using the S32_LE frontend and S24_LE backend on the temporary GPIO
 diagnostic boot. ALSA controls restore on close. The graphical torch app's
