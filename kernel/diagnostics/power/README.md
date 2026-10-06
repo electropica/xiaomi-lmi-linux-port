@@ -99,3 +99,35 @@ These are software use counts under connected conditions, not direct power
 measurements or residency during suspend. No regulator/clock debugfs control
 was written. A separate bounded unplug/suspend observation is being prepared;
 no consumption improvement or diagnostic-kernel long-run validation is claimed.
+
+
+## First bounded suspend trial - 2026-10-06
+
+A private, 180-second derivative of the existing gauge trial retained USB-off,
+settled USB runtime status, capacity, input-quiet and logind-inhibitor checks.
+It requested one initial suspend and disabled the gauge re-suspend branch for
+this observation. An owned RTC end alarm was cleared on completion; the
+transient service finished successfully and is inactive. No debugfs control,
+radio or charge policy was changed. Camera and microphone were not opened.
+
+The observed interval was 181.821441 boottime seconds and 0.675646 monotonic
+seconds, implying approximately 181.145795 seconds suspended. The newly
+available `lpm_stats/suspend` independently reported one successful L3 suspend
+lasting 181.169277 seconds. USB stayed offline at both sample endpoints.
+The gauge charge-counter decrease was 4,868 uAh, approximately 96.38 mA over
+the interval; instantaneous samples were 104.98 mA before initial suspend and
+95.703 mA at completion. This short gauge-derived estimate is not an independent
+current measurement or a controlled cross-boot comparison. No improvement is
+established against the previous approximately 94-97 mA observations.
+
+Before initial suspend, software use counts for primary USB and its PHY had
+fallen to zero. PCIe-0, the known always-on boost and several shared storage/radio
+rails retained positive use counts. Camera/GPU regulator use counts were zero
+in that pre-suspend snapshot. Post-resume snapshots can include display/GPU
+activity and must not be described as deep-suspend residency. These summaries
+identify consumers/votes, not actual current in individual rails; PCIe DRV
+firmware ownership is especially relevant when interpreting a retained vote.
+The directory `lpm_stats` cannot be read as a scalar file: future collection
+must read its specific read-only `suspend`/`stats` children, with compact parsed
+output. Raw logs remain private. After operator reconnection, status was
+Charging with USB online and no remaining RTC alarm.

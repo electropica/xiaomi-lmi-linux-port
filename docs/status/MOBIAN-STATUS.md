@@ -1035,3 +1035,11 @@ and readable clock/regulator debugfs interfaces. USB SSH and existing CPU-idle
 service work. Suspend/current comparison remains pending; no hardware policy
 or durable boot was changed.
 Residual deep-suspend consumption remains unresolved.
+
+
+The first debugfs-boot trial confirms approximately 181 seconds in deep suspend
+through both clock accounting and Qualcomm suspend statistics. Gauge-derived
+consumption remains approximately 96.4 mA; there is no demonstrated autonomy
+improvement. USB power votes drop after unplugging, while PCIe/shared rails
+require interpretation rather than forced shutdown. The transient trial ended,
+its RTC alarm was cleared, and charging resumed after reconnection.
