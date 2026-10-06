@@ -293,7 +293,8 @@ patch validation/application. The prepared private state is
 Shell/Python syntax and external-input/patch-sequence preflight pass. The first
 preparation encountered an ambiguous transformation anchor and was rejected;
 the corrected preparation uses unique anchors and keeps that failed state.
-No kernel compilation, source-tree patch application, boot or flash occurred.
+At preparation time no kernel compilation, source-tree patch application, boot
+or flash occurred; the subsequent manual build is documented below.
 
 The manual build will produce a separate
 `D-repro-01-power-touch-notifier-diagnostic-boot.img`; retain the current boot
@@ -302,3 +303,18 @@ are touch suspend/resume logging, usable touch after wake, display/USB/charging,
 and matched unplugged deep-suspend current measurements. Check wake/gesture
 behavior separately before any production integration. A current reduction
 must be measured rather than inferred from corrected notifications.
+
+
+### Touch notification candidate: manual build completed
+
+The operator's manual build on 2026-10-06 completed in inner state
+`audio-swr-20261006T180037Z-66217` and wrapper state
+`reset-gpio-variant-20261006T180020Z-66202`, both COMPLETE. Independent output
+inspection confirms the two candidate shutdown mappings are present in the
+private compiled source, post-olddefconfig configuration matches the lock,
+the repacked ramdisk matches the original and the repacked DTB matches the
+reset-GPIO-corrected DTB. The temporary boot is 54,652,928 bytes with SHA-256
+`390dd50ab4dea33affc8386b300a3c21c4aca9bce39284b8e700a58c1e873bae`.
+A separate Windows Downloads copy was verified with the same identity.
+No binary or raw build output is tracked. Hardware boot, tactile suspend/resume
+behavior and any current improvement remain unvalidated. No flashing occurred.
