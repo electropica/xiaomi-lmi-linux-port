@@ -377,3 +377,13 @@ No camera test or recording is active.
 See the [camera implementation status](../../userspace/camera/README.md) and
 [complete validation record](../validation/snapshot-pipewire-rear-preview-2026-10-05.md)
 for distinct operator, hardware and synthetic results.
+
+
+### Battery diagnostic follow-up - 2026-10-06
+
+The active 416-byte J11 battery-profile payload matches OEM-style DTBO entry 7
+exactly. This does not independently validate battery health or gauge calibration.
+A separate [power debugfs candidate](../../kernel/diagnostics/power/README.md) is prepared for inspecting
+clock/regulator summaries, retaining the reset-GPIO audio correction. It is not
+Kconfig-validated, built or booted; no hardware policy or durable boot was changed.
+Residual deep-suspend consumption remains unresolved.

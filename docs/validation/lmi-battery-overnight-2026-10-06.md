@@ -77,3 +77,22 @@ The bounded morning gauge re-suspend diagnostic was not permanently deployed;
 this interval must not be described as its long-run validation. Residual deep
 sleep consumption remains unresolved. No camera, microphone, test collector,
 radio change or new power policy was started by this inspection.
+
+
+## OEM battery-profile comparison
+
+Read-only comparison of the live device-tree payload with the on-phone OEM-style
+DTBO found `j11sun_4700mah` in entry 7. Both that payload and the live profile
+contain 416 bytes and have SHA-256
+`583d77b61a7723fe4f40990eafa42c6283a87c41ba39a69ad2be77ce70f16050`.
+The BMS reports the same selected battery type and resistance_id=99800 ohms.
+The original MIUI release and active OEM overlay index remain unknown. Matching
+payloads rule out a simple difference from this OEM J11 profile; they do not
+validate current physical battery health, all gauge SRAM state or calibration.
+No profile was loaded, changed or published as binary data.
+
+A separate [debugfs configuration preparer](../../kernel/diagnostics/power/README.md)
+now preserves the reset-GPIO audio recipe while preparing power-domain observation.
+It changes only the debugfs configuration bit and retains strict post-Kconfig
+identity checks. Preparation is not Kconfig, build or hardware validation, and
+no additional power saving is claimed.

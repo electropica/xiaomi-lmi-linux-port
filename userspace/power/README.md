@@ -156,3 +156,13 @@ Read-only follow-up found the same always-on GPIO-5 boost declaration in all
 supply. PCIe L1/L1SS enable bits are set; no simple disabled-ASPM configuration
 was found. These facts do not identify the residual current consumer or validate
 a hardware change. See the [existing boost candidate record](../../docs/validation/lmi-boost-diagnostic-candidate-2026-10-06.md).
+
+
+### Battery diagnostic follow-up - 2026-10-06
+
+The active 416-byte J11 battery-profile payload matches OEM-style DTBO entry 7
+exactly. This does not independently validate battery health or gauge calibration.
+A separate [power debugfs candidate](../../kernel/diagnostics/power/README.md) is prepared for inspecting
+clock/regulator summaries, retaining the reset-GPIO audio correction. It is not
+Kconfig-validated, built or booted; no hardware policy or durable boot was changed.
+Residual deep-suspend consumption remains unresolved.
