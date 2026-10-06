@@ -68,14 +68,11 @@ try:
   if time.monotonic()>wait:raise RuntimeError('No unplug before deadline')
   time.sleep(.5)
  record('unplugged')
- end=time.clock_gettime(time.CLOCK_BOOTTIME)+600
- r=subprocess.run(['rtcwake','-m','no','-s','600'],capture_output=True,text=True,timeout=4)
- if r.returncode:raise RuntimeError('Unable to set bounded end alarm')
- owned_alarm=read(alarm)
  prev=read('/sys/kernel/wakeup_reasons/last_suspend_time');handled=None;seen=time.monotonic();saw_resume=False
  # Explicit initial suspend: an automatic 15-minute idle policy cannot start a shorter trial.
+ unplug_time=time.clock_gettime(time.CLOCK_BOOTTIME)
  quiet_deadline=time.monotonic()+30
- while time.monotonic()-last_input<6:
+ while time.monotonic()-last_input<6 or time.clock_gettime(time.CLOCK_BOOTTIME)-unplug_time<12:
   drain()
   if time.monotonic()>quiet_deadline:raise RuntimeError('User remains active')
   time.sleep(.5)
@@ -83,6 +80,11 @@ try:
  if read('/sys/class/power_supply/usb/online')!='0' or inhibitors():raise RuntimeError('Initial suspend no longer eligible')
  capacity=int(read('/sys/class/power_supply/battery/capacity'))
  if capacity<20 or time.monotonic()-last_input<6:raise RuntimeError('Initial suspend safety check failed')
+ if read('/sys/bus/platform/devices/a600000.ssusb/power/runtime_status')!='suspended':raise RuntimeError('USB runtime transition not settled')
+ end=time.clock_gettime(time.CLOCK_BOOTTIME)+600
+ r=subprocess.run(['rtcwake','-m','no','-s','600'],capture_output=True,text=True,timeout=4)
+ if r.returncode:raise RuntimeError('Unable to set bounded end alarm')
+ owned_alarm=read(alarm)
  record('before-initial-suspend')
  bus.call_sync('org.freedesktop.login1','/org/freedesktop/login1','org.freedesktop.login1.Manager','Suspend',GLib.Variant('(b)',(False,)),None,Gio.DBusCallFlags.NONE,5000,None)
  while time.clock_gettime(time.CLOCK_BOOTTIME)<end:

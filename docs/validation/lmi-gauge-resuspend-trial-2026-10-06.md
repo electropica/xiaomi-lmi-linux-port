@@ -60,3 +60,31 @@ suspend occupancy. This result is not a controlled paired comparison with
 the earlier approximately 94 mA measurement; no current-saving claim follows
 from comparing them. Reducing the awake wake interval has not resolved the
 residual deep-suspend draw. The diagnostic remains outside production startup.
+
+## Counter and transition review
+
+A later 24.044-second read-only sample while charging steadily found counter
+gain of 4,166 uAh, equivalent to about 623.7 mA, consistent with the sampled
+instantaneous current of approximately 623-629 mA. This argues against a
+large scale error during that stable charge interval; both paths remain
+measurements from the same gauge, not an independent external meter.
+
+In the exact source, charge_counter reads CC_SOC_SW and scales it with
+learned capacity. charge_now_raw instead uses CC_SOC and nominal capacity;
+the raw absolute value must not be substituted as remaining charge. The
+instantaneous current reads separate IBATT registers with a fixed conversion.
+No calibration, learned capacity or battery profile was changed.
+
+The completed corrected trial took its initial endpoint only about 20 ms
+after unplug detection; current_now was then 488 uA. Its final approximately
+30.48-second interval after the gauge resuspend lost 784 uAh, about 92.6 mA,
+consistent with the earlier settled roughly 94 mA tests. This short interval
+is not a controlled new baseline. The entire 105.6 mA result remains an
+observed interval average; it cannot establish a steady minimum hardware draw.
+
+The reusable diagnostic now adds a minimum 12-second post-unplug settling
+period and requires the USB controller runtime status to be suspended before
+arming its ten-minute alarm and collecting the initial deep-suspend endpoint.
+This revision is syntax/guard-tested only, not another hardware trial.
+The earlier Wi-Fi A/B tests already used a 12-second settling delay; their
+94-96 mA endpoint results are unaffected by this protocol review.
