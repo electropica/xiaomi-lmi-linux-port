@@ -1008,6 +1008,8 @@ unresolved preservation and quality defects. Megapixels was removed and the
 lmi-camera prototype remains provisional. A private NEON trial reduced conversion
 to 9.3 ms, but delivered only 18.81 fps. The operator estimates remaining visible
 delay at 0.2-0.5 seconds; a preview queue experiment has no demonstrated gain.
+A later two-buffer/10 ms polling trial reached 21.62 fps but was reported
+saccadic by the operator; it remains rejected for production integration.
 No camera test or recording is active.
 See the [camera implementation status](../../userspace/camera/README.md) and
 [complete validation record](../validation/snapshot-pipewire-rear-preview-2026-10-05.md)

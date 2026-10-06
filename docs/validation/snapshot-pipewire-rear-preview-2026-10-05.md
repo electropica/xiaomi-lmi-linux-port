@@ -616,3 +616,41 @@ recording or power policy was changed.
 
 Source: https://download.gnome.org/sources/snapshot/48/snapshot-48.0.1.tar.xz
 Queue semantics: https://gstreamer.freedesktop.org/documentation/coreelements/queue.html
+
+
+## Two PipeWire buffers and faster polling - 2026-10-06
+
+A small native producer trial restricted buffer negotiation from the preferred
+8 (range 2-16) to exactly 2. Add-buffer callbacks confirmed two buffers were
+actually allocated in the generated-input and real trials. This tests capacity;
+the earlier preferred count alone was not proof of eight queued images.
+The first private producer retained the 40 ms polling interval used in the
+preceding fixed-FPS/NEON trials. Its bounded real preview delivered 551 unique
+images at 18.689 fps, mean PPM age 49.540 ms (maximum 77.456 ms), and mean
+sensor-to-RGB age 81.600 ms. The operator reported no perceptible change.
+A generated-only scope trial also streamed and stopped normally, but its
+four compositor-age ranges overlapped the previous variants. No improvement
+was established from reducing the buffer count alone.
+
+Review then identified that the canonical producer polls every 10 ms, whereas
+the private fixed-FPS producer had been set to 40 ms. A second trial kept two
+buffers and restored 10 ms polling. After fresh operator readiness, its bounded
+real preview delivered 638 unique images at 21.618 fps, mean PPM age 31.509 ms
+(maximum 54.983 ms), and mean sensor-to-RGB age 80.707 ms. Conversion averaged
+9.151 ms and result wait 36.954 ms; exposure and frame duration remained
+30.000 and 33.333 ms. Compared with the preceding two-buffer trial, publication
+rose about 16% and file age decreased, but the operator reported a visibly
+stuttering preview. The candidate therefore fails visual acceptance and is not
+a production fix. Average publication cadence is not frame-spacing regularity.
+
+The diagnostic patch against the canonical source changes only buffer negotiation
+and allocation logging; the canonical 10 ms poll is already present. Generated
+input and matched-header ARM64 compilation are separate evidence from the real
+preview. Generated writer cadence includes file I/O and its subsequent 40 ms
+sleep, so its approximately 22.5 fps is not a 25 fps capacity benchmark.
+
+Both real previews used a bounded GNOME idle inhibitor and neither requested
+video or microphone recording. All source, Snapshot and camera helper units
+stopped and cleanup completed. The installed bridge, production services,
+firmware and permanent idle/battery settings are unchanged. Remaining work is
+regular delivery and source-to-display latency, not simply more buffering.

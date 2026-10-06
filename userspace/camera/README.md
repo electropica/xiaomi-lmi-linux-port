@@ -864,6 +864,8 @@ on emulated ARM64 and NDK compilation. A bounded phone preview reduced conversio
 reported low delay and a usable preview. Publication remained 18.81 fps, below
 the 25 fps target. The operator later estimated remaining visible delay at 0.2-0.5 seconds.
 A preview-only one-buffer queue experiment did not demonstrate a clear gain.
+A later two-buffer/10 ms polling trial reached 21.62 fps and lower file age,
+but the operator reported stutter; this candidate is not accepted.
 The installed bridge is unchanged; recording is not validated.
 
 Native diagnostic sources and a small cross-compilation helper are under

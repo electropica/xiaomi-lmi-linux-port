@@ -3,3 +3,4 @@ kernel/patches/audio/0001-lmi-wcd938x-reset-gpio-mux.patch whitespace=-blank-at-
 kernel/patches/diagnostics/lmi-boost-release-always-on-unvalidated.patch whitespace=-blank-at-eol,-space-before-tab
 userspace/camera/diagnostics/camera-qti-neon-trial.patch whitespace=-blank-at-eol,-space-before-tab
 userspace/camera/diagnostics/snapshot-preview-queue-trial.patch whitespace=-blank-at-eol,-space-before-tab
+userspace/camera/diagnostics/native-pipewire-two-buffer-trial.patch whitespace=-blank-at-eol,-space-before-tab
