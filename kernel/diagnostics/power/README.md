@@ -1028,3 +1028,42 @@ snapshot. The normal permanent boot has no such diagnostic attribute. Do not
 run the reader in WSL expecting it to read the phone; it must execute over SSH
 on the confirmed diagnostic boot. This step needs neither camera/microphone
 acquisition nor a cable manipulation.
+
+
+### Reuse of the existing reviewed kernel — 2026-10-07
+
+The operator requested persistent installation of the already built/tested
+RPMh observer rather than another kernel build. The selected existing artifact
+is `D-repro-01-power-rpmh-votes-diagnostic-boot.img`, 54,652,928 bytes,
+SHA-256 `a89ae4d9529dcef55d3969eb6b5a75c2617d9ef0e2e1f568c5f619eb1adf5c50`.
+Both existing host copies match. This does not make the diagnostic a production
+autonomy fix. Its RPMh attributes are available in the previously tested boot;
+the newer guarded FG attribute, phandle fix and shadow-retry candidate are not
+part of this image. Do not request another build merely to change observation
+detail while the operator has selected this existing baseline.
+
+The currently installed partition is a single `boot`, 134,217,728 bytes; no
+boot A/B label or slot token was found. Its first 52,924,416 bytes exactly match
+the existing original D-repro image, SHA-256
+`0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`.
+That image is the available rollback baseline. This comparison covers the image
+prefix, not an exact backup of all partition padding or any trailing metadata.
+No new kernel or full-partition backup was created; the existing rollback image
+was made accessible to the host flashing tool without modifying its bytes.
+
+At this checkpoint persistent installation is prepared but not performed.
+The constructor's historical temporary-only message remains its default policy;
+the operator specifically authorized this persistent baseline for reproducible
+comparisons across shutdown/restart. The operator performs Fastboot actions.
+Only the boot partition is in scope; no userdata, firmware, recovery, vbmeta,
+bootloader-lock or partition-layout change is requested. After installation,
+identify the running build/config and diagnostic attributes, check the live DT
+and gauge status again, and confirm basic display/touch/USB behavior. A reboot
+alone is not proof that the requested candidate is running or that gauge state
+is unchanged. Retain one working candidate and the rollback baseline; obsolete
+diagnostic images can be removed after the retained installation is confirmed,
+preserving the small recipes/manifests and evidence rather than daily binaries.
+
+The guarded FG recipe/readers remain prepared research, not the next requested
+manual build and not deployed functionality. Hardware profile comparison using
+that new attribute is deferred unless a later justified build includes it.

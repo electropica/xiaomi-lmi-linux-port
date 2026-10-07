@@ -497,3 +497,15 @@ M1 now stages the Recorder launch wrapper required by the optional-app installer
 A host-only dependency-closure check first reproduced the missing-file failure,
 then passed all seven staged app inputs after the correction. No image or live
 phone was changed. The checker is under `userspace/apps/scripts/`.
+
+
+### Persistent diagnostic baseline requested — 2026-10-07
+
+The operator selected the existing reviewed RPMh observer image for persistent
+boot installation, avoiding another build/version. Its 54,652,928-byte artifact
+hash is `a89ae4d9529dcef55d3969eb6b5a75c2617d9ef0e2e1f568c5f619eb1adf5c50`.
+The installed boot image-size prefix matches the original D-repro rollback
+image. Installation is pending the operator's Fastboot action; no flash has
+occurred. The newly prepared guarded FG observer and lookup/retry fixes are
+excluded from this chosen image and must not be reported as active. See the
+[power protocol](../../kernel/diagnostics/power/README.md#reuse-of-the-existing-reviewed-kernel--2026-10-07).
