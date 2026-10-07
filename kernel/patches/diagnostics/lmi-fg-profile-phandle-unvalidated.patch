@@ -1,0 +1,9 @@
+--- a/drivers/power/supply/qcom/qpnp-fg-gen4.c
++++ b/drivers/power/supply/qcom/qpnp-fg-gen4.c
+@@ -2086 +2086,5 @@
+-	batt_node = of_find_node_by_name(node, "qcom,battery-data");
++	/* The lmi profile can precede the gauge in the global DT order. */
++	batt_node = of_parse_phandle(node, "qcom,battery-data", 0);
++	if (!batt_node)
++		batt_node = of_find_node_by_name(of_node_get(node),
++					       "qcom,battery-data");

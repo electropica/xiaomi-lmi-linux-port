@@ -872,3 +872,70 @@ Fastboot, startup and resumed USB charging also affect the return. The counter
 increase of 15,493 uAh cannot be treated as an off-state gain or discharge rate.
 The phone clock was not used to determine the off interval. Raw identifying
 snapshot data remains outside Git. No battery calibration or profile was reset.
+
+
+### Permanent-kernel profile lookup failure — 2026-10-07
+
+The powered-off return boot reproduced the older profile-load failure: the
+gauge reported `Unknown Battery`, zero design capacity, resistance ID 99,800
+ohms and profile errors -6/-61 followed by the driver's OTP fallback. This is
+an observed selection failure, not proof that retained gauge SRAM has been
+erased or contains a particular profile. The earlier successful lmi-profile
+identification must not be attributed to this permanent boot.
+
+Read-only inspection of the live DT confirmed that the gauge's existing
+`qcom,battery-data` phandle targets `/soc/qcom,battery-data`, containing
+`j11sun_4700mah`, 100 kOhm ID, 4,700 mAh nominal capacity and 416 profile bytes.
+The flattened tree order places that container before the gauge. The only
+subsequent node named `qcom,battery-data` is `/vendor/qcom,battery-data`, whose
+children are generic profiles rather than the lmi profile. In the locked
+driver, `of_find_node_by_name(node, "qcom,battery-data")` searches only nodes
+after `node`, not its property target. The source traversal and live ordering
+therefore explain why the named lmi lookup cannot succeed on this boot.
+
+The isolated candidate
+[`lmi-fg-profile-phandle-unvalidated.patch`](../../patches/diagnostics/lmi-fg-profile-phandle-unvalidated.patch)
+resolves the existing phandle first. If absent/unresolved, it retains the
+legacy name search and supplies an owned node reference because that API
+consumes its starting reference. The patch makes no direct changes to profile bytes, charging parameters,
+learning code, capacity conversion or authentication policy. However, reaching
+the existing load path can change retained gauge state, as explained below.
+Patch SHA-256:
+`59e357834e97f043a45c51e50e29ada59a44ca657afa9c2fcfdeafbfb56884f6`.
+The locked `qpnp-fg-gen4.c` input SHA-256 is
+`0f5676829cb2a40daa191a456998c700d744afe8346e07dd3c7af2a7e8685957`.
+
+`test-fg-profile-lookup.py` verifies that exact input and applies the patch with
+zero fuzz in a temporary tree. The actual changed C lookup fragment compiles
+with strict warnings against bounded OF stubs. Explicit-link precedence,
+legacy fallback, missing-container handling and 200 repeated reference-balanced
+lookups pass; the source remains unchanged. These stubs are not a full kernel
+OF implementation or a hardware test. No kernel was compiled or deployed and
+the candidate is not included in any prepared constructor.
+
+A future manual diagnostic build must first review profile-loading side
+effects, including the existing force-load policy and retained gauge state.
+Validation must identify the boot, inspect startup profile selection and
+confirm charging before any autonomy comparison. Successful selection alone
+would not prove lower physical consumption or battery health. Do not merge
+this with the separate shadow-read retry candidate merely to combine trials.
+
+
+#### Profile-loading side effects reviewed before deployment
+
+The locked `is_profile_load_required()` compares only the first 24 profile
+bytes when an accepted integrity marker is present. A matching prefix skips
+reload even with `qcom,fg-force-load-profile`; it does not prove all 416 bytes
+match. A different prefix with force-load enabled, an absent integrity bit or
+an invalid integrity marker can trigger a load. SRAM read errors instead skip
+the load. No live SRAM integrity or profile-prefix measurement was obtained in
+this permanent boot, so its reload decision remains unknown.
+
+If loading occurs, `profile_load_work()` can clear cycle counters, write the
+416-byte profile, restart the gauge, and store nominal capacity as learned
+capacity on the normal non-aged path. SDAM handling also depends on its cookie.
+Even a temporary `fastboot boot` therefore does not guarantee that all gauge
+state changes disappear after reboot. The candidate must not be deployed as
+though it were only a cosmetic battery-name fix. A future trial needs an
+explicit gauge-state preservation/observation plan before activation. No
+profile reload, counter clearing or learned-capacity write was performed here.
