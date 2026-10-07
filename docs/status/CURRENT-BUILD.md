@@ -484,8 +484,10 @@ The constructor's private-status reporting issue has a host-validated fix:
 16 metadata cases and a newly prepared observer preflight passed without a
 kernel build. Existing diagnostic images and historical prepared recipes were
 not modified; interactive sudo and a full manual build remain to be retested.
-A powered-off battery comparison is pending after an invalid first attempt
-that restarted the phone. There is no new battery result or autonomy fix.
+The subsequent approximate powered-off comparison returned at the same 88%
+reported charge. Charging and boot/Fastboot intervals were not quantified, so
+this does not establish zero off-state drain or physical battery health. No
+autonomy fix is established.
 See the power diagnostic record for return-measurement and kernel-identity limits.
 
 The next-build optional application recipe no longer installs the abandoned
@@ -499,13 +501,18 @@ then passed all seven staged app inputs after the correction. No image or live
 phone was changed. The checker is under `userspace/apps/scripts/`.
 
 
-### Persistent diagnostic baseline requested — 2026-10-07
+### Persistent diagnostic baseline installed — 2026-10-07
 
 The operator selected the existing reviewed RPMh observer image for persistent
 boot installation, avoiding another build/version. Its 54,652,928-byte artifact
 hash is `a89ae4d9529dcef55d3969eb6b5a75c2617d9ef0e2e1f568c5f619eb1adf5c50`.
-The installed boot image-size prefix matches the original D-repro rollback
-image. Installation is pending the operator's Fastboot action; no flash has
-occurred. The newly prepared guarded FG observer and lookup/retry fixes are
+The operator flashed only `boot` and rebooted successfully. Post-reboot
+verification confirms that its image-size prefix matches the selected RPMh
+image, the running banner is dated 2026-10-07 05:27:54 UTC, and IKCONFIG SHA-256
+is `c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78`.
+All 47 RPMh observer attributes are present; USB charging and CPU idle work.
+The gauge recognizes `j11sun_4700mah`, with design 4,700 mAh and learned full
+2,822 mAh. This is not a new autonomy validation. Display/touch confirmation
+remains an operator check. The original D-repro remains the rollback image. The newly prepared guarded FG observer and lookup/retry fixes are
 excluded from this chosen image and must not be reported as active. See the
 [power protocol](../../kernel/diagnostics/power/README.md#reuse-of-the-existing-reviewed-kernel--2026-10-07).

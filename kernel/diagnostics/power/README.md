@@ -1042,7 +1042,7 @@ the newer guarded FG attribute, phandle fix and shadow-retry candidate are not
 part of this image. Do not request another build merely to change observation
 detail while the operator has selected this existing baseline.
 
-The currently installed partition is a single `boot`, 134,217,728 bytes; no
+Before installation, the partition was confirmed as a single `boot`, 134,217,728 bytes; no
 boot A/B label or slot token was found. Its first 52,924,416 bytes exactly match
 the existing original D-repro image, SHA-256
 `0b6c7d88b3068ae4e3d106fd4b15a1a79bf00c3e576be7b3fcd8ab62faed73ad`.
@@ -1051,14 +1051,28 @@ prefix, not an exact backup of all partition padding or any trailing metadata.
 No new kernel or full-partition backup was created; the existing rollback image
 was made accessible to the host flashing tool without modifying its bytes.
 
-At this checkpoint persistent installation is prepared but not performed.
+The operator successfully flashed this existing image to `boot` and rebooted.
+A post-reboot read at 18:50 UTC confirmed that the first 54,652,928 bytes of
+`boot` match the selected RPMh SHA-256. The running banner is dated
+2026-10-07 05:27:54 UTC; IKCONFIG SHA-256 is
+`c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78`.
+All 47 RPMh observer attributes are present. These independent checks support
+the installed/running identity; the partition prefix alone is not executable
+identity proof. USB is online, charging resumes, CPU idle is enabled, and no
+RTC alarm is armed. The newer FG observer remains absent.
+
+The gauge reports `j11sun_4700mah`, design capacity 4,700,000 uAh and learned
+full capacity 2,822,000 uAh, with 100% reported charge and 24.5 C. Unlike the
+original permanent boot return, the profile is recognized. This is not proof
+of improved autonomy or physical capacity, nor proof that gauge state did not
+change during boot. No new unplugged measurement or operator touch check has
+been performed after this installation.
 The constructor's historical temporary-only message remains its default policy;
 the operator specifically authorized this persistent baseline for reproducible
 comparisons across shutdown/restart. The operator performs Fastboot actions.
 Only the boot partition is in scope; no userdata, firmware, recovery, vbmeta,
-bootloader-lock or partition-layout change is requested. After installation,
-identify the running build/config and diagnostic attributes, check the live DT
-and gauge status again, and confirm basic display/touch/USB behavior. A reboot
+bootloader-lock or partition-layout change is requested. The post-install build/config, attributes and gauge checks above are complete.
+Operator confirmation of display/touch behavior remains pending. A reboot
 alone is not proof that the requested candidate is running or that gauge state
 is unchanged. Retain one working candidate and the rollback baseline; obsolete
 diagnostic images can be removed after the retained installation is confirmed,
