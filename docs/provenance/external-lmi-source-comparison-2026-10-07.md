@@ -91,3 +91,16 @@ No selected difference establishes a lower idle current. Keep our hardware-teste
 kernel as the current base. The mainline integration's reported missing features
 justify caution for that port, but do not establish that the Android references
 are less stable than our kernel. No comparative boot or stability test occurred.
+
+
+## Touch supply sleep-path follow-up
+
+The already pinned and downloaded Utsav and PixelExperience FocalTech sources
+both send FTS_REG_POWER_MODE_SLEEP_VALUE in their normal suspend path; neither
+reviewed path cuts supplies there. Their power-off calls are in teardown/error
+paths. Our selected focaltech_touch_mi normal path also requests controller sleep,
+with supply cycling confined to its factory-build branch. This review supplies
+no existing normal-suspend supply-cut fix to transplant and does not measure
+controller current or authenticate which driver configuration each Android
+build uses. Runtime supply requests must not be mistaken for a failed sleep
+command solely because the regulator remains enabled.

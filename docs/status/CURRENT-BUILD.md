@@ -470,4 +470,11 @@ Pre-suspend supply requests must be reconciled with late suspend transitions:
 L17 is explicitly disabled and L12 receives a zero sleep-enable request.
 The collector, trace instance and RTC alarm are cleaned up; Wi-Fi is enabled
 and charging resumed. The power diagnostic record contains the consumer mapping
-and remaining limitations. The instrumented radio-off comparison is pending.
+and remaining limitations. The instrumented radio-off comparison subsequently completed: four Wi-Fi VRM
+sleep-enable requests are zero, yet the gauge still reports approximately
+93.135 mA with 99.612% suspend occupancy. L5/L6 receive low-power-mode commands;
+L17 is disabled before machine suspend. Wi-Fi was restored and the collector,
+trace and alarm cleaned up. No autonomy fix is demonstrated. Reported 2,822 mAh
+full capacity and cycle count one are gauge state, not verified physical health;
+the operator confirmed the original battery. See the diagnostic record for the
+charge-counter scaling and measurement limits.

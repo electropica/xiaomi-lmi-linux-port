@@ -715,3 +715,65 @@ voltage, device binding or persistent setting changed. A radio-off comparison
 with the same 47 observer snapshots is prepared, not executed. Its new purpose
 is to distinguish retained aggregate requests from the previous radio-off
 current measurements; no autonomy improvement is claimed. Raw data stays private.
+
+
+### Radio-off aggregate comparison and gauge limits ? October 7
+
+The second aggregate-observer trial stopped Wi-Fi using NetworkManager and
+verified zero software use counts for S5, S6, PM8150A S8, PM8009 S2 and PCIe
+GDSC before suspend and after the planned wake. All four VRM sleep-enable
+requests changed to zero in the observer as well. No driver was forcibly unbound.
+
+Elapsed time was 182.097 seconds, including 181.390 seconds suspended
+(99.612%); L3 added 181.408 seconds. Capacity stayed 77%, while the charge
+counter fell from 2,026,412 to 2,021,701 uAh: approximately 93.135 mA by the
+gauge. APSS and ADSP counters recorded 99.623% and 99.989% asleep. The RTC
+caused the planned wake without retry or early abort. All 47 snapshots were
+readable and all 11,958 trace events were retained without loss, nonzero PM
+callback results or RPMh acknowledgement errors.
+
+Compared with the preceding enabled-radio arm's 94.787 mA, the difference is
+1.652 mA. These short sequential arms had intervening charging and different
+capacity, without matched temperature or association control; the difference
+is not a calibrated stable Wi-Fi penalty. The important result is that disabling
+the four radio requests still leaves approximately 93 mA by the gauge.
+BOB, L5, L6, the touch L1 supply and shared S4 requests remain comparable.
+L17 is explicitly disabled during device suspension in both traces. The final
+L5/L6 mode commands are PMIC5 LDO LPM (4), not HPM (7), despite the earlier
+awake/pre-suspend values. BOB retains its PASS sleep-mode command.
+
+The read-only follow-up found no modem exposed through ModemManager and
+Bluetooth soft-blocked. Downstream subsystem labels were not interpreted as
+physical-current measurements. Flash intensity values can remain nonzero when
+its switch controls are zero: the driver getter returns cached brightness,
+not a hardware light/current measurement. No flash or microphone was activated.
+GPU force-clock, force-bus and force-rail settings are zero; both traces contain
+GPU clock and CX GDSC disable transitions. `force_no_nap=1` affects the ACTIVE
+to NAP idle path, not proof of a permanently powered GPU through system sleep.
+No graphics policy was changed.
+
+The operator confirmed the original battery. Its selected gauge profile is
+`j11sun_4700mah`; reported design capacity is 4,700 mAh and learned full capacity
+2,822 mAh, while the exposed cycle count is one. These values do not establish
+physical battery health or lifetime cycles. No independent capacity test exists.
+The active DT enables weighted learning and permits replacing a mismatched
+profile; the driver does not reload an identical profile solely because
+`fg-force-load-profile` is set. Profile replacement can clear cycle accounting.
+The absent min/max learning-limit properties default to zero (disabled); there
+is no evidence that 2,822 mAh was forced by a 60% lower clamp.
+
+In the locked GEN4 driver, `charge_counter` is computed from the hardware
+CC_SOC_SW fraction multiplied by learned capacity. Its delta is therefore not
+an independent coulomb/current calibration. `current_now` uses the separate
+IBATT register conversion, approximately 488.281 uA per signed count; the
+pre/post-unplug readings near 92?95 mA are internally consistent with the
+counter-derived interval, but both still depend on the same gauge hardware.
+No learned capacity, battery profile, charging limit or calibration was reset.
+Changing the reported full capacity would not demonstrate lower physical drain.
+
+Wi-Fi was restored and confirmed enabled before reconnection; the restore timer
+and collector are inactive, the owned RTC alarm is empty, the trace instance
+was removed and charging resumed. Further identical short suspend trials are
+not justified by these results alone. Remaining discrimination requires a
+specifically justified peripheral isolation or an independent/off-state baseline;
+no unsafe shared-rail shutdown is proposed. Raw data remains private.
