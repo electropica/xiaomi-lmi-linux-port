@@ -621,6 +621,11 @@ report 99.65% and 99.95% asleep respectively while the gauge still measures
 approximately 93.7 mA. This narrows the investigation but neither measures
 all physical loads nor validates an autonomy fix; the complete result is in
 the power diagnostic record.
+A subsequent RPMh trace confirms final APSS sleep votes of zero for CX/MX/XO
+and three inspected bus resources, while the gauge still reports about 94.9 mA.
+These software requests do not establish all physical rail currents; the
+residual discharge remains unresolved. The trial and alarm are cleaned up.
+
 
 
 

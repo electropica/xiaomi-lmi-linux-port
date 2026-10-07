@@ -534,3 +534,48 @@ would risk the validated audio and storage paths.
 No supply was disabled, no DT property was changed, and no driver was unbound
 during this inspection. No microphone or camera capture was performed.
 Raw DT and trace dumps remain private.
+
+
+### Final RPMh sleep commands — October 7
+
+A bounded three-minute trial added the existing `rpmh_send_msg` and
+`rpmh_tx_done` events without changing the radio or regulator policy.
+The interval lasted 181.315 seconds, including 180.631 seconds suspended
+(99.623%); L3 added one success lasting 180.649 seconds. Capacity stayed at
+96%, while the charge counter fell from 2,493,460 to 2,488,679 uAh:
+approximately 94.927 mA by the gauge. APSS and ADSP master counters recorded
+99.636% and 99.953% asleep respectively. The RTC caused the planned wake;
+no gauge retry, early reconnection or early-wake abort occurred.
+
+All 11,937 trace events were retained without overrun, dropped events,
+nonzero PM callback results or RPMh acknowledgement errors. Of these,
+291 were RPMh send events. The live command database and TCS configuration
+`[2,2,0,3,1,3,3,1]`, interpreted using the locked downstream driver's allocation
+order, identify apps_rsc banks 0–1 as active, 2–4 as sleep and 5–7 as wake.
+Bank 56 represents the separate PDC data-write path, not a regulator bank.
+
+At the `machine_suspend` entry, the final sleep commands superseded earlier
+nonzero bus commands. The final votes were:
+
+| Resource | Sleep command | Interpretation |
+|---|---|---|
+| `cx.lvl` / `mx.lvl` | 0 / 0 | APSS requests level zero |
+| `xo.lvl` | 0 | APSS requests level zero |
+| `bobc1` mode | 2 | PMIC5 PASS; wake command is AUTO (6) |
+| `ldoa12` enable | 0 | Disable request; wake command is 1 |
+| `SH4`, `SN11`, `CN0` | `0x40000000` each | Commit bit, invalid/zero X and Y bandwidth votes |
+
+The BCM interpretation follows `msm_bus_fabric_rpmh.c`: commit is bit 30,
+valid is bit 29, and X/Y each occupy 14 bits. Earlier values such as
+`0x60198000` are not the final sleep request. Post-reconnection `bw` sysfs
+snapshots contain nonzero USB/NPU client entries, but are awake snapshots;
+they must not override the final sleep trace or be treated as proof of a
+sleep-time bus leak. An absent command for a resource does not establish its
+state: unchanged requests can remain cached, and other masters can vote.
+
+These observations establish the APSS software requests, not the physical
+state or current of every PMIC rail, peripheral or unexposed subsystem.
+The approximately 95 mA remains unexplained. No new kernel build, regulator
+write, driver unbind, camera capture or microphone recording was performed.
+The collector is inactive, its trace instance was removed, its RTC alarm is
+empty, Wi-Fi remains enabled and charging resumed. Raw traces stay private.
