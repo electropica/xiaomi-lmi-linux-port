@@ -654,3 +654,37 @@ video or microphone recording. All source, Snapshot and camera helper units
 stopped and cleanup completed. The installed bridge, production services,
 firmware and permanent idle/battery settings are unchanged. Remaining work is
 regular delivery and source-to-display latency, not simply more buffering.
+
+## Publication regularity diagnostic — 2026-10-07
+
+The canonical native PPM producer now reports publication interval count,
+mean/minimum/maximum, 5 ms histogram upper bounds for p50/p95/p99, and counts
+above 60 and 80 ms. The histogram has fixed storage; intervals at or above
+500 ms are counted separately and produce an unavailable (`-1`) percentile
+bound when they contain the requested rank. Non-finite, zero and backwards
+clock samples are rejected and counted. Non-streaming transitions reset only
+the interval baseline, so deliberate pauses are excluded from gap statistics.
+The measurements use CLOCK_MONOTONIC and are collected with constant work per
+frame; no per-frame logging is added. They cover producer publication, not
+sensor-to-panel latency, rendering regularity or the time a frame is displayed.
+
+A deterministic host-only test verifies that evenly spaced 40 ms intervals
+and alternating 10/70 ms intervals have the same 25 fps average but different
+maximum/percentile gaps. Overflow and invalid-clock cases pass. The complete
+producer compiles for ARM64 with the existing matched PipeWire 1.4.2 headers
+and library, warnings treated as errors. No camera, microphone, PipeWire
+runtime or live phone was used for these checks. The existing two-buffer
+diagnostic patch still applies to the updated source.
+
+The producer also now requires exactly BGRx 720 x 1280 during format negotiation
+and checks those dimensions before conversion. Its existing portrait rotation
+indexes a fixed 1280 x 720 source; accepting other dimensions would invalidate
+those bounds. This is defensive host-validated rejection, not evidence that
+a real negotiation mismatch caused earlier stutter or preview failure.
+
+Copy `frame-pacing.h` alongside `native-pipewire-ppm-test.c` when preparing a
+standalone source bundle. `test-frame-pacing.c` is a small host-only check and
+does not link PipeWire or access hardware. No installed producer, buffer count,
+polling interval, camera FPS, firmware or recording setting was changed.
+Real pacing measurements and visual acceptance remain pending fresh operator
+readiness; this diagnostic is not a performance fix or production deployment.

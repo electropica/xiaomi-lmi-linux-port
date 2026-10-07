@@ -4,6 +4,8 @@
  * Uses the public PipeWire stream API; terminates after 30 seconds.
  */
 #include <stdio.h>
+#include <errno.h>
+#include "frame-pacing.h"
 #include <signal.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -22,6 +24,7 @@ struct app {
     struct spa_source *tick;
     struct spa_video_info_raw format;
     unsigned frames;
+    struct lmi_frame_pacing pacing;
     const char *input;
     unsigned char *rgb;
     struct timespec last_stamp;
@@ -64,7 +67,7 @@ static void process(void *opaque) {
     struct spa_buffer *buf=b->buffer;
     unsigned w=a->format.size.width,h=a->format.size.height,stride=w*4;
     if (!buf->n_datas || !buf->datas[0].data || !buf->datas[0].chunk ||
-        !w || !h || buf->datas[0].maxsize < stride*h) {
+        w!=720 || h!=1280 || buf->datas[0].maxsize < stride*h) {
         pw_stream_queue_buffer(a->stream,b); return;
     }
     unsigned char *p=buf->datas[0].data;
@@ -82,6 +85,7 @@ static void process(void *opaque) {
     double when=now.tv_sec+now.tv_nsec/1e9;
     double age=(wall.tv_sec-a->last_stamp.tv_sec)*1000.0+(wall.tv_nsec-a->last_stamp.tv_nsec)/1e6;
     if(!a->frames)a->first_frame=when;
+    lmi_frame_pacing_add(&a->pacing,when);
     a->last_frame=when;a->age_sum+=age;if(age>a->age_max)a->age_max=age;
     b->size=1; a->frames++; pw_stream_queue_buffer(a->stream,b);
 }
@@ -92,11 +96,22 @@ static void state(void *opaque, enum pw_stream_state old, enum pw_stream_state n
     if (now==PW_STREAM_STATE_STREAMING) {
         struct timespec first={0,1},period={0,10000000};
         pw_loop_update_timer(pw_main_loop_get_loop(a->loop),a->tick,&first,&period,false);
-    } else pw_loop_update_timer(pw_main_loop_get_loop(a->loop),a->tick,NULL,NULL,false);
+    } else {
+        pw_loop_update_timer(pw_main_loop_get_loop(a->loop),a->tick,NULL,NULL,false);
+        /* Do not classify a deliberate non-streaming pause as frame jitter. */
+        a->pacing.started=0;
+    }
 }
 static void format(void *opaque,uint32_t id,const struct spa_pod *param) {
     struct app *a=opaque;if(id!=SPA_PARAM_Format || !param)return;
-    if(spa_format_video_raw_parse(param,&a->format)<0 || a->format.format!=SPA_VIDEO_FORMAT_BGRx)return;
+    struct spa_video_info_raw proposed={0};
+    if(spa_format_video_raw_parse(param,&proposed)<0 ||
+       proposed.format!=SPA_VIDEO_FORMAT_BGRx || proposed.size.width!=720 ||
+       proposed.size.height!=1280) {
+        pw_stream_set_error(a->stream,-EINVAL,"Expected BGRx 720x1280 portrait format");
+        return;
+    }
+    a->format=proposed;
     uint8_t storage[512];struct spa_pod_builder builder=SPA_POD_BUILDER_INIT(storage,sizeof(storage));
     const struct spa_pod *params[2];unsigned stride=a->format.size.width*4;
     params[0]=spa_pod_builder_add_object(&builder,SPA_TYPE_OBJECT_ParamBuffers,SPA_PARAM_Buffers,
@@ -149,6 +164,20 @@ int main(int argc,char **argv) {
     if(a.frames>1 && a.last_frame>a.first_frame)
         fprintf(stderr,"PUBLICATION_FPS %.3f FILE_AGE_MEAN_MS %.3f FILE_AGE_MAX_MS %.3f\n",
                 (a.frames-1)/(a.last_frame-a.first_frame),a.age_sum/a.frames,a.age_max);
+    if(a.pacing.count) {
+        fprintf(stderr,"PUBLICATION_INTERVALS %llu MEAN_MS %.3f MIN_MS %.3f MAX_MS %.3f "
+                "P50_UPPER_MS %d P95_UPPER_MS %d P99_UPPER_MS %d OVER_60_MS %llu "
+                "OVER_80_MS %llu HIST_OVERFLOW %llu INVALID_CLOCK_SAMPLES %llu\n",
+                (unsigned long long)a.pacing.count,a.pacing.sum_ms/a.pacing.count,
+                a.pacing.min_ms,a.pacing.max_ms,
+                lmi_frame_pacing_upper_ms(&a.pacing,50),
+                lmi_frame_pacing_upper_ms(&a.pacing,95),
+                lmi_frame_pacing_upper_ms(&a.pacing,99),
+                (unsigned long long)a.pacing.over_60_ms,
+                (unsigned long long)a.pacing.over_80_ms,
+                (unsigned long long)a.pacing.bins[100],
+                (unsigned long long)a.pacing.invalid);
+    }
     pw_stream_destroy(a.stream);pw_core_disconnect(a.core);pw_context_destroy(a.context);
     pw_main_loop_destroy(a.loop);pw_deinit();free(a.rgb);return rc<0?1:0;
 }

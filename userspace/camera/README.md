@@ -873,3 +873,14 @@ Native diagnostic sources and a small cross-compilation helper are under
 are stopped; new hardware acquisition requires explicit operator readiness.
 Detailed evidence and historical trials are maintained in the
 [Snapshot validation record](../../docs/validation/snapshot-pipewire-rear-preview-2026-10-05.md).
+
+### Bounded publication-spacing diagnostic — 2026-10-07
+
+The native diagnostic reports frame-spacing distribution and long gaps in
+addition to average FPS. Host tests distinguish equal-average streams with
+different regularity; the ARM64 producer compiles with warnings as errors.
+It also rejects dimensions incompatible with its fixed portrait conversion.
+The new `diagnostics/frame-pacing.h` must accompany standalone copies of its
+source. This has not run on the phone and does not resolve the reported stutter.
+Installed services and camera/recording settings remain unchanged; see the
+Snapshot validation record for metrics and pending hardware checks.
