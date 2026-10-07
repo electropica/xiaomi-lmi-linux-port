@@ -611,6 +611,13 @@ CNSS/PCIe power votes, but its suspend-current comparison was invalidated by
 an early gauge wake. Autonomy remains unresolved; see the
 [power diagnostic record](../../kernel/diagnostics/power/README.md#wi-fi-shutdown-isolation-and-october-7-overnight-observation).
 
+A subsequent nearby three-minute comparison measured approximately 92.1 mA
+with normal radio shutdown and 94.8 mA with Wi-Fi enabled, both above 99.6%
+suspend occupancy. This single pair does not establish a stable Wi-Fi penalty;
+stopping the radio did not remove the residual consumption. Both collectors
+and alarms are cleaned up; the enabled-radio trace is complete.
+
+
 
 
 Clear speaker music was operator-confirmed through an installed PipeWire

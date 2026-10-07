@@ -405,3 +405,50 @@ fully-radio-off comparison. It does not demonstrate an autonomy improvement
 from the touch notification candidate. All test services/timers were inactive,
 the RTC alarm was empty, and charging worked after reconnection. Raw histories
 and kernel logs remain private; no camera or microphone was started.
+
+
+### Fully-radio-off suspend measurement — October 7
+
+The repeat Wi-Fi-off trial completed without an early wake or guarded retry.
+Clock accounting records 180.695 seconds asleep and 0.679 seconds awake over
+181.374 seconds (99.63% suspend occupancy); independent L3 statistics increased
+by one success and 180.712 seconds. Capacity remained 80%, and charge counter
+fell from 2,102,047 to 2,097,408 uAh, giving approximately 92.077 mA over the
+measured interval. Initial and final instantaneous readings were 91.796 and
+90.331 mA. All five CNSS/PCIe supply use counts were zero both before suspend
+and at the final snapshot. This establishes substantial gauge-reported residual
+current even with the normal radio shutdown path, but does not independently
+measure physical rail current or exclude a battery/gauge calibration issue.
+
+The RTC produced the planned wake. Wi-Fi was restored, charging resumed, the
+service and restoration timer are inactive, the owned alarm is empty, and the
+trace instance was removed. The trace retained only 7,836 of 11,578 events,
+with 3,742 overruns: clock/L3/gauge accounting remains independently available,
+but the incomplete trace cannot support conclusions about every device transition.
+No nonzero PM callback result appears in retained events; absence in an incomplete
+trace is not proof that every callback succeeded. A nearby Wi-Fi-enabled arm
+is pending to reduce the confounding of the older different-capacity comparison.
+
+
+### Nearby Wi-Fi-enabled comparison — October 7
+
+The enabled-radio arm on the same running candidate completed with 180.765
+seconds asleep and 0.683 seconds awake over 181.448 seconds (99.62% occupancy).
+L3 increased by one success and 180.782 seconds. Capacity stayed at 81%, and
+charge counter fell from 2,125,537 to 2,120,758 uAh: approximately 94.817 mA.
+The five CNSS/PCIe supply use counts were one at both snapshots, contrasting
+with the radio-off arm's zero votes. The original enabled radio state was kept;
+this is not a controlled associated-network workload comparison.
+
+The nearby off/on difference is approximately 2.740 mA (about 2.9% of the on-arm
+current). Both arms slept almost throughout and neither needed a gauge retry.
+This single sequential pair, at 80% then 81% with charging between arms and
+without matched temperature/association control, is insufficient to quantify
+a stable Wi-Fi penalty. It does show that stopping the radio did not eliminate
+the approximately 92 mA residual gauge-reported consumption in this experiment.
+It does not identify the remaining consumer or independently calibrate the gauge.
+
+The larger 1,024 KiB-per-CPU trace retained all 11,704 events without overruns
+or nonzero PM callback results. The RTC caused the planned wake; the service
+is inactive, its alarm is empty, the trace instance is removed, Wi-Fi remains
+enabled and charging resumed. No permanent radio or suspend policy changed.
