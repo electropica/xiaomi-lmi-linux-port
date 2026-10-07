@@ -939,3 +939,57 @@ state changes disappear after reboot. The candidate must not be deployed as
 though it were only a cosmetic battery-name fix. A future trial needs an
 explicit gauge-state preservation/observation plan before activation. No
 profile reload, counter clearing or learned-capacity write was performed here.
+
+
+### Guarded retained-profile observer — 2026-10-07
+
+The separate diagnostic patch
+[`lmi-fg-profile-observer-unvalidated.patch`](../../patches/diagnostics/lmi-fg-profile-observer-unvalidated.patch)
+adds the root-readable, non-writable `lmi_fg_profile` device attribute when
+CONFIG_DEBUG_FS is enabled. An explicit read follows the existing lmi DT
+phandle, copies the named 416-byte reference into a local buffer, then reads
+retained profile SRAM and the integrity marker before/after. It reports marker,
+24-byte prefix and full 416-byte equality, cached profile status, force-load,
+multi-profile flag and battery ID. Missing or malformed reference data and SRAM
+read errors are returned explicitly; a changed integrity marker returns EAGAIN.
+Stable markers are not a guarantee of an atomic 416-byte sample.
+
+The attribute calls no profile selector/loader, setter, work scheduler, gauge
+restart or gauge-data write. SRAM reads use the existing memory-interface
+transport and can wake it; take this snapshot while connected, not during a
+standby-consumption measurement. No periodic polling or acquisition is added.
+Raw profile bytes and authentication identifiers are not emitted.
+
+The diagnostic also blocks the existing reload-required branch before cycle
+clearing and `qpnp_fg_gen4_load_profile()`. It does not bypass the existing
+profile-selection failure or authentication policy. A matching retained-prefix
+path can still perform the driver's normal post-profile initialization, including
+its existing SDAM handling; this is not a claim that the whole boot performs
+no gauge writes. Battery removal and ordinary hardware initialization remain
+normal driver behavior. This temporary guard is diagnostic, not a production fix.
+
+Host tests apply the patch with zero fuzz to the locked source and compile the
+actual attribute fragment with strict warnings and bounded DT/SRAM stubs.
+Twelve cases cover full/prefix/tail equality, missing data, malformed lengths,
+all three read-error positions and a changing marker. References balance and
+cached chip state remains unchanged. Two extracted control-flow cases confirm
+that the reload-required path exits before clearing/loading, while the matching
+path still reaches existing initialization. The stubs are not a full kernel or
+hardware test. No kernel was built or booted for this observer.
+
+Patch SHA-256: `ec86f4cb13d7efe78f3dfcddbe6771c09373b24b2ab868d05e04f2261de80440`.
+`prepare-fg-profile-observer-variant.py` derives a new private recipe from the
+already tested RPMh/touch/debugfs chain; the selection-fix and shadow-retry
+candidates are explicitly excluded. The final guarded recipe passed manifest
+checks and the complete strict patch preflight. Earlier prepared states were
+not overwritten. The original boot's ramdisk and DTB sections are retained and
+verified by the constructor. Runtime bootloader overlays still need live review.
+
+The user performs all kernel builds. Use the guarded prepared directory,
+not the earlier observer-only preparation. A full user-invoked build and
+live attribute availability remain pending. Before any later standby trial,
+identify the temporary boot and take a single connected profile snapshot from
+`/sys/class/power_supply/bms/device/lmi_fg_profile`; retain it privately.
+Report prefix equality separately from whole-profile equality and interpret
+the integrity marker using the driver's whitelist. Do not infer physical
+capacity, lower consumption or safe profile replacement from equality alone.

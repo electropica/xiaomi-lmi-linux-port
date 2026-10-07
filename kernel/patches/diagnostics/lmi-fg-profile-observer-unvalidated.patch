@@ -1,0 +1,77 @@
+--- a/drivers/power/supply/qcom/qpnp-fg-gen4.c
++++ b/drivers/power/supply/qcom/qpnp-fg-gen4.c
+@@ -2715,0 +2716,6 @@
++#ifdef CONFIG_DEBUG_FS
++	/* Diagnostic variant: never clear/reload a mismatching gauge profile. */
++	pr_warn("lmi diagnostic: required profile reload blocked\n");
++	goto out;
++#endif
++
+@@ -4965,0 +4972,63 @@
++
++/* On-demand diagnostic: no profile loading or gauge-data writes. */
++#ifdef CONFIG_DEBUG_FS
++static ssize_t lmi_fg_profile_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct fg_gen4_chip *chip = dev_get_drvdata(dev);
++	struct device_node *container, *child;
++	const u8 *expected;
++	const char *type;
++	u8 reference[PROFILE_LEN], current[PROFILE_LEN], before, after;
++	int len, rc;
++	bool found = false;
++
++	(void)attr;
++	if (!chip)
++		return -ENODEV;
++	container = of_parse_phandle(dev->of_node, "qcom,battery-data", 0);
++	if (!container)
++		return -ENODATA;
++	for_each_child_of_node(container, child) {
++		if (of_property_read_string(child, "qcom,battery-type", &type) ||
++		    strcmp(type, "j11sun_4700mah"))
++			continue;
++		expected = of_get_property(child, "qcom,fg-profile-data", &len);
++		if (expected && len == PROFILE_LEN) {
++			memcpy(reference, expected, PROFILE_LEN);
++			found = true;
++		}
++		of_node_put(child);
++		break;
++	}
++	of_node_put(container);
++	if (!found)
++		return -ENODATA;
++
++	rc = fg_sram_read(&chip->fg, PROFILE_INTEGRITY_WORD,
++			PROFILE_INTEGRITY_OFFSET, &before, 1, FG_IMA_DEFAULT);
++	if (rc < 0)
++		return rc;
++	rc = fg_sram_read(&chip->fg, PROFILE_LOAD_WORD, PROFILE_LOAD_OFFSET,
++			current, PROFILE_LEN, FG_IMA_DEFAULT);
++	if (rc < 0)
++		return rc;
++	rc = fg_sram_read(&chip->fg, PROFILE_INTEGRITY_WORD,
++			PROFILE_INTEGRITY_OFFSET, &after, 1, FG_IMA_DEFAULT);
++	if (rc < 0)
++		return rc;
++	if (before != after)
++		return -EAGAIN;
++
++	return scnprintf(buf, PAGE_SIZE,
++		"candidate=j11sun_4700mah integrity=0x%02x prefix24_match=%d full416_match=%d\n"
++		"profile_status=%d force_load=%d multi_profile=%d batt_id_ohms=%d\n",
++		after, !memcmp(reference, current, PROFILE_COMP_LEN),
++		!memcmp(reference, current, PROFILE_LEN),
++		chip->fg.profile_load_status, chip->dt.force_load_profile,
++		chip->dt.multi_profile_load, chip->fg.batt_id_ohms);
++}
++static struct device_attribute dev_attr_lmi_fg_profile =
++	__ATTR(lmi_fg_profile, 0400, lmi_fg_profile_show, NULL);
++#endif
++
+@@ -4966,0 +5036,3 @@
++#ifdef CONFIG_DEBUG_FS
++	&dev_attr_lmi_fg_profile.attr,
++#endif
