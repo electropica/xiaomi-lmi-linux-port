@@ -6,22 +6,24 @@ of the upstream applications. The original system binaries remain in use.
 
 ## Where to find each fix
 
-| Application or feature | Implementation | Purpose and limits |
-|---|---|---|
-| Text Editor | [lmi-text-editor](files/lmi-text-editor), [portal routing](files/phosh-portals.conf) | GNOME file chooser routing and app-only Cairo workaround. Shortcut dialog remains clipped. |
-| Calculator | [lmi-calculator](files/lmi-calculator) | Simple app-only input context keeps the native keypad visible. |
-| Contacts | [lmi-contacts](files/lmi-contacts) | App-only Cairo workaround for deletion/teardown crash. |
-| Discussions (Chatty) | [lmi-chatty-safe](files/lmi-chatty-safe), [diagnosis and installation scope](CHATTY-LMI.md) | Isolated GStreamer plugin view and bounded memory scope. SMS/MMS and modem remain unvalidated. |
-| Photos (Koko) | [lmi-photos](files/lmi-photos), [thumbnail helper](files/lmi-photos-thumbnails), [diagnosis](PHOTOS-LMI.md) | Mobile launch environment and image-thumbnail workaround. Does not establish camera capture or video support. |
-| Clocks timer alert | [package recipe](scripts/install.sh), [validation](../../docs/validation/lmi-clock-feedback-2026-10-04.md) | Explicit Feedback service and PulseAudio sound backend restore the tested timer alert; suspend wakeup and closed-app alarms unvalidated. |
-| Recorder (KRecorder) | [lmi-recorder](files/lmi-recorder), [audio integration and opt-in settings](../audio/README.md#microphone-and-recorder-capture--2026-10-04) | App-only KDE theme restores action icons and Close. Microphone route, scheduling workaround and WAV/PCM preferences remain opt-in; the app installer stages only the launcher. |
-| Flashlight | [application](files/lmi-flashlight.py), [desktop entry](files/lmi-flashlight.desktop), [usage](files/LMI-FLASHLIGHT.md) | lmi flashlight controls. |
-| Close buttons | [Phosh schema override](../phosh/files/92_lmi-window-controls.gschema.override) | Restores Close in standard GTK headers; custom headers can still omit it. |
-| Oversized windows | [Phoc schema override](../phosh/files/93_lmi-scale-to-fit.gschema.override) | Adjusts oversized windows. Chatty shortcut dismissal tested; Editor still clips. |
+| Application or feature | Implementation | Purpose and limits | Next-image activation |
+|---|---|---|---|
+| Text Editor | [lmi-text-editor](files/lmi-text-editor), [portal routing](files/phosh-portals.conf) | GNOME file chooser routing and app-only Cairo workaround. Shortcut dialog remains clipped. | Optional apps enabled |
+| Calculator | [lmi-calculator](files/lmi-calculator) | Simple app-only input context keeps the native keypad visible. | Optional apps enabled |
+| Contacts | [lmi-contacts](files/lmi-contacts) | App-only Cairo workaround for deletion/teardown crash. | Optional apps enabled |
+| Discussions (Chatty) | [lmi-chatty-safe](files/lmi-chatty-safe), [diagnosis and installation scope](CHATTY-LMI.md) | Isolated GStreamer plugin view and bounded memory scope. SMS/MMS and modem remain unvalidated. | Separate opt-in; not staged by M1 |
+| Photos (Koko) | [lmi-photos](files/lmi-photos), [thumbnail helper](files/lmi-photos-thumbnails), [diagnosis](PHOTOS-LMI.md) | Mobile launch environment and image-thumbnail workaround. Does not establish camera capture or video support. | Optional apps enabled |
+| Clocks timer alert | [package recipe](scripts/install.sh), [validation](../../docs/validation/lmi-clock-feedback-2026-10-04.md) | Explicit Feedback service and PulseAudio sound backend restore the tested timer alert; suspend wakeup and closed-app alarms unvalidated. | Optional app dependencies enabled |
+| Recorder (KRecorder) | [lmi-recorder](files/lmi-recorder), [audio integration and opt-in settings](../audio/README.md#microphone-and-recorder-capture--2026-10-04) | App-only KDE theme restores action icons and Close. Microphone route, scheduling workaround and WAV/PCM preferences remain opt-in; the app installer stages only the launcher. | Optional launcher; audio/settings remain opt-in |
+| Flashlight | [application](files/lmi-flashlight.py), [desktop entry](files/lmi-flashlight.desktop), [usage](files/LMI-FLASHLIGHT.md) | lmi flashlight controls. | Separate opt-in; not staged by M1 |
+| Close buttons | [Phosh schema override](../phosh/files/92_lmi-window-controls.gschema.override) | Restores Close in standard GTK headers; custom headers can still omit it. | M1 Phosh schema |
+| Oversized windows | [Phoc schema override](../phosh/files/93_lmi-scale-to-fit.gschema.override) | Adjusts oversized windows. Chatty shortcut dismissal tested; Editor still clips. | M1 Phoc schema |
 
-[install.sh](scripts/install.sh) installs the application integration and
-launcher routing. See its switches and the app-specific documents for the
-exact activation scope. The [Phosh builder](../phosh/scripts/build-m1-phosh.sh)
+With `INSTALL_OPTIONAL_APPS=1`, [install.sh](scripts/install.sh) installs the
+selected dependencies and the Editor, Calculator, Contacts, Photos and Recorder
+launcher routes. Chatty's reviewed plugin/desktop/D-Bus setup and the Flashlight
+app remain separate opt-ins; they are not automatically staged by M1. See the
+app-specific documents for their exact activation scope. The [Phosh builder](../phosh/scripts/build-m1-phosh.sh)
 stages the next image's integration and validates session defaults. Preparing
 a recipe is distinct from actually building and booting an image.
 
@@ -74,3 +76,27 @@ from a live phone or rewrite the historical golden package lock.
 Snapshot remains a separate diagnostic installation; it is not silently added
 as a replacement because the real camera bridge and recording remain pending
 production integration. See the [camera record](../camera/README.md#current-snapshot-camera-status--2026-10-05).
+
+### Next-build application file closure — 2026-10-07
+
+The M1 optional-app staging list omitted `lmi-recorder`, although the installer
+required it. The host-only closure check reproduced that missing-file failure
+before the correction. M1 now stages the Recorder wrapper alongside the other
+launcher helpers. This prevents that known missing input at installation; it
+does not establish a complete rebuilt image or a new hardware result.
+
+Run `python3 userspace/apps/scripts/check-builder-staging.py` from the repository
+root before an M1 build. It compares actual installer dependencies with the
+builder's staging statements, then copies only the small public app files into
+a temporary directory and verifies contents/modes. It starts no launcher,
+package installation, image build or hardware access. Unsupported staging
+syntax fails for review instead of silently assuming coverage. Seven app-file
+dependencies pass after the correction. Package/upstream desktop-entry changes
+and a complete image build remain separate validation steps.
+
+Phone-local UPower status and CPU-idle opt-ins are documented under
+[`userspace/power/`](../power/README.md); the audio route/settings are under
+[`userspace/audio/`](../audio/README.md). They are not activated by this optional
+app installer. A source fix or live-phone validation must not be described as
+automatically present in a newly built image before its activation path is
+included and that image is manually built and checked.

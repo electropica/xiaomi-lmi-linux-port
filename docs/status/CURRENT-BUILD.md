@@ -492,3 +492,8 @@ The next-build optional application recipe no longer installs the abandoned
 Megapixels package. Snapshot is still a separately tested diagnostic application,
 not a production camera replacement in this recipe. No image was rebuilt and
 no live-phone package was changed by this recipe correction.
+
+M1 now stages the Recorder launch wrapper required by the optional-app installer.
+A host-only dependency-closure check first reproduced the missing-file failure,
+then passed all seven staged app inputs after the correction. No image or live
+phone was changed. The checker is under `userspace/apps/scripts/`.
