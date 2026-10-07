@@ -993,3 +993,38 @@ identify the temporary boot and take a single connected profile snapshot from
 Report prefix equality separately from whole-profile equality and interpret
 the integrity marker using the driver's whitelist. Do not infer physical
 capacity, lower consumption or safe profile replacement from equality alone.
+
+
+#### Single guarded-profile read and interpretation
+
+`read-fg-profile-observer.py` reads at most 4,096 characters once from the
+root-only attribute and emits parsed JSON. It rejects missing, duplicate,
+unknown and inconsistent fields. Missing attributes and kernel read errors
+remain explicitly unavailable rather than becoming zero or "no reload".
+It emits no raw SRAM bytes and performs no writes or background sampling.
+
+The integrity whitelist matches the locked driver's symbolic bit combinations.
+For single-profile mode, `reviewed_reload_rule` reports the reviewed logic from
+marker and prefix equality, including force-load behavior. It is interpretation
+of this snapshot, not an observed execution of the loader; the diagnostic guard
+blocks the reload-required branch. Multi-profile age state is not captured, so
+that interpretation is unavailable in multi-profile mode. Full-profile equality
+is reported separately because the driver checks only the first 24 bytes.
+
+The host-only reader test derives the whitelist from the exact locked source,
+then checks marker boundaries, prefix/full mismatch, forced/non-forced behavior,
+multi-profile limits, malformed input, missing files and the size cap. It uses
+only local fixtures. A live read awaits the user-built diagnostic boot; do not
+present successful parsing as evidence that the attribute is already installed.
+
+📱 SSH — Xiaomi lmi — 🔎 Read only — guarded diagnostic boot already confirmed
+
+```sh
+python3 /path/to/read-fg-profile-observer.py
+```
+
+Keep its result private with the manual boot manifest and first battery/kernel
+snapshot. The normal permanent boot has no such diagnostic attribute. Do not
+run the reader in WSL expecting it to read the phone; it must execute over SSH
+on the confirmed diagnostic boot. This step needs neither camera/microphone
+acquisition nor a cable manipulation.
