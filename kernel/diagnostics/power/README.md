@@ -506,11 +506,31 @@ callback returning zero; with the live properties, the helper cannot lower
 these four load requests. This identifies a policy worth investigating, not
 a demonstrated cause of the approximately 94 mA residual current.
 
-Before preparing a change, review RPMh regulator load-to-mode behavior and
-shared consumers, then determine whether a temporary variant can request
-lower sleep loads while preserving voltage and restoring the nominal loads
-on resume. BOB's live initial-mode property is zero; that value alone does
-not identify its physical sleep mode. No supply was disabled, no DT property
-was changed, and no driver was unbound during this inspection. An audio
-supply experiment would still require a separate bounded power comparison
-and speaker/microphone checks after wake. Raw DT and trace dumps remain private.
+Further inspection identified the actual live provider as
+`qcom,rpmh-vrm-regulator`, implemented by `drivers/regulator/rpmh-regulator.c`,
+rather than the separate upstream-style `qcom-rpmh-regulator.c`. S4's provider
+has no supported-mode table; the downstream driver removes its `set_load`,
+`set_mode` and `get_mode` operations when that table is absent. Reducing a
+codec load request alone would therefore not change S4's hardware-mode vote.
+S4 also supplies UFS and WLAN; it cannot be treated as an audio-only rail.
+
+BOB does expose supported modes 0, 2 and 4, with load thresholds of 0,
+1,000,000 and 2,000,000 uA. The driver's load mapping selects the same first
+mode for both 30,000 and zero uA. Its PMIC5 mapping identifies that first mode
+as PASS, exposed as framework STANDBY. The live debug view already reports
+framework mode 8 (STANDBY) for both the normal and active-only BOB regulators;
+the only enabled normal-regulator consumer is the codec's 30,000 uA request.
+These are software votes and do not independently measure physical current.
+
+Consequently, adding the missing codec LPM flags alone is not a justified
+power-saving candidate on this live configuration: S4 cannot act on the load
+change and BOB would retain the same mode. No kernel build is proposed for
+that change. This does not exclude physical codec consumption while its
+static supplies are enabled. Establishing whether those loads explain the
+residual current requires a separately justified isolation or measurement;
+blindly disabling a shared rail or converting static supplies to on-demand
+would risk the validated audio and storage paths.
+
+No supply was disabled, no DT property was changed, and no driver was unbound
+during this inspection. No microphone or camera capture was performed.
+Raw DT and trace dumps remain private.
