@@ -1081,3 +1081,24 @@ preserving the small recipes/manifests and evidence rather than daily binaries.
 The guarded FG recipe/readers remain prepared research, not the next requested
 manual build and not deployed functionality. Hardware profile comparison using
 that new attribute is deferred unless a later justified build includes it.
+
+
+### First standby measurement after persistent installation — 2026-10-07
+
+The unchanged-radio trial on the confirmed installed RPMh baseline completed
+without an early wake or gauge resuspend. From the pre-suspend to final samples,
+elapsed time was 181.396 s, monotonic awake time 0.716 s and inferred suspended
+time 180.679 s (99.605%). Charge counter fell by 4,504 uAh, corresponding to
+89.387 mA averaged over this interval. The reported percentage stayed at 100%.
+The final wake reason was the programmed RTC alarm. After reconnect, charging
+resumed, the diagnostic service was inactive with success, and neither its
+trace instance nor RTC alarm remained armed.
+
+This is one short gauge-derived measurement, not an independently calibrated
+physical current measurement or a proven autonomy improvement. Earlier radio-on
+and radio-off samples were approximately 94.787 and 93.135 mA respectively,
+at different state of charge and boot history. Their difference from this
+89.387 mA sample cannot isolate a kernel, radio or profile effect. The installed
+baseline now survives restart, allowing subsequent comparisons to identify and
+hold the kernel constant. Raw logs remain private; no audio/video acquisition,
+new kernel build or radio-state modification was performed in this trial.
