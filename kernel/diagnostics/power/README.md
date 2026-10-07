@@ -802,10 +802,12 @@ temporary RPMh observer identity must be checked again before later observer
 tests. The operator subsequently confirmed a manual shutdown for an unplugged
 comparison; no return measurement is available yet.
 
-The last pre-shutdown sample reported 88% and 2,273,114 uAh. The phone clock was
-approximately six minutes behind the trusted host reference, so elapsed time
-must use the host/operator interval rather than subtracting phone timestamps.
-The return sample will also include startup and any connected charging: this
+The last pre-shutdown sample reported 88% and 2,273,114 uAh. It did not
+include a paired host/phone clock sample; a later host reading does not establish
+an exact phone-clock offset. Measure elapsed time using the trusted host/operator
+interval rather than subtracting phone timestamps. Read the return battery
+before any further diagnostic reboot. Startup and any connected charging still
+affect that return sample: this
 comparison is approximate and cannot independently calibrate the gauge or
 measure powered-off current. Do not infer a battery fault or an autonomy fix
 from the pending test.
