@@ -452,3 +452,30 @@ The larger 1,024 KiB-per-CPU trace retained all 11,704 events without overruns
 or nonzero PM callback results. The RTC caused the planned wake; the service
 is inactive, its alarm is empty, the trace instance is removed, Wi-Fi remains
 enabled and charging resumed. No permanent radio or suspend policy changed.
+
+
+### APSS/ADSP sleep accounting — October 7
+
+A further bounded three-minute trial retained the enabled radio state and added
+RPMh master snapshots before and after suspend. Capacity stayed at 90%; charge
+counter fell from 2,355,464 to 2,350,729 uAh over 181.883 seconds, approximately
+93.720 mA. Clock accounting records 181.202 seconds suspended and 0.681 seconds
+awake (99.63% occupancy); L3 recorded one success lasting 181.223 seconds.
+No gauge retry or early reconnection occurred; the RTC caused the planned wake.
+
+The exposed RPMh master counters were APSS and ADSP only. Using their 19.2 MHz
+accumulated-duration counters, APSS added 181.240 seconds asleep (99.65% of the
+interval; seven entries), and ADSP added 181.793 seconds asleep (99.95%; eight
+entries). These counters support sleep of both processors despite substantial
+gauge-reported residual current. They do not establish physical removal of every
+DSP supply or account for unexposed masters, external peripheral loads or gauge
+calibration. In particular, missing modem statistics are not proof of modem sleep.
+The downstream kernel exposes msm_subsys states rather than remoteproc devices;
+labels such as ONLINE/OFFLINING alone were not treated as current measurements.
+
+The trace retained all 11,561 events without loss or nonzero PM callback results.
+The collector is inactive, its RTC alarm is empty, the trace instance was removed,
+Wi-Fi remains enabled and charging resumed. No processor, peripheral, driver,
+regulator or gauge protection was disabled. This narrows the residual-current
+investigation toward retained physical loads and measurement accuracy rather
+than demonstrating an autonomy fix. Raw traces and histories remain private.

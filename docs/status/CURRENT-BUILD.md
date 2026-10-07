@@ -178,6 +178,12 @@ with normal radio shutdown and 94.8 mA with Wi-Fi enabled, both above 99.6%
 suspend occupancy. This single pair does not establish a stable Wi-Fi penalty;
 stopping the radio did not remove the residual consumption. Both collectors
 and alarms are cleaned up; the enabled-radio trace is complete.
+A further three-minute trial exposed APSS/ADSP master sleep counters: they
+report 99.65% and 99.95% asleep respectively while the gauge still measures
+approximately 93.7 mA. This narrows the investigation but neither measures
+all physical loads nor validates an autonomy fix; the complete result is in
+the power diagnostic record.
+
 
 
 
