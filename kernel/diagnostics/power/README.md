@@ -579,3 +579,48 @@ The approximately 95 mA remains unexplained. No new kernel build, regulator
 write, driver unbind, camera capture or microphone recording was performed.
 The collector is inactive, its trace instance was removed, its RTC alarm is
 empty, Wi-Fi remains enabled and charging resumed. Raw traces stay private.
+
+
+### Read-only RPMh aggregate observer candidate — October 7
+
+The existing event trace shows commands that are emitted, not a complete
+snapshot of unchanged requests. The isolated diagnostic patch
+`kernel/patches/diagnostics/lmi-rpmh-vote-observer-unvalidated.patch` adds a
+read-only `lmi_diag_votes` sysfs attribute to each downstream RPMh provider
+when DEBUG_FS is enabled. It is outside the production patch list.
+
+The reader holds the provider's existing aggregation mutex, computes active
+and sleep requests into local zeroed structures, and prints their validity
+masks, register values, cached sent requests and each regulator's active/sleep
+participation. It does not send RPMh commands, access PMIC registers, call
+regulator setters or change enable/voltage/mode policy. The existing aggregate
+helper only modifies its local output structures. Device-managed attribute
+removal precedes managed provider memory release; an attribute creation failure
+warns without failing regulator probe. Output is bounded to one sysfs page.
+
+These are software requests, not measured current or physical rail states.
+A cached sleep request is not valid just because its storage contains a value;
+its valid mask and `sleep_request_sent` must be interpreted. Other masters'
+votes remain outside this reader, and snapshots around suspend do not sample
+the system continuously while it is asleep.
+
+`prepare-rpmh-vote-observer-variant.py` derives from the current debugfs/reset-GPIO/
+touch-notifier recipe, locks the observer patch hash and adds it to the archive
+comparison, strict patch sequence and application steps. It prepares an ignored
+private state directory and never builds or contacts hardware. The output name
+is `D-repro-01-power-rpmh-votes-diagnostic-boot.img`. The private prepared state
+is `kernel/diagnostics/audio/state-power-rpmh-votes-reviewed/`.
+
+Host validation passed: preparer Python syntax, wrapper shell syntax,
+`git apply --check --whitespace=error-all` on exact source, archive target
+comparison, the complete sequential patch check and native Kconfig validation.
+No kernel target was compiled. The initial check rejected missing environment
+paths, and a subsequent noninteractive user check stopped at sudo; the fully
+specified root-WSL check then completed. Failed checks are retained in ignored
+private state. This validates preparation, not the C compilation or hardware.
+
+The candidate is source-only until the manual build succeeds. After temporary
+Fastboot boot, verify identity, provider attributes, display, USB, charging and
+touch before a bounded unplug test. Capture requests after USB runtime suspend,
+then compare with the final command trace. Do not disable a retained supply
+merely because its software sleep enable is nonzero.

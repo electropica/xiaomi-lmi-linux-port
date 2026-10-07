@@ -1,0 +1,80 @@
+--- a/drivers/regulator/rpmh-regulator.c
++++ b/drivers/regulator/rpmh-regulator.c
+@@ -672,6 +672,64 @@
+ 	rpmh_regulator_handle_arc_enable(aggr_vreg, req_sleep);
+ }
+ 
++/* Diagnostic only: observe software requests; never access hardware here. */
++#ifdef CONFIG_DEBUG_FS
++static ssize_t lmi_diag_votes_show(struct device *dev,
++				  struct device_attribute *attr, char *buf)
++{
++	struct rpmh_aggr_vreg *aggr = dev_get_drvdata(dev);
++	struct rpmh_regulator_request active = { {0} };
++	struct rpmh_regulator_request sleep = { {0} };
++	int pos = 0, i, j, count;
++
++	if (!aggr)
++		return -ENODEV;
++
++	mutex_lock(&aggr->lock);
++	count = rpmh_regulator_get_max_reg_index(aggr);
++	rpmh_regulator_aggregate_requests(aggr, &active, &sleep);
++	pos += scnprintf(buf + pos, PAGE_SIZE - pos,
++		"resource=%s addr=0x%x type=%d sleep_request_sent=%d\n",
++		aggr->resource_name, aggr->addr, aggr->regulator_type,
++		aggr->sleep_request_sent);
++	pos += scnprintf(buf + pos, PAGE_SIZE - pos,
++		"computed_active_valid=0x%x computed_sleep_valid=0x%x\n",
++		active.valid, sleep.valid);
++	for (j = 0; j < count; j++)
++		pos += scnprintf(buf + pos, PAGE_SIZE - pos,
++			"r%d active=%u sleep=%u cached_active=%u cached_sleep=%u\n",
++			j, active.reg[j], sleep.reg[j],
++			aggr->aggr_req_active.reg[j], aggr->aggr_req_sleep.reg[j]);
++	pos += scnprintf(buf + pos, PAGE_SIZE - pos,
++		"cached_active_valid=0x%x cached_sleep_valid=0x%x\n",
++		aggr->aggr_req_active.valid, aggr->aggr_req_sleep.valid);
++	for (i = 0; i < aggr->vreg_count; i++) {
++		struct rpmh_vreg *vreg = &aggr->vreg[i];
++
++		pos += scnprintf(buf + pos, PAGE_SIZE - pos,
++			"vreg=%s active_set=%d sleep_set=%d valid=0x%x",
++			vreg->rdesc.name, vreg->set_active, vreg->set_sleep,
++			vreg->req.valid);
++		for (j = 0; j < count; j++)
++			pos += scnprintf(buf + pos, PAGE_SIZE - pos,
++				" r%d=%u", j, vreg->req.reg[j]);
++		pos += scnprintf(buf + pos, PAGE_SIZE - pos, "\n");
++	}
++	mutex_unlock(&aggr->lock);
++	return pos;
++}
++static DEVICE_ATTR_RO(lmi_diag_votes);
++
++static struct attribute *lmi_diag_vote_attrs[] = {
++	&dev_attr_lmi_diag_votes.attr,
++	NULL,
++};
++
++static const struct attribute_group lmi_diag_vote_group = {
++	.attrs = lmi_diag_vote_attrs,
++};
++#endif
++
+ /**
+  * rpmh_regulator_send_aggregate_requests() - aggregate the requests from all
+  *		regulators associated with an RPMh resource and send the request
+@@ -1975,6 +2033,12 @@
+ 	of_platform_populate(pdev->dev.of_node, NULL, NULL, &pdev->dev);
+ 	platform_set_drvdata(pdev, aggr_vreg);
+ 
++#ifdef CONFIG_DEBUG_FS
++	/* Attribute creation failure must not change regulator probe behavior. */
++	if (devm_device_add_group(&pdev->dev, &lmi_diag_vote_group))
++		dev_warn(&pdev->dev, "diagnostic vote attribute unavailable\n");
++#endif
++
+ 	aggr_vreg_debug(aggr_vreg, "successfully probed; addr=0x%05X, type=%s\n",
+ 			aggr_vreg->addr,
+ 			aggr_vreg->regulator_type == RPMH_REGULATOR_TYPE_ARC
