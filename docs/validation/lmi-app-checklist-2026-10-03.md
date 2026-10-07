@@ -29,7 +29,8 @@ labels are retained where useful to identify controls on the test phone.
 | Amberol | MP3 playback and volume confirmed before reboot. The later diagnostic boot restored ALSA and operator-confirmed PipeWire speaker playback; Amberol-specific playback on this boot still needs recheck. | Pending. | Pending. |
 | Showtime | MP4 playback confirmed before reboot. Speaker audio was later restored on the diagnostic boot; this does not establish a fresh Showtime playback/video check. | Pending. | Pending. |
 | Recorder | Diagnostic-boot microphone capture recognized through native ALSA preview; two complete KRecorder WAV saves measured. Application recording confirmed good by the operator after replay. | Microphone chooser, WAV/PCM saving and persisted `0:08` after normal relaunch passed with opt-in audio fixes. Rename and Delete tested on our temporary recording; confirmed recording preserved. Other codecs/export unvalidated. | Configuration labels French; complete coverage untested. |
-| Megapixels | Blocked: bounded current launch exits with status 1 because `qcom,kona-mtp.ini` is absent; no established standard capture pipeline. | Unvalidated. | Not the priority before functional capture. |
+| Megapixels | Abandoned standard-pipeline trial; uninstalled from the test phone at the operator's request and omitted from the next-image optional-app recipe. The historical startup failure is preserved below. | Not a current test target. | Not a current priority. |
+| Snapshot (GNOME Camera) | Rear preview and video/audio were tested through a separate diagnostic HAL-to-PipeWire bridge. Mirror correction and usable preview were operator-confirmed, but later tuning still showed visible delay or stutter. No full-resolution still, front-camera, zoom, production integration or 720p/30 fps validation. These results do not establish camera availability on the later permanent-kernel return boot. | Recording start/stop and playback were exercised; complete menus remain unvalidated. See the [dated camera record](snapshot-pipewire-rear-preview-2026-10-05.md). | Lower priority than capture and reliable playback. |
 | Calls | Startup, reopening, Keypad tab and normal exit status 0 verified. UI reports no modem/VoIP account; no number entered or call placed. | VoIP Accounts opened; session preference restores Close, and simulated touch dismisses the dialog while Calls stays open. | French labels on examined screens; complete coverage unvalidated. |
 | Web | Pending; Internet DNS failed at the last check. | Pending. | Pending. |
 | Maps | Pending; network and position unvalidated. | Pending. | Pending. |
@@ -1076,3 +1077,27 @@ remained reachable and returned to its application grid after stopping the
 test. Higher-quality video, stable preview and reliable file preservation
 remain unvalidated. All camera test units are stopped; no further capture
 without explicit operator readiness.
+
+
+## Offline reboot clock follow-up — October 7, 2026
+
+After the powered-off battery comparison, the permanent-kernel return retained
+the correct timezone but its system clock was about 76 minutes behind the
+trusted host. This comparison uses a fresh host/phone observation and is
+distinct from the earlier unpaired pre-shutdown timestamps. NTP was enabled
+but unsynchronized with zero received packets. Wi-Fi was enabled/disconnected
+and USB was unmanaged; no Internet or NTP reachability was demonstrated.
+
+The system clock alone was corrected from the host with CLOCK_REALTIME. The
+SSH operation took about 1.2 seconds, so this is an approximate seconds-level
+correction, not a measured subsecond synchronization. The hardware RTC date
+remained unchanged. No direct RTC write, radio-state change, network sharing,
+NTP disablement or application launch was performed. The earlier first return
+battery snapshot was preserved before the clock correction.
+
+The correction does not repair offline time retention across shutdown. The
+existing next-build timesyncd integration still requires an accessible time
+source; absence of connectivity must not be reported as a synchronized clock.
+Calendar/reminder timestamps and post-reboot logs need this limitation recorded.
+Physical alarm delivery remains unvalidated. Camera results are now summarized
+separately for Snapshot; the discontinued Megapixels trial is historical.
