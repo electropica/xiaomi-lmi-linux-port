@@ -461,3 +461,13 @@ no production boot replacement. The next bounded observer/trace comparison is
 prepared, not yet executed. See the
 [power diagnostic record](../../kernel/diagnostics/power/README.md) for identity,
 measurement boundaries and wrapper reporting details.
+
+
+The first bounded aggregate-observer trial completed with all 47 snapshots
+readable and a loss-free trace. It measured approximately 94.787 mA by the gauge
+with 99.617% suspend occupancy; no autonomy improvement is established.
+Pre-suspend supply requests must be reconciled with late suspend transitions:
+L17 is explicitly disabled and L12 receives a zero sleep-enable request.
+The collector, trace instance and RTC alarm are cleaned up; Wi-Fi is enabled
+and charging resumed. The power diagnostic record contains the consumer mapping
+and remaining limitations. The instrumented radio-off comparison is pending.

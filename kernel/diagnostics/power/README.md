@@ -670,3 +670,48 @@ collector adding all 47 observer snapshots is prepared but has not been run.
 No RTC alarm or collector was installed for the extended absence; raw histories
 and snapshots remain private. Shared supplies must not be disabled based solely
 on these software requests.
+
+
+### First bounded aggregate-observer trial ? October 7
+
+With the observer candidate and Wi-Fi enabled, the operator completed a bounded
+three-minute unplugged trial. Elapsed time was 181.240 seconds, including
+180.547 seconds suspended (99.617%); L3 added one success of 180.564 seconds.
+Capacity remained 73%, while the charge counter fell from 1,933,009 to
+1,928,237 uAh: approximately 94.787 mA by the gauge. APSS and ADSP counters
+recorded 99.636% and 99.950% asleep respectively. The RTC caused the planned
+wake, with no retry, early reconnect or early-wake abort.
+
+All 47 provider snapshots were readable at armed, pre-suspend and finished
+points. The trace retained all 11,892 events without overrun, dropped events,
+nonzero PM callback results or RPMh acknowledgement errors. Exact begin/end
+markers delimit the machine-suspend command window; substring matching of
+`end` would incorrectly match `suspend` and must not be used for extraction.
+The final sleep bank again requests zero CX/MX/XO levels, BOB mode PASS (2),
+L12 enable zero/mode 4, and zero/invalid bandwidth for SH4/SN11/CN0.
+
+The pre-suspend aggregate requests include enabled BOB, L5, L6, L17, the
+PM8150A L1 touch supply, S4 and four Wi-Fi rails. These snapshots precede
+late device suspension: the trace explicitly disables L17 before machine
+suspend, while L12 already has a zero sleep enable before initial suspend.
+L14 is already disabled in that snapshot and is enabled again after wake.
+Consequently neither pre-suspend L17 nor post-wake L14 activation establishes
+sleep-time retention. Remaining computed requests are software state, not
+independent physical-current measurements, and unexposed masters remain outside
+this observer.
+
+Consumer mapping identifies L5 as shared among display/USB/UFS/PCIe PHY paths,
+L6 and L17 as UFS supplies, PM8150A L1 as the touchscreen supply, S4 as shared
+codec/WLAN/UFS power, and BOB as a static codec supply. The locked UFS driver
+intentionally retains its I/O rails in low-power mode for device sleep with
+HIBERN8 while switching off VCC. The touch driver normally sends a sleep
+command rather than cutting supply power; supply cycling is confined to its
+factory-build branch. These policies do not prove excessive consumption by
+those consumers or justify disabling shared supplies.
+
+The collector is inactive, the owned RTC alarm is empty, the trace instance
+was removed, charging resumed and Wi-Fi remains enabled. No regulator policy,
+voltage, device binding or persistent setting changed. A radio-off comparison
+with the same 47 observer snapshots is prepared, not executed. Its new purpose
+is to distinguish retained aggregate requests from the previous radio-off
+current measurements; no autonomy improvement is claimed. Raw data stays private.
