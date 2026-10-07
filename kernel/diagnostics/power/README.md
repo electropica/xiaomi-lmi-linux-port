@@ -841,3 +841,13 @@ negative charging current, malformed and oversized config data. It never opens
 the host's live power supplies or contacts the phone. These fixture tests passed;
 live use of the new reader remains pending the operator's return. No shutdown,
 Android restore, battery learning reset or charging-limit change is automated.
+
+### Shared Android gauge source and retry candidate — 2026-10-07
+
+The selected lmi battery-profile file and five inspected gauge-read/counter
+function bodies match both pinned Android references. A shared retry-boundary
+defect was reproduced using the actual C functions and simulated register reads.
+A separate two-loop candidate passes the same twenty cases but is not included
+in any diagnostic recipe or live kernel. It addresses inconsistent-read handling,
+not charge calibration or demonstrated residual consumption. See the
+[source comparison and proof](../../../docs/provenance/external-lmi-source-comparison-2026-10-07.md#battery-profile-and-gauge-read-follow-up).

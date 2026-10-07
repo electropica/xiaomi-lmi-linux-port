@@ -1,0 +1,20 @@
+--- a/drivers/power/supply/qcom/fg-util.c
++++ b/drivers/power/supply/qcom/fg-util.c
+@@ -1017,7 +1017,7 @@
+ 	int64_t temp = 0;
+ 	u8 buf[2], buf_cp[2];
+ 
+-	while (tries++ < MAX_READ_TRIES) {
++	for (tries = 0; tries < MAX_READ_TRIES; tries++) {
+ 		rc = fg_read(fg, BATT_INFO_IBATT_LSB(fg), buf, 2);
+ 		if (rc < 0) {
+ 			pr_err("failed to read addr=0x%04x, rc=%d\n",
+@@ -1061,7 +1061,7 @@
+ 	u16 temp = 0;
+ 	u8 buf[2], buf_cp[2];
+ 
+-	while (tries++ < MAX_READ_TRIES) {
++	for (tries = 0; tries < MAX_READ_TRIES; tries++) {
+ 		rc = fg_read(fg, BATT_INFO_VBATT_LSB(fg), buf, 2);
+ 		if (rc < 0) {
+ 			pr_err("failed to read addr=0x%04x, rc=%d\n",
