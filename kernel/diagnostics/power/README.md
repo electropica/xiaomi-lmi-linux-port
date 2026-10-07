@@ -619,8 +619,54 @@ paths, and a subsequent noninteractive user check stopped at sudo; the fully
 specified root-WSL check then completed. Failed checks are retained in ignored
 private state. This validates preparation, not the C compilation or hardware.
 
-The candidate is source-only until the manual build succeeds. After temporary
+At preparation time, the candidate was source-only pending the manual build. After temporary
 Fastboot boot, verify identity, provider attributes, display, USB, charging and
 touch before a bounded unplug test. Capture requests after USB runtime suspend,
 then compare with the final command trace. Do not disable a retained supply
 merely because its software sleep enable is nonzero.
+
+
+### RPMh observer manual build and extended observation ? October 7
+
+The operator manually produced `D-repro-01-power-rpmh-votes-diagnostic-boot.img`,
+54,652,928 bytes, SHA-256
+`a89ae4d9529dcef55d3969eb6b5a75c2617d9ef0e2e1f568c5f619eb1adf5c50`.
+The internal builder recorded COMPLETE; kernel build, DTB build and DTB
+verification each returned zero. The outer wrapper reported a missing status
+file because the inner state directory was root-owned mode 0700 and unreadable
+by the invoking user. Root inspection confirmed completion and the output
+manifest; the Windows transfer was independently checked against the same hash.
+This is a wrapper reporting/access defect, not evidence of a failed kernel build.
+No global permissions were changed and no repeat compilation was started.
+
+After the operator's temporary boot, USB SSH and charging worked and all 47
+RPMh provider attributes were readable. The live banner identifies the build
+of October 7 at 05:27:54 UTC; IKCONFIG SHA-256 is
+`c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78`.
+The banner/config and observer presence corroborate the candidate but are not
+cryptographic attestation of running kernel text. No new touchscreen or media
+validation has yet been performed with this variant.
+
+The operator reported approximately 10 hours 20 minutes disconnected, with
+capacity falling from 100% before departure to 63% at first SSH after return:
+about 3.58 percentage points per hour. This uncontrolled interval is not an
+independently calibrated current measurement. The same boot remained active.
+Kernel logs contain 80 completed deep-suspend intervals from 08:02:37 to
+18:04:55 local time: approximately 34,889 seconds asleep over a 36,139-second
+span (96.54%). Of the 80 resume causes, 76 were msoc-delta, one esr-delta,
+one RTC alarm, one msoc-high and one Type-C state change. Median awake gaps
+were 15.83 seconds; median sleep among the 77 intervals lasting at least two
+minutes was 481.66 seconds. No panic, Oops or matching suspend-failure message
+was found in the inspected current-boot kernel journal. This does not establish
+absence of every possible device error. The observation provides no autonomy fix.
+
+An awake, plugged-in observer snapshot has eleven VRM resources with a valid
+computed sleep enable of one. It is not their final suspend state. In the locked
+provider driver, a separate sleep request is sent only when active and sleep
+requests differ or previously differed; an absent sleep command or invalid
+cached sleep mask cannot be interpreted as an off request. Late-suspend changes
+must be matched against the final command trace. A bounded three-minute
+collector adding all 47 observer snapshots is prepared but has not been run.
+No RTC alarm or collector was installed for the extended absence; raw histories
+and snapshots remain private. Shared supplies must not be disabled based solely
+on these software requests.

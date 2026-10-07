@@ -1087,3 +1087,20 @@ the expected touch suspend/resume path and 181 seconds of deep sleep. The operat
 confirmed normal touch response after wake; an autonomy improvement is not
 established. This covers one suspend/resume cycle only. The power diagnostic record gives its exact
 identity and experimental scope; this is not a production boot update.
+
+
+### RPMh observer diagnostic follow-up ? 2026-10-07
+
+The operator manually built and temporarily booted the read-only RPMh observer
+variant (54,652,928 bytes; SHA-256
+`a89ae4d9529dcef55d3969eb6b5a75c2617d9ef0e2e1f568c5f619eb1adf5c50`).
+All 47 provider attributes, USB SSH and charging were checked. The inner builder
+completed successfully despite the outer wrapper's inability to read its
+root-owned status directory. A roughly 10 h 20 min uncontrolled unplugged period
+still lost 37 capacity points. Kernel logs show approximately 96.54% deep sleep
+between the first recorded suspension and reconnection, predominantly interrupted
+by battery-gauge interrupts. There is no demonstrated autonomy improvement and
+no production boot replacement. The next bounded observer/trace comparison is
+prepared, not yet executed. See the
+[power diagnostic record](../../kernel/diagnostics/power/README.md) for identity,
+measurement boundaries and wrapper reporting details.
