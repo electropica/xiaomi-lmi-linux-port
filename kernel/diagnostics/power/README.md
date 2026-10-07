@@ -793,14 +793,14 @@ authentication and a complete user-invoked build have not been retested.
 Previously prepared recipes and their evidence remain unchanged. See the
 [audio constructor documentation](../audio/README.md#private-internal-completion-metadata).
 
-### Powered-off comparison pending — 2026-10-07
+### Approximate powered-off comparison — 2026-10-07
 
 An initial systemd poweroff reached the poweroff target but the operator reported
 that the phone restarted. That attempt is not a valid powered-off discharge
 test. The restart returned to the original persistent D-repro kernel, so the
 temporary RPMh observer identity must be checked again before later observer
 tests. The operator subsequently confirmed a manual shutdown for an unplugged
-comparison; no return measurement is available yet.
+comparison; the return observations are recorded below.
 
 The last pre-shutdown sample reported 88% and 2,273,114 uAh. It did not
 include a paired host/phone clock sample; a later host reading does not establish
@@ -810,7 +810,7 @@ before any further diagnostic reboot. Startup and any connected charging still
 affect that return sample: this
 comparison is approximate and cannot independently calibrate the gauge or
 measure powered-off current. Do not infer a battery fault or an autonomy fix
-from the pending test.
+from this approximate test.
 
 ### Single read-only return snapshot — 2026-10-07
 
@@ -839,7 +839,7 @@ artifact manifest and reconfirm the candidate before later controlled trials.
 `test-power-snapshot.py` uses a temporary fixture tree, including missing fields,
 negative charging current, malformed and oversized config data. It never opens
 the host's live power supplies or contacts the phone. These fixture tests passed;
-live use of the new reader remains pending the operator's return. No shutdown,
+the first live return read also succeeded without changing phone state. No shutdown,
 Android restore, battery learning reset or charging-limit change is automated.
 
 ### Shared Android gauge source and retry candidate — 2026-10-07
@@ -851,3 +851,24 @@ A separate two-loop candidate passes the same twenty cases but is not included
 in any diagnostic recipe or live kernel. It addresses inconsistent-read handling,
 not charge calibration or demonstrated residual consumption. See the
 [source comparison and proof](../../../docs/provenance/external-lmi-source-comparison-2026-10-07.md#battery-profile-and-gauge-read-follow-up).
+
+
+### Powered-off return observations — 2026-10-07
+
+After at least one hour confirmed off, the operator reported approximately two
+minutes in Fastboot while awaiting instructions, then a normal boot showing 88%.
+The first SSH return snapshot, at about 174 seconds of kernel uptime after USB
+reconnection, still reported 88%, Charging, 2,288,607 uAh, approximately -651 mA
+and 22.2 C. The permanent D-repro banner and IKCONFIG hash
+`6512a0c29ebf987d25c0cceb79917df32d6fed4b67e4c3b94bfad9fdb1745e37`
+were present; the transient RPMh observer was no longer running. No further
+diagnostic reboot occurred before this measurement. The RTC alarm was empty.
+
+The percentage matches the last pre-shutdown 88% sample, so there is no visible
+large percentage drop in this approximate comparison. It does not establish
+zero off-state consumption, battery health or a Mobian autonomy fix. Charging
+between the pre-shutdown sample and actual manual shutdown was not quantified;
+Fastboot, startup and resumed USB charging also affect the return. The counter
+increase of 15,493 uAh cannot be treated as an off-state gain or discharge rate.
+The phone clock was not used to determine the off interval. Raw identifying
+snapshot data remains outside Git. No battery calibration or profile was reset.
