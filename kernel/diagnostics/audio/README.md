@@ -125,3 +125,26 @@ not proof of the original full build.
 Run checksum verification from this directory:
 
     sha256sum -c SHA256SUMS
+
+## Private internal completion metadata
+
+The reset-GPIO wrapper keeps the internal builder attached to the operator's
+terminal for sudo authentication. The internal builder creates a root-owned,
+private state. After a successful return, the wrapper verifies its STATUS
+and, for a build, the expected nonempty regular output. When the operator
+cannot read that metadata, a narrowly scoped sudo subprocess performs the
+same checks without changing state or output permissions. Sudo may request
+authentication again if the build outlasted the cached authorization.
+Missing, linked, incomplete or inconsistent metadata still fails closed.
+The presence of an image alone is insufficient.
+
+Run `python3 kernel/diagnostics/audio/test-completion-metadata.py` from the
+repository root for bounded completion-gate regression tests. Running this
+test explicitly as root also checks that an unprivileged reader cannot read
+the private fixture while privileged verification succeeds. It never invokes
+the real builder, compiles a kernel or contacts a device. Interactive sudo
+authentication and a full manual build remain separate operator checks.
+
+Previously prepared diagnostic directories retain their historical wrapper
+and hashes. Prepare a new directory to use this correction; do not edit an
+already built candidate or its evidence in place.

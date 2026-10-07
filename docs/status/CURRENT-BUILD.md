@@ -457,8 +457,8 @@ root-owned status directory. A roughly 10 h 20 min uncontrolled unplugged period
 still lost 37 capacity points. Kernel logs show approximately 96.54% deep sleep
 between the first recorded suspension and reconnection, predominantly interrupted
 by battery-gauge interrupts. There is no demonstrated autonomy improvement and
-no production boot replacement. The next bounded observer/trace comparison is
-prepared, not yet executed. See the
+no production boot replacement. The bounded observer/trace comparisons subsequently completed, as recorded
+below. See the
 [power diagnostic record](../../kernel/diagnostics/power/README.md) for identity,
 measurement boundaries and wrapper reporting details.
 
@@ -478,3 +478,11 @@ trace and alarm cleaned up. No autonomy fix is demonstrated. Reported 2,822 mAh
 full capacity and cycle count one are gauge state, not verified physical health;
 the operator confirmed the original battery. See the diagnostic record for the
 charge-counter scaling and measurement limits.
+
+The constructor's private-status reporting issue has a host-validated fix:
+16 metadata cases and a newly prepared observer preflight passed without a
+kernel build. Existing diagnostic images and historical prepared recipes were
+not modified; interactive sudo and a full manual build remain to be retested.
+A powered-off battery comparison is pending after an invalid first attempt
+that restarted the phone. There is no new battery result or autonomy fix.
+See the power diagnostic record for return-measurement and kernel-identity limits.

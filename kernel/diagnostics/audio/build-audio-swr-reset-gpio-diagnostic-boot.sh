@@ -51,6 +51,25 @@ completion_valid() {
 		[[ $inner_status == COMPLETE && -f $output && ! -L $output && -s $output ]]
 	fi
 }
+
+verify_inner_completion() {
+	local mode=$1 rc=$2 inner_state=$3 output=$4 inner_status
+	[[ -d $inner_state && ! -L $inner_state && -f $inner_state/STATUS && ! -L $inner_state/STATUS ]] || {
+		printf 'ERROR: internal builder status is missing or unsafe\n' >&2
+		return 1
+	}
+	[[ -r $inner_state/STATUS ]] || {
+		printf 'ERROR: internal builder status is not readable\n' >&2
+		return 1
+	}
+	inner_status=$(<"$inner_state/STATUS")
+	completion_valid "$mode" "$rc" "$inner_status" "$output" || {
+		printf 'ERROR: internal builder did not complete successfully (status=%s, output=%s)\n' "$inner_status" "$output" >&2
+		return 1
+	}
+	printf '%s\n' "$inner_status"
+}
+
 cleanup() {
 	local rc=$?
 	trap - EXIT HUP INT TERM
@@ -146,10 +165,16 @@ done
 shopt -u nullglob
 (( ${#new_inner_states[@]} == 1 )) || die 'could not identify exactly one new internal builder state'
 INNER_STATE=${new_inner_states[0]}
-[[ -f $INNER_STATE/STATUS && ! -L $INNER_STATE/STATUS ]] || die 'internal builder status file is missing'
-INNER_STATUS=$(<"$INNER_STATE/STATUS")
 EXPECTED_OUTPUT=$OUTPUT_DIR/D-repro-01-audio-swr-reset-gpio-diagnostic-boot.img
-if ! completion_valid "${1:-build}" "$INNER_RC" "$INNER_STATUS" "$EXPECTED_OUTPUT"; then
-	die "internal builder did not complete successfully (status=$INNER_STATUS, output=$EXPECTED_OUTPUT)"
+# The internal builder elevates through sudo and keeps its state private.
+# Read only its completion metadata with the same privilege when necessary;
+# do not open the state permissions or infer completion from an image alone.
+if ((EUID == 0)) || [[ -r $INNER_STATE/STATUS && -x $OUTPUT_DIR ]]; then
+	INNER_STATUS=$(verify_inner_completion "${1:-build}" "$INNER_RC" "$INNER_STATE" "$EXPECTED_OUTPUT") || die 'internal completion verification failed'
+else
+	command -v sudo >/dev/null || die 'sudo is required to verify the private internal state'
+	COMPLETION_PROBE=$(declare -f completion_valid verify_inner_completion)
+	COMPLETION_PROBE+=$'\nset -Eeuo pipefail\nverify_inner_completion "$@"'
+	INNER_STATUS=$(sudo -- /bin/bash -c "$COMPLETION_PROBE" -- "${1:-build}" "$INNER_RC" "$INNER_STATE" "$EXPECTED_OUTPUT") || die 'privileged internal completion verification failed'
 fi
 RESULT_OK=1

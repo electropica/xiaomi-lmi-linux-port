@@ -777,3 +777,35 @@ was removed and charging resumed. Further identical short suspend trials are
 not justified by these results alone. Remaining discrimination requires a
 specifically justified peripheral isolation or an independent/off-state baseline;
 no unsafe shared-rail shutdown is proposed. Raw data remains private.
+
+### Completion reporting correction — 2026-10-07
+
+The reset-GPIO wrapper now verifies private internal completion metadata with
+sudo when it is inaccessible to the invoking user. It retains the private
+state/output modes and still rejects missing or linked STATUS, non-success
+status, nonzero builder exit, and empty or linked build outputs. Sixteen bounded
+metadata regression cases passed, including a root-owned private fixture
+that rejects an unprivileged reader. The same verifier accepted the existing
+observer state and its expected 54,652,928-byte output without modifying them.
+A newly prepared observer chain passed recipe checksums and host-only strict
+patch preflight. No kernel was compiled for this correction; interactive sudo
+authentication and a complete user-invoked build have not been retested.
+Previously prepared recipes and their evidence remain unchanged. See the
+[audio constructor documentation](../audio/README.md#private-internal-completion-metadata).
+
+### Powered-off comparison pending — 2026-10-07
+
+An initial systemd poweroff reached the poweroff target but the operator reported
+that the phone restarted. That attempt is not a valid powered-off discharge
+test. The restart returned to the original persistent D-repro kernel, so the
+temporary RPMh observer identity must be checked again before later observer
+tests. The operator subsequently confirmed a manual shutdown for an unplugged
+comparison; no return measurement is available yet.
+
+The last pre-shutdown sample reported 88% and 2,273,114 uAh. The phone clock was
+approximately six minutes behind the trusted host reference, so elapsed time
+must use the host/operator interval rather than subtracting phone timestamps.
+The return sample will also include startup and any connected charging: this
+comparison is approximate and cannot independently calibrate the gauge or
+measure powered-off current. Do not infer a battery fault or an autonomy fix
+from the pending test.
