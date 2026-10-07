@@ -56,3 +56,38 @@ is a ready replacement for the currently validated build. Preserve our external
 locked inputs and hardware results, and compare a specific function or binding
 before proposing any transplant. Current battery measurements and their limits
 remain in the [power diagnostic record](../../kernel/diagnostics/power/README.md).
+
+
+## Targeted downstream comparison
+
+Follow-up compared pinned source files against our exact unmodified
+`a5b3099017ae581aae8bf597b2f9c8c765026af1` diagnostic input. Both Android trees
+contain a vendor/qcom lmi overlay identifying xiaomi lmi and board ID 37;
+entries under vendor/xiaomi are symbolic links to these files. This establishes
+an lmi source target, not successful hardware operation or measured stability.
+Their FocalTech sources are under focaltech_touch, unlike our focaltech_touch_mi;
+a missing file at our path was not treated as an absent driver.
+
+In both references, qpnp-fg-gen4.c functions fg_delta_msoc_irq_handler,
+fg_gen4_suspend and fg_gen4_resume have identical extracted bodies to our source.
+No change to the gauge wake handler or these suspend hooks is therefore gained
+by copying those functions. Other gauge-driver differences were not all reviewed;
+identical functions do not imply identical runtime configuration or battery data.
+
+Utsav's lpm_suspend_enter body and psci_enter_sleep implementation match ours.
+PixelExperience uses a different integer-return convention at the suspend call
+site, with corresponding changes in psci_enter_sleep; this is not a standalone
+power-saving patch to transplant into our boolean-return implementation.
+The reviewed rpmh.c differences principally add oops_in_progress handling around
+completion waits, rather than identifying a normal-suspend rail-saving change.
+
+Both dsi_drm.c references retain the conditional FOD shutdown notification that
+reads sde_connector_get_lp and otherwise selects POWERDOWN. Neither reviewed
+branch provides our diagnostic candidate's explicit UNBLANK-to-POWERDOWN mapping
+inside that shutdown path. Whether the branch is active depends on each kernel's
+config and device tree; no identical hardware fault is claimed for their builds.
+
+No selected difference establishes a lower idle current. Keep our hardware-tested
+kernel as the current base. The mainline integration's reported missing features
+justify caution for that port, but do not establish that the Android references
+are less stable than our kernel. No comparative boot or stability test occurred.
