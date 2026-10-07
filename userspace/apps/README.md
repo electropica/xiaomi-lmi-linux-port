@@ -64,3 +64,13 @@ addition to the next app recipe was withdrawn. No native touch solution in
 Nautilus is claimed complete; selection and deletion must be usable without
 keyboard modifiers. Nautilus remains the existing file manager and GNOME
 portal dependency.
+
+### Camera package scope — 2026-10-07
+
+The optional package installer no longer installs Megapixels: it did not work
+with the selected downstream camera pipeline and the operator requested its
+removal. This affects future installer runs only and does not purge packages
+from a live phone or rewrite the historical golden package lock.
+Snapshot remains a separate diagnostic installation; it is not silently added
+as a replacement because the real camera bridge and recording remain pending
+production integration. See the [camera record](../camera/README.md#current-snapshot-camera-status--2026-10-05).

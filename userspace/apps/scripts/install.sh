@@ -22,7 +22,6 @@ apt-get install -y --no-install-recommends \
     gnome-weather \
     gnome-calls \
     chatty \
-    megapixels \
     gnome-calendar \
     gnome-maps \
     geary \

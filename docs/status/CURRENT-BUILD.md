@@ -109,7 +109,6 @@ The current selected optional application packages are:
 - gnome-contacts
 - gnome-calls
 - chatty
-- megapixels
 - gnome-calendar
 - gnome-maps
 - geary
@@ -142,7 +141,7 @@ The separate Mobian device workflow is not a replacement for the current
 
 The following remain separate deferred items:
 
-- full UCM2 routing, microphone/headset and durable audio-boot deployment
+- full UCM2 routing, headset/earpiece and durable audio-boot deployment
 - camera configuration and a usable downstream capture pipeline
 
 The historical M0 Weston display validation and the later D-v43/OpenRC Weston
@@ -196,8 +195,10 @@ residual discharge remains unresolved. The trial and alarm are cleaned up.
 Clear speaker music was operator-confirmed through an installed PipeWire
 route using the S32_LE frontend and S24_LE backend on the temporary GPIO
 diagnostic boot. ALSA controls restore on close. The graphical torch app's
-Allumer and Éteindre buttons were operator-confirmed. Camera capture remains
-blocked. These are live-phone customizations, not newly locked golden images.
+Allumer and Éteindre buttons were operator-confirmed. Camera capture was
+blocked at this milestone; later rear-camera diagnostic progress is recorded
+in the [camera record](../../userspace/camera/README.md). These are live-phone
+customizations, not newly locked golden images.
 See the [validation record](../validation/lmi-battery-audio-torch-2026-10-03.md).
 
 ## Next-build multilingual baseline — prepared 2026-10-03
@@ -486,3 +487,8 @@ not modified; interactive sudo and a full manual build remain to be retested.
 A powered-off battery comparison is pending after an invalid first attempt
 that restarted the phone. There is no new battery result or autonomy fix.
 See the power diagnostic record for return-measurement and kernel-identity limits.
+
+The next-build optional application recipe no longer installs the abandoned
+Megapixels package. Snapshot is still a separately tested diagnostic application,
+not a production camera replacement in this recipe. No image was rebuilt and
+no live-phone package was changed by this recipe correction.
