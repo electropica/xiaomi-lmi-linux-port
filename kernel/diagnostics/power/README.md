@@ -811,3 +811,33 @@ affect that return sample: this
 comparison is approximate and cannot independently calibrate the gauge or
 measure powered-off current. Do not infer a battery fault or an autonomy fix
 from the pending test.
+
+### Single read-only return snapshot — 2026-10-07
+
+`read-power-snapshot.py` emits one bounded JSON snapshot of the battery, BMS,
+USB supply, kernel release/banner, decompressed IKCONFIG hash, device compatible
+strings, uptime, existing RTC alarm and CPU-idle parameter. It runs no commands,
+starts no service or acquisition, makes no writes and schedules no wakeup.
+Missing or invalid fields remain explicitly unavailable; a missing USB property
+must not be interpreted as zero. Current signs and reported gauge capacity are
+preserved without recalibration or overriding the kernel's status.
+
+📱 SSH — Xiaomi lmi — 🔎 Read only — phone already powered on and reconnected
+
+```sh
+python3 /path/to/read-power-snapshot.py
+```
+
+Keep raw JSON outside Git: the kernel banner can contain a build-host identity.
+For a powered-off comparison, collect the first return snapshot before another
+diagnostic reboot. Record the off interval using a trusted host/operator clock
+and note any startup/USB-charge time. This snapshot cannot measure current while
+the phone is off or prove physical battery capacity. Banner/config identity also
+does not establish the executable boot image's hash; retain the manual boot
+artifact manifest and reconfirm the candidate before later controlled trials.
+
+`test-power-snapshot.py` uses a temporary fixture tree, including missing fields,
+negative charging current, malformed and oversized config data. It never opens
+the host's live power supplies or contacts the phone. These fixture tests passed;
+live use of the new reader remains pending the operator's return. No shutdown,
+Android restore, battery learning reset or charging-limit change is automated.
