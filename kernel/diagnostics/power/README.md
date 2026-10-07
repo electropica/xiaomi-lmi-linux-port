@@ -363,3 +363,45 @@ gauge state, not proof of an autonomy improvement. Wi-Fi conditions, battery
 temperature and gauge settling were not controlled as matched variables.
 The approximately 94-96 mA residual current remains unresolved. No production
 patch or permanent boot was installed, and raw logs remain private.
+
+
+### Wi-Fi shutdown isolation and October 7 overnight observation
+
+A finite phone-local radio-off check on October 6 exercised the normal CNSS
+idle-shutdown path. After 15 seconds, use counts for pm8150_s5, pm8150_s6,
+pm8150a_s8, pm8009_s2 and pcie_0_gdsc were all zero; they remained zero at
+45 seconds. The log recorded psoc idle timeout and CNSS idle shutdown. These
+are driver-vote observations, not independent measurements of rail current.
+The first restore command exceeded its eight-second timeout, but subsequent
+inspection confirmed Wi-Fi enabled again and the original votes restored.
+A pre-scheduled restoration timer had provided a fallback; none remains active.
+
+The subsequent Wi-Fi-off suspend trial was invalidated by IRQ 438 msoc-delta
+after only 2.944 seconds asleep over 3.625 seconds. Its trace had no buffer loss
+or nonzero device-PM result, but that interval is too short to estimate or compare
+idle consumption reliably. Wi-Fi was restored, the collector stopped, and its
+RTC alarm and trace instance were removed. A revised bounded collector allowing
+one guarded gauge-only re-suspend was prepared but not started before the night.
+No persistent Wi-Fi, gauge or suspend policy was changed.
+
+On October 7, the phone reconnected without rebooting. Its running build banner
+still identifies the October 6 18:01:14 UTC touch-notifier candidate. Persisted
+UPower history records 99% discharging at 21:12:26 CEST on October 6 and 66%
+at 06:03:41 CEST on October 7: 33 percentage points over 8 h 51 min 15 s,
+approximately 3.73 points/hour. The first inspection at 06:06 already found
+68% charging and 22.5 C. Exact unplug/replug capacities were not captured.
+The initial disk history ended at 01:48; a later UPower write recovered all
+remaining overnight samples. The service stayed active with zero restarts,
+so the apparent gap was delayed persistence rather than demonstrated data loss.
+
+Kernel journal accounting found 66 completed suspend pairs between 21:12:39
+and 06:05:01: 30,901.694 seconds suspended over a 31,941.929-second span
+(96.74%). Sixty-five wake reports identified IRQ 438 msoc-delta; typical awake
+intervals were about 16 seconds. The remaining current is therefore not
+explained by the phone staying continuously awake. Radio state was enabled
+before and after the night, but association and power votes were not continuously
+sampled. This is an uncontrolled overnight observation, not the pending
+fully-radio-off comparison. It does not demonstrate an autonomy improvement
+from the touch notification candidate. All test services/timers were inactive,
+the RTC alarm was empty, and charging worked after reconnection. Raw histories
+and kernel logs remain private; no camera or microphone was started.

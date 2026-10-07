@@ -165,6 +165,15 @@ A subsequent October 6 unplugged history interval lost 42 percentage points
 95.9% deep-suspend occupancy. No reboot occurred; autonomy remains unresolved.
 See the [October 6 observation](../validation/lmi-battery-overnight-2026-10-06.md).
 
+The October 7 night on the temporary touch-notifier candidate again showed
+substantial discharge: 99% to 66% over 8 h 51 min, approximately 3.73 points/hour,
+with 96.74% suspend occupancy over the journal-covered interval. No reboot or
+UPower restart occurred. A normal Wi-Fi shutdown check cleared the five
+CNSS/PCIe power votes, but its suspend-current comparison was invalidated by
+an early gauge wake. Autonomy remains unresolved; see the
+[power diagnostic record](../../kernel/diagnostics/power/README.md#wi-fi-shutdown-isolation-and-october-7-overnight-observation).
+
+
 
 Clear speaker music was operator-confirmed through an installed PipeWire
 route using the S32_LE frontend and S24_LE backend on the temporary GPIO
