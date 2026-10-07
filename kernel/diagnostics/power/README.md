@@ -479,3 +479,38 @@ Wi-Fi remains enabled and charging resumed. No processor, peripheral, driver,
 regulator or gauge protection was disabled. This narrows the residual-current
 investigation toward retained physical loads and measurement accuracy rather
 than demonstrating an autonomy fix. Raw traces and histories remain private.
+
+
+### Display chronology and codec supply policy — October 7
+
+The completed trials were compared without another suspend or media capture.
+In trials 06 and 08, `display_panel_vci` and `pm8150_l14` already had zero
+use counts in the pre-suspend snapshot, then had one after wake. Trials 04
+and 07 started with one and recorded their disable/enable transitions.
+The missing panel-disable event in trial 08 is therefore explained by the
+snapshot chronology; it is not evidence that the panel stayed powered in sleep.
+
+The live WCD938x node lists `cdc-vdd-rxtx`, `cdc-vddio`, `cdc-vdd-buck` and
+`cdc-vdd-mic-bias` as static supplies, with no per-supply `lpm-supported`
+properties. The first three resolve to `pm8150_s4`; microphone bias resolves
+to `pm8150a_bob`. The requested loads are 30,000, 30,000, 650,000 and
+30,000 uA respectively. These are regulator policy requests, not measured
+battery currents, and must not be added to estimate discharge.
+
+In the locked source, `techpack/audio/asoc/codecs/msm-cdc-supply.c` defaults
+missing `qcom,<supply>-lpm-supported` properties to zero. Its
+`msm_cdc_set_supplies_lpm_mode()` only calls `regulator_set_load()` for
+supplies with that flag. `wcd938x.c` registers a late-suspend callback which
+requests this mode when the component was suspended. Trial 08 recorded that
+callback returning zero; with the live properties, the helper cannot lower
+these four load requests. This identifies a policy worth investigating, not
+a demonstrated cause of the approximately 94 mA residual current.
+
+Before preparing a change, review RPMh regulator load-to-mode behavior and
+shared consumers, then determine whether a temporary variant can request
+lower sleep loads while preserving voltage and restoring the nominal loads
+on resume. BOB's live initial-mode property is zero; that value alone does
+not identify its physical sleep mode. No supply was disabled, no DT property
+was changed, and no driver was unbound during this inspection. An audio
+supply experiment would still require a separate bounded power comparison
+and speaker/microphone checks after wake. Raw DT and trace dumps remain private.
