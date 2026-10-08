@@ -1139,3 +1139,51 @@ confirms the autonomy problem persists on the now-persistent baseline. It does
 not isolate the gauge, physical battery condition or remaining consumer. Raw
 logs and first-return data remain private. No camera/microphone, new build or
 live power-policy modification was performed for this observation.
+
+
+### Retained profile verified using existing debugfs — 2026-10-08
+
+No additional kernel is required to compare the retained profile on the
+confirmed RPMh baseline. Its existing `/sys/kernel/debug/fg/sram` interface
+exposes two software reader controls (`address`, `count`) and a data file.
+The locked `fg-util.c` snapshots those controls when opening data; its read
+path calls `fg_sram_read`, while SRAM writes are a separate data-file write
+operation. The reader opens data with `O_RDONLY` and never invokes that write
+path, profile loading, gauge restart or learned-capacity adjustment.
+
+The bounded live read found integrity `0x03` before and after, with the load
+bit set and a whitelisted marker. All 416 retained bytes equal the live lmi
+`j11sun_4700mah` reference, including its first 24 bytes. Both hashes are
+`583d77b61a7723fe4f40990eafa42c6283a87c41ba39a69ad2be77ce70f16050`.
+The software reader controls were restored and reread successfully. This
+rules out a mismatched retained profile at the time of this read, despite
+continued high discharge. It does not calibrate current, establish physical
+battery health or prove that learned capacity is correct. No new kernel,
+SRAM data write or calibration change was performed.
+
+`read-existing-fg-profile.py` locks the running build and expected reference
+hash, requires USB online, and allows only profile word 65 / 416 bytes and
+integrity word 299 / one byte. GEN4 addresses are words of two bytes; debugfs
+prints decimal addresses with four bytes per full line. Strict parsing rejects
+missing, malformed, misaddressed, excessive or incomplete output. This matters
+because the driver's debugfs read can expose an underlying SRAM-read failure
+as empty output. It validates stable integrity across the profile read and
+restores the original software controls in a `finally` block. It emits hashes
+and equality results rather than raw SRAM contents.
+
+Run only as an on-demand connected-phone diagnostic with no concurrent SRAM
+reader or writer. The controls are shared and do not provide isolation from
+uncooperative processes. SRAM transport may briefly wake hardware; this is not
+a standby logger. Full-profile differences in another read can also reflect
+normal runtime tuning and must not automatically be labelled corruption.
+The host test covers nine parser cases and three restoration scenarios
+(success, SRAM read failure and changing integrity), without hardware access.
+The newer guarded FG observer remains unbuilt and absent from this baseline;
+it is not needed for this existing-interface observation.
+
+A separate check found `fts_gesture_mode` already Off. The touch driver logs
+`gesture suspend...` before checking that flag, then logs `gesture is disabled`;
+the entry message alone does not prove gestures are enabled. Disabling that
+already-disabled setting is not a useful isolation trial. Fingerprint/AOD
+branches can select a different suspend path, so this check alone does not
+prove that the touch controller or its rail is physically powered down.
