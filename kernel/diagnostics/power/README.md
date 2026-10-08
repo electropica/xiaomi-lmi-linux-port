@@ -135,6 +135,41 @@ them with rfkill/HCI ownership, and retain the original state for restoration.
 Do not repeat the existing Wi-Fi/NFC trials, unbind shared hardware or stop the
 working audio DSP solely on the basis of this source comparison.
 
+### Android package overlays and startup policy
+
+Memory-only inspection of the official October 7 LineageOS archive's DTBO
+table found twelve entries. Every entry declares `vdd_boost_vreg` always-on;
+`vdd_hap_boost` is not always-on, and both refer to PM8150B GPIO 5. Entries
+0 and 11 have SHA-256 values
+`524d131cb916a73bb5a44aa44c18faae89af14a51cfc9ae6145c3b16a131f571` and
+`ebef7c8ecdc14fe096e69d2c6d570edae681c48462c74e715e0fc8a9734022a6`,
+matching the two previously recorded OEM-style entries in the
+[boost review](../../../docs/validation/lmi-boost-diagnostic-candidate-2026-10-06.md).
+The archive SHA-256 is
+`c182c6f8ed1ccb1821be38e764e189f3d58f65dd9bea8aa21f1381c791395a29`.
+No image was extracted to disk, flashed or modified for this comparison.
+
+The always-on declaration is therefore not exclusive to the Mobian test
+environment. This narrows the hypothesis; it does not establish the selected
+merged runtime tree, actual GPIO state, rail current or complete equivalence
+of every overlay. It does not justify forcing the shared boost GPIO off.
+
+Read-only inspection of Android's installed `init.qcom.power.rc` shows UFS
+clock scaling/gating disabled during `on init`, then enabled in the
+`sys.boot_completed=1` block and charger mode. The init block also requests
+`sleep_disabled=1`; `enable-low-power` requests Power HAL initialization.
+These are startup instructions, not measured steady-state values. The current
+boot reports `sys.boot_completed=1`, but the Power HAL initialization property
+was empty and reading the sleep parameter was denied. Do not infer disabled
+runtime sleep from the isolated init write or assume every instruction succeeded.
+The completed Android trial's suspend accounting remains the observed evidence.
+
+Installed init files expose permissions for UFS auto-hibernation and Bluetooth
+rfkill, but no `rpm_lvl`/`spm_lvl` assignment was found in the five inspected
+files. The post-boot script and actual UFS power-level attributes were denied
+to the ordinary ADB shell. Their runtime values remain unknown; no Android
+root/security setting or Mobian policy was changed to obtain them.
+
 ### Prepared overnight protocol
 
 The operator intends to leave LineageOS idle overnight, with the same airplane,
