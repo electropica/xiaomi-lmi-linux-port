@@ -101,6 +101,40 @@ not demonstrated power causes. The configurations do not prove identical
 kernel source, device trees, firmware behavior or runtime power policy. Do not
 disable security or rebuild a kernel based on this comparison alone.
 
+### Current Android source comparison
+
+The running Android release contains the source suffix `g71b13e62f057`.
+The [official common-device dependency](https://github.com/LineageOS/android_device_xiaomi_sm8250-common/blob/lineage-23.2/lineage.dependencies)
+names `android_kernel_xiaomi_sm8250`; the prefix resolves there to
+[`71b13e62f057a649b77fe4062feb73ee72ad609c`](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/commit/71b13e62f057a649b77fe4062feb73ee72ad609c).
+Three complete files at that commit are byte-identical to the preserved
+`a5b3099017ae` Mobian source base:
+
+| File | SHA-256 on both sides |
+| --- | --- |
+| `drivers/power/supply/qcom/qpnp-fg-gen4.c` | `0f5676829cb2a40daa191a456998c700d744afe8346e07dd3c7af2a7e8685957` |
+| `drivers/cpuidle/lpm-levels.c` | `0899a58cc28945431fddd68c914b187719f99f2d49f831132382cd7401679aa3` |
+| `drivers/bluetooth/bluetooth-power.c` | `8bb4375cbea588d52a3d39e936bfcd9bfedb1e1f5379da0039d9a9acb47c515b` |
+
+This is source-file evidence, not binary equivalence or proof that every
+dependent function, device tree, patch, firmware and runtime setting matches.
+It offers no new gauge/suspend-driver fix to transplant from this commit.
+The existing Mobian boot was not rebuilt or replaced.
+
+The common Bluetooth power driver has two distinct software state caches:
+rfkill's `previous` and the power ioctl's `pwr_state`. Initial soft blocking sets
+`previous=true`; the rfkill callback calls hardware power control only when
+that cache changes. The power ioctl tracks its own state. Therefore the earlier
+observation that Bluetooth was soft-blocked is not, on its own, a measurement
+that its physical supplies/GPIOs were off. This is an untested integration lead,
+not proof of a Bluetooth fault or instruction to force a GPIO/ioctl.
+
+Before any Bluetooth isolation trial on a restored Mobian runtime, inspect
+its existing reset/enable GPIO state and named supply consumer votes, reconcile
+them with rfkill/HCI ownership, and retain the original state for restoration.
+Do not repeat the existing Wi-Fi/NFC trials, unbind shared hardware or stop the
+working audio DSP solely on the basis of this source comparison.
+
 ## Historical debugfs candidate design
 
 The historical D-repro configuration disables `CONFIG_DEBUG_FS`, preventing
