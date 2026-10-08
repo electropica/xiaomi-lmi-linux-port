@@ -1236,3 +1236,38 @@ comparisons. Retained profile mismatch and NFC VEN alone are no longer leading
 explanations on the measured baseline; physical capacity, gauge accuracy and
 other retained physical loads remain unresolved. No charging/calibration or
 permanent NFC policy was changed.
+
+
+### Short manual-off protocol with uncharged startup samples — 2026-10-08
+
+The operator offered an approximately 15-minute powered-off interval. To avoid
+USB recharge masking the return, a finite private sampler was prepared before
+manual shutdown. It waits at most 120 seconds for unplug, allows 12 seconds for
+USB state settling and saves one before-off sample. Operator instructions are
+to unplug, wait 20 seconds, then shut down manually. At return, start on battery,
+wait 30 seconds and only then reconnect. The RPMh image is permanent, so no
+Fastboot interval or alternate kernel is required.
+
+A next-boot oneshot waits at most 35 seconds for battery availability, saves
+three samples at availability, five seconds later and fifteen seconds later,
+then removes its one-use marker. The installed diagnostic service has a
+60-second start limit and a marker condition; it is not a periodic logger.
+It will be disabled and removed after result retrieval. No automatic shutdown,
+restart, RTC wake or gauge write is requested. The manual-off interval was
+operator-confirmed; its return result is still pending at this checkpoint.
+
+The sampler and offline interpreter are under `userspace/power/diagnostics/`.
+Seven local fixtures exercise the deployed sampler's exact mode branches,
+including no unplug, reconnect, unavailable battery and USB-connected startup.
+Eleven interpreter cases reject confounded USB/status readings, changed learned
+capacity/profile/kernel, missing numeric values or an unconfirmed new boot.
+The earliest eligible uncharged sample is selected; USB-connected samples
+remain evidence but are not used as an uncharged baseline. These are diagnostic
+tools, not automatic components of the M1 image.
+
+Shutdown/startup energy, gauge settling and temperature changes remain part of
+the comparison. Phone wall time is not a trusted duration reference after an
+offline reboot; use operator/host timing and boot elapsed time as well. Even an
+eligible pair does not independently calibrate physical current or prove
+battery health. A shorter interval can resolve a gross difference but may be
+inconclusive for small losses. Raw boot IDs and samples remain private.
