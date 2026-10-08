@@ -233,6 +233,38 @@ starting with the unproven Bluetooth-off state, rather than another rebuild of
 these unchanged implementations. It requires a restored Mobian runtime; Android
 cannot validate that runtime's GPIO/consumer state on its behalf.
 
+### Xiaomi post-boot policy and profile follow-up
+
+The same official archive contains one `j11sun_4700mah` profile, in DTBO
+entry 7. Its 416-byte payload SHA-256 is
+`583d77b61a7723fe4f40990eafa42c6283a87c41ba39a69ad2be77ce70f16050`,
+identical to the retained profile read on Mobian before the OS switch.
+This does not identify Android's current retained SRAM contents or independently
+measure battery health, but provides no different package profile to explain
+the idle comparison. No profile or calibration was written.
+
+The [official common-device post-boot script](https://github.com/LineageOS/android_device_xiaomi_sm8250-common/blob/da4ba935256abcc07973fb17d6b7729058fc9f9b/rootdir/bin/init.qcom.post_boot.sh)
+has a Kona-specific branch that requests `sleep_disabled=N`, alongside CPU and
+memory-bus governor tuning. Its companion power init file matches the installed
+file's normalized text. The post-boot script itself was not readable on the
+handset, so this is pinned source-policy evidence, not confirmation of every
+deployed write. It explains why the earlier init request of `1` must not be
+treated as the final intended policy. Mobian already used `N` in the completed
+diagnostic trials; copying that request again is not a new residual-drain fix.
+
+The reviewed common-device `powerhint.json` also defines interaction, audio,
+camera and performance hints. Its active deployment was not established and
+its Android framework-specific hints must not be copied wholesale into Mobian.
+The lmi variant initializer selects device identity rather than adding a separate
+power implementation. These sources supply comparison targets, not a validated
+replacement Linux userspace power manager.
+
+The tracked Mobian ADSP/BTFM startup unit is a guarded one-shot, not a periodic
+poller, and BTFM readiness alone does not establish QCA6390 HCI power-off.
+No explicit rfkill/BT attach or `/dev/btpower` control was found in the tracked
+userspace scripts. Earlier experimental attach results and externally retained
+tools must be reconciled with the restored live runtime before any isolation.
+
 ### Prepared overnight protocol
 
 The operator has unplugged after arming the finite LineageOS overnight
