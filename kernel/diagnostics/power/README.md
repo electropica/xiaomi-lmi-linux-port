@@ -17,7 +17,6 @@ recorded below. No battery-health verdict follows from this comparison.
 | Gauge identity | Retained 416-byte profile matches the expected profile; learned full is about 2,820 mAh on both systems versus 4,700 mAh nominal. | Profile mismatch was not observed. Learned capacity is not an independent cell-health measurement. |
 | Manual-off comparisons | Charging/boot timing or a missing departure sample prevented a valid baseline pair. | No off-state drain or physical health conclusion; no need to repeat a flawed protocol. |
 | First LineageOS idle interval | Displayed level stayed at 79%; battery history records about 2 mAh loss over 7 min 05 s before charging. | Preliminary evidence, supported by the longer interval below; not a cell-health test. |
-
 | Longer LineageOS idle interval | 29 min 41 s on battery; displayed 83% unchanged before reconnect; Android reports 5.35 mAh summed gauge decreases (~10.8 mA by that accounting). | Lower apparent idle drain is supported, but an upward gauge correction prevents a reliable net endpoint-current estimate. |
 
 The first Android baseline was recorded after unplug, with airplane mode enabled
