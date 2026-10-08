@@ -529,3 +529,24 @@ counter-derived consumption is 94.089 mA over 8.666782 hours between readings;
 charging at both ends and the unknown exact unplug time prevent treating this
 as a controlled current measurement. No autonomy fix is established. See the
 [power record](../../kernel/diagnostics/power/README.md#overnight-return-on-the-persistent-rpmh-baseline--2026-10-08).
+
+
+### Test handset temporarily switched to LineageOS — 2026-10-08
+
+The operator installed official LineageOS 23.2-20261007-NIGHTLY-lmi, Android 16,
+for an idle-drain comparison. The ZIP SHA-256 is
+`c182c6f8ed1ccb1821be38e764e189f3d58f65dd9bea8aa21f1381c791395a29`;
+the matching recovery SHA-256 is
+`211cdc50ae40a9ecbcc35fa91ee81a54fcb02af7b49b77e8623a357f9984f7b3`.
+Both downloaded files were verified. The operator explicitly chose installation
+without a snapshot of the current Mobian runtime. The installer replaces boot,
+Android dynamic partitions, dtbo and vbmeta images; the earlier permanently
+installed RPMh image is no longer the running test-handset kernel. Existing
+Mobian artifacts and Git history remain available, but exact runtime restoration
+has not been established. No new Mobian image was built.
+
+The first short Android idle comparison suggests lower drain but is preliminary.
+See the [single power decision summary](../../kernel/diagnostics/power/README.md#current-decision-summary--2026-10-08)
+for grouped results and the distinction between charging return samples and
+pre-charge battery-history events. A 30-minute Android idle interval is pending;
+do not report it as completed until return evidence is retrieved.

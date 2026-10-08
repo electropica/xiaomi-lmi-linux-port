@@ -1,6 +1,52 @@
-# Power-domain observation candidate
+# Power diagnostics and decision summary
 
-The running D-repro configuration disables `CONFIG_DEBUG_FS`, preventing
+## Current decision summary — 2026-10-08
+
+The test handset is temporarily running official LineageOS
+23.2-20261007-NIGHTLY-lmi (Android 16), not the Mobian RPMh diagnostic boot.
+Repeated peripheral-isolation trials are historical evidence, not a checklist
+to rerun. The next discriminating observation is a longer Android idle interval.
+
+| Evidence group | Observed result | Decision |
+| --- | --- | --- |
+| Mobian deep idle | Several short trials around 89–95 mA; long returns show substantial discharge despite extensive deep suspend. | The idle-drain problem is real; deep suspend alone does not resolve it. |
+| Wi-Fi isolation | About 93.1 mA radio-off versus 94.8 mA in an adjacent enabled trial. | Wi-Fi is not demonstrated as the sole cause; do not repeat the same pair without a new hypothesis. |
+| NFC isolation | VEN-low 88.8 mA versus VEN-high 90.3 mA in one adjacent pair. | NFC enable alone does not explain the residual load. |
+| CPU, ADSP and RPMh | Short trials show extensive APSS/ADSP sleep and zero final reviewed CX/MX/XO votes. | Do not assume a permanently awake CPU or cut shared power rails from awake snapshots. |
+| Gauge identity | Retained 416-byte profile matches the expected profile; learned full is about 2,820 mAh on both systems versus 4,700 mAh nominal. | Profile mismatch was not observed. Learned capacity is not an independent cell-health measurement. |
+| Manual-off comparisons | Charging/boot timing or a missing departure sample prevented a valid baseline pair. | No off-state drain or physical health conclusion; no need to repeat a flawed protocol. |
+| First LineageOS idle interval | Displayed level stayed at 79%; battery history records about 2 mAh loss over 7 min 05 s before charging. | Preliminary evidence of lower idle consumption under Android; confirm with the ongoing longer interval. |
+
+The first Android baseline was recorded after unplug, with airplane mode enabled
+and Wi-Fi/Bluetooth settings disabled. A finite phone-local sampler saved one
+departure read and turned the screen off, then exited; no periodic measurement
+logger was left running. Radio settings were restored after retrieval.
+
+The direct return read had already resumed charging: Android classified it as
+AC powered even though USB powered was false. Its counter increased and cannot
+provide a discharge-current estimate. All external-power flags and charging
+status must therefore be checked, not just the USB flag. The offline interpreter
+under `userspace/power/diagnostics/` now rejects charging endpoints and increasing
+counters; its host fixtures cover this observed AC/USB distinction.
+
+The battery-history interval starts at a discharging, plug-none event with
+2,099 mAh and ends at a not-charging reconnect event with 2,097 mAh, preceding
+the plug-AC and charging events. The roughly 17 mA quotient uses whole-mAh
+history values: endpoint quantization alone gives a rough 8–25 mA range.
+Temperature fell from 26.2 to 24.2 C. This is not calibrated physical current,
+a stable Android autonomy measurement or proof that the original cell is healthy.
+It makes a battery-only explanation less compelling; battery aging and software
+load may coexist. The initial Android installation includes Google applications,
+so it must not be described as a bare installation without background services.
+
+Keep one decision summary here and retain the detailed dated evidence below for
+traceability. Do not generate another kernel version or repeat the full trial
+series merely to reproduce the same result. Raw samples, application/process
+history and device identifiers remain private.
+
+## Historical debugfs candidate design
+
+The historical D-repro configuration disables `CONFIG_DEBUG_FS`, preventing
 inspection of downstream clock and regulator debug summaries. The preparer
 creates a private reset-GPIO diagnostic boot recipe without changing the canonical
 locked configuration or either canonical audio constructor. Historical source
