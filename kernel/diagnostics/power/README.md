@@ -44,6 +44,23 @@ traceability. Do not generate another kernel version or repeat the full trial
 series merely to reproduce the same result. Raw samples, application/process
 history and device identifiers remain private.
 
+### Existing kernel configuration comparison
+
+The embedded IKCONFIG payloads were extracted from the already downloaded
+LineageOS boot and the existing reviewed RPMh boot, without building or booting
+another image. Their decompressed LF-byte SHA-256 values are respectively
+`6c168341dfa9987656c6f738dbd8e4a58a72a0381a3c0cdf072a5a3a7fba3a90` and
+`c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78`.
+Both enable PM, suspend, CPU idle, CPU frequency, ARM cpuidle and QCOM RPMh;
+both use `CONFIG_HZ=250` and preemption. This does not support a simple
+missing-suspend-configuration explanation for Mobian's higher observed drain.
+
+Differences include Mobian's UART Bluetooth/RNDIS support and debugfs/idle
+statistics, and Android's SELinux/LTO/hardening configuration. These are leads,
+not demonstrated power causes. The configurations do not prove identical
+kernel source, device trees, firmware behavior or runtime power policy. Do not
+disable security or rebuild a kernel based on this comparison alone.
+
 ## Historical debugfs candidate design
 
 The historical D-repro configuration disables `CONFIG_DEBUG_FS`, preventing
