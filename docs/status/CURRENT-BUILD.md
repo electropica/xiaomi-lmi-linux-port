@@ -548,5 +548,9 @@ has not been established. No new Mobian image was built.
 The first short Android idle comparison suggests lower drain but is preliminary.
 See the [single power decision summary](../../kernel/diagnostics/power/README.md#current-decision-summary--2026-10-08)
 for grouped results and the distinction between charging return samples and
-pre-charge battery-history events. A 30-minute Android idle interval is pending;
-do not report it as completed until return evidence is retrieved.
+pre-charge battery-history events. The longer Android interval is complete: 29 min 41 s on battery, displayed
+83% unchanged before charge, about 98.5% system suspend and 5.35 mAh summed
+gauge decreases reported by Android. An upward gauge correction prevents a
+reliable net endpoint-current estimate. This supports lower apparent Android
+idle drain, not a physical battery-health verdict. Radios are restored and the
+one-shot reminder is paused. Detailed logs remain private.

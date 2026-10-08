@@ -5,7 +5,8 @@
 The test handset is temporarily running official LineageOS
 23.2-20261007-NIGHTLY-lmi (Android 16), not the Mobian RPMh diagnostic boot.
 Repeated peripheral-isolation trials are historical evidence, not a checklist
-to rerun. The next discriminating observation is a longer Android idle interval.
+to rerun. The longer Android idle interval is complete; its gauge limitations are
+recorded below. No battery-health verdict follows from this comparison.
 
 | Evidence group | Observed result | Decision |
 | --- | --- | --- |
@@ -15,7 +16,9 @@ to rerun. The next discriminating observation is a longer Android idle interval.
 | CPU, ADSP and RPMh | Short trials show extensive APSS/ADSP sleep and zero final reviewed CX/MX/XO votes. | Do not assume a permanently awake CPU or cut shared power rails from awake snapshots. |
 | Gauge identity | Retained 416-byte profile matches the expected profile; learned full is about 2,820 mAh on both systems versus 4,700 mAh nominal. | Profile mismatch was not observed. Learned capacity is not an independent cell-health measurement. |
 | Manual-off comparisons | Charging/boot timing or a missing departure sample prevented a valid baseline pair. | No off-state drain or physical health conclusion; no need to repeat a flawed protocol. |
-| First LineageOS idle interval | Displayed level stayed at 79%; battery history records about 2 mAh loss over 7 min 05 s before charging. | Preliminary evidence of lower idle consumption under Android; confirm with the ongoing longer interval. |
+| First LineageOS idle interval | Displayed level stayed at 79%; battery history records about 2 mAh loss over 7 min 05 s before charging. | Preliminary evidence, supported by the longer interval below; not a cell-health test. |
+
+| Longer LineageOS idle interval | 29 min 41 s on battery; displayed 83% unchanged before reconnect; Android reports 5.35 mAh summed gauge decreases (~10.8 mA by that accounting). | Lower apparent idle drain is supported, but an upward gauge correction prevents a reliable net endpoint-current estimate. |
 
 The first Android baseline was recorded after unplug, with airplane mode enabled
 and Wi-Fi/Bluetooth settings disabled. A finite phone-local sampler saved one
@@ -43,6 +46,44 @@ Keep one decision summary here and retain the detailed dated evidence below for
 traceability. Do not generate another kernel version or repeat the full trial
 series merely to reproduce the same result. Raw samples, application/process
 history and device identifiers remain private.
+
+### Longer Android idle result
+
+The second trial started at 19:30:46 local handset time and ended at 20:00:27,
+with airplane mode enabled and Wi-Fi/Bluetooth disabled. The finite baseline
+sampler confirmed every external-power flag false and status discharging,
+saved one reading, switched the screen off and exited. No periodic diagnostic
+logger, media playback or acquisition ran during the interval.
+
+Android's statistics were reset at this departure and report 1,780.981 seconds
+on battery, including 1,770.523 seconds screen-off and 26.582 seconds uptime.
+Realtime minus uptime gives approximately 98.5% system-suspend occupancy in
+this accounting; it is not a measurement of every peripheral power domain.
+Displayed level was 83% throughout the pre-charge history. The first host read
+was already charging at 84% and is excluded from discharge-current estimates.
+
+The charge gauge is not monotonic: rounded history fell from about 2,207 mAh
+to 2,204 mAh, then rose to 2,210 mAh with a `batt-temp-delta` wake event before
+ending near 2,209 mAh. Battery temperature fell from about 24 to 20.7 C.
+Coincidence with this event does not establish the gauge correction's cause.
+Negative endpoint loss must not be presented as zero drain or self-charging.
+
+Android reports 5.35 mAh discharge, all screen-off, including 4.30 mAh assigned
+to device deep doze. Its [upstream LineageOS 23.2 implementation](https://github.com/LineageOS/android_frameworks_base/blob/lineage-23.2/services/core/java/com/android/server/power/stats/BatteryStatsImpl.java)
+sums downward charge-counter changes while ignoring increases. The quotient
+is about 10.8 mA, an Android gauge-accounting estimate rather than independent
+physical current. The source was reviewed to interpret the field, not proven
+bit-identical to the running framework. The estimated per-component power
+table reports computed drain zero here and cannot identify physical service
+consumption.
+
+The learned full capacity remains 2,820 mAh versus 4,700 mAh nominal. The idle
+comparison supports a Mobian-specific load/policy difference worth pursuing,
+without proving the original cell healthy or quantifying a net-current ratio.
+Bluetooth and Wi-Fi settings were restored; no reboot or new kernel was needed.
+Bounded battery/power/device-idle/thermal readings were retained privately.
+Restricted suspend-service/logcat reads returned no usable detail; no root
+access or security-setting change was attempted. The one-shot reminder is paused.
 
 ### Existing kernel configuration comparison
 
