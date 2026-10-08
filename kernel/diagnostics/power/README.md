@@ -198,6 +198,27 @@ level Android selected or whether either system physically reaches it in every
 trial. Android's protected runtime attributes remain unreadable. No lower-level
 storage power policy, USB driver or kernel was changed from this comparison.
 
+The RPMh command layer, resource-state controller, RPMh regulator provider
+and GDSC power-domain implementation also match byte for byte at the pinned
+commit:
+
+| File | SHA-256 on both sides |
+| --- | --- |
+| `drivers/soc/qcom/rpmh.c` | `a6921d6e2f2a13aef6206228c8b2703c852f163171c15576c4a82411e85f75ed` |
+| `drivers/soc/qcom/rpmh-rsc.c` | `b37f390dbe93903c4a7884e605b76b507134c09d33a147d0c34648f1efd83cc0` |
+| `drivers/regulator/qcom-rpmh-regulator.c` | `856e7515d860f15482b4246dda69cc2953ef19e99488879e71b3e542f078ad8c` |
+| `drivers/clk/qcom/gdsc.c` | `be0de8d6e48bd6b4eb459821767c764ad9edb14e34a26ebc5429aa471752b8bc` |
+
+Across the thirteen selected files reviewed so far, twelve are identical and
+the remaining USB delta is the host-mode error guard described above. This is
+a targeted comparison, not a complete kernel audit. It supplies no demonstrated
+power fix from these implementations and does not exclude differences elsewhere
+in the kernel or in compiled patches. The next Mobian investigation should
+prioritize actual peripheral enable/supply states and their userspace ownership,
+starting with the unproven Bluetooth-off state, rather than another rebuild of
+these unchanged implementations. It requires a restored Mobian runtime; Android
+cannot validate that runtime's GPIO/consumer state on its behalf.
+
 ### Prepared overnight protocol
 
 The operator intends to leave LineageOS idle overnight, with the same airplane,
