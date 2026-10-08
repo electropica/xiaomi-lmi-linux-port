@@ -1298,3 +1298,35 @@ service file and temporary executable were removed after retrieval and systemd
 was reloaded. Charging was confirmed on return. No new kernel was built or
 installed and no gauge calibration was changed. A future attempt must positively
 acknowledge the saved unplugged baseline before the operator powers off.
+
+
+### Daytime unplugged return on the persistent RPMh kernel — 2026-10-08
+
+The operator supplied unplug/replug times of 06:46 and 18:35 Europe/Paris:
+11 hours 49 minutes. The first successful return read at approximately 18:37:30
+reported 54%, charge counter 1,448,759 uAh, learned full 2,820,000 uAh,
+design 4,700,000 uAh, temperature 21.2 C and active charging. The boot identity
+matches the morning startup; the October 7 RPMh kernel banner and
+j11sun_4700mah profile are unchanged. No intervening reboot was detected.
+
+The morning read after the manual-off test had reported 91% and counter
+2,361,292 uAh while charging. The endpoint difference is 37 percentage points
+and 912,533 uAh, approximately 77.2 mA if divided by the operator's unplugged
+duration. This is indicative, not an exact unplugged current measurement:
+the departure endpoint preceded unplug and the return endpoint followed
+approximately 2.5 minutes of charging. No uncharged departure sample exists.
+
+The selected kernel journal contains 77 complete deep-suspend pairs, totaling
+39,665.4 seconds (about 11 hours 1 minute, 93.24% of the operator's interval).
+This sums complete pairs only and may omit boundary-crossing sleep. Journal
+realtime timestamps include suspend; journal monotonic timestamps do not and
+must not be used as sleep-duration measurements. Wake messages include 76
+msoc-delta, one msoc-high and one typec-cc-state-change event. No selected
+suspend-failure, watchdog, BUG, Oops or thermal-shutdown message was found.
+
+The substantial discharge persists despite extensive deep sleep. Neither
+this result nor the learned-capacity value establishes physical battery health
+or independently calibrates the gauge. Radio association and physical battery
+condition remain uncontrolled. Raw samples, boot identity and selected journal
+events remain private; this observation introduced no logger, setting change,
+new kernel build or media acquisition.
