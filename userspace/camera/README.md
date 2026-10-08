@@ -1,15 +1,30 @@
 # Camera userspace status
 
-Current diagnostic-boot result: automatic rear 720p capture works through the
-[opt-in snapshot app](#opt-in-rear-snapshot-application--2026-10-05).
-Operator button/open validation is pending. Megapixels remains incompatible.
-The following dated sections preserve the earlier blockers and their resolution.
+## Current decision summary — 2026-10-08
 
-Megapixels is installed, but its required `qcom,kona-mtp.ini` is absent
-and its native media API is incompatible with this downstream stack. The
-rear IMX686 is now confirmed through the isolated OEM backend below. No
-speculative Megapixels configuration is included. See the
-[`camera blocker validation`](../../docs/validation/archi-validation-02-camera-blocker-2026-09-27.md).
+The handset is currently running LineageOS for the battery comparison, not
+Mobian. These results describe earlier Mobian hardware trials, not applications
+currently installed on the handset or a rebuilt image.
+
+| Path | Strongest established result | Remaining boundary |
+| --- | --- | --- |
+| Rear OEM HAL3 backend | Real images, upright portrait photos and smoother three-buffer preview were confirmed by the operator. | Preview-frame stills are not full-resolution photography; generic image integration remains open. |
+| Foreground lmi prototype | Preview ran beyond 25 seconds and resumed automatically after returning from another application. | Historical prototype evidence, not the selected final camera frontend. |
+| Snapshot with diagnostic PipeWire bridge | Real rear preview and corrected left/right orientation were confirmed; fixed sensor cadence and NEON conversion reduced perceived delay. | Approximately 18–19 unique publications/s in the accepted trials, below the 25 fps target; reliable recording and 720p/30 fps remain unvalidated. |
+| Faster two-buffer/10 ms polling candidate | Higher publication rate was measured. | The operator reported stutter; this candidate was not accepted. |
+| Megapixels and Lomiri Camera | Megapixels has a downstream API/configuration mismatch; Lomiri opened a black viewfinder. | Neither is a working alternative on the tested Mobian stack. Megapixels was removed in the later trial. |
+
+Front camera, camera-app zoom/flash controls and landscape auto-rotation are not
+validated. The separately working torch does not establish camera flash support.
+Generated-input rates are not sensor capture rates. The isolated runtime's
+diagnostic identity hooks are not a production access-control design.
+Do not repeat the previous latency trials without a new measurable hypothesis.
+No acquisition is active; camera or microphone use needs fresh operator readiness.
+
+The [Snapshot validation record](../../docs/validation/snapshot-pipewire-rear-preview-2026-10-05.md)
+and dated sections below preserve the evidence and superseded blockers.
+
+## Historical experiments
 
 ## Current functional recheck — 2026-10-04
 

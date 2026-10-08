@@ -1,5 +1,16 @@
 # Mobian status
 
+## Current handset boundary — 2026-10-08
+
+The handset now runs LineageOS 23.2 for the Android battery comparison. The
+Mobian results below remain historical validation evidence, not the currently
+running system. The operator chose installation without a snapshot of the
+then-current Mobian userdata; Android also replaced dynamic partitions. An
+exact return is not established by retaining the old boot alone. See
+[current build status](CURRENT-BUILD.md), the
+[power decision summary](../../kernel/diagnostics/power/README.md) and the
+[camera decision summary](../../userspace/camera/README.md).
+
 ## Current Mobian userspace state — updated 2026-10-03
 
 The current validated Mobian/Phosh userdata family is based on the external
