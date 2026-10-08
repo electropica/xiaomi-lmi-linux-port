@@ -1102,3 +1102,40 @@ at different state of charge and boot history. Their difference from this
 baseline now survives restart, allowing subsequent comparisons to identify and
 hold the kernel constant. Raw logs remain private; no audio/video acquisition,
 new kernel build or radio-state modification was performed in this trial.
+
+
+### Overnight return on the persistent RPMh baseline — 2026-10-08
+
+The 21:01:45 CEST baseline on October 7 reported 100%, charge counter
+2,729,766 uAh and 24.0 C while still charging. The first SSH return on
+October 8 at 05:41:45 CEST reported 69%, 1,914,318 uAh and 21.2 C, already
+charging. The running banner, IKCONFIG and installed boot-image prefix still
+match the confirmed RPMh baseline. Boot time was 32,127.039 seconds; the
+continuous boot-time progression from the previous sample supports no intervening
+restart. The profile remained `j11sun_4700mah`, with learned full capacity
+2,822,000 uAh and design capacity 4,700,000 uAh.
+
+Across the two samples, elapsed boot time was 8.666782 hours and charge counter
+fell by 815,448 uAh, giving an approximate 94.089 mA. This includes the baseline
+while plugged in, charging before the return read, and any operator activity;
+the actual unplug instant is not yet known. It is not a calibrated off-cable
+current measurement. The first return value is retained separately from the
+later 70% reading taken after additional charging.
+
+The kernel journal contains 62 completed deep-suspend pairs between 21:17:28
+and 05:41:23 CEST. Their combined sleep time is 29,269.886 seconds over
+30,234.989 seconds (96.808%). The 61 intervening awake gaps total 965.103
+seconds and are at most 15.852 seconds each. Resume reports identify 61
+`msoc-delta` interrupts and one `msoc-high` interrupt. No suspend-failure,
+watchdog, BUG, Oops or thermal-shutdown message was found in the selected
+current-boot interval. These journal timestamps and markers do not independently
+measure rail current or exclude every possible hardware issue.
+
+No trial logger was left active overnight. Radio was enabled before and after,
+with association and supply votes not continuously sampled; this must not be
+labelled a radio-off experiment. The RTC alarm was empty at return and charging
+worked. The loss of 31 reported percentage points despite extensive deep suspend
+confirms the autonomy problem persists on the now-persistent baseline. It does
+not isolate the gauge, physical battery condition or remaining consumer. Raw
+logs and first-return data remain private. No camera/microphone, new build or
+live power-policy modification was performed for this observation.

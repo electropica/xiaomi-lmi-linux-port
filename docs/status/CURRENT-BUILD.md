@@ -516,3 +516,16 @@ The gauge recognizes `j11sun_4700mah`, with design 4,700 mAh and learned full
 remains an operator check. The original D-repro remains the rollback image. The newly prepared guarded FG observer and lookup/retry fixes are
 excluded from this chosen image and must not be reported as active. See the
 [power protocol](../../kernel/diagnostics/power/README.md#reuse-of-the-existing-reviewed-kernel--2026-10-07).
+
+
+### Persistent-kernel overnight result — 2026-10-08
+
+The first return after the night reported 69% versus the previous plugged-in
+100% baseline. Running and installed RPMh kernel identity remained confirmed,
+with no intervening restart supported by boot-time progression. The journal
+records 96.808% deep suspend between the first and last overnight suspend
+markers, with 61 `msoc-delta` and one `msoc-high` wake reports. Approximate
+counter-derived consumption is 94.089 mA over 8.666782 hours between readings;
+charging at both ends and the unknown exact unplug time prevent treating this
+as a controlled current measurement. No autonomy fix is established. See the
+[power record](../../kernel/diagnostics/power/README.md#overnight-return-on-the-persistent-rpmh-baseline--2026-10-08).
