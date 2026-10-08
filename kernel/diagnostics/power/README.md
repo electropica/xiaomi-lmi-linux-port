@@ -1271,3 +1271,30 @@ offline reboot; use operator/host timing and boot elapsed time as well. Even an
 eligible pair does not independently calibrate physical current or prove
 battery health. A shorter interval can resolve a gross difference but may be
 inconclusive for small losses. Raw boot IDs and samples remain private.
+
+
+### Manual-off return: startup captured, comparison invalid — 2026-10-08
+
+The operator returned after an intended approximately 20-minute off interval.
+All three startup samples were taken on battery, with USB offline and status
+Discharging, at boot elapsed times 8.23, 13.23 and 23.23 seconds. Each reported
+91%, the j11sun_4700mah profile and the installed October 7 RPMh kernel banner.
+The learned full capacity was 2,820,000 uAh, compared with 2,822,000 uAh in the
+preceding running-boot measurements. This change would also fail the strict
+unchanged-capacity comparison guard.
+
+The required before-off file is absent. The previous boot's service journal
+shows the finite sampler being stopped during shutdown without its saved-sample
+message. The exact reason it did not reach its save point is not established.
+Consequently there is no eligible baseline pair, no measured off-state loss or
+off-state current, and no battery-health conclusion from this attempt. Startup
+charge counters alone must not be compared with a charging endpoint from the
+earlier NFC trial. Phone wall-clock timestamps are not used to certify the
+off interval.
+
+The return files were retained privately. The next-boot marker was consumed;
+the oneshot finished successfully and became inactive. Its enabled link,
+service file and temporary executable were removed after retrieval and systemd
+was reloaded. Charging was confirmed on return. No new kernel was built or
+installed and no gauge calibration was changed. A future attempt must positively
+acknowledge the saved unplugged baseline before the operator powers off.
