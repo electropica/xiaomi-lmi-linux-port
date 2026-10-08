@@ -1187,3 +1187,52 @@ the entry message alone does not prove gestures are enabled. Disabling that
 already-disabled setting is not a useful isolation trial. Fingerprint/AOD
 branches can select a different suspend path, so this check alone does not
 prove that the touch controller or its rail is physically powered down.
+
+
+### Normal NFC power-command comparison — 2026-10-08
+
+A source-guided check found the live SN100_B controller's VEN GPIO high with
+no client holding `/dev/nq-nci`. The driver's successful hardware probe leaves
+`nfc_ven_enabled` true, and closing the character device does not lower VEN.
+Opening it does temporarily enable its interrupt, reset software statistics
+and select normal firmware-GPIO state; closing disables that interrupt for the
+last client. Cached identification and `ESE_GET_PWR` on this confirmed SN100
+variant were used to read VEN without a power command during discovery.
+That getter maps another GPIO on other variants and must not be reused blindly.
+
+A bounded trial then used the driver's ordinary `NFC_SET_PWR(0)` request,
+verified VEN changed from one to zero, and restored it with request one after
+the final sample. Restoration verified zero to one. No GPIO was exported or
+written directly, driver unbound, firmware downloaded, shared rail forced off
+or kernel rebuilt. A one-shot restoration timer backed up the collector's
+`finally` cleanup; it was stopped after successful restoration. The power
+helper's seven host guard/transition cases passed without hardware access.
+
+| Arm | Reported charge | Elapsed / suspended seconds | Suspend share | Counter drop | Gauge average |
+|---|---|---|---|---|---|
+| VEN low, trial 13 | 88% | 181.503 / 180.810 | 99.619% | 4,479 uAh | 88.838 mA |
+| VEN high, trial 14 | 89% | 181.727 / 181.035 | 99.619% | 4,558 uAh | 90.294 mA |
+
+Both arms ended at the programmed RTC wake, with no early abort or gauge retry.
+Wi-Fi stayed enabled. The trace retained all 11,954 and 12,088 events
+respectively, with no nonzero loss statistics, PM callback errors or RPMh
+acknowledgement errno. The collectors are inactive with success, RTC alarms
+and trace instances are removed, charging resumed, and NFC VEN was restored.
+Raw traces, snapshots and private trial scripts remain outside Git.
+
+The 1.455 mA difference is one short sequential pair with intervening charging,
+a one-point SOC difference and no matched-temperature replication. It is not
+an independently calibrated or stable NFC power cost. The substantive result
+is that VEN low still leaves approximately 89 mA gauge-reported consumption,
+so an enabled NFC controller does not by itself explain the residual load.
+This normal command does not unvote its I/O regulator; it is controller-enable
+isolation, not proof that every NFC/eSE rail is electrically unpowered.
+
+Audited `drivers/nfc/nq-nci.c` SHA-256:
+`fcd4e82f6ab56da558015d03b382cf322fd902493c60f11dfad2f101dd9daed4`.
+The ioctl ABI came from the corresponding locked `nq-nci.h` and
+`include/uapi/linux/nfc/nfcinfo.h`. Keep the working kernel constant for further
+comparisons. Retained profile mismatch and NFC VEN alone are no longer leading
+explanations on the measured baseline; physical capacity, gauge accuracy and
+other retained physical loads remain unresolved. No charging/calibration or
+permanent NFC policy was changed.
