@@ -135,6 +135,40 @@ them with rfkill/HCI ownership, and retain the original state for restoration.
 Do not repeat the existing Wi-Fi/NFC trials, unbind shared hardware or stop the
 working audio DSP solely on the basis of this source comparison.
 
+### Prepared overnight protocol
+
+The operator intends to leave LineageOS idle overnight, with the same airplane,
+Wi-Fi-off and Bluetooth-off settings as the longer daytime trial. This is a
+planned observation, not a completed result or a new kernel experiment.
+
+The opt-in [Windows host helper](../../../userspace/power/diagnostics/android-idle-trial.py)
+and [finite baseline sampler](../../../userspace/power/diagnostics/android-idle-baseline.sh)
+preserve the trial ID, original radio settings, boot ID, uptime, local device
+clock and battery-service fields in private files. The host helper requires
+explicit `--adb`, `--output` and `--trial-id` arguments. Its `arm` action must
+run only after the operator is ready to unplug; it requires external power and
+validates the requested radio state before starting the sampler. Do not arm
+hours in advance or invoke it as an unattended schedule.
+
+The sampler waits at most 15 minutes while plugged in, then confirms all four
+external-power flags are false and status is discharging, settles for ten
+seconds, saves one baseline, switches the screen off and exits. If it fails,
+it requests restoration of the original radios; their state must be checked
+at return. No periodic overnight diagnostic logger remains running.
+
+After the operator confirms reconnection, `return` preserves the first reading
+before collecting baseline, history and Android statistics, and restores the
+recorded radio settings even if later retrieval fails. It rejects reused output
+and unsafe trial IDs. A boot-ID change invalidates a same-boot comparison;
+charge-counter increases, temperature changes, Android statistic resets and
+charging at return must still be handled explicitly in analysis. Displayed
+percentage alone cannot diagnose cell health.
+
+Host guards and shell syntax checks pass. The unified helper has not yet run
+on the phone; the earlier shorter protocol is the hardware-tested precedent.
+It is neither an installed image service nor a power-saving fix. Private trial
+outputs, identifiers and detailed histories must stay outside Git.
+
 ## Historical debugfs candidate design
 
 The historical D-repro configuration disables `CONFIG_DEBUG_FS`, preventing
