@@ -135,6 +135,17 @@ them with rfkill/HCI ownership, and retain the original state for restoration.
 Do not repeat the existing Wi-Fi/NFC trials, unbind shared hardware or stop the
 working audio DSP solely on the basis of this source comparison.
 
+The package's QCA6390 Bluetooth bindings provide concrete read targets for
+that later investigation: TLMM reset line 21 and software-control line 124,
+with supplies AON=`pm8150_s6`, RFA1=`pm8150_s5`, RFA2=`pm8150a_s8` and
+ASD=`pm8150_l16`. The digital supply is `pm8150_s6` in entries
+0/1/2/4/5/6/8/9 and `pm8009_s2` in entries 3/7/10/11. GPIO numbers are
+controller-local binding cells, not assumed Linux global GPIO numbers.
+Resolve the active runtime binding and regulator consumers first; package
+variants are not a reason to manipulate either supply directly. The driver's
+off path drives its reset low, whereas software-control is configured as an
+input during power-on; it is not a second independent enable output.
+
 ### Android package overlays and startup policy
 
 Memory-only inspection of the official October 7 LineageOS archive's DTBO
@@ -160,7 +171,10 @@ clock scaling/gating disabled during `on init`, then enabled in the
 `sleep_disabled=1`; `enable-low-power` requests Power HAL initialization.
 These are startup instructions, not measured steady-state values. The current
 boot reports `sys.boot_completed=1`, but the Power HAL initialization property
-was empty and reading the sleep parameter was denied. Do not infer disabled
+was empty and reading the sleep parameter was denied. The system init file
+imports the vendor hardware init file using `ro.hardware=qcom`, and that file
+imports the inspected power file. This establishes an import chain, not success
+of individual writes or the final runtime value. Do not infer disabled
 runtime sleep from the isolated init write or assume every instruction succeeded.
 The completed Android trial's suspend accounting remains the observed evidence.
 
@@ -221,9 +235,12 @@ cannot validate that runtime's GPIO/consumer state on its behalf.
 
 ### Prepared overnight protocol
 
-The operator intends to leave LineageOS idle overnight, with the same airplane,
+The operator has unplugged after arming the finite LineageOS overnight
+baseline sampler, with the same airplane,
 Wi-Fi-off and Bluetooth-off settings as the longer daytime trial. This is a
-planned observation, not a completed result or a new kernel experiment.
+pending observation, not a completed result or a new kernel experiment.
+The host arm action succeeded. Confirmation that the phone saved its baseline
+and exited must be retrieved at return; it is not observable while disconnected.
 
 The opt-in [Windows host helper](../../../userspace/power/diagnostics/android-idle-trial.py)
 and [finite baseline sampler](../../../userspace/power/diagnostics/android-idle-baseline.sh)
@@ -248,8 +265,9 @@ charge-counter increases, temperature changes, Android statistic resets and
 charging at return must still be handled explicitly in analysis. Displayed
 percentage alone cannot diagnose cell health.
 
-Host guards and shell syntax checks pass. The unified helper has not yet run
-on the phone; the earlier shorter protocol is the hardware-tested precedent.
+Host guards and shell syntax checks pass. The unified helper's first host arm action has succeeded;
+baseline completion and return retrieval remain pending. The earlier shorter
+protocol is the completed hardware-tested precedent.
 It is neither an installed image service nor a power-saving fix. Private trial
 outputs, identifiers and detailed histories must stay outside Git.
 
