@@ -170,6 +170,34 @@ files. The post-boot script and actual UFS power-level attributes were denied
 to the ordinary ADB shell. Their runtime values remain unknown; no Android
 root/security setting or Mobian policy was changed to obtain them.
 
+### Existing storage and USB source comparison
+
+At the same pinned Android kernel commit, five further complete source files
+are byte-identical to the preserved Mobian base:
+
+| File | SHA-256 on both sides |
+| --- | --- |
+| `drivers/scsi/ufs/ufshcd.c` | `cc3b00465c2cf0f096521d010150fb87b248119670fe8ed259eea4e56f38594e` |
+| `drivers/scsi/ufs/ufs-qcom.c` | `5914361ac55598d1e2ffb6105bbe161d93536aba7144310cc67cb94d400ac739` |
+| `drivers/usb/dwc3/core.c` | `c1315c8af7cb8b0f8efb2df5d51c5169f63257621840b8b40bea688e67a3f6ab` |
+| `drivers/usb/phy/phy-msm-ssusb-qmp.c` | `692f6cfb62866b928eb5e305fa478570ab8561eec21615963081a2bae167c34e` |
+| `drivers/usb/phy/phy-msm-qusb.c` | `b89ed9c718c8c0c9bd83b98e1057005fe52d89f9bee2791095ce8bff689653db` |
+
+The sixth file, `drivers/usb/dwc3/dwc3-msm.c`, differs only in
+`dwc3_otg_start_host`: the Mobian base checks `IS_ERR(vbus_reg)` before
+comparing `PTR_ERR(vbus_reg)` with `-EPROBE_DEFER`; the Android source omits
+the first guard. The reviewed delta is in host-mode regulator acquisition,
+not an altered suspend/resume implementation. It supplies no demonstrated
+idle-drain fix to transplant. These comparisons cover the named source files,
+not every compiled dependency, local patch or device-tree property.
+
+The common UFS core selects device SLEEP plus link Hibern8 when the runtime
+or system power level is not already valid. That fallback matches the states
+represented by Mobian's previously observed level 3; it does not prove which
+level Android selected or whether either system physically reaches it in every
+trial. Android's protected runtime attributes remain unreadable. No lower-level
+storage power policy, USB driver or kernel was changed from this comparison.
+
 ### Prepared overnight protocol
 
 The operator intends to leave LineageOS idle overnight, with the same airplane,
