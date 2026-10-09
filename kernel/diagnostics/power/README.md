@@ -1886,3 +1886,29 @@ The card-level bias was Standby. This weakens an active-stream explanation
 for the new image's residual load; software bias does not measure physical
 amplifier or shared-supply current. No audio route or gain was changed.
 Raw snapshots remain private; the existing kernel is unchanged.
+
+
+### Ten-day power investigation window — 2026-10-09 to 2026-10-19
+
+The operator set a ten-day investigation window, without buying another phone
+or replacing the battery as a prerequisite. This is a decision deadline, not
+a promise of a fix or an unattended scheduled job.
+
+The method is to prioritize concrete differences between LineageOS and Mobian
+on the same lmi. Another device would introduce different power hardware.
+Existing comparisons already cover the core gauge and RPMh sources; identical
+source files are not candidates for blind replacement. The reviewed boot-config
+subset mainly differs in diagnostic options and USB RNDIS support; this subset
+is not a complete configuration equivalence check.
+
+Next: complete the configuration and device-tree comparison, including applied
+Android overlays and peripheral supply consumers. Compare Android initialization
+policy with the actual Mobian idle state before proposing any change. Do not
+disable shared rails or charging blindly. A controlled trial must name a
+specific suspected cause, its reversible change, the existing baseline, and
+the expected observation; repeating unchanged short trials is not progress.
+
+Keep raw logs private and publish reviewed findings in English. Reuse the
+installed RPMh diagnostic boot; any necessary heavy build remains operator-run.
+At the deadline, report confirmed improvements, remaining hypotheses and
+whether further work is justified. Idle autonomy is still unresolved.
