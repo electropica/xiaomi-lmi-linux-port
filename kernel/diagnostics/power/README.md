@@ -1912,3 +1912,27 @@ Keep raw logs private and publish reviewed findings in English. Reuse the
 installed RPMh diagnostic boot; any necessary heavy build remains operator-run.
 At the deadline, report confirmed improvements, remaining hypotheses and
 whether further work is justified. Idle autonomy is still unresolved.
+
+
+### Full embedded boot-configuration comparison — 2026-10-09
+
+The retained LineageOS and installed RPMh diagnostic boot configurations differ
+in 84 symbols when compared without the earlier power-related prefix filter.
+Thirty differences are explicitly disabled versus absent symbols; absent
+symbols can reflect different Kconfig sources and must not be interpreted as
+enabled behavior. Other differences include toolchain/LTO, security, filesystem,
+diagnostic and Bluetooth UART options. This comparison is of embedded configs,
+not an equivalence check of the two kernel implementations or active hardware.
+
+Mobian enables the QCA UART HCI path that LineageOS does not use in this config.
+The historical lmi design requires an explicit userspace N_HCI attach to the
+GENI UART, with controller power managed separately. The current image's earlier
+read-only check found no HCI device and reset/SW_CTRL low. A compiled UART option
+alone therefore does not establish an active powered Bluetooth controller.
+Do not rebuild solely to remove it without establishing a relevant live path.
+
+No newly identified configuration difference is yet a demonstrated cause of
+the residual drain. No kernel was rebuilt, device power changed, or battery
+trial requested during this offline comparison. Raw comparison files remain
+private. The next comparison must reconcile applied Android DT overlays and
+actual peripheral supply state, rather than treating base DTBs as final trees.
