@@ -2060,3 +2060,27 @@ residency table as evidence of physical DDR sleep failure or improved current.
 Relevant retained-source paths: `drivers/devfreq/devfreq_devbw.c`,
 `drivers/devfreq/governor_performance.c`, `governor_powersave.c`, `devfreq.c`,
 and `drivers/soc/qcom/msm_bus/msm_bus_arb_rpmh.c`.
+
+
+### Guarded NPU bandwidth trial preparation — 2026-10-09
+
+`scripts/lmi-npu-bandwidth-policy.py` prepares a temporary isolation of the
+single NPU devbw client described above. It requires the reviewed performance
+policy and limits, USB connection, no detected NPU device user, and an active
+trial unit bounded to fifteen minutes. Before writing the governor it checks
+the typed systemd properties for exactly one independent restoration command
+and saves the original state with file and directory fsync. It refuses to
+overwrite external governor or bandwidth-limit changes during restoration.
+Missing or invalid restoration state is an error, not successful cleanup.
+
+The accompanying host-only failure-injection tests pass all fourteen cases.
+They cover policy mismatch, save/write/readback failures, restoration failure,
+state validation and misleading restoration hooks. These are simulated tests;
+they do not establish that the live systemd properties or handset trial work.
+
+The private matched collector and explicit-arm host launcher are prepared,
+but neither has been installed or started on the phone. Preserve the current
+overnight baseline first. A later attended trial must verify the software
+target reaches zero, the original target returns to 10437, cleanup completes,
+and the interval remains comparable before interpreting its gauge delta.
+No autonomy improvement or permanent power-policy change is claimed.
