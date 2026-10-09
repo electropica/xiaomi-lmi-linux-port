@@ -546,7 +546,7 @@ Mobian artifacts and Git history remain available, but exact runtime restoration
 has not been established. No new Mobian image was built.
 
 The first short Android idle comparison suggests lower drain but is preliminary.
-See the [single power decision summary](../../kernel/diagnostics/power/README.md#current-decision-summary--2026-10-08)
+See the [single power decision summary](../../kernel/diagnostics/power/README.md#current-decision-summary--2026-10-09)
 for grouped results and the distinction between charging return samples and
 pre-charge battery-history events. The longer Android interval is complete: 29 min 41 s on battery, displayed
 83% unchanged before charge, about 98.5% system suspend and 5.35 mAh summed
@@ -573,5 +573,16 @@ The hourly review refines this overnight result: approximately 71% of net
 counter loss occurs in the first two hours, with about 12.4 mA net gauge
 accounting over the remaining 6 h 37 min. This is not uniform physical idle
 current. See the [counter interpretation and limits](../../kernel/diagnostics/power/README.md#overnight-discharge-is-not-uniform).
-The next operator-requested ten-hour comparison uses the same finite baseline
-protocol; its result remains pending. No periodic diagnostic logger is used.
+The subsequent operator-requested comparison completed after 13 h 29 min.
+No periodic diagnostic logger was used.
+
+### LineageOS daytime comparison completed — 2026-10-09
+
+The same-boot, radios-off interval lasted 13 h 29 min, with displayed level
+100% to 94% before charging. Net rounded gauge loss is 150 mAh (~11.1 mA);
+Android counts 188 mAh decreases (~13.9 mA), with positive corrections retained.
+System-suspend accounting is about 99.62%. Original radio settings were
+restored and verified. This reinforces lower apparent Android idle drain,
+without a physical cell-health verdict or a demonstrated Mobian fix. See the
+[single power decision record](../../kernel/diagnostics/power/README.md#completed-android-daytime-result--2026-10-09).
+The handset remains on LineageOS; no Mobian restoration or new build occurred.

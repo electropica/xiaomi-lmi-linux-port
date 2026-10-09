@@ -19,6 +19,7 @@ recorded below. No battery-health verdict follows from this comparison.
 | First LineageOS idle interval | Displayed level stayed at 79%; battery history records about 2 mAh loss over 7 min 05 s before charging. | Preliminary evidence, supported by the longer interval below; not a cell-health test. |
 | Longer LineageOS idle interval | 29 min 41 s on battery; displayed 83% unchanged before reconnect; Android reports 5.35 mAh summed gauge decreases (~10.8 mA by that accounting). | Lower apparent idle drain is supported, but an upward gauge correction prevents a reliable net endpoint-current estimate. |
 | Overnight LineageOS idle interval | 8 h 37 min on battery, 100% to 91% before charging, same boot and radios off; roughly 33 mA by gauge accounting, about 99.5% system suspend. | Lower apparent drain than the historical Mobian trials is supported; gauge corrections and different trials prevent a calibrated current ratio or battery-health verdict. |
+| Daytime LineageOS idle interval | 13 h 29 min, 100% to 94% before charging, same boot and radios off; 150 mAh net gauge loss (~11.1 mA), Android counts 188 mAh decreases (~13.9 mA); about 99.62% system suspend. | Confirms substantially lower apparent idle drain in another long Android interval; upward corrections and different measurement conditions prohibit a calibrated current ratio or cell-health verdict. |
 
 The first Android baseline was recorded after unplug, with airplane mode enabled
 and Wi-Fi/Bluetooth settings disabled. A finite phone-local sampler saved one
@@ -163,6 +164,48 @@ current_now`. A plugged, charging read succeeded, but it is not an idle-current
 result. Future readings must retain timestamps, power status and measurement
 conditions; `current_average` returned zero and is not treated as a validated
 standby average. Battery-state simulation commands are not used.
+
+### Completed Android daytime result — 2026-10-09
+
+The operator extended the intended ten-hour test to approximately fourteen
+hours. History establishes the actual discharge interval from 06:30:37.407
+to the explicit pre-charge reconnect event at 19:59:39.564: 48,542.157 seconds,
+or 13 h 29 min 02.157 s. The same boot remained active. Departure radios were
+airplane enabled, Wi-Fi and Bluetooth disabled; the returned settings still
+matched, and the original settings were then restored and verified.
+The finite sampler's saved-baseline/exit marker was recovered. No periodic
+diagnostic logger or media acquisition ran during the interval.
+
+Displayed level changed from 100% to 94% before charging. Rounded history
+counter changed from 2,626 to 2,476 mAh: 150 mAh net, approximately 11.1 mA
+as a gauge quotient. Five positive corrections total 39 mAh; summed rounded
+decreases total 189 mAh. Android separately counts 188 mAh discharge,
+approximately 13.9 mA by its sum-of-decreases accounting, including 184 mAh
+in deep doze. The first host return read was already charging and is excluded
+from a direct discharge-endpoint calculation. These are gauge-based estimates,
+not independently measured physical currents.
+
+The first two roughly hourly segments lose 45 and 18 mAh, compared with
+146 and 55 mAh in the preceding night. Thus that night's initial large decline
+is not reproduced at the same magnitude. Corrections produce two later
+negative-net segments; these must not be called self-charging or zero load.
+Both trials display 100% at departure but have different counters, temperatures
+and charging histories. A controlled physical-current ratio is not established.
+
+Android reports 48,542.132 seconds on battery and 183.892 seconds uptime:
+approximately 99.62% system-suspend occupancy. Screen-off time is
+48,531.649 seconds. Departure temperature was 17.7 C; the first charging
+return reports 16.7 C. Learned full remains 2,813 mAh versus 4,700 mAh nominal.
+Composite sampler clock/uptime again occurs later than its battery/history
+departure; use the matching history and Android-statistics interval above.
+
+This second long Android trial reinforces a Mobian integration/runtime-policy
+investigation rather than a battery-only explanation. It does not establish
+cell health, identify a peripheral responsible for Mobian drain or validate
+an autonomy fix. Reuse the existing Mobian kernel; inspect runtime ownership
+and supply votes before a new targeted isolation trial. No new build, firmware,
+calibration reset or Android security change was performed. Raw logs remain
+private.
 
 ### Existing kernel configuration comparison
 

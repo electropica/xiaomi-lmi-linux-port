@@ -1,6 +1,6 @@
 # Mobian status
 
-## Current handset boundary — 2026-10-08
+## Current handset boundary — 2026-10-09
 
 The handset now runs LineageOS 23.2 for the Android battery comparison. The
 Mobian results below remain historical validation evidence, not the currently
@@ -10,6 +10,12 @@ exact return is not established by retaining the old boot alone. See
 [current build status](CURRENT-BUILD.md), the
 [power decision summary](../../kernel/diagnostics/power/README.md) and the
 [camera decision summary](../../userspace/camera/README.md).
+
+The Android comparison now includes completed 8 h 37 min overnight and
+13 h 29 min daytime intervals. Both support lower apparent idle drain than
+historical Mobian trials, with gauge corrections and timing limits retained
+in the single power record. No Mobian autonomy fix or physical cell-health
+verdict has been established.
 
 ## Current Mobian userspace state — updated 2026-10-03
 
