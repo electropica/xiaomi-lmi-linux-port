@@ -626,3 +626,12 @@ application, audio and vendor-runtime validation remain pending; battery
 autonomy is unresolved and the experimental Snapshot bridge is not
 production-integrated. See the [first-boot power record](../../kernel/diagnostics/power/README.md#integrated-userspace-first-boot-and-bluetooth-readback--2026-10-09). Reuse the
 existing RPMh boot; no additional kernel build is required.
+
+
+Current-image follow-up (2026-10-09): a shortened 128.528-second idle observation
+gave 86.38 mA from the gauge with 99.455% suspended; it is not a completed
+180-second comparison. High idle consumption remains unresolved. The current
+recipe now reuses the reviewed time-seed floor omitted from the first image;
+its helper and timer are active on the handset, without a direct RTC write.
+No rebuild or reboot validation of this recipe revision has been performed.
+See the [qualified idle and clock record](../../kernel/diagnostics/power/README.md#integrated-userspace-short-idle-observation-and-clock-floor--2026-10-09).

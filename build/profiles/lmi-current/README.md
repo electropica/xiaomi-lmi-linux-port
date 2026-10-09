@@ -17,7 +17,10 @@ operator-run. The generic/historical builder remains available separately.
 - Previously validated patched UPower battery-status opt-in, CPU-idle
   opt-in for the existing kernel release, and battery-only suspend after
   900 seconds; no automatic suspend while connected to AC.
-- Selected timezone, with the existing timesyncd service; current Android
+- Selected timezone and timesyncd, plus the existing time-seed clock floor
+  initialized at build time and saved periodically and at orderly shutdown.
+  This prevents regression below the saved epoch without writing the hardware
+  RTC; it does not replace NTP or account for time spent powered off. Current Android
   system/vendor mount layout generated from paired external metadata reports.
 
 These changes were validated separately on the previous phone installation.

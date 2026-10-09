@@ -66,5 +66,14 @@ test -f "/usr/share/zoneinfo/${M1_TIMEZONE:-Europe/Paris}"
 ln -sf "/usr/share/zoneinfo/${M1_TIMEZONE:-Europe/Paris}" /etc/localtime
 printf '%s\n' "${M1_TIMEZONE:-Europe/Paris}" > /etc/timezone
 install -Dm644 "$src/inputs/SHA256SUMS" /usr/share/lmi-current-profile/INPUT-SHA256SUMS
+# Initialize a build-time clock floor; never write the hardware RTC.
+test ! -e /var/lib/lmi-time-seed
+test ! -L /var/lib/lmi-time-seed
+install -Dm755 "$src/time-seed/usr/local/libexec/lmi-time-seed" /usr/local/libexec/lmi-time-seed
+for unit in lmi-time-seed.service lmi-time-seed-save.service lmi-time-seed-save.timer; do
+    install -Dm644 "$src/time-seed/etc/systemd/system/$unit" "/etc/systemd/system/$unit"
+done
+DERIVED_PROFILE=time-seed DERIVED_BUILD_EPOCH="$(date -u +%s)" \
+    /bin/sh "$src/initialize-time-seed.sh"
 install -Dm644 "$src/PROFILE.txt" /usr/share/lmi-current-profile/PROFILE.txt
 printf 'CURRENT_LMI_PROFILE_INSTALLED\n'

@@ -43,6 +43,9 @@ shutil.copy2(repo/'userspace/power/files/lmi-cpu-idle.service', a.destination/'p
 for name in ['99-lmi-upower-status.rules','94_lmi-current-power.gschema.override']:
     shutil.copy2(repo/'build/profiles/lmi-current'/name, a.destination/'power'/name)
 shutil.copy2(repo/'build/profiles/lmi-current/PROFILE.txt', a.destination/'PROFILE.txt')
+# Reuse the reviewed clock-floor assets rather than maintaining another copy.
+shutil.copytree(repo/'build/userdata/profiles/time-seed/overlay/rootfs', a.destination/'time-seed')
+shutil.copy2(repo/'build/userdata/profiles/time-seed/hooks.d/10-initialize-lmi-time-seed.sh', a.destination/'initialize-time-seed.sh')
 (a.destination/'inputs').mkdir()
 for f in files+[manifest]: shutil.copy2(f, a.destination/'inputs'/f.name)
 print('CURRENT_PROFILE_INPUTS_VALIDATED')

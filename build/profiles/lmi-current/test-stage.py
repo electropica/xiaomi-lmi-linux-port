@@ -26,6 +26,9 @@ class StageTests(unittest.TestCase):
         self.assertTrue((self.dest/'apps/lmi-flashlight.py').is_file())
         self.assertTrue((self.dest/'audio/91-lmi-microphone.conf').is_file())
         self.assertTrue((self.dest/'power/lmi-cpu-idle.service').is_file())
+        self.assertTrue((self.dest/'time-seed/usr/local/libexec/lmi-time-seed').is_file())
+        self.assertTrue((self.dest/'time-seed/etc/systemd/system/lmi-time-seed-save.timer').is_file())
+        self.assertTrue((self.dest/'initialize-time-seed.sh').is_file())
     def test_missing_package_fails_before_staging(self):
         next(self.inputs.glob('upower_*.deb')).unlink()
         self.assertNotEqual(self.run_stage().returncode,0)

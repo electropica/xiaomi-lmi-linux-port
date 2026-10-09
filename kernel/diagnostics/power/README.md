@@ -1794,3 +1794,37 @@ check is false, not a measured zero voltage/current. No Bluetooth power-control
 ioctl or GPIO write was issued. This weakens a Bluetooth-held-on hypothesis
 but does not prove that shared supplies or other masters are unpowered.
 Raw snapshots and public-key identifiers remain outside Git.
+
+
+### Integrated userspace short idle observation and clock floor — 2026-10-09
+
+The first idle collection after the integrated-image return was shortened by
+an RTC alarm wake. The requested 180-second comparison is **not complete**.
+The usable pre-suspend to final unplugged interval is 128.528 seconds, with
+0.701 seconds awake (99.455% suspended). The charge counter decreased by
+3,084 uAh, yielding a gauge-derived interval average of 86.38 mA. This is a
+qualified short observation consistent with the unresolved high idle load,
+not a physical current measurement or a completed paired comparison.
+The initial Full-to-Discharging counter discontinuity is excluded.
+
+Wi-Fi remained enabled, no media was captured or played, and the return
+reported Charging. The collector was inactive with successful cleanup;
+the RTC alarm and trace-instance list were empty. The trace had 12,178
+entries and no reported per-CPU overruns or dropped events. Parsed pre-suspend
+VRM register values, validity masks and contributors matched the retained
+trial-12 snapshot. This does not establish identical physical rail states.
+
+The fresh system clock had regressed to April 2026 and NTP was unsynchronized.
+The coordinator corrected system time from the host without directly writing
+the hardware RTC or gauge. A subsequent bounded alarm-only probe scheduled
+181 seconds ahead of the RTC counter and cleared its own alarm. The cause of
+the earlier 128-second alarm wake remains unproven.
+
+The integrated recipe had omitted the previously reviewed time-seed profile.
+It now stages that profile's existing helper, units and initialization hook,
+without maintaining another copy, and initializes a build-time floor inside
+the image. The same assets are active on this handset; restore completed
+successfully and the save timer is waiting. No reboot was performed to claim
+fresh-image or across-reboot validation of this recipe revision. The saved
+floor prevents regression below the last saved epoch, not clock drift or
+elapsed-time loss while powered off. No new image or kernel build was run.
