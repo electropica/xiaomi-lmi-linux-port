@@ -635,3 +635,10 @@ recipe now reuses the reviewed time-seed floor omitted from the first image;
 its helper and timer are active on the handset, without a direct RTC write.
 No rebuild or reboot validation of this recipe revision has been performed.
 See the [qualified idle and clock record](../../kernel/diagnostics/power/README.md#integrated-userspace-short-idle-observation-and-clock-floor--2026-10-09).
+
+
+The current profile also exposes the mounted stock Venus firmware through
+validated loader references. Both downstream codec nodes passed a bounded
+open/QUERYCAP/close check on the handset. Media streams and idle-power effects
+remain unvalidated; no camera-ready or autonomy-fix claim follows from this.
+See the [Venus correction record](../../kernel/diagnostics/power/README.md#current-image-venus-firmware-reference-correction--2026-10-09).

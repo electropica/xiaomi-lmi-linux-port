@@ -12,6 +12,10 @@ operator-run. The generic/historical builder remains available separately.
   Contacts and Recorder launchers; fonts and locale coverage from Phosh.
 - Torch application and the bounded Chatty launcher with its private plugin
   view, desktop and D-Bus overrides. SMS/MMS service is not thereby validated.
+- Stock Venus firmware references prepared after the read-only firmware mount,
+  before Phosh. Metadata and split-segment lengths are checked before creating
+  links. Existing differing destinations are refused. This enables codec open,
+  not a claim of validated encode/decode streams or a camera-ready image.
 - Previously validated ALSA/PipeWire speaker and microphone routes, generic
   TFA container, and Recorder format preferences.
 - Previously validated patched UPower battery-status opt-in, CPU-idle

@@ -1,0 +1,14 @@
+[Unit]
+Description=Expose mounted stock Venus firmware for lmi video codecs
+Requires=lmi-android-wifi-mounts.service
+After=lmi-android-wifi-mounts.service
+Before=phosh-m0.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lmi-venus-firmware-prepare
+RemainAfterExit=yes
+TimeoutStartSec=15s
+
+[Install]
+WantedBy=multi-user.target

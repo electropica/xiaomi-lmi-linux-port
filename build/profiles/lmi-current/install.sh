@@ -75,5 +75,8 @@ for unit in lmi-time-seed.service lmi-time-seed-save.service lmi-time-seed-save.
 done
 DERIVED_PROFILE=time-seed DERIVED_BUILD_EPOCH="$(date -u +%s)" \
     /bin/sh "$src/initialize-time-seed.sh"
+install -Dm755 "$src/profile/lmi-venus-firmware-prepare" /usr/local/sbin/lmi-venus-firmware-prepare
+install -Dm644 "$src/profile/lmi-venus-firmware-prepare.service" /etc/systemd/system/lmi-venus-firmware-prepare.service
+systemctl enable lmi-venus-firmware-prepare.service
 install -Dm644 "$src/PROFILE.txt" /usr/share/lmi-current-profile/PROFILE.txt
 printf 'CURRENT_LMI_PROFILE_INSTALLED\n'

@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+"""Expose the mounted stock Venus firmware to the downstream loader."""
+from pathlib import Path
+import os, re, struct, subprocess
+
+stock=Path('/mnt/vendor/firmware_mnt/image')
+loader=Path('/lib/firmware/postmarketos')
+assert Path('/sys/module/firmware_class/parameters/path').read_text().strip()==str(loader)
+options=subprocess.check_output(['findmnt','-n','-o','OPTIONS','-T',str(stock)],text=True,timeout=5).strip().split(',')
+assert 'ro' in options, 'Stock firmware must be mounted read-only'
+mdt=stock/'venus.mdt'
+data=mdt.read_bytes()
+assert data[:6]==b'\x7fELF\x01\x01', 'Expected ELF32 little-endian metadata'
+offset=struct.unpack_from('<I',data,28)[0]
+size,count=struct.unpack_from('<HH',data,42)
+assert size==32 and 0<count<128 and offset+size*count<=len(data)
+required=[]
+for i in range(count):
+    typ,off,virt,phys,filesz,memsz,flags,align=struct.unpack_from('<8I',data,offset+i*size)
+    if typ==1 and filesz and (flags & (7<<24))!=(2<<24):
+        part=stock/('venus.b%02d'%i)
+        assert part.is_file() and part.stat().st_size==filesz, 'Missing or truncated segment '+part.name
+        required.append(part)
+assert required, 'No loadable segments'
+parts=[mdt]+sorted(p for p in stock.glob('venus.b*') if re.fullmatch(r'venus\.b[0-9]{2}',p.name) and p.is_file())
+assert loader.is_dir() and not loader.is_symlink()
+# Validate every existing destination before changing anything.
+for part in parts:
+    dest=loader/part.name
+    if os.path.lexists(dest):
+        assert dest.is_symlink() and os.readlink(dest)==str(part), 'Refusing to replace '+str(dest)
+for part in parts:
+    dest=loader/part.name
+    if not os.path.lexists(dest): dest.symlink_to(part)
+    assert dest.is_file() and dest.resolve()==part.resolve()
+print('LMI_VENUS_FIRMWARE_READY',len(parts),'references;',len(required),'validated loadable segments')

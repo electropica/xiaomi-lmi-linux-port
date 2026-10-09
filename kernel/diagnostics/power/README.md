@@ -1828,3 +1828,36 @@ successfully and the save timer is waiting. No reboot was performed to claim
 fresh-image or across-reboot validation of this recipe revision. The saved
 floor prevents regression below the last saved epoch, not clock drift or
 elapsed-time loss while powered off. No new image or kernel build was run.
+
+
+### Current-image Venus firmware reference correction — 2026-10-09
+
+A bounded read of the new image's kernel journal found repeated Venus firmware
+lookup failures clustered at startup, around elapsed seconds 47–49. These are
+not evidence of a continuing background retry loop. The firmware loader path
+was `/lib/firmware/postmarketos`, with no Venus references; the already mounted
+stock firmware partition contained `image/venus.mdt` and its split segments.
+
+The current profile now includes a bounded oneshot after the existing read-only
+firmware mount and before Phosh. Its helper validates ELF32 little-endian
+metadata and every required loadable segment's length before creating links;
+all existing destinations must already refer to that exact source. It copies
+no firmware binary, writes no partition, and starts no media stream. Thirteen
+references expose ten validated loadable segments on this device. Repeated
+preparation completed successfully without changing existing correct links.
+
+On the handset, a bounded open/QUERYCAP/close probe succeeded for both downstream
+codec nodes: `msm_vidc_vdec` and `msm_vidc_venc`. The kernel reported Venus
+firmware loading and release from reset. Both codec descriptors were closed,
+the subsequent fuser check found no holders, and the preparation service was
+active/exited with Result=success. Runtime-PM attributes reported unsupported;
+this is not a measurement of physical rail state. No camera, microphone,
+recording or audible playback was requested. Encode/decode streams, application
+integration, across-reboot startup and effects on idle current remain unvalidated.
+
+The same read-only health check found UFS clock gating enabled, automatic
+HIBERN8 at 1000, and runtime/system PM levels 3. The exposed HBA and link error
+counters were zero. This snapshot does not certify the physical sleep state.
+The codec lookup omission is a concrete functional correction, not an established
+cause or fix of the approximately 86–95 mA gauge-derived idle observations.
+Raw logs and snapshots remain private. No new image or kernel build was run.
