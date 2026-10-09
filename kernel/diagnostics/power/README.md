@@ -1971,3 +1971,29 @@ these driver files. The reset mux difference deserves a focused suspend-path
 review because it is a real adaptation; it is not yet a demonstrated drain
 cause. No new build, hardware setting change or battery trial was performed
 during these offline comparisons. Raw comparison artifacts remain private.
+
+
+### Reset and secondary-charger follow-up — 2026-10-09
+
+The codec suspend callback does not change the WCD938x reset state. Probe and
+SSR_UP reset sequences finish in the active state; reset-low is an SSR_DOWN
+operation. The reset mux adaptation therefore does not, from the reviewed
+source alone, establish a new reset transition at system suspend. No codec
+unbind, forced reset or shared-rail change is justified by this observation.
+
+A single plugged read of the secondary bq2597x charge pump reported
+`charging_enabled=0`, `present=0`, and `status=Unknown`. The first getter reads
+the charging-enable register but its caller discards read errors; `present`
+is a software cache, and `status` is a constant unknown value in this driver.
+These readings do not establish physical standby current. The source's
+present-false setter does not disable charging, but this is not evidence that
+charging was enabled in the observed state.
+
+The existing complete short-trial trace contains the bound charge-pump driver's
+suspend and suspend-noirq callbacks returning zero. Its suspend callback asks
+for ADC disable but ignores the register-update error, so successful callback
+completion alone does not prove that ADC disable reached the hardware.
+No failed write has been established here. Avoid reading the driver's complete
+register dump or alarm-status interface during diagnosis: those paths include
+an alarm register whose read clears flags. No additional unchanged battery
+trial or charging-setting modification was requested for these findings.
