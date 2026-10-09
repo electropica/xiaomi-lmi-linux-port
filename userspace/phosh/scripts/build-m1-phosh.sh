@@ -79,6 +79,13 @@ if [[ -n ${M1_ANDROID_SUPER_REPORTS_DIR:-} ]]; then
     android_mounts_source="$work/android-super-mounts/lmi-android-wifi-mounts"
     sh -n "$android_mounts_source"
 fi
+current_profile_enabled=0
+if [[ -n ${M1_CURRENT_LMI_PROFILE_INPUTS:-} ]]; then
+    [[ ${INSTALL_OPTIONAL_APPS:-} == 1 ]] || { echo 'The current profile requires optional apps.' >&2; exit 2; }
+    python3 "$repo_dir/build/profiles/lmi-current/stage.py" \
+        --inputs "$M1_CURRENT_LMI_PROFILE_INPUTS" --destination "$work/current-profile"
+    current_profile_enabled=1
+fi
 tree="$work/rootfs"
 rootimg="$work/Mobian-M1-REPRO-pmOS_root.ext4"
 roundtrip="$work/roundtrip.raw"
@@ -152,6 +159,9 @@ if [[ ${INSTALL_OPTIONAL_APPS:-} == 1 ]]; then
     optional_apps_enabled=1
 fi
 
+if [[ $current_profile_enabled == 1 ]]; then
+    cp -a "$work/current-profile" "$tree/run/lmi-current-profile"
+fi
 configure_image_root_ssh "$tree"
 
 cat >"$tree/usr/sbin/policy-rc.d" <<'EOF'
@@ -172,7 +182,7 @@ install -D -o root -g root -m 0644 \
 install -D -o root -g root -m 0644 \
     "$phosh_files/93_lmi-scale-to-fit.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/93_lmi-scale-to-fit.gschema.override"
-chroot "$tree" /usr/bin/env M1_LOCALE="$m1_locale" M1_LANGUAGE="$m1_language" INSTALL_OPTIONAL_APPS="$optional_apps_enabled" INSTALL_DEBUG_TOOLS="$debug_tools_enabled" /bin/bash -eu <<'EOF'
+chroot "$tree" /usr/bin/env M1_LOCALE="$m1_locale" M1_LANGUAGE="$m1_language" INSTALL_OPTIONAL_APPS="$optional_apps_enabled" INSTALL_DEBUG_TOOLS="$debug_tools_enabled" M1_CURRENT_PROFILE="$current_profile_enabled" M1_TIMEZONE="${M1_TIMEZONE:-Europe/Paris}" /bin/bash -eu <<'EOF'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install --no-install-recommends -y \
@@ -201,6 +211,9 @@ if ! getent passwd 1000 >/dev/null; then
 fi
 test "$(getent passwd 1000 | cut -d: -f1)" = mobian
 usermod -aG audio,video,render,input,plugdev mobian
+if [[ $M1_CURRENT_PROFILE == 1 ]]; then
+    /bin/bash /run/lmi-current-profile/profile/install.sh
+fi
 locale -a | tr '[:upper:]' '[:lower:]' | grep -Fxq "$(printf '%s' "$M1_LOCALE" | tr '[:upper:]' '[:lower:]' | tr -d '-')"
 update-locale LANG="$M1_LOCALE" LANGUAGE="$M1_LANGUAGE"
 fc-cache -f
@@ -359,8 +372,10 @@ test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
     org.gnome.desktop.input-sources sources)" = "[('xkb', 'fr')]"
 test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
     org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type)" = "'nothing'"
+expected_battery_action="'nothing'"
+if [[ $current_profile_enabled == 1 ]]; then expected_battery_action="'suspend'"; fi
 test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \
-    org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type)" = "'nothing'"
+    org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type)" = "$expected_battery_action"
 cmp -s "$phosh_files/92_lmi-window-controls.gschema.override" \
     "$tree/usr/share/glib-2.0/schemas/92_lmi-window-controls.gschema.override"
 test "$(chroot "$tree" env GSETTINGS_BACKEND=memory gsettings get \

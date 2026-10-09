@@ -1,0 +1,7 @@
+lmi-current profile, 2026-10-09
+Existing RPMh/reset-GPIO boot SHA256: a89ae4d9529dcef55d3969eb6b5a75c2617d9ef0e2e1f568c5f619eb1adf5c50
+Includes optional mobile apps and their scoped launchers, torch, ALSA/PipeWire speaker and microphone, Recorder preferences, patched UPower battery-status opt-in, CPU-idle opt-in and battery-only automatic suspend.
+Fonts/locales and current Android super layout are provided by the main builder.
+Fresh-image integration is host-reviewed; post-flash hardware validation is required.
+Battery autonomy remains unresolved. Camera Snapshot bridge remains experimental and is not installed by this profile. No obsolete camera frontend or Megapixels is added.
+No personal files, recordings or desktop settings database are imported.

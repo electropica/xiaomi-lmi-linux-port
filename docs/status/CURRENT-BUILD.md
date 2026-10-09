@@ -614,3 +614,13 @@ parameters; no historical source or lock is silently replaced. Static shell
 checks and nine metadata guards pass. No actual build, flash or runtime
 validation has occurred. Reuse the existing RPMh kernel; selected external
 power/audio/camera runtime layers remain separate from the generic build.
+
+## Integrated current-image entry point — 2026-10-09
+
+The operator-selected [`lmi-current` profile](../../build/profiles/lmi-current/README.md)
+is installed during the userdata build through `build/build-current-lmi.sh`.
+It incorporates the validated application launchers, torch, audio/microphone,
+UPower status and CPU-idle opt-ins. Fresh-image hardware validation and the
+new LineageOS vendor ABI remain pending; battery autonomy is unresolved and
+the experimental Snapshot bridge is not production-integrated. Reuse the
+existing RPMh boot; no additional kernel build is required.

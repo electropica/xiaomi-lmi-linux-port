@@ -1,0 +1,1 @@
+SUBSYSTEM=="power_supply", KERNEL=="battery", KERNELS=="*qpnp-smb5", TEST=="/etc/upower/lmi-trust-battery-status", ENV{UPOWER_TRUST_BATTERY_STATUS}="1"
