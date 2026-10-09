@@ -1997,3 +1997,30 @@ No failed write has been established here. Avoid reading the driver's complete
 register dump or alarm-status interface during diagnosis: those paths include
 an alarm register whose read clears flags. No additional unchanged battery
 trial or charging-setting modification was requested for these findings.
+
+
+### Active Mobian tree and charger-source check — 2026-10-09
+
+A read-only capture of the active Mobian flattened device tree was compared
+with its retained boot base merged with package overlay candidate 7. The
+active tree has 4,018 nodes versus 4,017 in that candidate. The same selected
+power-property comparison found only five differences: root compatible and
+board ID, a disabled Android exaid fstab node, and disabled Android vendor
+fstab status. No additional supply/regulator difference was identified in
+this selected scope. This narrows the earlier package-only uncertainty for
+Mobian; it does not establish Android's active overlay or universally normalize
+every vendor-specific phandle property.
+
+The active tree declares the 416-byte j11sun battery profile with SHA-256
+`583d77b61a7723fe4f40990eafa42c6283a87c41ba39a69ad2be77ce70f16050`,
+matching the previously reviewed package declaration. Other profiles exist
+under a vendor battery-data node; declarations alone do not identify the
+profile actually loaded into gauge SRAM.
+
+The secondary charger driver `bq2597x_charger.c`, primary driver `qpnp-smb5.c`
+and shared `smb5-lib.c` are byte-identical to the pinned LineageOS kernel
+revision already linked above. The current-boot kernel journal includes 103
+secondary-charger lines and no matching I2C/ADC failure message. This supports
+the recent getter observation but does not independently prove ADC-off or
+physical quiescent current. No charger state was changed. These checks do not
+justify replacing those identical driver sources or repeating the same trial.
