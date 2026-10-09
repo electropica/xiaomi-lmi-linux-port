@@ -9,6 +9,9 @@ load_image_root_ssh_key() {
         return 1
     }
     m1_ssh_public_key=$(cat -- "$key_file") || return 1
+    # Windows OpenSSH public keys commonly end in CRLF. Normalize only the
+    # terminal CR; embedded CR/newlines and multiple keys remain invalid.
+    m1_ssh_public_key=${m1_ssh_public_key%$'\r'}
     [[ -n $m1_ssh_public_key && $m1_ssh_public_key != *$'\n'* && $m1_ssh_public_key != *$'\r'* ]] || {
         echo 'SSH key input must contain one OpenSSH public-key line' >&2
         return 1

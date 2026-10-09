@@ -20,6 +20,12 @@ load_image_root_ssh_key "$tmp/test-key.pub"
 configure_image_root_ssh "$tmp/image"
 verify_image_root_ssh "$tmp/image"
 cmp "$tmp/test-key.pub" "$tmp/image/root/.ssh/authorized_keys"
+
+sed 's/$/\r/' "$tmp/test-key.pub" >"$tmp/windows-key.pub"
+load_image_root_ssh_key "$tmp/windows-key.pub"
+configure_image_root_ssh "$tmp/image"
+verify_image_root_ssh "$tmp/image"
+cmp "$tmp/test-key.pub" "$tmp/image/root/.ssh/authorized_keys"
 expect_rejected_key() {
     if load_image_root_ssh_key "$1" 2>/dev/null; then
         echo 'Invalid key input unexpectedly accepted' >&2; exit 1
@@ -29,6 +35,8 @@ expect_rejected_key "$tmp/test-key"
 expect_rejected_key "$tmp/missing"
 cat "$tmp/test-key.pub" "$tmp/test-key.pub" >"$tmp/two-keys"
 expect_rejected_key "$tmp/two-keys"
+cat "$tmp/windows-key.pub" "$tmp/windows-key.pub" >"$tmp/two-windows-keys"
+expect_rejected_key "$tmp/two-windows-keys"
 printf 'ssh-ed25519 invalid test\n' >"$tmp/invalid"
 expect_rejected_key "$tmp/invalid"
 printf 'command="true" ' >"$tmp/options"
