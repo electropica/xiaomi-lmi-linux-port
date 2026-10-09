@@ -1936,3 +1936,38 @@ the residual drain. No kernel was rebuilt, device power changed, or battery
 trial requested during this offline comparison. Raw comparison files remain
 private. The next comparison must reconcile applied Android DT overlays and
 actual peripheral supply state, rather than treating base DTBs as final trees.
+
+
+### Paired DT-overlay and peripheral-source review — 2026-10-09
+
+Each of the twelve DT overlays in the retained LineageOS lmi package was applied
+to both retained kona v2.1 base DTBs, pairing the same overlay in each comparison.
+The selected supply, regulator, GPIO, clock, reset, power-domain and pinctrl
+properties had no differences after resolving phandle references to node paths.
+This is a package-candidate comparison: the overlay selected by Android's
+bootloader and the final runtime device trees have not been established here.
+It does not prove that the two systems actually use identical hardware states.
+
+An independent, broader check of candidate overlay 7 found 4,017 nodes in each
+merged tree. Excluding metadata nodes and phandle properties, only two property
+differences remained: the WCD938x reset active/sleep mux functions are `func2`
+in LineageOS and `gpio` in the installed Mobian diagnostic boot. This matches
+the existing audio reset correction. The broader check covers this one
+candidate; it does not extend the full-property result to every overlay.
+Independent fdtget readbacks also confirmed matching UFS and SMB5 status and
+the external boost regulator name in this candidate pair.
+
+Nine further source files were byte-identical between the retained Mobian
+source and the pinned LineageOS kernel revision
+[`71b13e62f057a649b77fe4062feb73ee72ad609c`](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/tree/71b13e62f057a649b77fe4062feb73ee72ad609c):
+the three subsystem/PIL files (`subsys-pil-tz.c`, `subsystem_restart.c`,
+`pil-q6v5.c`), the three pinctrl files (`pinctrl-msm.c`, `pinctrl-kona.c`,
+`pinctrl-spmi-gpio.c`), and the codec files (`wcd938x.c`, `msm-cdc-supply.c`,
+`msm-cdc-pinctrl.c`). Identical source does not prove equivalent configuration,
+initialization, callback execution or physical peripheral current.
+
+These findings provide no basis for blindly transplanting a regulator tree or
+these driver files. The reset mux difference deserves a focused suspend-path
+review because it is a real adaptation; it is not yet a demonstrated drain
+cause. No new build, hardware setting change or battery trial was performed
+during these offline comparisons. Raw comparison artifacts remain private.
