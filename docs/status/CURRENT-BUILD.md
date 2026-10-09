@@ -601,3 +601,16 @@ Existing sparse userdata and RPMh boot were located; returning to that older
 userdata would not restore the latest live application fixes automatically.
 The running handset remains on LineageOS until the operator chooses a reviewed
 return procedure. No partition write or new kernel is part of this preparation.
+
+### Current-recipe return build prepared — 2026-10-09
+
+The operator selected rebuilding userspace from current sources rather than
+reusing the September audio sparse image. The preserved M0 raw's prefix and
+M0 DISPLAY ext4 filesystem identity were verified locally. The
+[read-only M0-input wrapper](../../userspace/phosh/README.md#operator-run-build-from-the-preserved-m0-filesystem)
+feeds the current Phosh recipe without needing an old extracted working tree.
+Paired current Android reports are an explicit input for generated mount
+parameters; no historical source or lock is silently replaced. Static shell
+checks and nine metadata guards pass. No actual build, flash or runtime
+validation has occurred. Reuse the existing RPMh kernel; selected external
+power/audio/camera runtime layers remain separate from the generic build.

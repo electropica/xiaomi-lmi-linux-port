@@ -78,6 +78,49 @@ The session deliberately uses wlroots Pixman rendering. The D-v43 display DRM
 node does not implement the MSM GPU UAPI needed by Freedreno, while Phoc with
 Pixman has reached the DSI-1 modeset in a live hardware experiment.
 
+## Operator-run build from the preserved M0 filesystem
+
+`build/build-m1-from-preserved-m0.sh BASE_RAW M0_EXT4 OUTPUT_NAME` is an
+alternative input wrapper for the current Phosh builder when the extracted
+M0 working tree is unavailable. Run it as root in a private mount namespace,
+using `sudo unshare --mount --propagation private`. This root-run variant
+preserves the filesystem's numeric ownership directly, rather than applying
+the subordinate-ID mapping used with the historical extracted tree.
+
+The wrapper requires the reviewed 1,490,026,496-byte M0 raw and the preserved
+1,233,125,376-byte M0 DISPLAY ext4, with the expected filesystem UUID. The
+Phosh builder independently checks the raw's inherited prefix. The wrapper
+mounts the ext4 read-only with journal replay disabled and verifies its loop
+backing, offset and read-only state. The builder copies it before modifying
+the new tree. Cleanup unmounts only this private source mount; it does not
+delete inputs, old outputs or state directories. Output names cannot be reused.
+Completed images are private files readable by the invoking operator.
+
+The wrapper requires operator-selected `M1_MOBIAN_PASSWORD`, external
+`M1_SSH_PUBLIC_KEY_FILE` and `M1_ANDROID_SUPER_REPORTS_DIR`. Never store the
+password in a command history, file or repository. Read it interactively and
+preserve only the explicitly named build environment through sudo.
+
+`M1_ANDROID_SUPER_REPORTS_DIR` points to external paired `metadata.txt` and
+`metadata.json` from current read-only Android `lpdump`. Before mounts or
+package changes, the Phosh builder generates and syntax-checks a private
+system/vendor mount-script candidate using the guarded preparer. The generated
+script is installed into the new rootfs, and its manifest stays in the private
+build state. Without this variable the canonical historical mount script is
+unchanged. Re-read reports following Android partition changes or an OTA.
+
+`INSTALL_OPTIONAL_APPS=1` enables the current optional-app recipe and wrappers;
+locale/font support is included. This is not a snapshot of the former live
+phone: external patched UPower, opt-in CPU-idle policy, speaker configuration
+and the experimental Snapshot bridge are separate layers and must not be
+claimed installed merely because this build succeeds. Reapply and validate
+the selected runtime layers after the first restored boot. The existing RPMh
+boot is reused; this procedure never builds or flashes a kernel.
+
+Host shell syntax and the nine metadata guards pass. The root-run wrapper
+and Lineage vendor/APEX runtime compatibility still require an operator build
+and actual restored-phone validation; they have not been hardware-validated.
+
 ## Hardware validation (2026-09-03)
 
 M1 reached the Phosh lock screen on the Xiaomi lmi: the clear-KMS marker was

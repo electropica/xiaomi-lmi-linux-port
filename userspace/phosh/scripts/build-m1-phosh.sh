@@ -68,6 +68,17 @@ base_prefix_sha=$(dd if="$base" bs=4096 count="$root_start" status=none | sha256
 unset base_prefix_sha
 
 mkdir -p "$work"
+android_mounts_source="$wifi_dir/scripts/lmi-android-wifi-mounts"
+if [[ -n ${M1_ANDROID_SUPER_REPORTS_DIR:-} ]]; then
+    test -d "$M1_ANDROID_SUPER_REPORTS_DIR"
+    python3 "$wifi_dir/diagnostics/prepare-android-super-mounts.py" \
+        --lpdump-text "$M1_ANDROID_SUPER_REPORTS_DIR/metadata.txt" \
+        --lpdump-json "$M1_ANDROID_SUPER_REPORTS_DIR/metadata.json" \
+        --reference-script "$android_mounts_source" \
+        --output-directory "$work/android-super-mounts"
+    android_mounts_source="$work/android-super-mounts/lmi-android-wifi-mounts"
+    sh -n "$android_mounts_source"
+fi
 tree="$work/rootfs"
 rootimg="$work/Mobian-M1-REPRO-pmOS_root.ext4"
 roundtrip="$work/roundtrip.raw"
@@ -236,7 +247,8 @@ install -D -o root -g root -m 0600 "$phosh_files/accountsservice-mobian.ini" "$t
 sed -i "s/^Language=.*/Language=$m1_locale/" "$tree/var/lib/AccountsService/users/mobian"
 install -D -o root -g root -m 0644 "$phosh_files/networkmanager-usb0-unmanaged.conf" "$tree/etc/NetworkManager/conf.d/10-m1-usb0-unmanaged.conf"
 install -D -o root -g root -m 0644 "$gpu_dir/udev/70-lmi-gpu-access.rules" "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
-install -D -o root -g root -m 0755 "$wifi_dir/scripts/lmi-android-wifi-mounts" "$tree/usr/local/sbin/lmi-android-wifi-mounts"
+install -D -o root -g root -m 0755 "$android_mounts_source" "$tree/usr/local/sbin/lmi-android-wifi-mounts"
+cmp -s "$android_mounts_source" "$tree/usr/local/sbin/lmi-android-wifi-mounts"
 install -D -o root -g root -m 0755 "$wifi_dir/scripts/lmi-wlan-firmware-prepare" "$tree/usr/local/sbin/lmi-wlan-firmware-prepare"
 install -D -o root -g root -m 0755 "$wifi_dir/scripts/lmi-cnss-daemon-wrapper" "$tree/usr/local/sbin/lmi-cnss-daemon-wrapper"
 install -D -o root -g root -m 0755 "$wifi_dir/scripts/lmi-cnss-fs-ready" "$tree/usr/local/sbin/lmi-cnss-fs-ready"
