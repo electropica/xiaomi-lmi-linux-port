@@ -620,7 +620,9 @@ power/audio/camera runtime layers remain separate from the generic build.
 The operator-selected [`lmi-current` profile](../../build/profiles/lmi-current/README.md)
 is installed during the userdata build through `build/build-current-lmi.sh`.
 It incorporates the validated application launchers, torch, audio/microphone,
-UPower status and CPU-idle opt-ins. Fresh-image hardware validation and the
-new LineageOS vendor ABI remain pending; battery autonomy is unresolved and
-the experimental Snapshot bridge is not production-integrated. Reuse the
+UPower status and CPU-idle opt-ins. The operator-built image boots Mobian with working USB SSH, registered ALSA
+card and active UPower/CPU-idle services on the existing RPMh kernel. Full
+application, audio and vendor-runtime validation remain pending; battery
+autonomy is unresolved and the experimental Snapshot bridge is not
+production-integrated. See the [first-boot power record](../../kernel/diagnostics/power/README.md#integrated-userspace-first-boot-and-bluetooth-readback--2026-10-09). Reuse the
 existing RPMh boot; no additional kernel build is required.

@@ -1766,3 +1766,31 @@ or independently calibrates the gauge. Radio association and physical battery
 condition remain uncontrolled. Raw samples, boot identity and selected journal
 events remain private; this observation introduced no logger, setting change,
 new kernel build or media acquisition.
+
+
+### Integrated userspace first boot and Bluetooth readback — 2026-10-09
+
+The operator completed the integrated userspace build with exit status zero,
+flashed its Android-sparse userdata and the existing RPMh boot, and confirmed
+Mobian startup. The sparse image is 3,645,243,684 bytes and the raw image is
+4,551,868,416 bytes. The successful constructor includes sparse-to-raw byte
+comparison and filesystem validation; these do not validate every application.
+
+USB SSH works after the operator authorized the existing diagnostic public key.
+The running kernel banner matches the retained October 7 RPMh build. The
+installed profile marker is present; all three UPower packages report
+1.90.9-1+lmi1. UPower, CPU-idle, ADSP/BTFM and pd-mapper services report successful
+active states. The ALSA kona-mtp-snd-card is registered and the battery reports
+Charging. The sole failed unit in the first check is getty@tty1; its cause has
+not been investigated. App usability, audio quality and idle autonomy still
+require validation on this newly built userspace.
+
+Bluetooth is software-blocked, its service is inactive and no HCI interface is
+present. A reviewed read-only BT_CMD_GETVAL_POWER_SRCS (0xbfb1, 28 integers)
+query reports reset and SW_CTRL GPIO values zero. Configured AON, DIG, RFA1,
+RFA2 and ASD current slots report -1; other unconfigured slots report -2.
+In this exact driver, -1 means its cached enable flag or regulator enable
+check is false, not a measured zero voltage/current. No Bluetooth power-control
+ioctl or GPIO write was issued. This weakens a Bluetooth-held-on hypothesis
+but does not prove that shared supplies or other masters are unpowered.
+Raw snapshots and public-key identifiers remain outside Git.
