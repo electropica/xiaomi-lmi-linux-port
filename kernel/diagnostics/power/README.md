@@ -126,6 +126,44 @@ Mobian peripheral. Aging and a Mobian policy/integration problem may coexist.
 No additional kernel, calibration reset or package installation was needed.
 Detailed history, identifiers and raw readings remain private.
 
+### Overnight discharge is not uniform
+
+The October 8–9 history has a strongly front-loaded charge-counter decline.
+Segments use actual samples nearest each hourly boundary, without interpolation:
+
+| Segment | Net rounded counter decrease |
+| --- | ---: |
+| First hour | 146 mAh |
+| Second hour | 55 mAh |
+| Third hour | 26 mAh |
+| Fourth hour | 14 mAh |
+| Fifth and sixth hours | 11 mAh each |
+| Seventh and eighth hours | 9 mAh each |
+| Final approximately 37 minutes | 2 mAh |
+
+The first two hours account for 201 of the net 283 mAh, about 71%.
+The remaining 6 h 37 min account for 82 mAh, a net gauge quotient of about
+12.4 mA. The full-night roughly 33 mA quotient therefore does not describe a
+uniform idle load. Positive corrections of 3 and 4 mAh remain included;
+neither the late slope nor these segments are calibrated physical current.
+Extensive suspend also occurs during the early decline. Awake time alone
+does not explain its shape, and the observation does not identify its cause.
+
+The pinned kernel's
+[`fg_gen4_get_charge_counter`](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/blob/71b13e62f057a649b77fe4062feb73ee72ad609c/drivers/power/supply/qcom/qpnp-fg-gen4.c#L793)
+scales `FG_SRAM_CC_SOC_SW` by learned full capacity. Its software counter can
+be primed from battery SOC through the
+[capacity-learning logic](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/blob/71b13e62f057a649b77fe4062feb73ee72ad609c/drivers/power/supply/qcom/fg-alg.c#L675).
+Thus this reported counter is not an independent, immutable physical-energy
+measurement. No runtime trace proves that priming caused this night's early
+decline; no calibration, SRAM write or learning reset has been performed.
+
+Ordinary Android shell access also exposes read-only `cmd battery get
+current_now`. A plugged, charging read succeeded, but it is not an idle-current
+result. Future readings must retain timestamps, power status and measurement
+conditions; `current_average` returned zero and is not treated as a validated
+standby average. Battery-state simulation commands are not used.
+
 ### Existing kernel configuration comparison
 
 The embedded IKCONFIG payloads were extracted from the already downloaded
@@ -157,6 +195,15 @@ Three complete files at that commit are byte-identical to the preserved
 | `drivers/power/supply/qcom/qpnp-fg-gen4.c` | `0f5676829cb2a40daa191a456998c700d744afe8346e07dd3c7af2a7e8685957` |
 | `drivers/cpuidle/lpm-levels.c` | `0899a58cc28945431fddd68c914b187719f99f2d49f831132382cd7401679aa3` |
 | `drivers/bluetooth/bluetooth-power.c` | `8bb4375cbea588d52a3d39e936bfcd9bfedb1e1f5379da0039d9a9acb47c515b` |
+
+Three further gauge-support files were subsequently compared at the same
+pinned commit and are also byte-identical:
+
+| File | SHA-256 on both sides |
+| --- | --- |
+| `drivers/power/supply/qcom/fg-alg.c` | `436db2892f19c0055bcb1f21916bbfe3bbcdb9429db694aad0cabbb4c79166f1` |
+| `drivers/power/supply/qcom/fg-util.c` | `c969590d0f30c2746a725497969eb49cad9a951e2426b1753b670c2bf7f94837` |
+| `drivers/power/supply/qcom/fg-memif.c` | `6eb7626265aa2bfa8b7a85a3c2e175d79500d7f5fea10464cad92de641488526` |
 
 This is source-file evidence, not binary equivalence or proof that every
 dependent function, device tree, patch, firmware and runtime setting matches.

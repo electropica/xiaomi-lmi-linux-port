@@ -568,3 +568,10 @@ Mobian trials are supported, without a physical battery-health verdict or an
 identified autonomy fix. The finite collector completed, its private data was
 retrieved, and original radios were restored. The handset remains on LineageOS;
 no Mobian build, restoration or new kernel was performed.
+
+The hourly review refines this overnight result: approximately 71% of net
+counter loss occurs in the first two hours, with about 12.4 mA net gauge
+accounting over the remaining 6 h 37 min. This is not uniform physical idle
+current. See the [counter interpretation and limits](../../kernel/diagnostics/power/README.md#overnight-discharge-is-not-uniform).
+The next operator-requested ten-hour comparison uses the same finite baseline
+protocol; its result remains pending. No periodic diagnostic logger is used.
