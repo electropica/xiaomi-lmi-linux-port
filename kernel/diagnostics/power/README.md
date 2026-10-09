@@ -1,6 +1,6 @@
 # Power diagnostics and decision summary
 
-## Current decision summary — 2026-10-08
+## Current decision summary — 2026-10-09
 
 The test handset is temporarily running official LineageOS
 23.2-20261007-NIGHTLY-lmi (Android 16), not the Mobian RPMh diagnostic boot.
@@ -18,6 +18,7 @@ recorded below. No battery-health verdict follows from this comparison.
 | Manual-off comparisons | Charging/boot timing or a missing departure sample prevented a valid baseline pair. | No off-state drain or physical health conclusion; no need to repeat a flawed protocol. |
 | First LineageOS idle interval | Displayed level stayed at 79%; battery history records about 2 mAh loss over 7 min 05 s before charging. | Preliminary evidence, supported by the longer interval below; not a cell-health test. |
 | Longer LineageOS idle interval | 29 min 41 s on battery; displayed 83% unchanged before reconnect; Android reports 5.35 mAh summed gauge decreases (~10.8 mA by that accounting). | Lower apparent idle drain is supported, but an upward gauge correction prevents a reliable net endpoint-current estimate. |
+| Overnight LineageOS idle interval | 8 h 37 min on battery, 100% to 91% before charging, same boot and radios off; roughly 33 mA by gauge accounting, about 99.5% system suspend. | Lower apparent drain than the historical Mobian trials is supported; gauge corrections and different trials prevent a calibrated current ratio or battery-health verdict. |
 
 The first Android baseline was recorded after unplug, with airplane mode enabled
 and Wi-Fi/Bluetooth settings disabled. A finite phone-local sampler saved one
@@ -83,6 +84,47 @@ Bluetooth and Wi-Fi settings were restored; no reboot or new kernel was needed.
 Bounded battery/power/device-idle/thermal readings were retained privately.
 Restricted suspend-service/logcat reads returned no usable detail; no root
 access or security-setting change was attempted. The one-shot reminder is paused.
+
+### Completed Android overnight result — 2026-10-09
+
+The operator confirmed unplugging around 21:27 local time on October 8.
+Battery history records discharge from 21:27:07.537 to the explicit
+not-charging pre-plug event at 06:04:12.110 on October 9: 31,024.573 seconds
+(8 h 37 min 04.573 s). The displayed level fell from 100% to 91% before
+external power. Airplane mode was enabled, Wi-Fi and Bluetooth settings were
+disabled, and the screen was on for about ten seconds at departure before
+being switched off. No media test or periodic diagnostic logger ran overnight.
+
+The finite sampler's completion marker was recovered. Departure and return
+boot identifiers match, so no intervening reboot is indicated. The first host
+return read was already AC-powered and charging; its raw counter is excluded
+from a direct discharge calculation. The original radio flags were restored
+and verified after the first read and history retrieval.
+
+Rounded pre-charge history falls from 2,805 to 2,522 mAh, a net 283 mAh or
+approximately 32.8 mA over the history interval. The gauge is not monotonic:
+it has upward corrections of 3 and 4 mAh, with 290 mAh of summed rounded
+decreases. Android separately reports 289 mAh discharge (about 33.5 mA by its
+sum-of-decreases accounting), including 275 mAh assigned to deep doze. These
+are related gauge estimates, not independent electrical measurements. The
+earlier short trial's roughly 10.8 mA accounting must not be extrapolated to
+this full night.
+
+Android reports 31,024.572 seconds on battery and 143.212 seconds uptime,
+approximately 99.54% system-suspend occupancy. Screen-off duration is
+31,014.073 seconds. The composite sampler file's clock/uptime was captured
+later than its battery snapshot and gives a shorter interval (about 8 h 35 min
+to first host return); use the matching history/on-battery-statistics duration
+above rather than treating its fields as an atomic snapshot. Battery temperature
+fell from 21.2 C in departure history to 16.7 C at the charging return; learned
+full remained 2,813 mAh versus 4,700 mAh nominal.
+
+The result supports lower apparent idle drain under LineageOS than the
+historical roughly 89–95 mA Mobian trials. It is not a controlled physical-current
+ratio, proof of a healthy original cell or identification of a particular faulty
+Mobian peripheral. Aging and a Mobian policy/integration problem may coexist.
+No additional kernel, calibration reset or package installation was needed.
+Detailed history, identifiers and raw readings remain private.
 
 ### Existing kernel configuration comparison
 
@@ -265,14 +307,12 @@ No explicit rfkill/BT attach or `/dev/btpower` control was found in the tracked
 userspace scripts. Earlier experimental attach results and externally retained
 tools must be reconciled with the restored live runtime before any isolation.
 
-### Prepared overnight protocol
+### Overnight protocol and completion
 
-The operator has unplugged after arming the finite LineageOS overnight
-baseline sampler, with the same airplane,
-Wi-Fi-off and Bluetooth-off settings as the longer daytime trial. This is a
-pending observation, not a completed result or a new kernel experiment.
-The host arm action succeeded. Confirmation that the phone saved its baseline
-and exited must be retrieved at return; it is not observable while disconnected.
+The finite LineageOS overnight trial completed on October 9, using the same
+airplane, Wi-Fi-off and Bluetooth-off settings as the longer daytime trial.
+Both arm and return actions succeeded; the sampler's saved baseline and exit
+marker were recovered. The result and timing limits are recorded above.
 
 The opt-in [Windows host helper](../../../userspace/power/diagnostics/android-idle-trial.py)
 and [finite baseline sampler](../../../userspace/power/diagnostics/android-idle-baseline.sh)
@@ -297,9 +337,10 @@ charge-counter increases, temperature changes, Android statistic resets and
 charging at return must still be handled explicitly in analysis. Displayed
 percentage alone cannot diagnose cell health.
 
-Host guards and shell syntax checks pass. The unified helper's first host arm action has succeeded;
-baseline completion and return retrieval remain pending. The earlier shorter
-protocol is the completed hardware-tested precedent.
+Host guards and shell syntax checks pass. The unified helper's first overnight
+arm, baseline completion and return retrieval now have hardware evidence,
+including verified radio restoration. Its composite baseline fields are not
+atomic, as the overnight timing observation above makes explicit.
 It is neither an installed image service nor a power-saving fix. Private trial
 outputs, identifiers and detailed histories must stay outside Git.
 

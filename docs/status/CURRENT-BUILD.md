@@ -554,3 +554,17 @@ gauge decreases reported by Android. An upward gauge correction prevents a
 reliable net endpoint-current estimate. This supports lower apparent Android
 idle drain, not a physical battery-health verdict. Radios are restored and the
 one-shot reminder is paused. Detailed logs remain private.
+
+
+### LineageOS overnight comparison completed — 2026-10-09
+
+The same-boot, radios-off overnight interval lasted 8 h 37 min, with displayed
+charge falling from 100% to 91% before reconnect. Pre-charge history gives
+283 mAh net loss (about 32.8 mA); Android's sum-of-decreases statistic gives
+289 mAh (about 33.5 mA). Upward gauge corrections, cooling and baseline timing
+limits remain explicit in the [single power decision record](../../kernel/diagnostics/power/README.md#completed-android-overnight-result--2026-10-09).
+About 99.54% system-suspend occupancy and lower apparent drain than historical
+Mobian trials are supported, without a physical battery-health verdict or an
+identified autonomy fix. The finite collector completed, its private data was
+retrieved, and original radios were restored. The handset remains on LineageOS;
+no Mobian build, restoration or new kernel was performed.
