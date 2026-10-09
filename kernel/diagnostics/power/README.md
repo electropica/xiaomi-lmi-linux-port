@@ -1861,3 +1861,28 @@ counters were zero. This snapshot does not certify the physical sleep state.
 The codec lookup omission is a concrete functional correction, not an established
 cause or fix of the approximately 86–95 mA gauge-derived idle observations.
 Raw logs and snapshots remain private. No new image or kernel build was run.
+
+
+### Complete current-image idle observation after clock/codec preparation — 2026-10-09
+
+The follow-up verified that the owned RTC alarm was 181 seconds ahead before
+explicit suspend. The unplugged interval completed in 181.416 seconds, with
+0.695 seconds awake (99.617% suspended). Counter loss was 4,339 uAh, giving
+86.103 mA from the gauge. Both comparison endpoints were Discharging with USB
+offline. The initial Full-to-Discharging counter discontinuity is excluded.
+No early reconnect or early-wake abort was recorded. Wi-Fi remained enabled;
+no media capture or playback was performed. The service finished inactive
+with Result=success, the alarm and trace-instance list were empty, and the
+return reported Charging.
+
+This corroborates the preceding shortened 86.38 mA observation after fixing
+the clock floor and exposing the stock Venus firmware. It does not establish
+a calibrated physical current, a small stable before/after improvement, or
+an autonomy fix. The collection does not isolate the two functional changes.
+
+A subsequent read-only audio-idle check found all 52 PCM substreams closed,
+zero DAPM widgets reported On, and Off bias levels for both TFA98xx and WCD938x.
+The card-level bias was Standby. This weakens an active-stream explanation
+for the new image's residual load; software bias does not measure physical
+amplifier or shared-supply current. No audio route or gain was changed.
+Raw snapshots remain private; the existing kernel is unchanged.

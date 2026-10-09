@@ -642,3 +642,10 @@ validated loader references. Both downstream codec nodes passed a bounded
 open/QUERYCAP/close check on the handset. Media streams and idle-power effects
 remain unvalidated; no camera-ready or autonomy-fix claim follows from this.
 See the [Venus correction record](../../kernel/diagnostics/power/README.md#current-image-venus-firmware-reference-correction--2026-10-09).
+
+
+A complete follow-up idle interval lasted 181.416 seconds with 99.617%
+suspended and 86.103 mA derived from the gauge. The RTC-delay guard passed
+and collection cleanup completed. All PCM streams were subsequently closed
+and codec DAPM bias levels Off. Idle autonomy remains unresolved.
+See the [complete idle observation](../../kernel/diagnostics/power/README.md#complete-current-image-idle-observation-after-clockcodec-preparation--2026-10-09).
