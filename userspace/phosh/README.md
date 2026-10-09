@@ -96,6 +96,13 @@ the new tree. Cleanup unmounts only this private source mount; it does not
 delete inputs, old outputs or state directories. Output names cannot be reused.
 Completed images are private files readable by the invoking operator.
 
+The builder reuses the host's enabled `qemu-aarch64` binfmt registration,
+verifying the interpreter, ARM64 ELF match and `F` flag needed for chroot.
+It does not rewrite or remove host registrations. An inherited binfmt mount
+is left mounted; cleanup detaches only a mount created by this attempt.
+Missing or incompatible registration is a preflight failure, not an automatic
+host configuration change.
+
 The wrapper requires operator-selected `M1_MOBIAN_PASSWORD`, external
 `M1_SSH_PUBLIC_KEY_FILE` and `M1_ANDROID_SUPER_REPORTS_DIR`. Never store the
 password in a command history, file or repository. Read it interactively and

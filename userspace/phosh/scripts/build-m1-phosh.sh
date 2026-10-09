@@ -114,10 +114,24 @@ cleanup() {
 trap cleanup EXIT
 
 mount --make-rprivate /
-mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
-binfmt_mounted=1
-sed -n '1p' /usr/lib/binfmt.d/qemu-aarch64.conf > /proc/sys/fs/binfmt_misc/register
-test -e /proc/sys/fs/binfmt_misc/qemu-aarch64
+if ! mountpoint -q /proc/sys/fs/binfmt_misc; then
+    mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
+    binfmt_mounted=1
+fi
+# Reuse the existing ARM64 interpreter without changing host registrations.
+# F keeps the interpreter available inside the ARM64 chroot.
+binfmt_entry=/proc/sys/fs/binfmt_misc/qemu-aarch64
+[[ -r $binfmt_entry && -x /usr/bin/qemu-aarch64 ]] || {
+    echo 'An enabled qemu-aarch64 binfmt registration is required on the host.' >&2
+    exit 1
+}
+grep -Fxq enabled /proc/sys/fs/binfmt_misc/status
+grep -Fxq enabled "$binfmt_entry"
+grep -Fxq 'interpreter /usr/bin/qemu-aarch64' "$binfmt_entry"
+grep -Eq '^flags: [A-Z]*F[A-Z]*$' "$binfmt_entry"
+grep -Fxq 'magic 7f454c460201010000000000000000000200b700' "$binfmt_entry"
+grep -Fxq 'mask ffffffffffffff00fffffffffffffffffeffffff' "$binfmt_entry"
+unset binfmt_entry
 
 cp -a --reflink=auto -- "$m0_tree" "$tree"
 for path in dev proc sys; do
