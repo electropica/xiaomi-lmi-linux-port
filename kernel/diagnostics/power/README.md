@@ -2024,3 +2024,39 @@ secondary-charger lines and no matching I2C/ADC failure message. This supports
 the recent getter observation but does not independently prove ADC-off or
 physical quiescent current. No charger state was changed. These checks do not
 justify replacing those identical driver sources or repeating the same trial.
+
+
+### Candidate: persistent NPU-to-DDR bandwidth vote — 2026-10-09
+
+The current Mobian `soc:qcom,npu-llcc-ddr-bw` devfreq policy is `performance`,
+with minimum 0, maximum 10437 and software target 10437. `powersave` is
+available. This target is a bandwidth request in the devbw driver's units,
+not a measurement of the physical NPU or DDR clock frequency.
+
+The active NPU devbw node lacks `qcom,active-only`; the inspected CPU
+LLCC/DDR clients have that property. In the downstream RPMh bus arbiter,
+the NPU request therefore uses the dual context, which also contributes to
+the active aggregate. The performance governor always targets the maximum
+and handles START but not SUSPEND. The devbw suspend wrapper delegates to
+the governor; it does not independently withdraw that bandwidth request.
+This is a concrete policy difference worth isolating, not a proven drain fix.
+
+The reviewed Android Kona boot policy enables dynamic bandwidth governors.
+Do not copy its entire PowerHAL or its values wholesale. The narrow candidate
+trial changes only this NPU devbw governor to `powersave` while no NPU workload
+is running, verifies the target falls to the existing minimum, performs one
+matched idle interval, then restores the saved governor and verifies its
+target. This changes both active and sleep bandwidth requests for this client;
+it does not directly write NPU power, regulator or clock controls. Other bus
+clients may still dominate the aggregate and must not be inferred from this
+client alone.
+
+No such change has yet been applied. The operator's overnight baseline keeps
+the original performance governor and radio state unchanged. Prepare bounded
+cleanup and an independent restoration path before a trial; the next hardware
+step requires the operator's availability. Do not use the stale/partial DDR
+residency table as evidence of physical DDR sleep failure or improved current.
+
+Relevant retained-source paths: `drivers/devfreq/devfreq_devbw.c`,
+`drivers/devfreq/governor_performance.c`, `governor_powersave.c`, `devfreq.c`,
+and `drivers/soc/qcom/msm_bus/msm_bus_arb_rpmh.c`.
