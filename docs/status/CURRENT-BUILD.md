@@ -586,3 +586,18 @@ restored and verified. This reinforces lower apparent Android idle drain,
 without a physical cell-health verdict or a demonstrated Mobian fix. See the
 [single power decision record](../../kernel/diagnostics/power/README.md#completed-android-daytime-result--2026-10-09).
 The handset remains on LineageOS; no Mobian restoration or new build occurred.
+
+### Return-to-Mobian mount prerequisite — 2026-10-09
+
+LineageOS changed the dynamic vendor partition offset and uses EROFS. The
+retained Mobian kernel already supports EROFS, but the historical fixed vendor
+offset is incompatible with the inspected current layout. A guarded,
+[text-only candidate preparer](../../userspace/wifi/diagnostics/README.md)
+and nine synthetic tests are now available. A private candidate passes shell
+syntax validation; no candidate was installed and no image was built.
+Runtime vendor/APEX compatibility and actual Mobian startup remain pending.
+This storage compatibility gate is separate from the battery investigation.
+Existing sparse userdata and RPMh boot were located; returning to that older
+userdata would not restore the latest live application fixes automatically.
+The running handset remains on LineageOS until the operator chooses a reviewed
+return procedure. No partition write or new kernel is part of this preparation.
