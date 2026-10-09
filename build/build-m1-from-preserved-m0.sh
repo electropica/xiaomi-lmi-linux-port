@@ -11,7 +11,7 @@ source_ext4=$(realpath -e -- "$2")
 name=$3
 [[ $name =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$ ]] || exit 2
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-repo=$(CDPATH= cd -- "$script_dir/../.." && pwd)
+repo=$(CDPATH= cd -- "$script_dir/.." && pwd)
 out="$repo/output"
 input_work="$out/$name-m0-input"
 source_mount="$input_work/rootfs"
