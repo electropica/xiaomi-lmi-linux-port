@@ -2311,3 +2311,28 @@ This validates one explicit suspend/resume cycle, not repeated automatic
 suspension, overnight autonomy or calibrated physical current. Production
 integration and longer validation remain necessary; residual consumption near
 50 mA is not explained by this result alone. No kernel build or flash was used.
+
+
+### BMS counter qualification — 2026-10-10
+
+A plugged, read-only inspection established that the `bms` power-supply
+interface exposes `charge_counter_shadow` and `charge_now_raw`, although the
+`battery` proxy does not. Future bounded observations can therefore record
+these alongside `charge_counter`, learned and design capacity, temperature,
+voltage and current. Unavailable attributes must remain missing values,
+not zero. This inspection is not a discharge endpoint.
+
+In the locked `qpnp-fg-gen4.c`, the ordinary counter uses `CC_SOC_SW` scaled
+by learned capacity; the shadow counter uses `BATT_SOC` scaled by learned
+capacity; the raw counter uses `CC_SOC` scaled by nominal capacity. These
+are different SRAM estimates and scales, not three independent physical
+ammeters. Compare changes within each counter and preserve the capacity
+and temperature endpoints rather than equating their absolute values.
+
+Trial 28 did not retain these additional endpoints. Its approximately
+69 mA gauge-derived result cannot retrospectively establish or exclude
+a change in counter scale or state. The corrected private collector now
+records the BMS attributes and uses the valid login1 D-Bus interface.
+Isolated recording checks cover available and unavailable BMS getters;
+the existing seven suspend eligibility guards still pass. A subsequent
+measurement remains necessary; no new residual-power fix is claimed.
