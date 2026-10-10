@@ -2084,3 +2084,40 @@ overnight baseline first. A later attended trial must verify the software
 target reaches zero, the original target returns to 10437, cleanup completes,
 and the interval remains comparable before interpreting its gauge delta.
 No autonomy improvement or permanent power-policy change is claimed.
+
+
+### Overnight return and metadata-indexer resource exhaustion — 2026-10-10
+
+The first return was preserved before any setting change. The same installed
+RPMh kernel and boot remained active. Over 33717.080 seconds (9 h 22 min),
+displayed charge changed from 100% to 65%; the gauge counter decreased by
+872706 uAh. The return already reports Charging, so this is not an exact
+uncharged endpoint or calibrated physical-current measurement. BOOTTIME minus
+MONOTONIC accounts for only 357.345 seconds suspended, about 1.060% of the
+interval. The finite departure sampler completed successfully, saved USB-off
+Discharging state and requested one suspend. No RTC alarm or periodic logger
+was left running. The kernel records a subsequent `msoc-delta` wake, followed
+by no further system-suspend entry in the retained interval.
+
+Inspection found 28609 zombie extractor children owned by one running
+`localsearch-3` metadata-indexer process. Its logs report unavailable Landlock,
+extractor failure and `waitid(P_PIDFD)` EINVAL. The retained GLib source marks
+the child exited after that PIDFD error instead of entering the `waitpid`
+fallback, a source-supported explanation for unreaped children. User commands
+then failed to create threads with EAGAIN despite available memory.
+
+Stopping and runtime-masking only `localsearch-3.service` removed all its
+processes and restored successful user GSettings reads. A persistent global
+user-unit mask is now installed on the handset, and the current-image profile
+includes the same mask. No indexed files or databases were deleted. This
+disables background metadata/full-text indexing; ordinary file browsing is
+retained. Future extraction needs both old-kernel child reaping compatibility
+and a supported sandbox, rather than bypassing Landlock blindly.
+
+This is a confirmed resource-exhaustion correction, not a demonstrated idle
+autonomy fix. The configured 900-second battery suspend setting does not
+prove its idle watch was armed or fired. Verify automatic suspend after
+cleanup in an attended no-input interval before comparing NPU bandwidth
+policies. The NPU candidate remains unapplied. The overnight result must not
+be described as nine hours of deep standby or compared directly with the
+earlier 99.6%-suspended short trials.

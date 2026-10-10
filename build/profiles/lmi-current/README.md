@@ -76,3 +76,14 @@ existing-output preservation and package-symlink rejection without building
 an image. The image builder also audits Debian package state, compiles schemas,
 checks the selected battery suspend action and retains its ext4/GPT/sparse
 roundtrip checks. No services, camera or microphone are started by the profile.
+
+
+## Old-kernel metadata-indexer guard
+
+The profile masks the global user unit `localsearch-3.service`. On the current
+4.19 kernel its extractor cannot enable Landlock, and PIDFD child-watch errors
+were observed with 28609 unreaped children. Stopping the indexer restored user
+thread creation on the handset. No indexing database or personal file is
+removed. Background metadata/full-text indexing is unavailable while masked;
+ordinary file browsing is retained. This guard is not an autonomy-fix claim.
+The recipe change has shell validation, but no new image build or reboot test.

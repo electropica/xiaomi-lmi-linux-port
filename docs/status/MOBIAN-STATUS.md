@@ -1181,3 +1181,16 @@ suspended and 86.103 mA derived from the gauge. The RTC-delay guard passed
 and collection cleanup completed. All PCM streams were subsequently closed
 and codec DAPM bias levels Off. Idle autonomy remains unresolved.
 See the [complete idle observation](../../kernel/diagnostics/power/README.md#complete-current-image-idle-observation-after-clockcodec-preparation--2026-10-09).
+
+
+### Current-image indexer correction — 2026-10-10
+
+The first same-boot overnight return showed 100% to 65% over 9 h 22 min,
+with only about six minutes of system suspend. A metadata-indexer failure
+accumulated 28609 zombie children and exhausted user process resources.
+Stopping/masking `localsearch-3.service` removed those children and restored
+user command operation without reboot. The persistent handset mask and
+current-profile recipe correction disable background metadata indexing;
+files and indexing databases were preserved. Automatic return to suspend
+and improved autonomy remain unvalidated. No kernel build was required.
+See the [qualified overnight and resource-exhaustion record](../../kernel/diagnostics/power/README.md#overnight-return-and-metadata-indexer-resource-exhaustion--2026-10-10).

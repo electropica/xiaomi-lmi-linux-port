@@ -11,6 +11,9 @@ apt-get install -y --no-install-recommends python3-gi gir1.2-gtk-3.0 \
     "$src"/inputs/upower_*.deb "$src"/inputs/libupower-glib3_*.deb \
     "$src"/inputs/gir1.2-upowerglib-1.0_*.deb
 test -z "$(dpkg --audit)"
+# The 4.19 extractor lacks Landlock and failed PIDFD reaping exhausted user tasks.
+# Keep files/databases; disable only incompatible background metadata indexing.
+systemctl --global mask localsearch-3.service
 for p in upower libupower-glib3 gir1.2-upowerglib-1.0; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = 1.90.9-1+lmi1
 done
