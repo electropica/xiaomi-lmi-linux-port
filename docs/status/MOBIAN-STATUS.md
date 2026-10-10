@@ -1229,3 +1229,10 @@ an immediate return to the original policy yielded 86.6 mA with comparable
 suspend duration. This supports a causal power-policy lead, but remains a
 short diagnostic comparison. Original governors are restored; no permanent
 NPU policy is enabled and overnight autonomy is not yet validated.
+
+
+A bounded suspend-only NPU policy trial reproduced about 50.6 mA from the
+gauge, with original performance policy restored before user-session thaw.
+Touchscreen and application scrolling were confirmed normal after resume.
+The temporary hook was removed; permanent build integration and overnight
+validation remain pending.

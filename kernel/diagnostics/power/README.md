@@ -2279,3 +2279,35 @@ They are diagnostic tools and are not enabled by the current build profile.
 A next candidate should lower these votes only around suspend and restore
 the original policy on resume, rather than permanently limiting awake work.
 That lifecycle integration is not yet installed or validated.
+
+
+### Suspend-only NPU policy lifecycle validated in a bounded trial â€” 2026-10-10
+
+A corrected temporary systemd-sleep hook retained all three original governors
+before suspension, selected powersave immediately before kernel suspend, and
+restored the original governors/targets before user.slice was thawed. The
+independent bounded-unit restoration then removed only the exact owned hook.
+The journal confirms both pre-suspend and post-resume transitions.
+
+The unplugged interval lasted 181.300 seconds, with 0.822 seconds awake
+(99.546% suspended). Counter loss was 2,547 uAh, yielding 50.575 mA from the
+gauge, close to the earlier three-client isolation's 49.247 mA and below the
+immediate original-policy counter-check's 86.561 mA. Wi-Fi remained enabled.
+Original policy was checked before and after the interval; the unit completed
+successfully, the hook was absent, and no RTC alarm or trace instance remained.
+The operator confirmed normal touchscreen and application scrolling afterward.
+
+The first lifecycle attempt was invalid: a Windows CRLF shell payload prevented
+both hook phases from executing. No recovery state was created and original
+governors remained unchanged. A byte-normalization mismatch also blocked its
+ownership cleanup; the exact owned file was removed after matching its hash.
+The corrected payload uses LF, checks shell syntax before arming, and matches
+embedded ownership bytes to the actual transferred shell bytes. Fifteen host
+tests cover transaction failures, lifecycle guards and exact hook cleanup.
+
+The candidate files below scripts/ remain bounded diagnostic tools, not a
+permanent build-profile policy. No hook remains installed on the handset.
+This validates one explicit suspend/resume cycle, not repeated automatic
+suspension, overnight autonomy or calibrated physical current. Production
+integration and longer validation remain necessary; residual consumption near
+50 mA is not explained by this result alone. No kernel build or flash was used.
