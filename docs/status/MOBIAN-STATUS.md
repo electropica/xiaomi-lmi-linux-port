@@ -1271,3 +1271,20 @@ after 22 minutes 22 seconds. Its valid unplugged counter interval gives
 sleep/recovery pairs were observed and cleanup passed. A diagnostic retry
 interface typo was found and corrected privately; no new trial was started.
 See [the interruption and limits](../../userspace/power/README.md#longer-observation-interrupted-by-gauge-wakeups).
+
+
+### BMS measurement qualification — 2026-10-10
+
+A completed 721-second corrected-policy observation and an interrupted
+620-second original-policy reference corroborate the NPU benefit: sleep
+raw-counter rates were approximately 83–84 versus 145 mA, and instantaneous
+wake readings approximately 49 versus 86 mA. This supports about 42% lower
+readings within each method; neither method is an independently calibrated
+physical ammeter. Software counters can be reprimed and use a different
+capacity scale, so their reported mA values must not be treated as exact
+physical consumption. The reference did not complete its planned 12 minutes.
+Its cleanup ran twice and the second invocation failed on an already removed
+timer; production-policy restoration was independently confirmed. Residual
+standby consumption remains unresolved and a fresh image has not validated
+this integration. See [the power diagnostic record](../../kernel/diagnostics/power/README.md) for segment values,
+source qualifications, and restoration evidence.

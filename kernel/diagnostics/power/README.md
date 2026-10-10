@@ -2373,3 +2373,37 @@ was inactive with a successful result. No new kernel, shared-rail change or
 residual-power fix was introduced. Earlier short NPU counter-checks remain
 useful causal evidence, but their reported mA values must retain the same
 gauge-derived qualification.
+
+
+### Interrupted original-policy BMS reference — 2026-10-10
+
+The matched-counter reference was planned for 12 minutes but stopped on
+the second gauge wake after its single permitted retry. Its recorded interval
+was 619.530 seconds, including 7.324 seconds awake. It is a partial reference,
+not a completed 12-minute observation. Learned capacity remained 2,806,000
+uAh at the recorded endpoints; temperature changed from 22.7 to 22.5 C.
+
+The two sleep segments lasted 209.735 and 403.724 seconds. Their raw-counter
+rates were 145.14 and 144.92 mA, compared with 83.96 and 83.02 mA in the
+completed observation with the NPU correction. Instantaneous wake readings
+were 85.937 versus 49.316 mA. Both comparisons support an approximately
+42% reduction within their respective measurement methods. These gauge
+readings are not independently calibrated physical current, and the unequal
+durations do not establish a precise long-term battery-life improvement.
+Software-counter rates in the reference were 110.06 and 112.12 mA; the
+completed corrected observation gave 67.16 and 49.49 mA. The source-backed
+software-counter reprime qualification above therefore remains essential.
+
+The reference used a runtime-only no-op sleep hook bound inside the suspend
+service namespace; the real production hook and opt-in remained untouched.
+Restoration removed that override successfully. A second cleanup invocation
+then failed when stopping an already unloaded timer, marking the collector
+failed despite successful restoration. A corrected idempotent cleanup helper
+was prepared and passed three simulations (loaded timer, already unloaded
+timer, and genuine active failure); it was not deployed or rearmed.
+
+At return, the original awake NPU policies were restored, recovery state and
+the reference override were absent, the fallback timer was inactive, and
+the RTC alarm and trace instance were empty. A subsequent automatic sleep
+cycle used the production NPU correction and restored it normally. No new
+kernel, flash, recording, or residual-power fix was introduced.
