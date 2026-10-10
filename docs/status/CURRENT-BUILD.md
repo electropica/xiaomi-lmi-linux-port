@@ -732,3 +732,10 @@ With the NPU correction active, Wi-Fi isolation measured 50.150 mA from the
 gauge versus 49.593 mA with the radio enabled: no visible reduction in these
 short intervals. Wi-Fi and original awake NPU performance were restored. See
 [the qualified comparison](../../userspace/power/README.md#wi-fi-isolation-with-the-npu-correction-active).
+
+A planned thirty-minute follow-up was interrupted by the second gauge wake
+after 22 minutes 22 seconds. Its valid unplugged counter interval gives
+69.015 mA, so sustained consumption near 50 mA is not established. Three NPU
+sleep/recovery pairs were observed and cleanup passed. A diagnostic retry
+interface typo was found and corrected privately; no new trial was started.
+See [the interruption and limits](../../userspace/power/README.md#longer-observation-interrupted-by-gauge-wakeups).

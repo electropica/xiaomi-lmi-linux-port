@@ -94,7 +94,9 @@ from the gauge versus 86.561 mA in the immediate original-policy comparison,
 with original performance restored on wake. One combined-policy automatic cycle
 is now validated at the normal fifteen-minute delay. Multiple automatic cycles,
 night-long and fresh-image validation remain pending; residual consumption
-and gauge accuracy remain unresolved. Details and evidence limits are in
+and gauge accuracy remain unresolved. A longer interval interrupted after
+22 minutes yielded 69.015 mA from the gauge; sustained consumption near 50 mA
+is not established. Details and evidence limits are in
 [the power notes](userspace/power/README.md#suspend-only-npu-bandwidth-policy-2026-10-10).
 
 

@@ -265,3 +265,30 @@ trace instance and NPU recovery state were absent. Trace overruns and dropped
 events were zero. Residual consumption near 50 mA remains unresolved; these
 gauge readings are not independently calibrated physical current. No kernel
 build or flash was performed, and no persistent radio setting was changed.
+
+
+#### Longer observation interrupted by gauge wakeups
+
+A planned thirty-minute observation ended its counter collection after
+1,342.199 seconds (22 minutes 22 seconds), on the second msoc-delta gauge IRQ.
+Only one diagnostic retry was permitted. The recorded unplugged, discharging
+interval lost 25,731 uAh with 16.830 seconds awake (98.746% suspended), giving
+a gauge quotient of 69.015 mA. This is an interrupted interval, not a completed
+thirty-minute validation. It does not confirm that the approximately 50 mA
+short-trial estimate persists, nor provide a matched longer original-policy
+comparison or calibrated physical current.
+
+The diagnostic retry contained an invalid D-Bus interface string and emitted
+a GLib assertion. Its attempted-call marker does not establish a successful
+forced re-suspend. Subsequent sleeps occurred through the existing power
+policy; the last began after the collector had exited. Three NPU pre/post pairs
+were observed through final reconnection, with original governors/targets
+restored and no recovery state left. The collector ended successfully and its
+alarm and trace instance were removed. Wi-Fi remained enabled.
+
+The retry interface has been corrected in a private collector candidate; all
+three D-Bus call interface arguments and seven safety cases pass host checks.
+That candidate was not deployed or re-run. No NPU production hook, kernel,
+radio or gauge configuration was changed. Sustained autonomy and the residual
+consumer remain unresolved; longer gauge readings must not be replaced with
+the more favorable short-trial value.
