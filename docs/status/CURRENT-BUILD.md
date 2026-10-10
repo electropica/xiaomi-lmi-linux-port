@@ -715,8 +715,15 @@ out-of-lifecycle apply is rejected. Fifteen failure/recovery tests pass.
 The permanent hook passed an attended 181.258-second sleep cycle: 99.607%
 suspended, 2,497 uAh loss, gauge estimate 49.593 mA, original governors/targets
 restored and recovery state removed. Wi-Fi stayed enabled; alarm and trace
-instances were cleaned. Automatic multi-cycle and night-long validation remain
-pending, as does a fresh-image build.
+instances were cleaned.
+
+One automatic cycle with the permanent NPU hook is now validated: deep
+suspend began 900.419 seconds after the unplugged baseline, with 274.239
+seconds suspended in the 1,202.132-second observation. The hook applied once
+and restored the original policy once on wake; recovery state and RTC alarm
+were absent. No forced suspend or RTC alarm was used. The unchanged 100%
+capacity and charging return do not establish calibrated current or autonomy.
+Multiple automatic cycles, night-long and fresh-image validation remain pending.
 Short gauge results near 50 mA versus 86.6 mA original-policy do not establish
 night-long autonomy or calibrated current. See
 [power policy details](../../userspace/power/README.md#suspend-only-npu-bandwidth-policy-2026-10-10).

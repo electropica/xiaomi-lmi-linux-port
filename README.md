@@ -86,6 +86,18 @@ for licensing information.
 
 ## Battery state correction
 
+Latest update (2026-10-10): the metadata-indexer failure and notification wake
+loop were corrected, and normal fifteen-minute automatic suspend was observed.
+A permanent, guarded sleep-only NPU bandwidth policy is now installed and
+included in the current build profile. Its attended cycle measured 49.593 mA
+from the gauge versus 86.561 mA in the immediate original-policy comparison,
+with original performance restored on wake. One combined-policy automatic cycle
+is now validated at the normal fifteen-minute delay. Multiple automatic cycles,
+night-long and fresh-image validation remain pending; residual consumption
+and gauge accuracy remain unresolved. Details and evidence limits are in
+[the power notes](userspace/power/README.md#suspend-only-npu-bandwidth-policy-2026-10-10).
+
+
 The [UPower status opt-in](userspace/power/README.md) passed selected host
 tests and private hardware checks. The full Debian ARM64 package is now
 installed with a phone-local opt-in, and the installed service passed a real

@@ -96,5 +96,7 @@ from [userspace/power](../../../userspace/power/README.md#suspend-only-npu-bandw
 and enables its opt-in marker. Exact kernel/build guards keep this scoped to
 the reviewed RPMh/reset-GPIO boot. Generic builds are unaffected. Production
 hook passed an attended sleep cycle at 49.593 mA from the gauge, with original
-policy restored. Automatic multi-cycle/night-long validation remains pending.
+policy restored. One automatic cycle at the normal fifteen-minute delay also
+passed with the permanent hook; original performance was restored on wake.
+Multiple automatic cycles and night-long validation remain pending.
 No new image or kernel build was run.

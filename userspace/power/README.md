@@ -233,8 +233,17 @@ rejected. The permanent hook passed a 181.258-second attended sleep cycle with
 0.713 seconds awake (99.607% suspended), 2,497 uAh gauge loss and a 49.593 mA
 gauge estimate. Original governors/targets were restored; the recovery state,
 RTC alarm and trace instance were absent afterward, and Wi-Fi remained enabled.
-No trace overruns or dropped events were reported. Automatic multi-cycle,
-night-long and fresh-image validation remain pending. Removing the opt-in
+No trace overruns or dropped events were reported.
+
+One automatic cycle with the permanent NPU hook is now validated: deep
+suspend began 900.419 seconds after the unplugged baseline, with 274.239
+seconds suspended in the 1,202.132-second observation. The hook applied once
+and restored the original policy once on wake; recovery state and RTC alarm
+were absent. No forced suspend or RTC alarm was used. The unchanged 100%
+capacity and charging return do not establish calibrated current or autonomy.
+Multiple automatic cycles, night-long and fresh-image validation remain pending.
+
+Removing the opt-in
 prevents future applications; post/recover still restore any saved policy.
 Residual consumption near 50 mA remains unresolved. No kernel build or flash
 is required for this userspace change.

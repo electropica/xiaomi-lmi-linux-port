@@ -9,4 +9,4 @@ No personal files, recordings or desktop settings database are imported.
 Stock Venus firmware references are prepared after the read-only mount; codec open is tested, streams remain unvalidated.
 Background metadata indexing is masked for old-kernel sandbox/child-watch compatibility.
 Notification-triggered screen wakeup is disabled to avoid the automatic-suspend warning loop; notifications remain available.
-Suspend-only NPU bandwidth opt-in: three reviewed clients reach target zero in sleep and recover original performance on wake; exact kernel/build guards and independent ExecStopPost recovery. Short gauge trials and one permanent-hook sleep cycle validated; automatic multi-cycle, night-long and fresh-image validation pending.
+Suspend-only NPU bandwidth opt-in: three reviewed clients reach target zero in sleep and recover original performance on wake; exact kernel/build guards and independent ExecStopPost recovery. Short gauge trials, one permanent-hook sleep cycle and one normal-timeout automatic cycle validated; multiple automatic cycles, night-long and fresh-image validation pending.
