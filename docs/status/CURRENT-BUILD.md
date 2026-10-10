@@ -690,3 +690,10 @@ but yielded 88.036 mA from the gauge versus the previous 86.103 mA reference.
 No visible battery improvement was demonstrated; the original governor was
 restored. Automatic suspend is validated separately, while residual deep-sleep
 consumption remains unresolved.
+
+
+A three-client NPU bandwidth isolation yielded about 49.2 mA from the gauge;
+an immediate return to the original policy yielded 86.6 mA with comparable
+suspend duration. This supports a causal power-policy lead, but remains a
+short diagnostic comparison. Original governors are restored; no permanent
+NPU policy is enabled and overnight autonomy is not yet validated.

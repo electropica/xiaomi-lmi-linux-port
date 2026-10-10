@@ -2237,3 +2237,45 @@ that all three client sleep-bandwidth rows reach zero. It has not been armed
 or applied. Expected devfreq limits must still be confirmed on the handset;
 the helper rejects a mismatch rather than changing them. No new kernel build
 or NPU power, clock, reset or regulator write is proposed.
+
+
+### Three-client NPU isolation and immediate counter-check — 2026-10-10
+
+Read-only preflight confirmed all three clients had performance governors,
+minimum zero, and matching current/maximum targets: 15258 for NPU-to-LLCC,
+10437 for each DDR client. No process was detected using /dev/msm_npu.
+An attended guarded trial selected powersave for all three clients without
+changing limits. Before and after explicit suspend, all three software targets
+and their exposed client sleep-bandwidth votes were zero; the SH0 and MC0
+aggregate sleep IB/AB values were also zero. Restoration returned all three
+to their original governors and targets.
+
+| Observation | Policy | Duration | Suspended | Gauge-derived current |
+| --- | --- | ---: | ---: | ---: |
+| Prior single-client isolation | Two NPU clients retain performance | 181.603 s | 99.617% | 88.036 mA |
+| Three-client isolation | All three targets zero | 181.510 s | 99.616% | 49.247 mA |
+| Immediate counter-check | All three original performance targets | 181.911 s | 99.617% | 86.561 mA |
+
+Wi-Fi stayed enabled, the kernel was unchanged, and no media workload ran.
+Both measurement endpoints in each interval were unplugged and Discharging.
+The initial charging-to-discharge counter discontinuity was excluded. Every
+service finished successfully and inactive, with no owned alarm or trace
+instance remaining. No trace overruns or dropped events were reported.
+
+The immediate return to about 87 mA after restoring the original policy
+strengthens the causal bandwidth-policy hypothesis. The isolated interval
+is about 43% lower than the immediate counter-check. These are short gauge
+observations, not independently calibrated physical current or an overnight
+autonomy validation. The residual 49 mA remains unresolved.
+
+The isolated trace contains additional RPMh sleep/wake-bank commands for
+addresses 0x50000, 0x50004 and 0x5007c, with zero sleep vote values. Command
+ordering/index changes are not treated as separate power changes. This
+supports propagation beyond a devfreq label, without proving every hardware
+rail or accelerator power state.
+
+The tested helper and failure-injection tests are retained below scripts/.
+They are diagnostic tools and are not enabled by the current build profile.
+A next candidate should lower these votes only around suspend and restore
+the original policy on resume, rather than permanently limiting awake work.
+That lifecycle integration is not yet installed or validated.
