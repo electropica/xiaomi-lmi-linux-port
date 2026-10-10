@@ -1,0 +1,6 @@
+#!/bin/sh
+# Limit the reviewed policy to suspend; post runs before user.slice is thawed.
+[ "$2" = suspend ] || exit 0
+case "$1" in
+    pre|post) exec /usr/local/sbin/lmi-npu-suspend "$1" ;;
+esac

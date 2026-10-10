@@ -1,0 +1,183 @@
+#!/usr/bin/python3
+"""Suspend-only bandwidth policy for the tested lmi diagnostic kernel.
+
+No NPU clocks, reset lines, power rails or frequency limits are changed.
+Recovery remains available after opt-out and is retried by ExecStopPost.
+"""
+import argparse
+import fcntl
+import json
+import os
+from pathlib import Path
+import stat
+import subprocess
+
+RELEASE = '4.19.325-cip128-st12-perf-ga5b3099017ae-dirty'
+VERSION = '#3 SMP PREEMPT Wed Oct 7 05:27:54 UTC 2026'
+BASELINES = {'soc:qcom,npu-npu-llcc-bw': '15258',
+             'soc:qcom,npu-llcc-ddr-bw': '10437',
+             'soc:qcom,npudsp-npu-ddr-bw': '10437'}
+DIRECTORY = Path('/run/lmi-npu-suspend')
+OPT_IN = Path('/etc/lmi/npu-suspend-opt-in')
+FIELDS = ('governor', 'min_freq', 'max_freq', 'cur_freq', 'available_governors')
+
+
+def private_regular(path):
+    s = path.lstat()
+    if not stat.S_ISREG(s.st_mode) or s.st_uid != 0 or s.st_mode & 0o022:
+        raise RuntimeError('Unsafe ownership/type/mode: ' + str(path))
+
+
+class Node:
+    def __init__(self, name):
+        self.link = Path('/sys/class/devfreq') / name
+        self.path = self.link.resolve(strict=True)
+        self.maximum = BASELINES[name]
+        if not str(self.path).startswith('/sys/devices/'):
+            raise RuntimeError('Unexpected devfreq path')
+
+    def read(self, field):
+        if field not in FIELDS:
+            raise RuntimeError('Unreviewed attribute')
+        return (self.path / field).read_text().strip()
+
+    def write(self, governor):
+        if governor not in ('performance', 'powersave') or self.link.resolve(strict=True) != self.path:
+            raise RuntimeError('Changed device binding or governor')
+        (self.path / 'governor').write_text(governor + '\n')
+
+
+def inspect(node):
+    values = {field: node.read(field) for field in FIELDS}
+    if (values['governor'] != 'performance' or values['min_freq'] != '0'
+            or values['max_freq'] != node.maximum or values['cur_freq'] != node.maximum
+            or 'powersave' not in values['available_governors'].split()):
+        raise RuntimeError('Device policy differs from the reviewed baseline')
+    return values
+
+
+def restore_all(nodes, originals):
+    failures = []
+    for name, node in nodes.items():
+        try:
+            original = originals[name]
+            if (original.get('governor') != 'performance' or original.get('min_freq') != '0'
+                    or original.get('max_freq') != node.maximum or original.get('cur_freq') != node.maximum):
+                raise RuntimeError('Unreviewed recovery policy')
+            if node.read('min_freq') != '0' or node.read('max_freq') != node.maximum:
+                raise RuntimeError('Limits changed externally; preserve them')
+            if node.read('governor') not in ('performance', 'powersave'):
+                raise RuntimeError('Governor changed externally; preserve it')
+            if node.read('governor') != 'performance':
+                node.write('performance')
+            if node.read('governor') != 'performance' or node.read('cur_freq') != node.maximum:
+                raise RuntimeError('Restoration unconfirmed')
+        except Exception as exc:
+            failures.append(name + ': ' + str(exc))
+    if failures:
+        raise RuntimeError('; '.join(failures))
+
+
+def apply_all(nodes, save):
+    originals = {name: inspect(node) for name, node in nodes.items()}
+    save(originals)  # durable recovery record before any mutable operation
+    try:
+        for node in nodes.values():
+            node.write('powersave')
+            if node.read('governor') != 'powersave' or node.read('cur_freq') != '0':
+                raise RuntimeError('Software bandwidth target did not reach zero')
+    except Exception:
+        restore_all(nodes, originals)
+        raise
+
+
+def load_state(path, nodes):
+    private_regular(path)
+    data = json.loads(path.read_text())
+    if (data.get('version') != 1 or data.get('release') != os.uname().release
+            or data.get('kernel_version') != os.uname().version
+            or data.get('devices') != {name: str(node.path) for name, node in nodes.items()}
+            or set(data.get('originals', {})) != set(nodes)):
+        raise RuntimeError('Recovery identity mismatch')
+    return data['originals']
+
+
+def save_state(path, nodes, originals):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, 'w') as stream:
+        json.dump({'version': 1, 'release': os.uname().release,
+                   'kernel_version': os.uname().version,
+                   'devices': {name: str(node.path) for name, node in nodes.items()},
+                   'originals': originals}, stream)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def recover(path, nodes):
+    if not path.exists() and not path.is_symlink():
+        return False
+    restore_all(nodes, load_state(path, nodes))
+    path.unlink()  # retain the record if any restoration fails
+    print('LMI_NPU_ORIGINAL_POLICY_RESTORED', flush=True)
+    return True
+
+
+def pre_allowed():
+    if not OPT_IN.exists() and not OPT_IN.is_symlink():
+        return False
+    private_regular(OPT_IN)
+    if os.uname().release != RELEASE or os.uname().version != VERSION:
+        print('LMI_NPU_SKIP_UNREVIEWED_KERNEL', flush=True)
+        return False
+    active = subprocess.check_output(['systemctl', 'show', 'systemd-suspend.service',
+                                      '-p', 'ActiveState', '--value'], text=True, timeout=5).strip()
+    if active != 'activating':
+        raise RuntimeError('Apply is restricted to systemd suspend')
+    if Path('/dev/msm_npu').exists():
+        result = subprocess.run(['fuser', '/dev/msm_npu'], capture_output=True, timeout=5)
+        if result.returncode != 1:
+            print('LMI_NPU_SKIP_DEVICE_BUSY_OR_CHECK_FAILED', flush=True)
+            return False
+    return True
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('mode', choices=('pre', 'post', 'recover'))
+    args = parser.parse_args()
+    if os.geteuid() != 0:
+        raise RuntimeError('Root required')
+    # A normal generic build without this opt-in has no policy to apply.
+    if args.mode == 'pre' and not OPT_IN.exists() and not OPT_IN.is_symlink() and not DIRECTORY.exists():
+        return
+    if args.mode != 'pre' and not DIRECTORY.exists() and not DIRECTORY.is_symlink():
+        return
+    DIRECTORY.mkdir(mode=0o700, exist_ok=True)
+    s = DIRECTORY.lstat()
+    if not stat.S_ISDIR(s.st_mode) or s.st_uid != 0 or stat.S_IMODE(s.st_mode) != 0o700:
+        raise RuntimeError('Unsafe recovery directory')
+    lock = DIRECTORY / 'lock'
+    fd = os.open(lock, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    try:
+        private_regular(lock)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        path = DIRECTORY / 'state.json'
+        if args.mode != 'pre' and not path.exists() and not path.is_symlink():
+            return
+        allowed = args.mode == 'pre' and pre_allowed()
+        if not allowed and not path.exists() and not path.is_symlink():
+            return
+        nodes = {name: Node(name) for name in BASELINES}
+        recover(path, nodes)  # recover a previous interrupted cycle even after opt-out
+        if allowed:
+            apply_all(nodes, lambda values: save_state(path, nodes, values))
+            print('LMI_NPU_SUSPEND_TARGETS_ZERO', flush=True)
+    finally:
+        os.close(fd)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as error:
+        raise SystemExit('LMI_NPU_POLICY_ERROR: ' + str(error))

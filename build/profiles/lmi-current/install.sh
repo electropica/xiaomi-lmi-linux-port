@@ -7,7 +7,7 @@ test -f /usr/sbin/policy-rc.d
 src=/run/lmi-current-profile
 (cd "$src/inputs"; sha256sum -c SHA256SUMS)
 export DEBIAN_FRONTEND=noninteractive
-apt-get install -y --no-install-recommends python3-gi gir1.2-gtk-3.0 \
+apt-get install -y --no-install-recommends python3-gi gir1.2-gtk-3.0 psmisc \
     "$src"/inputs/upower_*.deb "$src"/inputs/libupower-glib3_*.deb \
     "$src"/inputs/gir1.2-upowerglib-1.0_*.deb
 test -z "$(dpkg --audit)"
@@ -60,6 +60,11 @@ install -Dm644 /dev/null /etc/lmi/cpu-idle-opt-in
 install -Dm644 /dev/null /etc/upower/lmi-trust-battery-status
 install -Dm644 "$src/power/99-lmi-upower-status.rules" /etc/udev/rules.d/99-lmi-upower-status.rules
 systemctl enable lmi-cpu-idle.service
+# Suspend-only NPU bandwidth policy; no background polling or kernel replacement.
+install -Dm755 "$src/power/lmi-npu-suspend" /usr/local/sbin/lmi-npu-suspend
+install -Dm755 "$src/power/lmi-npu-suspend-hook" /usr/lib/systemd/system-sleep/90-lmi-npu-suspend
+install -Dm644 "$src/power/90-lmi-npu-suspend.conf" /etc/systemd/system/systemd-suspend.service.d/90-lmi-npu-suspend.conf
+install -Dm644 /dev/null /etc/lmi/npu-suspend-opt-in
 install -Dm644 "$src/power/94_lmi-current-power.gschema.override" \
     /usr/share/glib-2.0/schemas/94_lmi-current-power.gschema.override
 glib-compile-schemas --strict /usr/share/glib-2.0/schemas

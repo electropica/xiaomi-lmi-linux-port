@@ -87,3 +87,14 @@ thread creation on the handset. No indexing database or personal file is
 removed. Background metadata/full-text indexing is unavailable while masked;
 ordinary file browsing is retained. This guard is not an autonomy-fix claim.
 The recipe change has shell validation, but no new image build or reboot test.
+
+
+### Suspend-only NPU bandwidth policy (2026-10-10)
+
+The profile stages the helper, sleep hook and independent ExecStopPost recovery
+from [userspace/power](../../../userspace/power/README.md#suspend-only-npu-bandwidth-policy-2026-10-10),
+and enables its opt-in marker. Exact kernel/build guards keep this scoped to
+the reviewed RPMh/reset-GPIO boot. Generic builds are unaffected. Production
+hook passed an attended sleep cycle at 49.593 mA from the gauge, with original
+policy restored. Automatic multi-cycle/night-long validation remains pending.
+No new image or kernel build was run.

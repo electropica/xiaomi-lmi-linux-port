@@ -1236,3 +1236,19 @@ gauge, with original performance policy restored before user-session thaw.
 Touchscreen and application scrolling were confirmed normal after resume.
 The temporary hook was removed; permanent build integration and overnight
 validation remain pending.
+
+
+### Suspend-only NPU bandwidth policy (2026-10-10)
+
+The current profile includes the suspend-only three-client bandwidth policy,
+with exact kernel/baseline guards and independent post-suspend recovery.
+Production files are installed; awake governors/targets remain unchanged and
+out-of-lifecycle apply is rejected. Fifteen failure/recovery tests pass.
+The permanent hook passed an attended 181.258-second sleep cycle: 99.607%
+suspended, 2,497 uAh loss, gauge estimate 49.593 mA, original governors/targets
+restored and recovery state removed. Wi-Fi stayed enabled; alarm and trace
+instances were cleaned. Automatic multi-cycle and night-long validation remain
+pending, as does a fresh-image build.
+Short gauge results near 50 mA versus 86.6 mA original-policy do not establish
+night-long autonomy or calibrated current. See
+[power policy details](../../userspace/power/README.md#suspend-only-npu-bandwidth-policy-2026-10-10).

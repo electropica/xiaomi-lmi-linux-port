@@ -40,6 +40,8 @@ for name in ['lmi-flashlight.py','lmi-flashlight.desktop','lmi-chatty-safe']:
 (a.destination/'power').mkdir()
 shutil.copy2(repo/'userspace/power/scripts/lmi-cpu-idle', a.destination/'power/lmi-cpu-idle')
 shutil.copy2(repo/'userspace/power/files/lmi-cpu-idle.service', a.destination/'power/lmi-cpu-idle.service')
+for source in ['scripts/lmi-npu-suspend', 'files/lmi-npu-suspend-hook', 'files/90-lmi-npu-suspend.conf']:
+    shutil.copy2(repo/'userspace/power'/source, a.destination/'power'/Path(source).name)
 for name in ['99-lmi-upower-status.rules','94_lmi-current-power.gschema.override']:
     shutil.copy2(repo/'build/profiles/lmi-current'/name, a.destination/'power'/name)
 shutil.copy2(repo/'build/profiles/lmi-current/PROFILE.txt', a.destination/'PROFILE.txt')

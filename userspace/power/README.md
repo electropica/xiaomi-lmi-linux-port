@@ -204,3 +204,37 @@ the expected touch suspend/resume path and 181 seconds of deep sleep. The operat
 confirmed normal touch response after wake; an autonomy improvement is not
 established. This covers one suspend/resume cycle only. The power diagnostic record gives its exact
 identity and experimental scope; this is not a production boot update.
+
+
+### Suspend-only NPU bandwidth policy (2026-10-10)
+
+The current lmi profile now stages a guarded userspace sleep hook for the
+existing RPMh/reset-GPIO kernel. It selects powersave for the three reviewed
+NPU devfreq bandwidth clients immediately before suspend and restores their
+original performance targets on resume. A systemd-suspend.service ExecStopPost
+drop-in retries recovery after a failed hook or sleep operation. Recovery does
+not require the opt-in marker to remain present. There is no polling daemon.
+
+The helper requires the exact reviewed kernel release/build identity, expected
+bandwidth limits and targets, and an unused /dev/msm_npu. It saves recovery
+state under root-only /run before writing any governor, rejects symlinks and
+external policy changes, and attempts every client's restoration after an
+individual failure. It changes no NPU clock, regulator, reset or frequency
+limit. Other kernels and busy devices are skipped. The lmi-current installer
+adds the opt-in; generic builds are not enabled by this change.
+
+Three short trials support the policy: all-three isolation measured 49.247 mA
+from the gauge, the immediate original-policy counter-check 86.561 mA, and a
+bounded suspend-only hook 50.575 mA. Touchscreen and application scrolling
+worked after wake. These are gauge estimates, not calibrated physical current
+or overnight autonomy. Fifteen failure/recovery tests pass for this integration.
+Production files are installed with awake governors unchanged and manual pre
+rejected. The permanent hook passed a 181.258-second attended sleep cycle with
+0.713 seconds awake (99.607% suspended), 2,497 uAh gauge loss and a 49.593 mA
+gauge estimate. Original governors/targets were restored; the recovery state,
+RTC alarm and trace instance were absent afterward, and Wi-Fi remained enabled.
+No trace overruns or dropped events were reported. Automatic multi-cycle,
+night-long and fresh-image validation remain pending. Removing the opt-in
+prevents future applications; post/recover still restore any saved policy.
+Residual consumption near 50 mA remains unresolved. No kernel build or flash
+is required for this userspace change.

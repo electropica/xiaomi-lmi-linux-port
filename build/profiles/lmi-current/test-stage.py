@@ -26,6 +26,9 @@ class StageTests(unittest.TestCase):
         self.assertTrue((self.dest/'apps/lmi-flashlight.py').is_file())
         self.assertTrue((self.dest/'audio/91-lmi-microphone.conf').is_file())
         self.assertTrue((self.dest/'power/lmi-cpu-idle.service').is_file())
+        for name, subdir in [('lmi-npu-suspend','scripts'), ('lmi-npu-suspend-hook','files'), ('90-lmi-npu-suspend.conf','files')]:
+            self.assertEqual((self.dest/'power'/name).read_bytes(),
+                             (stage.resolve().parents[3]/'userspace/power'/subdir/name).read_bytes())
         self.assertTrue((self.dest/'time-seed/usr/local/libexec/lmi-time-seed').is_file())
         self.assertTrue((self.dest/'time-seed/etc/systemd/system/lmi-time-seed-save.timer').is_file())
         self.assertTrue((self.dest/'initialize-time-seed.sh').is_file())
