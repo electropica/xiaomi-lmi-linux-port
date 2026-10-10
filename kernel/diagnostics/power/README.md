@@ -2189,3 +2189,27 @@ the notification-wakeup workaround. A selective future userspace patch could
 lower only the impending-suspend warning's urgency while preserving critical
 battery notification wake; such a patch has been checked against source,
 but has not been built or installed.
+
+
+### Attended NPU bandwidth isolation result — 2026-10-10
+
+The existing RPMh diagnostic kernel was retained. A guarded, temporary change
+selected powersave for the NPU LLCC/DDR devfreq bandwidth client, keeping its
+minimum and maximum unchanged. The software target was zero at arming,
+before explicit suspend and at the final unplugged sample. Wi-Fi remained
+enabled. No NPU power/reset writes, media workload or new kernel build were
+used. This short test explicitly requested suspend; it is separate from the
+normal-timeout automatic-suspend validation above.
+
+The interval completed in 181.603 seconds with 0.695 seconds awake (99.617%
+suspended). Counter loss was 4,441 uAh, corresponding to 88.036 mA from the
+gauge. The preceding complete current-image reference was 86.103 mA. This
+single comparison shows no visible reduction; it does not establish a small
+regression or a calibrated physical current. The software zero target alone
+does not prove zero aggregate interconnect traffic or a powered-off NPU.
+
+The original performance governor and target 10437 were restored. The service
+finished successfully and inactive, with no RTC alarm or trace instance left.
+Trace statistics reported no overruns or dropped events. Raw logs remain
+private. Do not adopt powersave as a permanent battery fix on this evidence;
+the residual deep-sleep consumption remains unresolved.

@@ -683,3 +683,10 @@ an intermediate wake. The 18-minute interval contains about 176 seconds of
 suspend because the initial 15-minute timeout is intentionally retained.
 This is a validated suspend-policy correction, not a deep-sleep-current or
 overnight-autonomy result.
+
+
+The attended NPU bandwidth isolation completed with the software target zero,
+but yielded 88.036 mA from the gauge versus the previous 86.103 mA reference.
+No visible battery improvement was demonstrated; the original governor was
+restored. Automatic suspend is validated separately, while residual deep-sleep
+consumption remains unresolved.
