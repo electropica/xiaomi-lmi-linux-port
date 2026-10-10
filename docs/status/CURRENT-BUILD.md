@@ -727,3 +727,8 @@ Multiple automatic cycles, night-long and fresh-image validation remain pending.
 Short gauge results near 50 mA versus 86.6 mA original-policy do not establish
 night-long autonomy or calibrated current. See
 [power policy details](../../userspace/power/README.md#suspend-only-npu-bandwidth-policy-2026-10-10).
+
+With the NPU correction active, Wi-Fi isolation measured 50.150 mA from the
+gauge versus 49.593 mA with the radio enabled: no visible reduction in these
+short intervals. Wi-Fi and original awake NPU performance were restored. See
+[the qualified comparison](../../userspace/power/README.md#wi-fi-isolation-with-the-npu-correction-active).

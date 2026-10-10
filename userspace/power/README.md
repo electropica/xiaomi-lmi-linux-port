@@ -247,3 +247,21 @@ Removing the opt-in
 prevents future applications; post/recover still restore any saved policy.
 Residual consumption near 50 mA remains unresolved. No kernel build or flash
 is required for this userspace change.
+
+
+#### Wi-Fi isolation with the NPU correction active
+
+A subsequent radio-off trial retained the permanent NPU sleep policy. The five
+reviewed Wi-Fi supply/domain software use counts were zero before suspend.
+It recorded 181.973 seconds, 0.710 seconds awake (99.610% suspended), and
+2,535 uAh gauge loss: 50.150 mA estimated, versus 49.593 mA in the preceding
+radio-enabled production trial. No visible reduction was demonstrated by
+turning off Wi-Fi in these short intervals. This does not establish that Wi-Fi
+has no cost during association, traffic or other conditions.
+
+Original NPU governors/targets and enabled Wi-Fi were restored. The finite
+collector exited successfully, the fallback timer was stopped, and RTC alarm,
+trace instance and NPU recovery state were absent. Trace overruns and dropped
+events were zero. Residual consumption near 50 mA remains unresolved; these
+gauge readings are not independently calibrated physical current. No kernel
+build or flash was performed, and no persistent radio setting was changed.
