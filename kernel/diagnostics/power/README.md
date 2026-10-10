@@ -2213,3 +2213,27 @@ finished successfully and inactive, with no RTC alarm or trace instance left.
 Trace statistics reported no overruns or dropped events. Raw logs remain
 private. Do not adopt powersave as a permanent battery fix on this evidence;
 the residual deep-sleep consumption remains unresolved.
+
+
+### Scope correction: three NPU bandwidth clients — 2026-10-10
+
+A subsequent read of the source-reviewed msm-bus bw attributes found three
+named clients with nonzero DUAL_CTX sleep bandwidth: npu-npu-llcc-bw,
+npu-llcc-ddr-bw and npudsp-npu-ddr-bw. The latter two share the LLCC-to-DDR
+path, and the first and third also request the NPU-to-LLCC path. The pinned
+kernel's vendor/qcom/kona.dtsi defines all three with performance governors
+and without qcom,active-only. These are software votes, not physical traffic
+or proof that the accelerator itself is powered.
+
+The preceding trial isolated only npu-llcc-ddr-bw. Its lack of visible benefit
+therefore does not rule out aggregate NPU-client bandwidth as a contributor:
+other clients can retain the maximum on shared paths. The 20 RPMh command
+payloads observed between machine_suspend begin/end match the preceding
+reference exactly; this comparison does not cover every hardware vote.
+
+A three-client idle-only isolation has been prepared locally, with saved
+state before any write, independent bounded-unit restoration, and checks
+that all three client sleep-bandwidth rows reach zero. It has not been armed
+or applied. Expected devfreq limits must still be confirmed on the handset;
+the helper rejects a mismatch rather than changing them. No new kernel build
+or NPU power, clock, reset or regulator write is proposed.
