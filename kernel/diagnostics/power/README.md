@@ -2336,3 +2336,40 @@ records the BMS attributes and uses the valid login1 D-Bus interface.
 Isolated recording checks cover available and unavailable BMS getters;
 the existing seven suspend eligibility guards still pass. A subsequent
 measurement remains necessary; no new residual-power fix is claimed.
+
+
+### Completed bounded BMS comparison — 2026-10-10
+
+The subsequent 12-minute observation completed in 721.043 seconds, with
+7.351 seconds awake (98.980% suspended). Learned capacity remained
+2,806,000 uAh at both endpoints, and temperature changed from 22.7 to
+22.2 C. The permanent NPU suspend policy and enabled Wi-Fi were unchanged.
+The software, shadow and raw counter deltas were respectively 12,401,
+13,626 and 17,218 uAh: approximately 61.92, 68.03 and 85.97 mA when each
+is divided by the observation duration. These remain distinct gauge-derived
+rates; none is independently calibrated battery current.
+
+Before the gauge IRQ, the first 449.332-second sleep segment gave software
+and raw rates of 67.16 and 83.96 mA. After one guarded re-suspend, the
+265.627-second second sleep gave 49.49 and 83.02 mA respectively. The
+software-rate change therefore did not accompany a comparable raw-rate
+change. Endpoint learned capacity was stable; an interior capacity change
+is not ruled out solely by those endpoint samples. This supports a counter
+state/scale qualification rather than treating the software-rate difference
+as a demonstrated physical power change.
+
+The locked source provides a concrete possible path: the MSOC-delta handler
+notifies the battery supply, the FG notifier schedules `status_change_work`,
+and that worker calls `cap_learning_update`. Its inactive/discharging path
+can prime `CC_SOC_SW` from the estimated battery SOC. No explicit driver
+write to the raw `CC_SOC` counter was found in the inspected source. This
+is a source-supported explanation, not an instrumented proof of the SRAM
+write during this observation or a complete model of internal PMIC behavior.
+
+Three NPU pre/post marker pairs were retained, including a later automatic
+cycle; the original awake policy was restored, recovery state was absent,
+and the RTC alarm and trace instance were empty at return. The collector
+was inactive with a successful result. No new kernel, shared-rail change or
+residual-power fix was introduced. Earlier short NPU counter-checks remain
+useful causal evidence, but their reported mA values must retain the same
+gauge-derived qualification.
