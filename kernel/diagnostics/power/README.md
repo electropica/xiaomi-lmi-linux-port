@@ -2162,3 +2162,30 @@ NPU bandwidth candidate remains unapplied. No new kernel or image was built.
 
 Source references: [GSD 48.1 show_sleep_warning](https://sources.debian.org/data/main/g/gnome-settings-daemon/48.1-1/plugins/power/gsd-power-manager.c),
 [Phosh 0.46 notification feedback](https://sources.debian.org/data/main/p/phosh/0.46.0-3%2Bdeb13u1/src/notifications/notify-feedback.c).
+
+
+### Normal-timeout validation after the notification workaround — 2026-10-10
+
+An attended comparison retained the normal 900-second battery timeout and
+empty Phosh notification-wakeup triggers. The departure helper only locked
+and blanked the display, saved a baseline, and exited; it did not request
+Suspend, program an RTC alarm or leave a periodic sampler active. The first
+return was preserved before further handset actions.
+
+The kernel entered deep suspend 900.271 seconds after the saved baseline.
+A first suspend lasted about 18 seconds; after its wake, the kernel re-entered
+deep suspend about 16 seconds later and remained there until USB return.
+Across 1109.425 seconds, BOOTTIME minus MONOTONIC accounts for 176.430 seconds
+of suspend. Most awake time is the expected initial 15-minute timeout. The
+helper completed successfully, the indexer remained absent, and no RTC alarm
+was present. Displayed charge changed from 94% to 92%, with a charging return;
+this does not isolate deep-sleep current or establish overnight autonomy.
+
+This validates automatic suspend at the production timeout as well as return
+to suspend after the observed intermediate wake, on the existing installed
+RPMh kernel. It replaces the earlier unsupported assumption that a configured
+timeout alone proved functional automatic suspension. The handset retains
+the notification-wakeup workaround. A selective future userspace patch could
+lower only the impending-suspend warning's urgency while preserving critical
+battery notification wake; such a patch has been checked against source,
+but has not been built or installed.

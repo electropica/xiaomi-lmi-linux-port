@@ -1207,3 +1207,11 @@ The handset and next-image profile disable notification-triggered screen
 wakeup; alerts remain available. This broad workaround requires long-interval
 validation and does not establish normal standby consumption. No new kernel
 or image build was needed. See the [qualified diagnostic record](../../kernel/diagnostics/power/README.md#automatic-suspend-warning-wakes-the-screen--2026-10-10).
+
+
+The normal-timeout observation now confirms automatic deep suspend at about
+900 seconds, followed by a second deep-suspend entry about 16 seconds after
+an intermediate wake. The 18-minute interval contains about 176 seconds of
+suspend because the initial 15-minute timeout is intentionally retained.
+This is a validated suspend-policy correction, not a deep-sleep-current or
+overnight-autonomy result.
