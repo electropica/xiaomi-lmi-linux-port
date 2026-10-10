@@ -2,3 +2,8 @@
 sleep-inactive-ac-type='nothing'
 sleep-inactive-battery-type='suspend'
 sleep-inactive-battery-timeout=900
+
+# Avoid critical auto-suspend warnings waking Phosh and resetting its idle watch.
+# Notifications remain available; screen wake by notification is disabled.
+[sm.puri.phosh.notifications]
+wakeup-screen-triggers=[]

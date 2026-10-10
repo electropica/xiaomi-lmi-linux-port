@@ -2121,3 +2121,44 @@ cleanup in an attended no-input interval before comparing NPU bandwidth
 policies. The NPU candidate remains unapplied. The overnight result must not
 be described as nine hours of deep standby or compared directly with the
 earlier 99.6%-suspended short trials.
+
+
+### Automatic-suspend warning wakes the screen — 2026-10-10
+
+After removing the incompatible metadata indexer, a 19-minute no-input
+observation still recorded no system suspend. A bounded diagnostic changed
+only the battery timeout to 60 seconds and enabled scoped Power logs. Its
+first attempt aborted on an asynchronous-lock check and is excluded. The
+corrected control recorded four sleep-warning callbacks: each was followed
+by an unblank transition, screensaver deactivation and new sleep watches.
+No sleep callback or kernel suspend occurred during that 180-second control.
+
+The packaged GNOME Settings Daemon 48.1 source marks the impending automatic
+suspend notification CRITICAL. Phosh 0.46 defaults to waking its screen for
+critical notifications; its notify-feedback handler activates
+`screensaver.wakeup-screen`. GSD temporarily returns to normal mode, and the
+screensaver transitions recreate the sleep watch. This explains the observed
+45-second loop with the diagnostic 60-second timeout.
+
+In a second attended comparison, Phosh notification screen-wakeup triggers
+were temporarily empty. The warning still fired at 30 seconds, but did not
+unblank the screen. The sleep callback fired at 60 seconds; the kernel entered
+deep suspend and remained suspended for about 136 seconds until USB return.
+There was no forced Suspend call, RTC alarm, microphone or video capture.
+The default 900-second timeout and original Power service environment were
+restored. Cleanup initially preserved owned files because USB had changed
+the display state; those files were subsequently removed without overwriting
+the display state.
+
+The current-image profile now defaults
+`sm.puri.phosh.notifications wakeup-screen-triggers` to `[]`, and the same
+workaround is applied on the handset. Notifications remain available, but
+notification urgency/category will not turn on the screen. This is a broad
+notification-wakeup workaround pending a selective upstream fix; it does not
+change the separate incoming-call or power-button wake paths. It is a
+confirmed automatic-suspend correction for this short comparison, not a
+validated overnight-autonomy fix or calibrated current measurement. The
+NPU bandwidth candidate remains unapplied. No new kernel or image was built.
+
+Source references: [GSD 48.1 show_sleep_warning](https://sources.debian.org/data/main/g/gnome-settings-daemon/48.1-1/plugins/power/gsd-power-manager.c),
+[Phosh 0.46 notification feedback](https://sources.debian.org/data/main/p/phosh/0.46.0-3%2Bdeb13u1/src/notifications/notify-feedback.c).

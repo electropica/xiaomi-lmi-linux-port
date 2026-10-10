@@ -7,3 +7,5 @@ Fresh-image integration is host-reviewed; post-flash hardware validation is requ
 Battery autonomy remains unresolved. Camera Snapshot bridge remains experimental and is not installed by this profile. No obsolete camera frontend or Megapixels is added.
 No personal files, recordings or desktop settings database are imported.
 Stock Venus firmware references are prepared after the read-only mount; codec open is tested, streams remain unvalidated.
+Background metadata indexing is masked for old-kernel sandbox/child-watch compatibility.
+Notification-triggered screen wakeup is disabled to avoid the automatic-suspend warning loop; notifications remain available.

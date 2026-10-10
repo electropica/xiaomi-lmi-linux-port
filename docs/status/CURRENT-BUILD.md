@@ -662,3 +662,16 @@ current-profile recipe correction disable background metadata indexing;
 files and indexing databases were preserved. Automatic return to suspend
 and improved autonomy remain unvalidated. No kernel build was required.
 See the [qualified overnight and resource-exhaustion record](../../kernel/diagnostics/power/README.md#overnight-return-and-metadata-indexer-resource-exhaustion--2026-10-10).
+
+
+### Automatic-suspend notification loop workaround — 2026-10-10
+
+The integrated handset could remain awake because GSD's critical impending
+suspend notification woke Phosh and recreated the idle sleep watch. A scoped
+60-second comparison reproduced the loop; disabling notification screen
+wakeup allowed automatic deep suspend at 60 seconds, lasting about 136
+seconds until USB return. The 900-second normal timeout is retained.
+The handset and next-image profile disable notification-triggered screen
+wakeup; alerts remain available. This broad workaround requires long-interval
+validation and does not establish normal standby consumption. No new kernel
+or image build was needed. See the [qualified diagnostic record](../../kernel/diagnostics/power/README.md#automatic-suspend-warning-wakes-the-screen--2026-10-10).
