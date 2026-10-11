@@ -54,9 +54,26 @@ the reply is deliberately delivered after suspend preparation. Normal ordering
 closes the FD correctly. This artificial ordering is not evidence that it
 occurred on the handset, nor that two seconds necessarily causes it.
 
-The shorter-grace proposal is therefore not ready for deployment: it needs an
-explicit pending-inhibitor strategy and asynchronous-order qualification before
-a target build request. Keep the qualified fifteen-second baseline unchanged.
+The guarded draft now tags opt-in requests with a generation number and holds
+a manager reference until completion. Release invalidates pending generations
+even when no FD has arrived; obsolete replies close their own FD and cannot
+replace a newer cycle's descriptor. A failed current request clears only its
+own pending state. Default/opt-out requests retain the original callback.
+
+Seven native ordering/lifetime cases pass, including stale-after-new replies,
+failure and retry, duplicate pending requests and repeated cleanup. Duration
+and existing state/qualification fixtures still pass. Applying the incremental
+patch to the exact quiet-v1 source reproduces the complete expected file bytes.
+The [guarded source draft](../../kernel/diagnostics/power/userspace/gsd-quiet-gauge-grace-draft.patch)
+starts from source SHA256
+154a332b498cb2edce4ee4d8125d9310031b2939b29edb9d2e9b55259e18c3ef
+and produces source SHA256
+550f7e6ce437db558968e86ae2fa5fc7d25662984c686dacf169618d3818d6f7.
+
+This resolves the reproduced local ordering case, not the target qualification
+prerequisite: the proposal has no full ARM package build, actual logind timing,
+input/call validation or consumption result. Keep the qualified fifteen-second
+baseline unchanged for the night measurement. No target build is requested.
 The delay-lock lifecycle is documented at https://systemd.io/INHIBITOR_LOCKS/.
 
 The stable paired fix should remain installed for the planned night observation.

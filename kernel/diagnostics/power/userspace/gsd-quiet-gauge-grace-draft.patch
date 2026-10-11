@@ -1,0 +1,104 @@
+--- a/plugins/power/gsd-power-manager.c
++++ b/plugins/power/gsd-power-manager.c
+@@ -224,0 +225 @@
++        guint64                  lmi_inhibit_generation;
+@@ -356,2 +357,2 @@
+- * ‘system’ scope has its detailed description shown in the lock screen. ‘user’
+- * scope notifications don’t (because they could contain private information). */
++ * â€˜systemâ€™ scope has its detailed description shown in the lock screen. â€˜userâ€™
++ * scope notifications donâ€™t (because they could contain private information). */
+@@ -2168,0 +2170,22 @@
++static guint
++lmi_quiet_grace_seconds (gboolean quiet)
++{
++        const gchar *value;
++        gchar *end = NULL;
++        guint64 seconds;
++
++        if (!quiet)
++                return POWER_UP_TIME_ON_AC;
++        value = g_getenv ("LMI_GSD_QUIET_GAUGE_GRACE_SECONDS");
++        if (!value || !*value)
++                return POWER_UP_TIME_ON_AC;
++        /* Accept only decimal integers: no signs, whitespace or suffixes. */
++        for (const gchar *p = value; *p; p++)
++                if (!g_ascii_isdigit (*p))
++                        return POWER_UP_TIME_ON_AC;
++        seconds = g_ascii_strtoull (value, &end, 10);
++        if (!end || *end || seconds < 2 || seconds > POWER_UP_TIME_ON_AC)
++                return POWER_UP_TIME_ON_AC;
++        return (guint) seconds;
++}
++
+@@ -2191 +2214 @@
+-                manager->temporary_unidle_on_ac_id = g_timeout_add_seconds (POWER_UP_TIME_ON_AC,
++                manager->temporary_unidle_on_ac_id = g_timeout_add_seconds (lmi_quiet_grace_seconds (manager->lmi_skip_normal_illumination),
+@@ -2752,0 +2776,49 @@
++/* Opt-in shortened grace must not accept an obsolete asynchronous FD. */
++typedef struct {
++        GsdPowerManager *manager;
++        guint64 generation;
++} LmiSuspendInhibitRequest;
++
++static gboolean
++lmi_guard_inhibitor_reply (void)
++{
++        return g_strcmp0 (g_getenv ("LMI_GSD_QUIET_GAUGE_RESUME"), "1") == 0 &&
++               lmi_quiet_grace_seconds (TRUE) < POWER_UP_TIME_ON_AC;
++}
++
++static void
++lmi_inhibit_suspend_done (GObject *source,
++                          GAsyncResult *result,
++                          gpointer user_data)
++{
++        LmiSuspendInhibitRequest *request = user_data;
++        GsdPowerManager *manager = request->manager;
++        g_autoptr (GUnixFDList) fd_list = NULL;
++        g_autoptr (GVariant) reply = NULL;
++        g_autoptr (GError) error = NULL;
++        gint index;
++        gint fd = -1;
++        gboolean current;
++
++        reply = g_dbus_proxy_call_with_unix_fd_list_finish (
++                G_DBUS_PROXY (source), &fd_list, result, &error);
++        if (reply != NULL) {
++                g_variant_get (reply, "(h)", &index);
++                fd = g_unix_fd_list_get (fd_list, index, &error);
++        }
++        current = request->generation == manager->lmi_inhibit_generation &&
++                  manager->inhibit_suspend_taken;
++        if (!current) {
++                if (fd >= 0)
++                        close (fd);
++        } else if (fd < 0) {
++                manager->inhibit_suspend_taken = FALSE;
++                g_warning ("Quiet-grace suspend inhibitor request failed: %s",
++                           error ? error->message : "no file descriptor");
++        } else {
++                manager->inhibit_suspend_fd = fd;
++        }
++        g_object_unref (manager);
++        g_free (request);
++}
++
+@@ -2761,0 +2834,12 @@
++        if (lmi_guard_inhibitor_reply ()) {
++                LmiSuspendInhibitRequest *request = g_new0 (LmiSuspendInhibitRequest, 1);
++                request->manager = g_object_ref (manager);
++                request->generation = ++manager->lmi_inhibit_generation;
++                g_dbus_proxy_call_with_unix_fd_list (
++                        manager->logind_proxy, "Inhibit",
++                        g_variant_new ("(ssss)", "sleep", g_get_user_name (),
++                                       "GNOME needs to lock the screen", "delay"),
++                        0, G_MAXINT, NULL, NULL,
++                        lmi_inhibit_suspend_done, request);
++                return;
++        }
+@@ -2779,0 +2864,5 @@
++        if (manager->lmi_inhibit_generation != 0) {
++                /* Invalidate pending replies before an early no-FD return. */
++                manager->lmi_inhibit_generation++;
++                manager->inhibit_suspend_taken = FALSE;
++        }
