@@ -363,3 +363,14 @@ to three after verified restoration. No consumption benefit or deep-suspend
 effect is established. Application validation precedes a battery comparison;
 the candidate is not installed permanently.
 See [the diagnostic record](../../kernel/diagnostics/power/README.md).
+
+
+### core_ctl comparison closed — 2026-10-11
+
+Applications and touch passed the temporary threshold trial. A complete
+six-minute screen-off awake comparison confirmed reduced scheduler-active
+core counts but no coherent consumption gain: gauge-counter rates increased
+slightly while instantaneous current declined slightly. All original policies
+were restored and the owned inhibitor removed. No permanent core_ctl policy
+is adopted; this does not solve the residual deep-suspend drain.
+See [the diagnostic record](../../kernel/diagnostics/power/README.md).

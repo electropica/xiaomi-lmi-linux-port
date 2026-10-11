@@ -2574,3 +2574,37 @@ and all observed CPU-frequency policies were independently verified, and
 cpu4 again reported three active CPUs. No battery-consumption gain is claimed.
 An attended application check is the next gate before an electrical comparison;
 no permanent core_ctl change is installed. Raw trial evidence remains private.
+
+
+### core_ctl usability and complete awake comparison — 2026-10-11
+
+The operator confirmed normal touch, application launch and scrolling during
+the attended threshold trial. A subsequent USB loss triggered its guard,
+finally recovery and independent ExecStopPost recovery. At reconnection,
+all original thresholds, minimum/maximum counts, task settings and CPU
+frequency policies were independently verified. The trial's failed unit
+status records that guarded USB abort, not an unrecovered policy change.
+
+The subsequent screen-off awake comparison completed two consecutive phases:
+original thresholds for 180.066 seconds, then 60/30 thresholds
+for 180.058 seconds. No suspend occurred. Temperature stayed
+21.5 C and learned capacity2806000uAh; CPU frequency policies and minimum
+core counts remained unchanged. The cpu4 active count was3 throughout the
+original phase and1–3 with the candidate; cpu7 stayed1 in both phases.
+
+| Gauge-derived rate (mA) | Original | Candidate |
+| --- | ---: | ---: |
+| Software charge counter | 93.47 | 97.99 |
+| Shadow charge counter | 109.88 | 113.46 |
+| Raw charge counter | 156.82 | 164.35 |
+| Median instantaneous reading | 90.820 | 88.867 |
+
+The counters increased slightly while the instantaneous median declined
+slightly. This sequential trial shows no coherent additional power benefit;
+it does not establish a precise small regression either. Scheduler isolation
+is not proof of a new rail-power state, particularly with rail-pc idle already
+enabled. The candidate is not adopted permanently, and this same short
+comparison should not be repeated without a new causal hypothesis.
+At return, all original core_ctl and CPU frequency settings were independently
+verified and the owned sleep inhibitor was absent. No boot, firmware, NPU
+sleep policy, media capture or radio setting was changed. Raw logs stay private.
