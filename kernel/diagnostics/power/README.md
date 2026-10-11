@@ -2736,3 +2736,24 @@ not proof of identical runtime policy, generated machine code, boot firmware
 behavior or electrical consumption. No replacement kernel or new build was
 requested on the strength of these negative checks. Residual corrected
 standby consumption remains unresolved.
+
+
+### External modem state interpretation — 2026-10-11
+
+The locked subsystem_restart.c defines SUBSYS_OFFLINING as enum value zero.
+subsys_register() allocates its tracking structure with kzalloc and does not
+set an initial public state. Consequently, OFFLINING can be the untouched
+registration state; it does not by itself demonstrate either an ongoing
+shutdown or a powered-off peripheral. Apply the same caution to the SLPI,
+CDSP, SPSS and external-modem entries in earlier snapshots.
+
+A plugged, read-only check identified the external SDX55M on the ESOC PCIe
+link. The device-tree-assigned MDM2AP_STATUS input (TLMM GPIO3) was low, as
+were AP2MDM_STATUS, AP2MDM_ERRFATAL and MDM2AP_ERRFATAL. The locked ESOC
+mdm_get_status() reads MDM2AP_STATUS directly and returns zero for that level.
+No modem PCI endpoint was enumerated; the sole endpoint was the CNSS Wi-Fi
+device. The modem clock-reference and PCIe1/2 branch enable/prepare counts
+were zero. This does not demonstrate a ready or actively linked modem, but
+does not establish its PMIC rail current or complete electrical power-off.
+No GPIO, reset, modem power command, PCI configuration or radio setting was
+changed. These negative checks do not identify a new battery fix.
