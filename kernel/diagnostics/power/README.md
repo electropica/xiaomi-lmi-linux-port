@@ -3021,3 +3021,14 @@ versions. The tracked patches remain the source provenance. This deployment
 is an installed-userspace change; historical image hashes are unchanged and
 a fresh image has not yet qualified these packages and settings. A longer
 observation without debug is needed to assess sustained standby consumption.
+
+
+### Remaining quiet-resume grace: source review (2026-10-11)
+
+The [source review](../../../docs/validation/quiet-gauge-grace-source-review-2026-10-11.md)
+identifies the remaining approximately fifteen-second interval as the reused
+GNOME temporary-unidle timer. A bounded, optional shorter grace has only
+host state-function checks; it is not built or installed. The qualified
+Phosh v2/GSD v1 pair remains the handset baseline for sustained standby
+observation. The review also documents why three BMS charge estimates
+are not independent calibrated current measurements.
