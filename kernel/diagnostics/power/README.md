@@ -2866,3 +2866,41 @@ was removed, and the shell was active with no trial environment. The fallback
 rollback timer was stopped only after restoration verification. No RTC alarm
 or NPU recovery state remained. No kernel, radio, audio or camera change was
 made, and no media was captured.
+
+
+### Passive gauge-resume display attribution - 2026-10-11
+
+Trial38 observed approximately one hour unplugged using the original Phosh
+0.46.0-3+deb13u1 and gnome-settings-daemon 48.1-1, the installed RPMh diagnostic
+kernel and the existing NPU suspend policy. The observer did not request
+locking, suspension or resuspension, program an RTC alarm, or change settings.
+Normal automatic suspension began approximately 15 minutes after unplugging.
+
+Four genuine IRQ438 msoc-delta resumes occurred while USB was offline. Each
+was accompanied by Phosh WakeUpScreen, two DisplayConfig PowerSaveMode=ON
+requests attributed to gsd-power, and ScreenSaver ActiveChanged=false.
+Automatic suspension followed after 15.226, 15.265, 15.286 and 15.284 seconds
+respectively. USB reconnection produced a separate IRQ502 resume.
+
+This establishes recurring software unblank requests during gauge wakes,
+including a GSD path that a Phosh-only WakeUpScreen filter cannot intercept.
+Concurrent signals do not identify a sole causal winner. DisplayConfig
+property readback is a requested-property cache, not an independent physical
+panel measurement; screensaver transitions provide additional software state
+evidence. No calibrated current or total battery-drain correction is claimed.
+
+Source review also identifies a resuspension dependency: GSD handles
+WakeUpScreen through set_temporary_unidle_on_ac(TRUE), retaining the previous
+idle mode, entering NORMAL and restoring the previous mode after its timer.
+Repeated SLEEP-to-SLEEP requests are ignored by idle_set_mode. The observed
+roughly fifteen-second return is consistent with this existing state cycle.
+Suppressing both resume-unblank paths without retaining the logical return
+to idle could leave the phone awake with a dark screen. The source-only GSD
+companion proposal therefore remains incomplete and must not be deployed
+on the strength of its isolated display-owner helper tests.
+
+The next candidate must distinguish a quiet gauge resume from real user,
+USB and call activity while retaining cancellation and resuspension semantics.
+Trial38 finished successfully; its observer was inactive on return, no RTC
+alarm or NPU recovery state remained, and original packages were retained.
+No audio, video or input values were captured.
