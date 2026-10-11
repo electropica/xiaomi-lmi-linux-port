@@ -2940,3 +2940,40 @@ The source candidate is not installed or adopted. A user-run ARM package
 build, original-package rollback preparation, and device tests of natural
 gauge resume, user/USB wake and automatic resuspension are still required.
 The phone retains its original Phosh and GSD packages.
+
+
+### Paired quiet-resume trial39 and inhibitor correction - 2026-10-11
+
+The earlier source-only GSD status is superseded by its completed ARM package
+build and this device trial. With both opt-in candidates, three actual
+IRQ438 msoc-delta resumes occurred while USB was offline. Each had both
+filter markers, no DisplayConfig ON request or screensaver deactivation
+through the entire awake interval, and an automatic return to measured
+sleep. USB reconnection retained normal visible wake. Touch and application
+interaction remained normal after return. This qualifies the observed
+software quiet-resume path, not calibrated battery savings or all wake cases.
+
+A regression prevents adoption: after each quiet resume, Phosh retained its
+newly acquired logind delay inhibitor. The screen was already active/blank,
+so the usual active-state notification did not release that descriptor.
+Logind reported the Phosh inhibitor reaching its timeout on all three
+resuspensions. Clock accounting measured about 5.7 seconds awake overhead
+versus about 0.7 seconds in the original-package baseline. Requests and
+screensaver signals are software evidence, not independent panel telemetry.
+
+All four original Phosh/GSD packages were restored. Both services were
+active without trial overrides; the rollback timer was stopped only after
+verified restoration. No observation, RTC alarm or recovery state remained.
+
+The [incremental Phosh inhibitor patch](userspace/phosh-quiet-resume-inhibitor-v2.patch)
+targets the previously built gauge-filter source (SHA-256
+7022fe5a75feb69876b3684f5b34e91b25e89d3bdb187fe5f8d07131ac76ab84).
+On PrepareForSleep(true), only with LMI_PHOSH_GAUGE_WAKE_FILTER=1 and an
+already blank screen, it releases the known delay-inhibitor descriptor.
+Default and visible-screen paths retain their existing behavior. Six native
+fixture cases compiled the edited callback and checked real descriptor
+closure, opt-out behavior and repeated cleanup; patch applicability passed.
+These are dependency fixtures, not a complete ARM build or device result.
+The candidate still requires a user-run incremental Phosh package build and
+another device qualification of both quiet display and prompt resuspension.
+Reuse the already built GSD companion and the same kernel.

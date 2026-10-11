@@ -1,0 +1,10 @@
+--- a/src/screen-saver-manager.c
++++ b/src/screen-saver-manager.c
+@@ -611,0 +612,7 @@
++    /* A quiet resume keeps active TRUE, so there is no active notification
++     * to release the newly reacquired logind delay inhibitor. */
++    if (self->active &&
++        g_strcmp0 (g_getenv ("LMI_PHOSH_GAUGE_WAKE_FILTER"), "1") == 0) {
++      phosh_clear_fd (&self->inhibit_suspend_fd, NULL);
++      g_debug ("lmi: release suspend delay inhibitor for already blank screen");
++    }
