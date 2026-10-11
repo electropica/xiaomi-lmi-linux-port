@@ -2703,3 +2703,36 @@ The SoundWire diagnostic is guarded by a one-shot atomic flag; lpm-stats.c
 accounts transitions without an autonomous polling worker. This review does
 not prove zero instrumentation overhead, but finds no periodic diagnostic
 wake source in those inspected paths. No build or flash was performed.
+
+
+### Charger, camera idle and SoC suspend backend — 2026-10-11
+
+A plugged read-only check found smb5-vbus disabled with zero users and the
+bound bq2597x-charger standalone supply reporting charging_enabled=0. The
+SMB5 enable getter reads the OTG register; the BQ getter attempts a charge
+enable register read, retaining its cached value if that read fails. The
+inspected kernel journal contained no matching I2C register failure or OTG
+read error. BQ suspend/resume callbacks were logged; the locked suspend path
+requests ADC disable. Its success message is unconditional and does not
+independently prove the ADC bit during deep sleep. The already preserved
+source comparison found BQ2597x and SMB5 identical to the pinned LineageOS
+reference. These observations do not establish an active charging circuit
+fault or measure its quiescent current outside USB.
+
+The camera idle check found no open video/media/V4L-subdevice descriptors.
+All eleven inspected camera supplies and processing domains reported disabled
+with zero users; capture PLLs, sensor MCLKs and processing clocks had zero
+enable/prepare references. The retained cam_cc_gdsc_clk references are
+consistent with its CLK_IS_CRITICAL declaration and its XO parent. Neither
+those references nor a process name alone establish an active capture.
+No camera or microphone was opened, stopped or recorded by this check.
+
+Five additional locked backend files were compared byte-for-byte with
+LineageOS commit 71b13e62f057a649b77fe4062feb73ee72ad609c:
+drivers/soc/qcom/system_pm.c, msm-spm.c, spm.c, spm_devices.c, and
+drivers/cpuidle/lpm-levels-of.c. All five were identical. This extends the
+previous lpm-levels.c/RPMh comparison; it is a bounded source comparison,
+not proof of identical runtime policy, generated machine code, boot firmware
+behavior or electrical consumption. No replacement kernel or new build was
+requested on the strength of these negative checks. Residual corrected
+standby consumption remains unresolved.
