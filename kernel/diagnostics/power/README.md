@@ -2778,3 +2778,25 @@ interface was opened read-only for two 16-bit register reads; no hardware
 register value, DSP command, gain, calibration, reset or audio route was
 written. No sound was played or recorded. No blind amplifier or shared-rail
 shutdown is justified by this result; residual standby drain is unresolved.
+
+
+### Repeated-suspend RPMh observation boundary — 2026-10-11
+
+An offline decoder check confirmed that trial26 contains one complete
+machine_suspend window with 26 RPMh messages, including six sleep-bank BCM
+messages with no valid nonzero bandwidth vote. Trials28 and29 contain two
+complete suspend windows each, but no RPMh messages: their collectors enabled
+only power/suspend_resume. These later traces cannot confirm the sleep-bank
+votes after the gauge-triggered resuspend. Absent messages are unknown, not
+zero votes or evidence of a failed hardware transition.
+
+A bounded twelve-minute observation candidate preserves the existing radio,
+NPU policy, counters, single guarded gauge resuspend and owned RTC cleanup,
+adding only rpmh_send_msg and rpmh_tx_done tracing. It is prepared offline,
+not deployed or armed. Syntax and seven existing guard cases pass; the
+decoder passes ten cases covering missing/invalid commands, wrong bank,
+repeated/incomplete windows and malformed traces, plus retained-trace checks.
+These tests do not certify the full phone service lifecycle. Before any
+execution, verify boot identity, alarm ownership, NPU restoration, USB and
+absence of a conflicting collector. The hypothesis is a sleep bandwidth
+vote reappearing after a gauge wake; it is not an established fault or fix.
