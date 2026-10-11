@@ -2657,3 +2657,49 @@ sampled awake-idle observation, not a new deep-suspend rail measurement or a
 calibrated current measurement. No display regulator, shared boost GPIO or
 device-tree setting was changed. These checks do not resolve the remaining
 standby consumption and do not justify force-disabling shared supplies.
+
+
+### NPU devfreq lifecycle and observer audit — 2026-10-11
+
+Review of the locked source identifies two relevant NPU lifecycle details.
+In drivers/media/platform/msm/npu/npu_dev.c, probe calls npu_hw_info_init
+before npu_pwrctrl_init. The first function powers the core briefly to read
+its version; devbw client discovery occurs in the later power-control
+initialization. That initial core shutdown therefore precedes discovery of
+the devbw clients. The later initialization assumes the bandwidth monitors
+are on. Core-off status alone consequently does not establish zero requests
+from those separate devfreq clients.
+
+For subsequent core shutdowns, npu_suspend_devbw calls devfreq_suspend_device.
+The locked governor_performance.c handles START only and targets max_freq;
+it does not update the target on the SUSPEND event. In contrast,
+governor_bw_hwmon.c stops its monitor and updates devfreq during suspension.
+These source paths explain why a native lifecycle policy deserves review,
+in addition to the already validated suspend-only NPU workaround. They do
+not establish a new reduction in the residual corrected standby current.
+
+The retained LineageOS Kona post-boot branch brackets bw_hwmon configuration
+with paired writes of 1 then 0 to the NPU pwr attribute. This attribute is
+reference-counted: writing 0 is an unvote, not an unconditional power-off.
+The locked devfreq governor_store also rejects a governor change while its
+dev_suspended flag is set. Listing bw_hwmon as available therefore is not
+enough to justify changing it while hardware is off. A future initializer
+must establish client/monitor binding, control ownership, balanced power
+votes, partial-failure recovery and coexistence with the installed sleep
+hook before any trial. No power vote or governor was changed by this review.
+
+The live read-only check found the msm_npu driver and its three bandwidth
+monitors bound, with the NPU pwr attribute reporting off. The separate
+maximum devfreq targets remain documented by the prior snapshot. This is
+a software lifecycle observation, not a physical current measurement.
+
+An accompanying diagnostic audit found no running temporary collector,
+no test-owned sleep inhibitor and no enabled tracing events (tracer nop).
+Historical failed transient units were inactive, not running collectors.
+The time-seed timer has WakeSystem=no and its service has Restart=no.
+The inspected RPMh vote observer has no autonomous timer: its read handler
+aggregates requests into local output structures without sending commands.
+The SoundWire diagnostic is guarded by a one-shot atomic flag; lpm-stats.c
+accounts transitions without an autonomous polling worker. This review does
+not prove zero instrumentation overhead, but finds no periodic diagnostic
+wake source in those inspected paths. No build or flash was performed.
