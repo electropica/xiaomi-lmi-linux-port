@@ -2757,3 +2757,24 @@ were zero. This does not demonstrate a ready or actively linked modem, but
 does not establish its PMIC rail current or complete electrical power-off.
 No GPIO, reset, modem power command, PCI configuration or radio setting was
 changed. These negative checks do not identify a new battery fix.
+
+
+### TFA9874 idle power-state registers — 2026-10-11
+
+With all ALSA substreams closed, the TFA debug cache reported Stopped,
+firmware Ok, and no_start=0. Source review found that the mute callback sets
+the Stopped cache without checking tfa_dev_stop()'s result. Cache state alone
+therefore does not prove successful hardware power-down.
+
+A subsequent bounded plugged read returned control register 0x00=0x0011
+and status register 0x14=0x0000. Using the locked TFA9874 field definitions,
+PWDN=1, AMPE=0 and MANSTATE=0; DCA remains set to 1. This is stronger evidence
+of the amplifier's idle power-down state than the cache alone. It is not a
+measurement of its supply current, nor proof of zero analog/boost quiescent
+consumption or of the same state during every suspend interval.
+
+Only the driver's RAM diagnostic address selector was written. The rw
+interface was opened read-only for two 16-bit register reads; no hardware
+register value, DSP command, gain, calibration, reset or audio route was
+written. No sound was played or recorded. No blind amplifier or shared-rail
+shutdown is justified by this result; residual standby drain is unresolved.
