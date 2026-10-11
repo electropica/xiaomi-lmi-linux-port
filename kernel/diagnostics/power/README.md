@@ -3028,7 +3028,9 @@ observation without debug is needed to assess sustained standby consumption.
 The [source review](../../../docs/validation/quiet-gauge-grace-source-review-2026-10-11.md)
 identifies the remaining approximately fifteen-second interval as the reused
 GNOME temporary-unidle timer. A bounded, optional shorter grace has only
-host state-function checks; it is not built or installed. The qualified
+host state-function checks; an artificial delayed inhibitor-reply fixture
+identified an additional ordering prerequisite. It is not ready for
+deployment and is not built or installed. The qualified
 Phosh v2/GSD v1 pair remains the handset baseline for sustained standby
 observation. The review also documents why three BMS charge estimates
 are not independent calibrated current measurements.

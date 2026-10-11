@@ -43,6 +43,22 @@ against the pinned GSD quiet v1 source. This is not a full ARM package build,
 target asynchronous timing test, input/call qualification or autonomy result.
 No new package version, installation or device setting was created.
 
+### Asynchronous inhibitor boundary
+
+Further review found a deployment prerequisite beyond the duration fixtures.
+GSD requests its logind delay-inhibitor FD asynchronously. Its release routine
+returns without clearing the pending flag when the FD has not arrived yet;
+the completion callback can subsequently install that FD. A native fixture
+using the actual two functions and real pipe FDs reproduces this ordering when
+the reply is deliberately delivered after suspend preparation. Normal ordering
+closes the FD correctly. This artificial ordering is not evidence that it
+occurred on the handset, nor that two seconds necessarily causes it.
+
+The shorter-grace proposal is therefore not ready for deployment: it needs an
+explicit pending-inhibitor strategy and asynchronous-order qualification before
+a target build request. Keep the qualified fifteen-second baseline unchanged.
+The delay-lock lifecycle is documented at https://systemd.io/INHIBITOR_LOCKS/.
+
 The stable paired fix should remain installed for the planned night observation.
 Only request an incremental user-run build if long-duration evidence justifies
 this optimization. Removing about thirteen seconds per gauge event cannot be
@@ -56,6 +72,16 @@ for drivers/power/supply/qcom/qpnp-fg-gen4.c. Its msoc-delta IRQ is wakeable.
 The handler also updates temperature-dependent coefficients, capacity learning,
 charge/full and ESR state, then notifies the battery power supply. Do not disable
 this IRQ as an assumed equivalent of fixing desktop wake handling.
+
+The same preserved driver defines DEFAULT_DELTA_SOC_THR as 5, documented as
+0.5 percent, and programs the MSOC/BSOC threshold from qcom,fg-delta-soc-thr.
+No occurrence of that override was found in the preserved arch/arm64/boot/dts
+sources. This identifies a default in that source tree, not the active DTB/SRAM
+value. A delta-SOC threshold is not a fixed twelve-minute wake timer: a repeated
+elapsed interval alone cannot establish which hardware threshold is active.
+Changing this threshold would change gauge update behavior and is not proposed.
+Public corroboration for this default:
+https://android.googlesource.com/kernel/msm/+/074e4ba126d86174a7633c5416debff514b4a270/drivers/power/supply/qcom/qpnp-fg-gen4.c
 
 Its three exposed charge estimates are not independent physical meters:
 - charge_counter: CC_SOC_SW multiplied by learned capacity, divided by 2^30-1.
