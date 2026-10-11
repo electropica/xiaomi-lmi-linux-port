@@ -2608,3 +2608,31 @@ comparison should not be repeated without a new causal hypothesis.
 At return, all original core_ctl and CPU frequency settings were independently
 verified and the owned sleep inhibitor was absent. No boot, firmware, NPU
 sleep policy, media capture or radio setting was changed. Raw logs stay private.
+
+
+### Residual media and firmware checks — 2026-10-11
+
+After the restored core_ctl comparison, a read-only check confirmed that all
+twenty ADSP loader entries are symlinks to the mounted stock firmware
+partition and that the partition is read-only. This provides no evidence for
+an isolated historical ADSP copy at those lookup paths; it does not by itself
+identify bytes already loaded into DSP memory. ADSP and Venus report ONLINE,
+with zero recorded subsystem crashes. ONLINE is a lifecycle state, not proof
+of continuous hardware activity or a measured power fault.
+
+The video clock snapshot retains XO/AHB references while the inspected VIDC
+core information shows no instance listing. The locked videocc-kona.c marks
+the relevant clocks CLK_IS_CRITICAL. Its SHA-256 is
+92688e8059a5e031376933edbaae353fcaf14650374e1493b16d6c8701d76a73,
+identical to the [pinned LineageOS clock driver](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/blob/71b13e62f057a649b77fe4062feb73ee72ad609c/drivers/clk/qcom/videocc-kona.c).
+Thus these retained clock references alone do not establish a Mobian-specific
+driver regression or justify disabling critical clocks. Runtime-PM reports
+unsupported on these inspected downstream video nodes; interpret this through
+the downstream driver's own power handling, not as a measured always-on rail.
+
+All52 inspected ALSA substream status files were closed. No Venus/VIDC/video
+named client row was found in the inspected RPMh vote observers. This weakens
+a current forgotten media-stream hypothesis, but is not proof that every
+unnamed aggregate resource is idle in deep suspend. No firmware load, DSP
+shutdown, critical-clock write, media capture or kernel build was performed.
+These checks do not solve the residual NPU-corrected standby consumption.
