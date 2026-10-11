@@ -766,3 +766,15 @@ existing minimum, with original awake requests restored and the validated NPU
 correction retained. Nineteen Linux restoration/guard tests pass. This remains
 an uninstalled, unmeasured diagnostic candidate, not a confirmed residual-power
 fix or a current image-profile change. See [the power diagnostic record](../../kernel/diagnostics/power/README.md).
+
+
+### L3 candidate outcome — 2026-10-11
+
+An attended first sleep segment with all four L3 requests at their existing
+minimum showed no visible additional benefit beyond the NPU correction:
+raw-counter rate 84.24 mA, instantaneous wake reading 50.292 mA. The collector
+then double-counted prior wake metadata and ended before its three-minute
+target. A reviewed detection guard passes seven cases plus the retained-log
+replay, but has not been deployed. All original L3 policies were restored,
+and the temporary hook, alarm and trace instance were removed. No permanent
+L3 policy is adopted; see [the diagnostic record](../../kernel/diagnostics/power/README.md) for qualifications.

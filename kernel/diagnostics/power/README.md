@@ -2443,3 +2443,42 @@ CPU governor, frequency limit, firmware, shared regulator, partition or image
 is changed by this candidate. No new kernel build is needed. At this record,
 the candidate has not been installed or measured on the handset; no additional
 power reduction or permanent L3 integration is claimed.
+
+
+### L3 candidate: valid sleep segment, interrupted collector — 2026-10-11
+
+The attended isolation lowered all four L3 voter requests to their existing
+300 MHz minimum before suspend, with the permanent NPU correction retained.
+The first sleep segment lasted 158.341 seconds with 0.774 seconds awake
+(99.511% suspended). Its software, shadow and raw counter rates were 62.86,
+60.55 and 84.24 mA. The instantaneous wake reading was 50.292 mA. Compared
+with the preceding NPU-corrected raw sleep rates of 83–84 mA and instantaneous
+49.316 mA, this segment shows no visible additional benefit. Unequal durations,
+gauge scales and temperatures preclude a precise small-effect conclusion.
+No permanent L3 power policy is justified by this observation.
+
+The gauge MSOC-delta IRQ woke the handset about 158 seconds after entry,
+consistent with the operator's report that the screen illuminated. The
+collector requested its one permitted retry but immediately interpreted
+the prior wake metadata as another wake. Its second recorded wake added
+less than one microsecond to BOOTTIME minus MONOTONIC; the retained trace
+contains only the first complete suspend cycle. The collector ended at
+164.474 seconds, so the planned three-minute interval did not complete.
+The late retry reached the sleep hook after the managed trial had exited:
+the L3 guard rejected it before changing policy. The NPU production hook
+handled that later cycle normally. Do not treat it as an L3-corrected segment.
+
+The locked wakeup-reason source updates its before/after timestamps in
+separate PM notifier phases; the sysfs pair is not a cycle serial number.
+A private reviewed collector additionally requires growth in cumulative
+suspended time before accepting another wake, with a 50 ms tolerance for
+sampling jitter. Seven cases and a replay of the retained duplicate pass.
+This proposal deliberately does not identify sub-50 ms sleep attempts as
+new completed sleep; existing input, inhibitor, USB and capacity guards
+remain required. It was not deployed or used to claim a corrected trial.
+
+At operator return, all four original L3 governors and maximum voter targets
+were independently confirmed, the temporary hook was absent, the trial unit
+was inactive with Result=success, NPU recovery state was absent, and the
+RTC alarm and trace-instance list were empty. No new build, flash, media
+capture, or permanent L3 change was made. Raw logs remain private.
