@@ -1288,3 +1288,13 @@ timer; production-policy restoration was independently confirmed. Residual
 standby consumption remains unresolved and a fresh image has not validated
 this integration. See [the power diagnostic record](../../kernel/diagnostics/power/README.md) for segment values,
 source qualifications, and restoration evidence.
+
+
+### Next targeted power candidate — 2026-10-11
+
+All four L3 frequency voters currently request their maximum under performance
+governors. Source review supports a bounded suspend-only isolation at the
+existing minimum, with original awake requests restored and the validated NPU
+correction retained. Nineteen Linux restoration/guard tests pass. This remains
+an uninstalled, unmeasured diagnostic candidate, not a confirmed residual-power
+fix or a current image-profile change. See [the power diagnostic record](../../kernel/diagnostics/power/README.md).

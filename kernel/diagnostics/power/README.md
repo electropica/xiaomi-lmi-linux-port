@@ -2407,3 +2407,39 @@ the reference override were absent, the fallback timer was inactive, and
 the RTC alarm and trace instance were empty. A subsequent automatic sleep
 cycle used the production NPU correction and restored it normally. No new
 kernel, flash, recording, or residual-power fix was introduced.
+
+
+### Candidate: retained maximum L3 voter requests — 2026-10-11
+
+A bounded USB-connected read confirmed the installed diagnostic kernel and
+normal NPU opt-in, with no recovery state, owned RTC alarm, trace instance,
+or running test job. All four L3 voters (CPU0, CPU4, CPU7 and CDSP) reported
+performance governors and 1,612,800,000 Hz targets, with an existing minimum
+of 300,000,000 Hz. These are voter requests, not independently measured
+physical cache clocks or proof that the cache stays powered in deep sleep.
+
+In the locked `drivers/devfreq/devfreq_qcom_fw.c`, target updates take the
+maximum index across all sibling voters and write that request to the parent
+firmware interface. The child current-frequency getter returns its cached
+voter index. Probe selects performance; the platform driver has no PM callback
+in this source. The performance governor updates on START and does not handle
+SUSPEND. This provides a specific hypothesis distinct from the already tested
+NPU interconnect clients. Firmware can still gate the domain during collapse;
+the source and awake targets alone cannot establish a drain cause.
+
+The candidate helper and LF shell hook in scripts/ lower only these four
+governors to powersave immediately before suspend, retaining their existing
+limits, and restore original targets on resume. A bounded diagnostic unit
+must provide an independent ExecStopPost restoration. State is saved before
+the first write; altered limits or an externally changed governor are preserved
+rather than overwritten. Hook removal requires exact bytes and ownership.
+Nineteen Linux tests pass, including partial transitions, failed state saving,
+external changes, repeated restoration and invalid managed-unit settings.
+The three-minute collector's seven eligibility guards and shell syntax also
+pass. Deployment and collection orchestration remain private.
+
+The permanent NPU correction must remain active during this isolation. No
+CPU governor, frequency limit, firmware, shared regulator, partition or image
+is changed by this candidate. No new kernel build is needed. At this record,
+the candidate has not been installed or measured on the handset; no additional
+power reduction or permanent L3 integration is claimed.
