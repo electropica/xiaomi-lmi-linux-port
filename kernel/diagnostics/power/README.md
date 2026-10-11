@@ -2482,3 +2482,33 @@ were independently confirmed, the temporary hook was absent, the trial unit
 was inactive with Result=success, NPU recovery state was absent, and the
 RTC alarm and trace-instance list were empty. No new build, flash, media
 capture, or permanent L3 change was made. Raw logs remain private.
+
+
+### CPU frequency policy: dynamic operation and usability — 2026-10-11
+
+The running diagnostic kernel uses qcom-cpufreq-hw with WALT and schedutil
+available, but all three CPU groups defaulted to performance. Their existing
+minimum/maximum limits, in kHz, were 300000/1804800, 710400/2419200 and
+844800/2841600. Reported frequencies were at the maximum during the initial
+plugged observation. The CPU idle service was already active: enabling idle
+states and selecting a frequency governor are separate actions.
+
+A bounded twenty-second trial changed only the governors to schedutil.
+Each group's reported frequency varied between its existing minimum and
+maximum. A subsequent attended application trial confirmed normal touch,
+application launch and scrolling. Both trials had saved original policy,
+partial-application rollback and independent systemd ExecStopPost recovery;
+all original governors and frequency limits were verified after restoration.
+No CPU voltage, frequency limit, kernel image or NPU sleep policy was changed.
+
+The pinned LineageOS common-device post-boot source selects schedutil in its
+Kona section; this supports investigating the governor choice, not copying
+Android's minimum-frequency and hispeed tuning without validation. Source:
+[pinned common-device script](https://github.com/LineageOS/android_device_xiaomi_sm8250-common/blob/da4ba935256abcc07973fb17d6b7729058fc9f9b/rootdir/bin/init.qcom.post_boot.sh).
+
+This is an awake-policy candidate, not a demonstrated deep-suspend fix.
+No electrical consumption measurement accompanied the plugged usability
+trial. A useful next comparison must measure matching screen-off awake
+intervals before automatic suspension, retain the same gauge counters,
+and restore the original governors. No permanent CPU policy is installed
+on the strength of the usability result alone. Trial logs remain private.

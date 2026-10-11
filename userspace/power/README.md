@@ -331,3 +331,13 @@ target. A reviewed detection guard passes seven cases plus the retained-log
 replay, but has not been deployed. All original L3 policies were restored,
 and the temporary hook, alarm and trace instance were removed. No permanent
 L3 policy is adopted; see [the diagnostic record](../../kernel/diagnostics/power/README.md) for qualifications.
+
+
+### CPU dynamic-governor usability — 2026-10-11
+
+A temporary schedutil trial passed touch, application launch and scrolling,
+with all original CPU limits preserved and original governors restored.
+The preceding twenty-second probe confirmed dynamic frequency selection.
+No consumption reduction is demonstrated yet; this candidate targets awake
+operation before automatic suspension. No permanent CPU policy is installed.
+See [the diagnostic record](../../kernel/diagnostics/power/README.md).
