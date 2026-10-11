@@ -1,21 +1,25 @@
 # Mobian status
 
-## Current handset boundary — 2026-10-09
+## Current handset boundary — 2026-10-11
 
-The handset now runs LineageOS 23.2 for the Android battery comparison. The
-Mobian results below remain historical validation evidence, not the currently
-running system. The operator chose installation without a snapshot of the
-then-current Mobian userdata; Android also replaced dynamic partitions. An
-exact return is not established by retaining the old boot alone. See
-[current build status](CURRENT-BUILD.md), the
-[power decision summary](../../kernel/diagnostics/power/README.md) and the
-[camera decision summary](../../userspace/camera/README.md).
+The handset is back on Mobian after the LineageOS battery comparison. It
+retains the installed RPMh diagnostic kernel and the NPU suspend policy.
+The qualified Phosh/GSD quiet-resume packages are now installed with
+persistent opt-ins and without trial debugging: Phosh
+0.46.0-3+deb13u1+lmigaugewake2 and GSD48.1-1+lmiquietgauge1.
 
-The Android comparison now includes completed 8 h 37 min overnight and
-13 h 29 min daytime intervals. Both support lower apparent idle drain than
-historical Mobian trials, with gauge corrections and timing limits retained
-in the single power record. No Mobian autonomy fix or physical cell-health
-verdict has been established.
+Two observed gauge wakes kept the software screen state blank, released the
+Phosh delay inhibitor and returned to actual deep sleep without the former
+five-second timeout. USB wake, power-button operation, touch and application
+interaction passed. This is a userspace correction, not proof of resolved
+standby drain or a newly qualified image. Long-duration autonomy remains
+pending. See the [power record](../../kernel/diagnostics/power/README.md).
+
+The earlier Android overnight/daytime comparison remains historical evidence
+of lower apparent idle drain than Mobian, with its gauge and timing limits.
+The operator's Android installation did not preserve a snapshot of the
+then-current Mobian userdata. Historical Mobian image identities below do
+not identify the subsequently modified handset filesystem.
 
 ## Current Mobian userspace state — updated 2026-10-03
 

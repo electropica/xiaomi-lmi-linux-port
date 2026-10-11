@@ -4,7 +4,21 @@ This document distinguishes the validated Mobian userdata family from the
 separate D-v43/OpenRC reconstruction and from temporary diagnostic boots.
 Generated images are not stored in Git.
 
-## Current hardware state
+## Current installed userspace — 2026-10-11
+
+The handset runs Mobian again after the Android comparison. Its installed
+Phosh0.46.0-3+deb13u1+lmigaugewake2 and GSD48.1-1+lmiquietgauge1 packages now
+retain screen blanking during the two observed gauge-only wakes and release
+the Phosh delay inhibitor before resuspension. Persistent service opt-ins
+are enabled without debug environments. The same installed kernel and NPU
+suspend policy were retained; no new boot was built or flashed for this fix.
+
+This is a qualified installed-userspace change, not a new golden image or
+bit-for-bit image reconstruction. The artifact identities below are historical
+validation records. Fresh-image integration and sustained autonomy remain
+unqualified; see the [power record](../../kernel/diagnostics/power/README.md).
+
+## Golden-family hardware validation
 
 The `archi-validation-02` Debian 13/Mobian userdata was booted on Xiaomi
 `lmi` with the D-repro D-v43 boot. Phosh was visible and usable; touch/unlock,

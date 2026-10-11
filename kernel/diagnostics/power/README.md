@@ -2977,3 +2977,47 @@ These are dependency fixtures, not a complete ARM build or device result.
 The candidate still requires a user-run incremental Phosh package build and
 another device qualification of both quiet display and prompt resuspension.
 Reuse the already built GSD companion and the same kernel.
+
+
+### Quiet-resume inhibitor v2 qualified and retained - 2026-10-11
+
+Trial40 completed a passive unplugged observation with the rebuilt Phosh
+0.46.0-3+deb13u1+lmigaugewake2 and existing GSD48.1-1+lmiquietgauge1 on the
+same installed kernel and NPU suspend policy. The observer neither forced
+suspension nor programmed a wake alarm. Normal automatic suspension began
+900 seconds after screen blanking. Two real IRQ438 msoc-delta wakes occurred
+while USB was offline.
+
+Both quiet-resume markers were present. Neither wake produced a display ON
+request, WakeUpScreen or screensaver deactivation throughout its awake gap.
+Phosh released the delay inhibitor at each following suspend request;
+logind recorded no inhibitor timeout. The subsequent paired sleep windows
+had 0.614 and 0.633 seconds awake boundary overhead, compared with about
+5.7 seconds in trial39. Kernel deep-suspend entries occurred about 0.316
+seconds after those requests. This removes the observed five-second
+inhibitor regression while retaining quiet gauge resume. The approximately
+15-second interval from gauge resume to the next suspend request remains;
+it must not be confused with entry overhead or claimed as eliminated.
+
+USB reconnection restored visible wake. The operator then confirmed normal
+power-button blank/wake, touch, application launch and scrolling. The observer
+finished successfully; no RTC alarm or NPU recovery state remained. No media
+was captured. Signals and clock accounting qualify software behavior and
+actual sleep, not independently measured panel power or calibrated current.
+No long-duration autonomy gain is established by this observation.
+
+The paired packages are retained on the handset. Persistent per-service
+opt-ins enable the reviewed paths: LMI_PHOSH_GAUGE_WAKE_FILTER=1 for Phosh,
+and LMI_GSD_QUIET_GAUGE_RESUME=1 for GSD Power. Scoped debug environments and
+trial overrides were removed; both services remained active with their live
+opt-ins and without debug variables. Original package hashes and an owned-file
+rollback were preserved. The fallback timer was stopped only after verified
+activation. No kernel build or flash was required.
+
+The two opt-in templates are [Phosh](userspace/phosh-quiet-resume.conf) and
+[GSD Power](userspace/gsd-quiet-resume.conf); they belong in their respective
+user-service drop-in directories only alongside the qualified package
+versions. The tracked patches remain the source provenance. This deployment
+is an installed-userspace change; historical image hashes are unchanged and
+a fresh image has not yet qualified these packages and settings. A longer
+observation without debug is needed to assess sustained standby consumption.
