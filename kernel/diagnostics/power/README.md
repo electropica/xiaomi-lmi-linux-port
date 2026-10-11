@@ -2636,3 +2636,24 @@ a current forgotten media-stream hypothesis, but is not proof that every
 unnamed aggregate resource is idle in deep suspend. No firmware load, DSP
 shutdown, critical-clock write, media capture or kernel build was performed.
 These checks do not solve the residual NPU-corrected standby consumption.
+
+
+### Display supply and overlay cross-check — 2026-10-11
+
+An offline comparison of the saved Mobian runtime device tree with the three
+base device trees in the retained official LineageOS boot found eight shared
+selected power-policy properties identical. The three apparently runtime-only
+declarations were display AVDD/VCI regulator-boot-on and shared boost
+regulator-always-on. All twelve overlays in the retained official LineageOS
+package also declare those flags. Their absence from a base tree is therefore
+not evidence of a Mobian-specific power constraint. Package declarations do
+not establish the bootloader-selected merged Android runtime tree.
+
+The preserved October 3 unplugged peripheral inspection additionally shows
+display_panel_vci becoming disabled with zero users at 20 seconds and staying
+so through the final 30-second snapshot; oledb was disabled throughout. This
+does not support a forgotten VCI enable in that observation. It is an older
+sampled awake-idle observation, not a new deep-suspend rail measurement or a
+calibrated current measurement. No display regulator, shared boost GPIO or
+device-tree setting was changed. These checks do not resolve the remaining
+standby consumption and do not justify force-disabling shared supplies.
