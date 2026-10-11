@@ -2800,3 +2800,33 @@ These tests do not certify the full phone service lifecycle. Before any
 execution, verify boot identity, alarm ownership, NPU restoration, USB and
 absence of a conflicting collector. The hypothesis is a sleep bandwidth
 vote reappearing after a gauge wake; it is not an established fault or fix.
+
+
+### Twelve-minute RPMh observation and reported screen wake — 2026-10-11
+
+The prepared trial36 observation completed on the installed diagnostic kernel
+with the permanent NPU suspend hook and Wi-Fi enabled. Over 721.244 seconds,
+clock accounting recorded 0.698 seconds awake (99.903% suspended). There was
+one complete suspend window, no gauge-triggered resuspend and no early abort.
+Its trace contains 26 RPMh messages, including six sleep-bank BCM messages;
+none contains a valid nonzero bandwidth vote. Trace loss counters are zero.
+This confirms the observed first-window commands only. The hypothesis of a
+vote returning after a gauge-triggered resuspend remains untested because
+that event did not occur; missing/cached commands are not zero-power proof.
+
+Software, shadow and raw gauge-derived rates were respectively 49.46, 59.38
+and 82.97 mA, with unchanged learned capacity. These are distinct counter
+states/scales, not independently calibrated current measurements. No new
+power-policy fix was applied. The collector finished successfully, NPU
+pre/post markers are balanced, the original awake policy was restored, and
+the owned RTC alarm and trace instance were removed. Charging resumed.
+
+A user reported unsolicited screen activation during this observation.
+The recorded suspend interval ends at the scheduled RTC alarm, with wake IRQ
+323 (pm8xxx_rtc_alarm), and no intermediate kernel resume is recorded. This
+explains the scheduled end-of-test system wake; it does not establish the
+cause of other screen activations or prove their absence outside this interval.
+The live notification workaround remains wakeup-screen-triggers=[] and the
+normal battery idle timeout remains 900 seconds. These settings were read,
+not changed. Precise timing of the reported display activation remains to
+be matched to the observation before attributing every occurrence to RTC.
