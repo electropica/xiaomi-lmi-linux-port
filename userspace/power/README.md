@@ -341,3 +341,14 @@ The preceding twenty-second probe confirmed dynamic frequency selection.
 No consumption reduction is demonstrated yet; this candidate targets awake
 operation before automatic suspension. No permanent CPU policy is installed.
 See [the diagnostic record](../../kernel/diagnostics/power/README.md).
+
+
+### CPU governor comparison completed — 2026-10-11
+
+Two screen-off awake phases completed, with no suspend and identical CPU
+limits. Schedutil gave about 4% lower gauge-counter rates, but instantaneous
+medians were close (90.331 versus 89.355 mA). This small sequential difference
+does not explain residual suspended drain; no permanent governor change
+is adopted. Original policies were restored and the owned inhibitor removed.
+The next source review concerns unconfigured core_ctl busy thresholds.
+See [the diagnostic record](../../kernel/diagnostics/power/README.md).

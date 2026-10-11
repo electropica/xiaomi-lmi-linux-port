@@ -2512,3 +2512,37 @@ trial. A useful next comparison must measure matching screen-off awake
 intervals before automatic suspension, retain the same gauge counters,
 and restore the original governors. No permanent CPU policy is installed
 on the strength of the usability result alone. Trial logs remain private.
+
+
+### CPU governor: complete screen-off awake comparison — 2026-10-11
+
+A bounded sleep inhibitor kept the handset awake with its screen off for
+two consecutive intervals, without changing the radio, CPU limits or NPU
+sleep policy. Performance ran for 180.433 seconds, followed by schedutil
+for 180.148 seconds. BOOTTIME and MONOTONIC agreed within sampling error;
+neither interval is a deep-suspend measurement. Temperature stayed at 21.5 C
+and learned capacity at 2806000 uAh throughout both phases.
+
+| Gauge-derived rate (mA) | Performance | Schedutil |
+| --- | ---: | ---: |
+| Software charge counter | 97.37 | 93.08 |
+| Shadow charge counter | 113.55 | 109.17 |
+| Raw charge counter | 163.35 | 156.13 |
+| Median instantaneous reading | 90.331 | 89.355 |
+
+Counter-derived rates declined by about 4%, while instantaneous medians
+were close. The sequential order and gauge behavior prevent attributing
+this small difference confidently to the governor alone. It does not
+explain the established residual suspended drain, and does not justify
+repeating this same short comparison or declaring a battery fix.
+At return, the owned inhibitor was absent and all original CPU governors
+and minimum/maximum limits were independently verified. No permanent CPU
+governor policy is adopted from this result.
+
+A subsequent read-only inspection found C1 rail-pc enabled on every CPU
+and sleep_disabled=N. Core_ctl retains zero busy thresholds and all eight
+cores active even when the larger cores report zero utilization. The pinned
+Kona Android script supplies nonzero thresholds and different minimum-core
+policies. This is a specific awake-policy difference to review; enabled
+idle states and cumulative residency counters do not prove a regulator
+turns off, nor establish a new deep-suspend cause.
