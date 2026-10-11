@@ -2904,3 +2904,39 @@ USB and call activity while retaining cancellation and resuspension semantics.
 Trial38 finished successfully; its observer was inactive on return, no RTC
 alarm or NPU recovery state remained, and original packages were retained.
 No audio, video or input values were captured.
+
+
+### Quiet gauge resume companion: source candidate, not installed - 2026-10-11
+
+The [GSD quiet-resume patch](userspace/gsd-quiet-gauge-resume.patch) targets
+gnome-settings-daemon 48.1-1 and complements the existing Phosh gauge-filter
+candidate. It supersedes the incomplete display-owner-only proposal. It does
+not require another Phosh or kernel build. Explicit opt-ins are required in
+both processes; the GSD switch is LMI_GSD_QUIET_GAUGE_RESUME=1.
+
+The guard requires the active Phosh display owner with its filter opt-in,
+screensaver blanking before and after suspension, an actual measured sleep,
+exact IRQ438 msoc-delta, USB offline, the previous GSD SLEEP state and no
+observed user activity or ordinary WakeUpScreen since suspension. Unknown
+or failed qualifications retain normal behavior. An owner change invalidates
+the peer check. Peer environment contents are never logged.
+
+For a qualified resume, the patch retains GSD's existing temporary NORMAL
+transition and return-to-previous-idle timer, suppressing only illumination
+during that synthetic transition. Ambient-light ownership and logind's delay
+inhibitor are restored. Actual activity cancels the timer as before. Ordinary
+WakeUpScreen cancels a quiet interval before restoring visible-wake semantics,
+so a call or explicit shell request is not swallowed by a dark NORMAL state.
+
+Patch applicability passed. Native isolated fixtures compiled the edited GSD
+state functions: five timer/activity/wake/fallback scenarios and thirteen
+qualification cases passed. Sixteen isolated GIO owner/peer cases also passed.
+These checks use host GLib and dependency fixtures; they do not establish a
+full ARM package build, real cross-bus event ordering, physical panel behavior
+or battery savings. The strict SLEEP prerequisite intentionally falls back
+for forced suspension from other idle states.
+
+The source candidate is not installed or adopted. A user-run ARM package
+build, original-package rollback preparation, and device tests of natural
+gauge resume, user/USB wake and automatic resuspension are still required.
+The phone retains its original Phosh and GSD packages.

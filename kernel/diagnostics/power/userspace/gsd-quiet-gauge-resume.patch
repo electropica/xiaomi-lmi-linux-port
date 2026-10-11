@@ -1,0 +1,178 @@
+--- a/plugins/power/gsd-power-manager.c
++++ b/plugins/power/gsd-power-manager.c
+@@ -25,0 +26 @@
++#include <time.h>
+@@ -218,0 +220,6 @@
++        gint64                   lmi_sleep_before;
++        gboolean                 lmi_sleep_before_valid;
++        gboolean                 lmi_screen_blank_before;
++        gboolean                 lmi_resume_activity_seen;
++        gboolean                 lmi_skip_normal_illumination;
++        gboolean                 lmi_quiet_unidle;
+@@ -1831,0 +1839,4 @@
++                /* Keep the logical NORMAL transition and existing activity
++                 * watch, but do not illuminate on a synthetic gauge resume. */
++                if (manager->lmi_skip_normal_illumination)
++                        return;
+@@ -2151,0 +2163 @@
++        manager->lmi_quiet_unidle = FALSE;
+@@ -2161,0 +2174 @@
++                manager->lmi_quiet_unidle = FALSE;
+@@ -2273,0 +2287,5 @@
++        manager->lmi_resume_activity_seen = TRUE;
++        /* Calls and explicit shell wake requests retain visible wake. Cancel
++         * our quiet interval first so NORMAL actually restores illumination. */
++        if (manager->lmi_quiet_unidle)
++                set_temporary_unidle_on_ac (manager, FALSE);
+@@ -2550,0 +2569 @@
++        manager->lmi_resume_activity_seen = TRUE;
+@@ -2801,0 +2821,127 @@
++/* Optional companion to a shell-owned resume policy. This is deliberately
++ * default-off and must not suppress display requests when the active shell
++ * cannot be identified. Ordinary activity and brightness paths are unchanged.
++ */
++static gboolean
++lmi_phosh_filter_peer_ready (void)
++{
++        GsdDisplayConfig *display_config;
++        g_autofree char *owner = NULL;
++        g_autofree char *owner_after = NULL;
++        g_autofree char *comm_path = NULL;
++        g_autofree char *comm = NULL;
++        g_autofree char *environment_path = NULL;
++        g_autofree char *environment = NULL;
++        gsize environment_size = 0;
++        gboolean peer_opted_in = FALSE;
++        g_autoptr (GVariant) reply = NULL;
++        g_autoptr (GVariant) owner_reply = NULL;
++        GDBusConnection *connection;
++        guint32 pid;
++
++        if (g_strcmp0 (g_getenv ("LMI_GSD_QUIET_GAUGE_RESUME"), "1") != 0)
++                return FALSE;
++
++        display_config = gnome_settings_bus_get_display_config_proxy ();
++        if (display_config == NULL || !G_IS_DBUS_PROXY (display_config) ||
++            g_strcmp0 (g_dbus_proxy_get_name (G_DBUS_PROXY (display_config)),
++                       "org.gnome.Mutter.DisplayConfig") != 0)
++                return FALSE;
++        connection = g_dbus_proxy_get_connection (G_DBUS_PROXY (display_config));
++        owner_reply = g_dbus_connection_call_sync (
++                connection, "org.freedesktop.DBus", "/org/freedesktop/DBus",
++                "org.freedesktop.DBus", "GetNameOwner",
++                g_variant_new ("(s)", "org.gnome.Mutter.DisplayConfig"),
++                G_VARIANT_TYPE ("(s)"), G_DBUS_CALL_FLAGS_NONE, 250, NULL, NULL);
++        if (owner_reply == NULL)
++                return FALSE;
++        g_variant_get (owner_reply, "(s)", &owner);
++        g_clear_pointer (&owner_reply, g_variant_unref);
++
++        reply = g_dbus_connection_call_sync (
++                connection,
++                "org.freedesktop.DBus", "/org/freedesktop/DBus",
++                "org.freedesktop.DBus", "GetConnectionUnixProcessID",
++                g_variant_new ("(s)", owner), G_VARIANT_TYPE ("(u)"),
++                G_DBUS_CALL_FLAGS_NONE, 250, NULL, NULL);
++        if (reply == NULL)
++                return FALSE;
++        g_variant_get (reply, "(u)", &pid);
++        comm_path = g_strdup_printf ("/proc/%u/comm", pid);
++        if (!g_file_get_contents (comm_path, &comm, NULL, NULL) ||
++            g_strcmp0 (g_strstrip (comm), "phosh") != 0)
++                return FALSE;
++        environment_path = g_strdup_printf ("/proc/%u/environ", pid);
++        if (!g_file_get_contents (environment_path, &environment,
++                                  &environment_size, NULL))
++                return FALSE;
++        for (gsize pos = 0; pos < environment_size;) {
++                gsize remaining = environment_size - pos;
++                const char *end = memchr (environment + pos, '\0', remaining);
++                if (end == NULL)
++                        return FALSE;
++                if (g_strcmp0 (environment + pos,
++                               "LMI_PHOSH_GAUGE_WAKE_FILTER=1") == 0)
++                        peer_opted_in = TRUE;
++                pos += (end - (environment + pos)) + 1;
++        }
++        if (!peer_opted_in)
++                return FALSE;
++        owner_reply = g_dbus_connection_call_sync (
++                connection, "org.freedesktop.DBus", "/org/freedesktop/DBus",
++                "org.freedesktop.DBus", "GetNameOwner",
++                g_variant_new ("(s)", "org.gnome.Mutter.DisplayConfig"),
++                G_VARIANT_TYPE ("(s)"), G_DBUS_CALL_FLAGS_NONE, 250, NULL, NULL);
++        if (owner_reply == NULL)
++                return FALSE;
++        g_variant_get (owner_reply, "(s)", &owner_after);
++        return g_strcmp0 (owner, owner_after) == 0;
++}
++
++
++static gboolean
++lmi_sleep_total (gint64 *total)
++{
++        struct timespec now;
++        if (clock_gettime (CLOCK_BOOTTIME, &now) != 0)
++                return FALSE;
++        *total = (gint64) now.tv_sec * G_USEC_PER_SEC + now.tv_nsec / 1000
++                 - g_get_monotonic_time ();
++        return TRUE;
++}
++
++static gboolean
++lmi_quiet_resume_matches (gboolean peer_ready, gboolean blank_before,
++                          gboolean blank_now, gboolean activity_seen,
++                          gboolean was_sleep, gboolean before_valid,
++                          gboolean after_valid, gint64 before, gint64 after,
++                          const char *reason, const char *usb)
++{
++        return peer_ready && blank_before && blank_now && !activity_seen
++               && was_sleep && before_valid && after_valid
++               && after > before && after - before > 50000
++               && g_strcmp0 (reason, "438 msoc-delta") == 0
++               && g_strcmp0 (usb, "0") == 0;
++}
++
++static gboolean
++lmi_quiet_gauge_resume (GsdPowerManager *manager)
++{
++        gint64 after = 0;
++        gboolean after_valid = lmi_sleep_total (&after);
++        g_autofree char *reason = NULL;
++        g_autofree char *usb = NULL;
++        if (!g_file_get_contents ("/sys/kernel/wakeup_reasons/last_resume_reason",
++                                  &reason, NULL, NULL) ||
++            !g_file_get_contents ("/sys/class/power_supply/usb/online",
++                                  &usb, NULL, NULL))
++                return FALSE;
++        return lmi_quiet_resume_matches (
++                lmi_phosh_filter_peer_ready (), manager->lmi_screen_blank_before,
++                manager->screensaver_active, manager->lmi_resume_activity_seen,
++                manager->current_idle_mode == GSD_POWER_IDLE_MODE_SLEEP,
++                manager->lmi_sleep_before_valid, after_valid,
++                manager->lmi_sleep_before, after,
++                g_strstrip (reason), g_strstrip (usb));
++}
++
+@@ -2805,2 +2951,14 @@
+-        /* ensure we turn the panel back on after resume */
+-        backlight_enable (manager);
++        gboolean quiet = lmi_quiet_gauge_resume (manager);
++        /* One qualification per completed PrepareForSleep cycle. */
++        manager->lmi_sleep_before_valid = FALSE;
++        if (quiet) {
++                manager->lmi_skip_normal_illumination = TRUE;
++                set_temporary_unidle_on_ac (manager, TRUE);
++                manager->lmi_skip_normal_illumination = FALSE;
++                manager->lmi_quiet_unidle =
++                        manager->temporary_unidle_on_ac_id != 0;
++                iio_proxy_claim_light (manager, TRUE);
++                g_debug ("lmi: quiet gauge resume with existing idle restoration");
++        } else {
++                backlight_enable (manager);
++        }
+@@ -2825,0 +2984,4 @@
++                manager->lmi_sleep_before_valid =
++                        lmi_sleep_total (&manager->lmi_sleep_before);
++                manager->lmi_screen_blank_before = manager->screensaver_active;
++                manager->lmi_resume_activity_seen = FALSE;
