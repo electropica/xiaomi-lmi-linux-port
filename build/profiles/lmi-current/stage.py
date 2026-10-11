@@ -7,13 +7,21 @@ p.add_argument('--inputs', type=Path, required=True)
 p.add_argument('--destination', type=Path, required=True)
 a=p.parse_args()
 repo=Path(__file__).resolve().parents[3]
-names=['upower', 'libupower-glib3', 'gir1.2-upowerglib-1.0']
+packages=[
+    ('upower', '1.90.9-1+lmi1', 'arm64'),
+    ('libupower-glib3', '1.90.9-1+lmi1', 'arm64'),
+    ('gir1.2-upowerglib-1.0', '1.90.9-1+lmi1', 'arm64'),
+    ('phosh', '0.46.0-3+deb13u1+lmigaugewake2', 'arm64'),
+    ('phosh-common', '0.46.0-3+deb13u1+lmigaugewake2', 'all'),
+    ('gnome-settings-daemon', '48.1-1+lmiquietgauge1', 'arm64'),
+    ('gnome-settings-daemon-common', '48.1-1+lmiquietgauge1', 'all'),
+]
 files=[]
-for name in names:
-    f=a.inputs/(name+'_1.90.9-1+lmi1_arm64.deb')
+for name, version, arch in packages:
+    f=a.inputs/(name+'_'+version+'_'+arch+'.deb')
     if not f.is_file() or f.is_symlink(): raise SystemExit('Missing regular input: '+str(f))
     fields=subprocess.check_output(['dpkg-deb', '-f', str(f), 'Package', 'Version', 'Architecture'], text=True).splitlines()
-    expected=['Package: '+name, 'Version: 1.90.9-1+lmi1', 'Architecture: arm64']
+    expected=['Package: '+name, 'Version: '+version, 'Architecture: '+arch]
     if fields != expected: raise SystemExit('Unexpected package identity: '+str(f))
     files.append(f)
 fw=a.inputs/'tfa98xx.cnt'
@@ -22,6 +30,7 @@ if not fw.is_file() or fw.is_symlink() or hashlib.sha256(fw.read_bytes()).hexdig
 files.append(fw)
 # Verify the saved private package identities, not only their Debian metadata.
 manifest=a.inputs/'SHA256SUMS'
+if not manifest.is_file() or manifest.is_symlink(): raise SystemExit('Missing regular checksum manifest')
 lines=manifest.read_text().splitlines()
 expected={f.name:hashlib.sha256(f.read_bytes()).hexdigest() for f in files}
 parsed={}
@@ -38,6 +47,8 @@ shutil.copytree(repo/'userspace/audio/files', a.destination/'audio')
 for name in ['lmi-flashlight.py','lmi-flashlight.desktop','lmi-chatty-safe']:
     shutil.copy2(repo/'userspace/apps/files'/name, a.destination/'apps'/name)
 (a.destination/'power').mkdir()
+for name in ['phosh-quiet-resume.conf','gsd-quiet-resume.conf']:
+    shutil.copy2(repo/'kernel/diagnostics/power/userspace'/name, a.destination/'power'/name)
 shutil.copy2(repo/'userspace/power/scripts/lmi-cpu-idle', a.destination/'power/lmi-cpu-idle')
 shutil.copy2(repo/'userspace/power/files/lmi-cpu-idle.service', a.destination/'power/lmi-cpu-idle.service')
 for source in ['scripts/lmi-npu-suspend', 'files/lmi-npu-suspend-hook', 'files/90-lmi-npu-suspend.conf']:

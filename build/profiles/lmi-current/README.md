@@ -21,6 +21,9 @@ operator-run. The generic/historical builder remains available separately.
 - Previously validated patched UPower battery-status opt-in, CPU-idle
   opt-in for the existing kernel release, and battery-only suspend after
   900 seconds; no automatic suspend while connected to AC.
+- Qualified Phosh/GSD quiet-gauge packages and persistent service opt-ins,
+  without debug environments; screen blanking and prompt resuspension were
+  validated on the handset. Fresh-image validation remains pending.
 - Selected timezone and timesyncd, plus the existing time-seed clock floor
   initialized at build time and saved periodically and at orderly shutdown.
   This prevents regression below the saved epoch without writing the hardware
@@ -44,11 +47,16 @@ Set `M1_CURRENT_LMI_PROFILE_INPUTS` to a private directory containing:
 - `upower_1.90.9-1+lmi1_arm64.deb`
 - `libupower-glib3_1.90.9-1+lmi1_arm64.deb`
 - `gir1.2-upowerglib-1.0_1.90.9-1+lmi1_arm64.deb`
+- `phosh_0.46.0-3+deb13u1+lmigaugewake2_arm64.deb`
+- `phosh-common_0.46.0-3+deb13u1+lmigaugewake2_all.deb`
+- `gnome-settings-daemon_48.1-1+lmiquietgauge1_arm64.deb`
+- `gnome-settings-daemon-common_48.1-1+lmiquietgauge1_all.deb`
 - `tfa98xx.cnt`, SHA256
   `07abfca151aaa296595fff35d53c2aa2999e7d16cdc373ade2fd5954ff90c9a9`
-- `SHA256SUMS` containing exactly those four files and their recorded sums.
+- `SHA256SUMS` containing exactly those eight files and their recorded sums.
 
-The package binaries are outputs of the existing UPower package recipe;
+The package binaries are outputs of the existing UPower recipe and reviewed Phosh/GSD
+package recipes;
 they are not committed. Preflight checks package name/version/architecture,
 firmware identity and the private checksum manifest before rootfs work.
 The runtime profile rechecks the inputs and installed package versions.
@@ -72,7 +80,8 @@ Firmware, packages, personal files and recordings remain outside Git.
 
 `python3 build/profiles/lmi-current/test-stage.py INPUTS_DIRECTORY` tests
 real input staging, missing inputs, corrupt firmware, incorrect manifests,
-existing-output preservation and package-symlink rejection without building
+existing-output preservation, missing quiet-resume pair, old GSD version
+with matching checksum manifest, and package/manifest-symlink rejection without building
 an image. The image builder also audits Debian package state, compiles schemas,
 checks the selected battery suspend action and retains its ext4/GPT/sparse
 roundtrip checks. No services, camera or microphone are started by the profile.
@@ -100,3 +109,21 @@ policy restored. One automatic cycle at the normal fifteen-minute delay also
 passed with the permanent hook; original performance was restored on wake.
 Multiple automatic cycles and night-long validation remain pending.
 No new image or kernel build was run.
+
+
+### Paired quiet-gauge resume integration (2026-10-11)
+
+The current profile now requires the exact Phosh/GSD packages qualified by
+trial40 and installs them inside the policy-rc.d-protected image chroot.
+It stages the two reviewed user-service opt-in templates from the single
+[power source record](../../../kernel/diagnostics/power/README.md), rather
+than duplicating their contents. The installer checks all four package
+versions before enabling the opt-ins; no debug environment is installed.
+The private input manifest covers seven packages and the external TFA
+container. Older four-file input directories fail preflight.
+
+Nine host staging/rejection checks and shell syntax checks pass. The handset
+qualified two actual gauge resumes, prompt deep-sleep entry and USB/button/
+touch/application interaction. This does not qualify a new image: no full
+image build, flash or fresh-image test was performed for this integration.
+Long-duration standby consumption remains pending. The kernel is reused.

@@ -1,4 +1,4 @@
-lmi-current profile, 2026-10-09
+lmi-current profile, 2026-10-11
 Existing RPMh/reset-GPIO boot SHA256: a89ae4d9529dcef55d3969eb6b5a75c2617d9ef0e2e1f568c5f619eb1adf5c50
 Includes optional mobile apps and their scoped launchers, torch, ALSA/PipeWire speaker and microphone, Recorder preferences, patched UPower battery-status opt-in, CPU-idle opt-in and battery-only automatic suspend.
 The reviewed time-seed clock floor is initialized at build time; no hardware RTC write.
@@ -10,3 +10,4 @@ Stock Venus firmware references are prepared after the read-only mount; codec op
 Background metadata indexing is masked for old-kernel sandbox/child-watch compatibility.
 Notification-triggered screen wakeup is disabled to avoid the automatic-suspend warning loop; notifications remain available.
 Suspend-only NPU bandwidth opt-in: three reviewed clients reach target zero in sleep and recover original performance on wake; exact kernel/build guards and independent ExecStopPost recovery. Short gauge trials, one permanent-hook sleep cycle and one normal-timeout automatic cycle validated; multiple automatic cycles, night-long and fresh-image validation pending.
+Paired Phosh0.46.0-3+deb13u1+lmigaugewake2 and GSD48.1-1+lmiquietgauge1 with persistent quiet-gauge opt-ins and no debug environments. Two gauge wakes, prompt deep-sleep entry, USB/button/touch/app checks passed on the handset; fresh image and night-long autonomy remain unqualified.

@@ -7,9 +7,11 @@ test -f /usr/sbin/policy-rc.d
 src=/run/lmi-current-profile
 (cd "$src/inputs"; sha256sum -c SHA256SUMS)
 export DEBIAN_FRONTEND=noninteractive
-apt-get install -y --no-install-recommends python3-gi gir1.2-gtk-3.0 psmisc \
+apt-get install -y --no-remove --no-install-recommends python3-gi gir1.2-gtk-3.0 psmisc \
     "$src"/inputs/upower_*.deb "$src"/inputs/libupower-glib3_*.deb \
-    "$src"/inputs/gir1.2-upowerglib-1.0_*.deb
+    "$src"/inputs/gir1.2-upowerglib-1.0_*.deb \
+    "$src"/inputs/phosh_*.deb "$src"/inputs/phosh-common_*.deb \
+    "$src"/inputs/gnome-settings-daemon_*.deb "$src"/inputs/gnome-settings-daemon-common_*.deb
 test -z "$(dpkg --audit)"
 # The 4.19 extractor lacks Landlock and failed PIDFD reaping exhausted user tasks.
 # Keep files/databases; disable only incompatible background metadata indexing.
@@ -17,6 +19,15 @@ systemctl --global mask localsearch-3.service
 for p in upower libupower-glib3 gir1.2-upowerglib-1.0; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = 1.90.9-1+lmi1
 done
+for p in phosh phosh-common; do
+    test "$(dpkg-query -W -f='${Version}' "$p")" = 0.46.0-3+deb13u1+lmigaugewake2
+done
+for p in gnome-settings-daemon gnome-settings-daemon-common; do
+    test "$(dpkg-query -W -f='${Version}' "$p")" = 48.1-1+lmiquietgauge1
+done
+# Enable only the paired qualified quiet-resume paths; no debug environment.
+install -Dm644 "$src/power/phosh-quiet-resume.conf" /etc/systemd/user/mobi.phosh.Shell.service.d/60-lmi-quiet-gauge-resume.conf
+install -Dm644 "$src/power/gsd-quiet-resume.conf" /etc/systemd/user/org.gnome.SettingsDaemon.Power.service.d/60-lmi-quiet-gauge-resume.conf
 install -Dm644 "$src/inputs/tfa98xx.cnt" /lib/firmware/postmarketos/tfa98xx.cnt
 test "$(dpkg-query -W -f='${Version}' krecorder)" = 25.04.0-2
 test "$(getent passwd 1000 | cut -d: -f1)" = mobian

@@ -15,8 +15,9 @@ suspend policy were retained; no new boot was built or flashed for this fix.
 
 This is a qualified installed-userspace change, not a new golden image or
 bit-for-bit image reconstruction. The artifact identities below are historical
-validation records. Fresh-image integration and sustained autonomy remain
-unqualified; see the [power record](../../kernel/diagnostics/power/README.md).
+validation records. The current image recipe now stages these exact packages and service opt-ins
+with nine host preflight/rejection checks. No new image has been built or
+tested for this integration; sustained autonomy remains unqualified; see the [power record](../../kernel/diagnostics/power/README.md).
 
 ## Golden-family hardware validation
 
