@@ -2830,3 +2830,39 @@ The live notification workaround remains wakeup-screen-triggers=[] and the
 normal battery idle timeout remains 900 seconds. These settings were read,
 not changed. Precise timing of the reported display activation remains to
 be matched to the observation before attributing every occurrence to RTC.
+
+
+### Unscheduled screen-wake observation and Phosh candidate boundary - 2026-10-11
+
+A twenty-minute observation (trial37) ran with an opt-in Phosh gauge-wake
+candidate on the same installed diagnostic kernel and NPU suspend policy.
+The observer issued one initial suspend after confirmed screen blanking,
+without an RTC end alarm or a forced resuspend. Over 1286.042 seconds,
+clock accounting recorded 1283.047 seconds suspended and 2.995 seconds awake.
+The only recorded resume was USB reconnection (IRQ502, typec-cc-state-change).
+There was no intermediate gauge IRQ438 resume. Phosh's USB WakeUpScreen and
+subsequent screensaver ActiveChanged=false were preserved as intended.
+
+The candidate therefore remains unqualified for its target gauge-wake case.
+Absence of a screen wake in this interval does not establish a correction of
+the previously reported recurrence. This was a display observation, not a
+calibrated battery-current comparison; endpoint battery snapshots include
+the return to charging and must not be promoted to an isolated drain result.
+
+Source review identifies two resume-unblank paths. In Phosh 0.46.0,
+screen-saver-manager.c wakes the screen on PrepareForSleep(false). In
+gnome-settings-daemon 48.1, handle_resume_actions() calls backlight_enable(),
+which requests DisplayConfig PowerSaveMode=ON. Phosh monitor-manager.c applies
+that property to its monitors; monitor power notifications update the
+screensaver's active state. The latter path can therefore bypass a filter
+limited to Phosh's own WakeUpScreen call. This is a source-level competing
+path, not an observed cause in trial37: there was no gauge wake and the
+scoped gsd-power journal contained no entries. Correlate a real gauge resume,
+the filter marker and monitor/screen state before requesting another build.
+
+The observer finished successfully. The original phosh and phosh-common
+0.46.0-3+deb13u1 packages were restored, the temporary user-service override
+was removed, and the shell was active with no trial environment. The fallback
+rollback timer was stopped only after restoration verification. No RTC alarm
+or NPU recovery state remained. No kernel, radio, audio or camera change was
+made, and no media was captured.
