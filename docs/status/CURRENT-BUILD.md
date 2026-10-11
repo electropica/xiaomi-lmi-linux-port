@@ -799,3 +799,14 @@ does not explain residual suspended drain; no permanent governor change
 is adopted. Original policies were restored and the owned inhibitor removed.
 The next source review concerns unconfigured core_ctl busy thresholds.
 See [the diagnostic record](../../kernel/diagnostics/power/README.md).
+
+
+### core_ctl mechanism verified — 2026-10-11
+
+A twenty-second plugged probe changed only the larger CPU groups' busy
+thresholds, retaining their minimum counts and all CPU frequency policies.
+The three-core group reduced its active count to one at rest and returned
+to three after verified restoration. No consumption benefit or deep-suspend
+effect is established. Application validation precedes a battery comparison;
+the candidate is not installed permanently.
+See [the diagnostic record](../../kernel/diagnostics/power/README.md).

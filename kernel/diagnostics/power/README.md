@@ -2546,3 +2546,31 @@ Kona Android script supplies nonzero thresholds and different minimum-core
 policies. This is a specific awake-policy difference to review; enabled
 idle states and cumulative residency counters do not prove a regulator
 turns off, nor establish a new deep-suspend cause.
+
+
+### core_ctl threshold probe — 2026-10-11
+
+The running core_ctl state has zero busy-up and busy-down thresholds. In
+the locked kernel/sched/core_ctl.c eval_need implementation, busy >= up
+marks a CPU busy; zero thresholds therefore classify even zero utilization
+as busy. This is a source-backed explanation for the observed group state,
+not evidence that all cores consume power continuously during deep sleep.
+
+A twenty-second plugged trial changed only cpu4 and cpu7 thresholds to
+60/30, following the threshold choice in the pinned Kona post-boot script.
+It retained the existing minimum counts (one in each group), maximum counts,
+task and assist thresholds, CPU frequency governors and frequency limits.
+No Android minimum-count or scheduler tuning was copied in this probe.
+The cpu4 group reported one to three active CPUs, compared with three before
+the trial; cpu7 stayed at one, as expected from its unchanged minimum.
+core_ctl active counts describe scheduler eligibility, not CPU online status
+or a measured rail-power transition.
+
+Original thresholds were saved before writes and independently restored by
+the bounded systemd unit. Partial-write and state-save failures, external
+policy changes and recovery-unit guards pass six host tests. After the
+twenty samples, the unit was inactive with Result=success, original thresholds
+and all observed CPU-frequency policies were independently verified, and
+cpu4 again reported three active CPUs. No battery-consumption gain is claimed.
+An attended application check is the next gate before an electrical comparison;
+no permanent core_ctl change is installed. Raw trial evidence remains private.
