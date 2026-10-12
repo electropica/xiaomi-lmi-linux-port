@@ -74,6 +74,14 @@ This resolves the reproduced local ordering case, not the target qualification
 prerequisite: the proposal has no full ARM package build, actual logind timing,
 input/call validation or consumption result. Keep the qualified fifteen-second
 baseline unchanged for the night measurement. No target build is requested.
+A subsequent native integration fixture also passed five cases on a private
+GTestDBus bus: valid FD retention/release, obsolete reply closure, an older reply
+arriving after a newer valid reply, a real D-Bus error followed by retry, and
+actual GObject lifetime during pending stale delivery. This exercised real
+GDBus Unix-FD transport rather than mocked completion calls. It used neither
+the system/session bus nor the handset, and does not establish actual logind
+scheduling or target power savings. No target package was built or installed.
+
 The delay-lock lifecycle is documented at https://systemd.io/INHIBITOR_LOCKS/.
 
 The stable paired fix should remain installed for the planned night observation.
