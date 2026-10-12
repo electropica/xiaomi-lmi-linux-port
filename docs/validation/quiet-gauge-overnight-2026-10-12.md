@@ -177,3 +177,47 @@ branch has source regression coverage, but target gauge-resume behavior and
 long natural standby still require observation with the retained GSD2 pair.
 The currently built image profile still pins GSD1 until its private package
 inputs are updated and a new image is separately built and qualified.
+
+
+## Retained GSD2: normal timeout and a gauge-only return
+
+A subsequent 30-minute cable-free observation retained the normal 900-second
+idle timeout, Phosh v2, GSD2, the same installed kernel and NPU policy, with
+userspace debug disabled. The screen was verified locked before arming. There
+was no explicit Suspend request, wake alarm or radio/governor change. The
+battery viewer and its recorder were not running during this observation.
+
+Automatic suspension occurred after the normal initial idle period. Two
+clock-qualified sleep windows lasted 541.458 and 388.915 seconds (930.373
+seconds total). The first ended at gauge IRQ438; the screen remained blank
+through the complete awake interval and another PrepareForSleep followed
+15.187 seconds later. The second ended at USB IRQ502 on physical return. The
+observer completed successfully on the same boot; no RTC alarm or pending
+NPU restoration remained. This qualifies a real gauge/resuspend path with
+GSD2, separately from the earlier repeated USB-cycle result.
+
+The first fully sampled suspended interval spans 542.076 seconds at callback
+boundaries and gives software/shadow/raw estimates of 52.84/49.93/83.68 mA.
+These remain different gauge models and are consistent with the previously
+observed residual load. The broader 24.524-minute eligible sample coverage
+includes the initial awake idle period; its 87.55/87.87/136.85 mA estimates
+are not a suspended-current comparison. Charging return intervals are excluded.
+No new physical-current calibration or causal energy reduction is claimed.
+
+## Short plugged-in charger-input isolation probe
+
+The preserved SMB5 source exposes `input_suspend`: it applies a USER vote of
+zero to the USB input-current limit and a DC-suspend vote. The handset exposes
+this control writable, initially zero. A brief probe armed an independent
+60-second restoration timer before setting it to one. A fresh SSH connection
+then succeeded while the battery driver reported Discharging, USB `online=0`
+and USB `present=1`. The driver's instantaneous battery current was positive,
+159.179 mA, during awake SSH activity; it is not a standby-current measurement.
+
+The probe restored `input_suspend=0`, verified Charging and USB `online=1`,
+then stopped its fallback timer after successful restoration. No related
+charging-enabled, FCC, gauge-profile or USB-data control was changed. This
+demonstrates logical input isolation with a usable data path on this handset.
+It does not prove electrically zero USB draw, nor equivalence to cable-free
+deep standby: VBUS detection, USB hardware and host traffic are still present.
+Any use as an automated standby fixture needs its own sleep/wakeup comparison.

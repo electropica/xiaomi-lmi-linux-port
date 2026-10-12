@@ -83,7 +83,7 @@ hardware qualifications; the viewer is not enabled automatically.
 
 After that prototype check, optional automatic-start controls and bounded
 history loading were added with source-level validation. Those additions have
-not been qualified on the handset. The project handset application is being
+not been qualified on the handset. The project handset application was
 removed at the user's request because its global readings duplicate the
 existing focused diagnostic collector. These sources remain available as a
 standalone utility; they do not require the coordinator's private scripts.

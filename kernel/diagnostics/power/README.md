@@ -6,9 +6,11 @@ The later eleven-hour day did not reproduce the qualified quiet-night protocol:
 the initial explicit sleep started from an unblanked screen, followed by one
 gauge return and no later suspension. Keep that failure separate from the valid
 night. A complete short transition trace has no lost events or failed device-PM
-callback; residual physical current remains unknown. A GSD USB-cycle source
-draft has native checks only and is awaiting a user-run package build/target
-qualification. See the [daytime and trace boundaries](../../../docs/validation/quiet-gauge-overnight-2026-10-12.md).
+callback; residual physical current remains unknown. The GSD2 USB-cycle fix
+has now passed two repeated short cycles and a normal-timeout observation with
+a quiet gauge wake followed by resuspension. Standby consumption remains
+unresolved. A short charger-input isolation probe preserves SSH, but connected
+USB has not been qualified as equivalent to physically unplugged standby. See the [daytime and trace boundaries](../../../docs/validation/quiet-gauge-overnight-2026-10-12.md).
 
 
 The handset runs Mobian again with the installed RPMh diagnostic kernel,
