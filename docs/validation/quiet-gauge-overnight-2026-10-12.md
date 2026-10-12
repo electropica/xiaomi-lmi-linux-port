@@ -64,3 +64,37 @@ to this Wi-Fi-enabled night. Fresh-image hardware qualification is still pending
 See the [power decision record](../../kernel/diagnostics/power/README.md) and
 [source review of the separate grace draft](quiet-gauge-grace-source-review-2026-10-11.md).
 Private raw samples, timestamps and device/session identifiers remain outside Git.
+
+## Follow-up transition trace and source-only USB-cycle boundary
+
+A subsequent 20 min 45 s passive cable-free observation did not enter system
+suspension: neither PrepareForSleep nor a paired kernel sleep boundary was
+recorded. Its trace buffers overflowed during the awake interval. The owned
+trace was saved and removed, with no outstanding alarm or collector. This
+observation is unqualified for peripheral state during deep sleep; absent
+callback/disable events cannot be interpreted as evidence of powered rails.
+
+The battery timeout remained 900 seconds with suspend selected, and no blocking
+sleep inhibitor appeared in the return inspection. An automatic-suspend warning
+logged a NULL-string assertion; the installed source passes a NULL icon to its
+notification helper. That warning alone does not establish why sleep was skipped.
+
+A separate native fixture reproduced a possible state-machine cause in the exact
+installed GSD source: an ordinary USB wake from terminal SLEEP on AC temporarily
+sets NORMAL, then restores SLEEP, whose AC action is nothing. A later battery
+SLEEP request is rejected as an equal idle mode. Actual user activity clears
+that state and allows a subsequent sleep request. This ordering is reproduced
+in isolated source-function tests, not directly proven as the live handset state
+in the inconclusive observation.
+
+The [source-only USB-cycle draft](../../kernel/diagnostics/power/userspace/gsd-usb-cycle-state-draft.patch)
+normalizes a non-quiet resume only in an active session with the existing explicit
+quiet-resume opt-in. It cancels an older temporary restoration before entering
+NORMAL, while leaving the quiet-gauge branch and default opt-out unchanged.
+Six native cases pass, including both signal orders, real-activity cancellation,
+quiet resuspension, inactive-session fallback and opt-out. GNU patch application
+reproduces the exact complete candidate bytes. The draft starts from source
+SHA256 154a332b498cb2edce4ee4d8125d9310031b2939b29edb9d2e9b55259e18c3ef
+and produces SHA256 31a319b3e9d4542bc6f1287da3c085c4872aa53c224bca0b1e96d32d739510a3.
+It is separate from the optional shorter-grace draft. No ARM package build,
+phone installation or target USB-cycle qualification has occurred.

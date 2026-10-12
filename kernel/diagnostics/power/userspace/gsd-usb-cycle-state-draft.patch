@@ -1,0 +1,11 @@
+--- a/plugins/power/gsd-power-manager.c
++++ b/plugins/power/gsd-power-manager.c
+@@ -2961,0 +2962,8 @@
++        } else if (manager->session_is_active &&
++                   g_strcmp0 (g_getenv ("LMI_GSD_QUIET_GAUGE_RESUME"), "1") == 0) {
++                /* A real USB/button wake must leave the terminal SLEEP state.
++                 * Cancel any older ordinary wake timer before resetting it,
++                 * otherwise that timer can restore SLEEP on AC (a no-op) and
++                 * swallow the next battery sleep request as an equal mode. */
++                set_temporary_unidle_on_ac (manager, FALSE);
++                idle_set_mode (manager, GSD_POWER_IDLE_MODE_NORMAL);
