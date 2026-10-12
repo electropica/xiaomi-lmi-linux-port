@@ -1,5 +1,16 @@
 # Mobian status
 
+## Later daytime boundary — 2026-10-12
+
+An eleven-hour return showed 97% to 59%, but only 16 min 39 s of actual sleep.
+The initial explicit suspension began before screen blanking and therefore did
+not qualify for quiet resume; no later automatic suspension was recorded.
+This is an invalid quiet-night comparison and an unresolved automatic-sleep
+boundary. The USB-cycle source draft is tested locally but remains unbuilt and
+uninstalled. The installed versions above/below remain unchanged.
+See the [protocol and transition evidence](../validation/quiet-gauge-overnight-2026-10-12.md).
+
+
 ## Overnight installed-userspace observation — 2026-10-12
 
 An 8 h 51 min cable-free observation retained the qualified quiet-resume pair,

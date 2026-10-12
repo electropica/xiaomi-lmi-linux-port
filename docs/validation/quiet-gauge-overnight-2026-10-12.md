@@ -98,3 +98,55 @@ SHA256 154a332b498cb2edce4ee4d8125d9310031b2939b29edb9d2e9b55259e18c3ef
 and produces SHA256 31a319b3e9d4542bc6f1287da3c085c4872aa53c224bca0b1e96d32d739510a3.
 It is separate from the optional shorter-grace draft. No ARM package build,
 phone installation or target USB-cycle qualification has occurred.
+
+## Complete transition trace
+
+After the initial overflowed captures, a bounded explicit-suspend observation
+used a 2 MiB per-CPU owned trace buffer. It recorded 190.634 seconds of actual
+clock-accounted sleep ending at USB return, 5,637 paired device-PM callbacks
+without recorded error, and paired regulator enable/disable/voltage operations.
+No trace-buffer overrun or unmatched operation was found. The instance and
+collector were cleaned up after retrieval.
+
+One complete machine-suspend window contained 26 RPMh messages, including six
+sleep-bank BCM messages with no valid nonzero vote. Observed CX/MX sleep requests
+were zero. This covers emitted messages only: cached commands, other masters'
+votes and physical rail current must not be inferred from missing messages.
+Panel, UFS PHY and GPU-domain disable completions were observed. Driver callbacks
+and regulator completions are software evidence, not a physical power meter.
+The trace clock did not advance between the machine-suspend markers in this
+kernel; the separate BOOTTIME-minus-MONOTONIC samples provide the sleep duration.
+
+## Daytime observation: initial protocol error and no automatic return to sleep
+
+The subsequent cable-free interval lasted 11 h 00 min 19 s, with the displayed
+level changing from 97% at departure to 59% at charging return. The same boot,
+installed package versions, service opt-ins and Wi-Fi-enabled setting were
+retained. Both userspace units remained active with zero restarts. The observer
+finished successfully; no alarm or pending NPU recovery state remained.
+
+Only one system-suspend interval occurred, lasting 998.686 seconds (16 min 39 s).
+The first gauge-only IRQ438 return unblanked the software screen state. It
+blanked again five minutes later, but no further system suspension occurred
+during the remaining cable-free interval. The kernel journal independently
+contains only that one sleep entry and exit.
+
+The initial explicit suspension was requested while the screen was not yet
+blank. This was a protocol error: it did not meet the installed filters' required
+blank-before-sleep qualification, so their visible-wake fallback was expected.
+Do not present this day as a qualified reproduction of the successful quiet
+night, or as evidence that the qualifying filters silently regressed.
+
+The absence of later automatic suspension still requires correction or causal
+qualification. The source-only USB-cycle ordering reproduced above is a lead,
+not a directly inspected live idle-state enum. Its six native boundary cases and
+exact patch application pass; a user-run incremental GSD package build is now
+prepared, using the existing ARM source and dependencies. No new kernel or
+phone package installation has occurred. Two complete power-source cycles must
+be tested after any trial installation before adoption.
+
+Eligible adjacent USB-zero counter samples cover only approximately 22 minutes
+before the long unsampled awake gap. Their roughly 89/90/122 mA method estimates
+must not be reported as eleven-hour average current; charging return endpoints
+remain excluded. The displayed fall is observable, but no calibrated current or
+cell-health conclusion follows.

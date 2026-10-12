@@ -2,6 +2,15 @@
 
 ## Current decision summary — 2026-10-12
 
+The later eleven-hour day did not reproduce the qualified quiet-night protocol:
+the initial explicit sleep started from an unblanked screen, followed by one
+gauge return and no later suspension. Keep that failure separate from the valid
+night. A complete short transition trace has no lost events or failed device-PM
+callback; residual physical current remains unknown. A GSD USB-cycle source
+draft has native checks only and is awaiting a user-run package build/target
+qualification. See the [daytime and trace boundaries](../../../docs/validation/quiet-gauge-overnight-2026-10-12.md).
+
+
 The handset runs Mobian again with the installed RPMh diagnostic kernel,
 suspend-only NPU policy and qualified Phosh/GSD quiet-resume packages.
 The latest overnight observation lasted 8 h 51 min: about 95.52% actual
