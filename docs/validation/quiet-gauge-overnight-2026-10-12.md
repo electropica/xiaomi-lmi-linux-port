@@ -96,8 +96,8 @@ quiet resuspension, inactive-session fallback and opt-out. GNU patch application
 reproduces the exact complete candidate bytes. The draft starts from source
 SHA256 154a332b498cb2edce4ee4d8125d9310031b2939b29edb9d2e9b55259e18c3ef
 and produces SHA256 31a319b3e9d4542bc6f1287da3c085c4872aa53c224bca0b1e96d32d739510a3.
-It is separate from the optional shorter-grace draft. No ARM package build,
-phone installation or target USB-cycle qualification has occurred.
+It is separate from the optional shorter-grace draft. The later incremental
+ARM package build and two target USB cycles are documented below.
 
 ## Complete transition trace
 
@@ -140,13 +140,40 @@ night, or as evidence that the qualifying filters silently regressed.
 The absence of later automatic suspension still requires correction or causal
 qualification. The source-only USB-cycle ordering reproduced above is a lead,
 not a directly inspected live idle-state enum. Its six native boundary cases and
-exact patch application pass; a user-run incremental GSD package build is now
-prepared, using the existing ARM source and dependencies. No new kernel or
-phone package installation has occurred. Two complete power-source cycles must
-be tested after any trial installation before adoption.
+exact patch application pass. The user subsequently completed the incremental
+ARM build; the two target cycles and retained package are documented below.
 
 Eligible adjacent USB-zero counter samples cover only approximately 22 minutes
 before the long unsampled awake gap. Their roughly 89/90/122 mA method estimates
 must not be reported as eleven-hour average current; charging return endpoints
 remain excluded. The displayed fall is observable, but no calibrated current or
 cell-health conclusion follows.
+
+
+## USB return and subsequent automatic suspension: two-cycle validation
+
+The user built GSD/common `48.1-1+lmiquietgauge2` from the pinned USB-cycle
+candidate source. Only those two packages were changed; Phosh remained
+`0.46.0-3+deb13u1+lmigaugewake2`, with the existing kernel and NPU policy.
+Verified GSD1 packages and a timed rollback were staged before installation.
+
+Two unplug/replug cycles used a temporary 60-second battery idle timeout.
+The screen was verified locked before each observation. Both cycles reached
+automatic deep suspension without an explicit Suspend request or wake alarm.
+BOOTTIME-minus-MONOTONIC accounting measured 153.455 and 158.037 seconds of
+sleep, ending at USB return. Both observations used the same GSD process,
+without a service restart between cycles, on the same boot. This verifies
+that the second suspension remains reachable after a USB wake.
+
+The GSD2 pair was retained. The normal 900-second idle timeout was restored;
+the owned debug override was removed and live debug environment absence
+verified. Temporary rollback/timeout timers were stopped after verification;
+the verified GSD1 rollback remains available. Phosh, kernel and NPU policy
+were unchanged. No pending RTC alarm or NPU recovery state remained.
+
+These are shortened-timeout functional observations, not an autonomy result.
+Neither interval contained a qualifying gauge-only wake. The unchanged quiet
+branch has source regression coverage, but target gauge-resume behavior and
+long natural standby still require observation with the retained GSD2 pair.
+The currently built image profile still pins GSD1 until its private package
+inputs are updated and a new image is separately built and qualified.
