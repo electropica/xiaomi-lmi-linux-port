@@ -1,0 +1,13 @@
+[Unit]
+Description=User-started lmi battery recorder
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/python3 /usr/local/lib/lmi-battery/recorder.py --run
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=10
+UMask=0077
+Nice=10

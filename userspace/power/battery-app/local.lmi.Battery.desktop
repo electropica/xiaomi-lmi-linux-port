@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Battery lmi
+Name[fr]=Batterie lmi
+Comment=Battery readings and passive sleep history
+Comment[fr]=Relevés de batterie et historique de veille
+Exec=env GTK_IM_MODULE=gtk-im-context-simple /usr/bin/python3 /usr/local/lib/lmi-battery/app.py
+Icon=battery-good-symbolic
+Terminal=false
+Categories=System;Monitor;
+StartupNotify=true
+X-Purism-FormFactor=Workstation;Mobile;
