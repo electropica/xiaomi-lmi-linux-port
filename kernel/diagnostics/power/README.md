@@ -10,7 +10,9 @@ callback; residual physical current remains unknown. The GSD2 USB-cycle fix
 has now passed two repeated short cycles and a normal-timeout observation with
 a quiet gauge wake followed by resuspension. Standby consumption remains
 unresolved. A short charger-input isolation probe preserves SSH, but connected
-USB has not been qualified as equivalent to physically unplugged standby. See the [daytime and trace boundaries](../../../docs/validation/quiet-gauge-overnight-2026-10-12.md).
+USB failed the subsequent paired standby comparison: the controller remains
+active and rejects system suspend with -EBUSY. See the
+[five-minute paired result](../../../docs/validation/usb-input-isolation-paired-2026-10-12.md). See the [daytime and trace boundaries](../../../docs/validation/quiet-gauge-overnight-2026-10-12.md).
 
 
 The handset runs Mobian again with the installed RPMh diagnostic kernel,
