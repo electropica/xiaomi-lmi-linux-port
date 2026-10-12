@@ -1,5 +1,17 @@
 # Mobian status
 
+## Overnight installed-userspace observation — 2026-10-12
+
+An 8 h 51 min cable-free observation retained the qualified quiet-resume pair,
+the same kernel/NPU policy and Wi-Fi enabled. The handset stayed in the same
+boot, slept about 95.52% of the interval and recorded 32 gauge-only resumes
+without software screen unblank. Displayed charge fell from 100% to 83%.
+Differently modelled counters estimate about 49 and 87 mA; neither is calibrated
+physical current. The correction persists, but standby drain remains unresolved.
+See the [overnight result](../validation/quiet-gauge-overnight-2026-10-12.md).
+This does not qualify a newly built image.
+
+
 ## Current handset boundary — 2026-10-11
 
 The handset is back on Mobian after the LineageOS battery comparison. It
@@ -12,8 +24,8 @@ Two observed gauge wakes kept the software screen state blank, released the
 Phosh delay inhibitor and returned to actual deep sleep without the former
 five-second timeout. USB wake, power-button operation, touch and application
 interaction passed. This is a userspace correction, not proof of resolved
-standby drain or a newly qualified image. Long-duration autonomy remains
-pending. See the [power record](../../kernel/diagnostics/power/README.md).
+standby drain or a newly qualified image. The overnight result above supersedes the pending long-duration observation;
+standby drain remains unresolved. See the [power record](../../kernel/diagnostics/power/README.md).
 
 The earlier Android overnight/daytime comparison remains historical evidence
 of lower apparent idle drain than Mobian, with its gauge and timing limits.

@@ -1,5 +1,17 @@
 # Current validated build and userspace state
 
+## Overnight installed-userspace observation — 2026-10-12
+
+An 8 h 51 min cable-free observation retained the qualified quiet-resume pair,
+the same kernel/NPU policy and Wi-Fi enabled. The handset stayed in the same
+boot, slept about 95.52% of the interval and recorded 32 gauge-only resumes
+without software screen unblank. Displayed charge fell from 100% to 83%.
+Differently modelled counters estimate about 49 and 87 mA; neither is calibrated
+physical current. The correction persists, but standby drain remains unresolved.
+See the [overnight result](../validation/quiet-gauge-overnight-2026-10-12.md).
+This does not qualify a newly built image.
+
+
 This document distinguishes the validated Mobian userdata family from the
 separate D-v43/OpenRC reconstruction and from temporary diagnostic boots.
 Generated images are not stored in Git.

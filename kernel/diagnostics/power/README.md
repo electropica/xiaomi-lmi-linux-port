@@ -1,12 +1,18 @@
 # Power diagnostics and decision summary
 
-## Current decision summary — 2026-10-09
+## Current decision summary — 2026-10-12
 
-The test handset is temporarily running official LineageOS
-23.2-20261007-NIGHTLY-lmi (Android 16), not the Mobian RPMh diagnostic boot.
-Repeated peripheral-isolation trials are historical evidence, not a checklist
-to rerun. The longer Android idle interval is complete; its gauge limitations are
-recorded below. No battery-health verdict follows from this comparison.
+The handset runs Mobian again with the installed RPMh diagnostic kernel,
+suspend-only NPU policy and qualified Phosh/GSD quiet-resume packages.
+The latest overnight observation lasted 8 h 51 min: about 95.52% actual
+suspension, 32 gauge-only returns without recorded screen unblank, and a
+displayed fall from 100% to 83%. Counter methods gave differently modelled
+estimates near 49 and 87 mA; standby drain remains unresolved.
+See the [overnight result](../../../docs/validation/quiet-gauge-overnight-2026-10-12.md).
+
+The Android observations below are historical comparisons, not the current
+handset OS. Repeated peripheral-isolation trials must not be rerun without a
+new causal hypothesis. No battery-health verdict follows from these comparisons.
 
 | Evidence group | Observed result | Decision |
 | --- | --- | --- |
