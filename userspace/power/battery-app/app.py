@@ -5,7 +5,7 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, GLib, Gdk, GdkPixbuf
-from model import STATE, snapshot, number, load, analyze, graph_svg, export_csv
+from model import STATE, snapshot, number, load, analyze, graph_svg, export_csv, iter_rows
 
 
 class Battery(Adw.Application):
@@ -41,6 +41,16 @@ class Battery(Adw.Application):
             button.connect('clicked', self.control, command)
             buttons.append(button)
         box.append(buttons)
+        self.auto_updating = False
+        self.auto = Adw.SwitchRow(title='Suivi automatique au démarrage', subtitle='À la prochaine ouverture de session')
+        try:
+            enabled = subprocess.run(['systemctl','--user','is-enabled','lmi-battery-recorder.service'],capture_output=True,text=True,timeout=8)
+            automatic = enabled.stdout.strip()=='enabled'
+        except subprocess.TimeoutExpired:
+            automatic = False
+        self.auto.set_active(automatic)
+        self.auto.connect('notify::active', self.automatic)
+        box.append(self.auto)
         self.sessions = Gtk.DropDown()
         self.sessions.connect('notify::selected', lambda *_: self.history())
         box.append(self.sessions)
@@ -51,7 +61,7 @@ class Battery(Adw.Application):
         export = Gtk.Button(label='Exporter cette session en CSV')
         export.connect('clicked', self.export)
         box.append(export)
-        note = Gtk.Label(label='Le suivi continue si cette fenêtre est fermée. Les relevés périodiques attendent le réveil du téléphone. Les trois estimations proviennent de la jauge et couvrent uniquement les intervalles de décharge valides.', wrap=True, xalign=0)
+        note = Gtk.Label(label='Le suivi continue si cette fenêtre est fermée. Les relevés périodiques attendent le réveil du téléphone. La vue montre au maximum les 5 000 derniers relevés ; le CSV exporte la session complète. Les estimations de jauge couvrent seulement les intervalles de décharge valides.', wrap=True, xalign=0)
         note.add_css_class('dim-label')
         box.append(note)
         self.files = []
@@ -99,7 +109,9 @@ class Battery(Adw.Application):
     def history(self):
         rows = self.selected_rows()
         result = analyze(rows)
-        lines = [f"Veille mesurée : {result['sleep_s']/60:.1f} min"]
+        lines = [f"Veille observée : {result['sleep_s']/60:.1f} min" if result['valid_sleep_pairs'] else 'Veille : aucun intervalle complet observé']
+        if result['warnings']:
+            lines.append('Certaines transitions de veille sont incomplètes ou invalides')
         names = {'charge_counter':'Compteur logiciel', 'charge_counter_shadow':'Compteur shadow', 'charge_now_raw':'Compteur brut'}
         for name, item in result['methods'].items():
             value = item['estimated_ma']
@@ -131,8 +143,25 @@ class Battery(Adw.Application):
         folder = Path.home()/'Documents/Batterie-lmi'
         folder.mkdir(parents=True,exist_ok=True)
         path = folder/('session-'+datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f')+'.csv')
-        export_csv(rows,path)
+        export_csv(iter_rows(self.files[self.sessions.get_selected()]),path)
         self.toasts.add_toast(Adw.Toast(title='CSV enregistré dans Documents/Batterie-lmi'))
+
+    def automatic(self, row, pspec):
+        if self.auto_updating:
+            return
+        active = row.get_active()
+        try:
+            result = subprocess.run(['systemctl','--user','enable' if active else 'disable','lmi-battery-recorder.service'],capture_output=True,text=True,timeout=8)
+            failed = result.returncode != 0
+        except subprocess.TimeoutExpired:
+            failed = True
+        if failed:
+            self.auto_updating = True
+            row.set_active(not active)
+            self.auto_updating = False
+            self.toasts.add_toast(Adw.Toast(title='Impossible de modifier le démarrage automatique'))
+        else:
+            self.toasts.add_toast(Adw.Toast(title='Suivi prévu au prochain démarrage' if active else 'Démarrage automatique désactivé'))
 
 
 if __name__ == '__main__':

@@ -1,11 +1,14 @@
 """Read-only battery data; charge-counter quotients are modelled estimates."""
 import csv, datetime, html, json, math, os, time
+from collections import deque
 from pathlib import Path
 
 FIELDS = ('capacity', 'status', 'charge_counter', 'charge_full', 'charge_full_design',
           'temp', 'current_now', 'voltage_now')
 METHODS = ('charge_counter', 'charge_counter_shadow', 'charge_now_raw')
 STATE = Path(os.environ.get('XDG_STATE_HOME', str(Path.home()/'.local/state')))/'lmi-battery'
+MAX_VIEW_ROWS = 5000
+MAX_VIEW_BYTES = 8 * 1024 * 1024
 
 def read(path):
     try: return Path(path).read_text().strip()
@@ -27,20 +30,32 @@ def snapshot(event='sample', root=Path('/sys')):
             'usb':read(root/'class/power_supply/usb/online'), 'supplies':supplies,
             'wake_reason':read(root/'kernel/wakeup_reasons/last_resume_reason')}
 
-def load(path):
-    rows=[]
+def iter_rows(path, offset=0):
     try:
-        for line in Path(path).read_text().splitlines():
-            try:
-                row=json.loads(line)
-                if isinstance(row,dict) and 'boottime' in row: rows.append(row)
-            except (ValueError, TypeError): pass  # An unfinished final write is retried next refresh.
+        with Path(path).open('rb') as stream:
+            if offset:
+                stream.seek(offset)
+                stream.readline(65536)  # Skip the partial first record in a tail view.
+            while True:
+                line=stream.readline(65536)
+                if not line:break
+                if not line.endswith(b'\n'):
+                    while line and not line.endswith(b'\n'):line=stream.readline(65536)
+                    continue  # Oversized or unfinished records are not trusted.
+                try:
+                    row=json.loads(line)
+                    if isinstance(row,dict) and 'boottime' in row:yield row
+                except (ValueError, TypeError):pass
     except OSError: pass
-    return rows
+
+def load(path, max_rows=MAX_VIEW_ROWS, max_bytes=MAX_VIEW_BYTES):
+    try:offset=max(0,Path(path).stat().st_size-max_bytes)
+    except OSError:return []
+    return list(deque(iter_rows(path,offset),maxlen=max_rows))
 
 def analyze(rows):
     totals={k:{'delta_uah':0, 'duration_s':0, 'rejected':0, 'estimated_ma':None} for k in METHODS}
-    sleep=0.; pending=None; warnings=[]
+    sleep=0.; pending=None; warnings=[]; valid_sleep_pairs=0
     for row in rows:
         if row.get('event')=='prepare-sleep':
             if pending: warnings.append('unpaired prepare')
@@ -50,6 +65,7 @@ def analyze(rows):
             dt=row['boottime']-pending['boottime']; awake=row['monotonic']-pending['monotonic']
             if row.get('boot_id')==pending.get('boot_id') and 0<=awake<=dt+.05 and dt>0:
                 sleep+=max(0,dt-awake)
+                valid_sleep_pairs+=1
             else: warnings.append('invalid sleep clocks or changed boot')
             pending=None
     if pending: warnings.append('sleep interval not yet complete')
@@ -72,7 +88,7 @@ def analyze(rows):
     for item in totals.values():
         if item['duration_s']:item['estimated_ma']=item['delta_uah']*3.6/item['duration_s']
     duration=(rows[-1]['boottime']-rows[0]['boottime']) if len(rows)>1 and rows[0].get('boot_id')==rows[-1].get('boot_id') else 0
-    return {'duration_s':max(0,duration),'sleep_s':sleep,'methods':totals,'warnings':warnings}
+    return {'duration_s':max(0,duration),'sleep_s':sleep,'valid_sleep_pairs':valid_sleep_pairs,'methods':totals,'warnings':warnings}
 
 def export_csv(rows,path):
     columns=['time_utc','event','usb','capacity_percent','status','current_ua','voltage_uv','temperature_decic',

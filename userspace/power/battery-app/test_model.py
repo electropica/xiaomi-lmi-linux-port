@@ -1,6 +1,7 @@
 """Boundary checks: exclude charging, scale drift, reboot and missing counters."""
-import copy, unittest
-from model import analyze
+import copy, unittest, tempfile,json
+from pathlib import Path
+from model import analyze,load,iter_rows
 
 def row(t, counter, event='sample'):
     return {'boottime':t,'monotonic':t,'boot_id':'same','usb':'0','event':event,
@@ -36,5 +37,21 @@ class Boundaries(unittest.TestCase):
     def test_invalid_sleep_not_claimed(self):
         a=row(0,2000,'prepare-sleep');b=row(180,1900,'resume-signal');b['monotonic']=200
         self.assertEqual(analyze([a,b])['sleep_s'],0)
+        self.assertEqual(analyze([a,b])['valid_sleep_pairs'],0)
+    def test_incomplete_sleep_warns(self):
+        result=analyze([row(0,2000,'prepare-sleep')])
+        self.assertEqual(result['valid_sleep_pairs'],0)
+        self.assertTrue(result['warnings'])
+    def test_history_view_is_bounded_but_stream_is_complete(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            path=Path(folder)/'long.jsonl'
+            path.write_text(''.join(json.dumps(row(t,2000-t))+'\n' for t in range(20)))
+            self.assertEqual([r['boottime'] for r in load(path,max_rows=3)],[17,18,19])
+            self.assertEqual(len(list(iter_rows(path))),20)
+    def test_partial_tail_is_not_a_record(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            path=Path(folder)/'partial.jsonl'
+            path.write_text(json.dumps(row(0,2000))+'\n'+json.dumps(row(1,1999))[:30])
+            self.assertEqual(len(load(path)),1)
 
 if __name__=='__main__':unittest.main()

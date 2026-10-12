@@ -11,3 +11,6 @@ RestartSec=10
 TimeoutStopSec=10
 UMask=0077
 Nice=10
+
+[Install]
+WantedBy=default.target

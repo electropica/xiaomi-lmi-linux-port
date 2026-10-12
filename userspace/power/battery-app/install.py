@@ -5,7 +5,9 @@ from pathlib import Path
 parser=argparse.ArgumentParser()
 parser.add_argument('username')
 parser.add_argument('--remove',action='store_true')
+parser.add_argument('--automatic',action='store_true',help='Enable and start background recording for the desktop user')
 args=parser.parse_args()
+assert not (args.remove and args.automatic)
 assert os.geteuid()==0,'Run the installer as root'
 account=pwd.getpwnam(args.username)
 assert account.pw_uid>0,'Select the desktop user, not root'
@@ -23,6 +25,7 @@ base=['runuser','-u',args.username,'--','env',f'XDG_RUNTIME_DIR=/run/user/{accou
 state=subprocess.run(base+['systemctl','--user','is-active','lmi-battery-recorder.service'],text=True,capture_output=True,timeout=8)
 assert state.stdout.strip()!='active','Stop recording before updating or removing the app'
 if args.remove:
+    subprocess.run(base+['systemctl','--user','disable','lmi-battery-recorder.service'],check=True,capture_output=True,timeout=10)
     for path in targets.values():
         if path.exists():path.unlink()
     if manifest.exists():manifest.unlink()
@@ -37,4 +40,6 @@ else:
     manifest.write_text(json.dumps(updated,indent=2));manifest.chmod(0o644)
 subprocess.run(base+['systemctl','--user','daemon-reload'],check=True,timeout=10)
 subprocess.run(['update-desktop-database','/usr/local/share/applications'],check=True,timeout=10)
-print('Owned application removed; private data retained' if args.remove else 'Installed; recording remains stopped and is not enabled')
+if args.automatic:
+    subprocess.run(base+['systemctl','--user','enable','--now','lmi-battery-recorder.service'],check=True,capture_output=True,timeout=10)
+print('Owned application removed; private data retained' if args.remove else ('Installed; automatic recording enabled and started' if args.automatic else 'Installed; no automatic start was requested'))
