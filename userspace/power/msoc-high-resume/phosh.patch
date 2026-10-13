@@ -1,0 +1,45 @@
+--- a/src/screen-saver-manager.c
++++ b/src/screen-saver-manager.c
+@@ -564,6 +564,33 @@
+   return TRUE;
+ }
+ 
++/* IRQ 441 is accepted only with a fresh, noncritical discharging reading.
++ * Missing data, low/empty events and combined IRQ reasons fail open. */
++static gboolean
++lmi_quiet_reason_allowed (const char *reason)
++{
++  g_autofree char *capacity = NULL;
++  g_autofree char *status = NULL;
++  char *end = NULL;
++  guint64 level;
++
++  if (g_strcmp0 (reason, "438 msoc-delta") == 0)
++    return TRUE;
++  if (g_strcmp0 (reason, "441 msoc-high") != 0)
++    return FALSE;
++  if (!g_file_get_contents ("/sys/class/power_supply/battery/capacity",
++                            &capacity, NULL, NULL) ||
++      !g_file_get_contents ("/sys/class/power_supply/battery/status",
++                            &status, NULL, NULL))
++    return FALSE;
++  g_strstrip (capacity);
++  if (!g_ascii_isdigit (capacity[0]) ||
++      g_strcmp0 (g_strstrip (status), "Discharging") != 0)
++    return FALSE;
++  level = g_ascii_strtoull (capacity, &end, 10);
++  return end != capacity && *end == '\0' && level >= 30 && level <= 100;
++}
++
+ static gboolean
+ lmi_gauge_resume_matches (gboolean opted_in, gboolean locked,
+                          gboolean before_valid, gboolean after_valid,
+@@ -572,7 +599,7 @@
+ {
+   return opted_in && locked && before_valid && after_valid
+          && after > before && after - before > 50000
+-         && g_strcmp0 (reason, "438 msoc-delta") == 0
++         && lmi_quiet_reason_allowed (reason)
+          && g_strcmp0 (usb, "0") == 0;
+ }
+ 

@@ -1,0 +1,14 @@
+{
+  "phosh": {
+    "before": "6edcc206d8e7caf97e550ebf89dc1b12083a724afcc0d424a955568785ead4af",
+    "before_normalized": "ace8af63ebbe636e932790daba15ba5c3645660de3fc9297c20b962c623571a2",
+    "after": "f8cbde684bd1920eebcfab70c39d2adef8696498fadc5443e6d2bde37669f019",
+    "target": "src/screen-saver-manager.c"
+  },
+  "gsd": {
+    "before": "31a319b3e9d4542bc6f1287da3c085c4872aa53c224bca0b1e96d32d739510a3",
+    "before_normalized": "31a319b3e9d4542bc6f1287da3c085c4872aa53c224bca0b1e96d32d739510a3",
+    "after": "3a776734c398cd88f64ef62116c5b6e1f1ada5165abd6f20b2fd8507e0f31fe2",
+    "target": "plugins/power/gsd-power-manager.c"
+  }
+}
