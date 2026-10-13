@@ -57,6 +57,34 @@ Phosh's original CRLF bytes and LF-normalized identity are recorded separately;
 the guarded build copies the pinned LF candidate only after validating the actual
 compiled baseline bytes. GSD baseline bytes already use LF.
 
-Full ARM package compilation, installation and target qualification have NOT
-been performed. This candidate has no measured battery saving yet. Its intended
-effect is to avoid the identified screen relight and twenty-minute awake episode.
+At the initial source publication, ARM compilation, installation and target
+qualification had not been performed. The subsequent update below records the
+completed build/install and normal-path smoke test. The exact msoc-high resume
+remains unqualified; no saving is established yet. The intended effect is to
+avoid the identified screen relight and twenty-minute awake episode.
+
+## Build, installation and normal-path smoke update
+
+The user completed the incremental ARM build. Source identities match the pinned
+candidates; package names, versions and architectures were checked for Phosh/
+common `0.46.0-3+deb13u1+lmigaugewake3` and GSD/common `48.1-1+lmiquietgauge3`.
+Four qualified v2 rollback packages were verified and staged before installation.
+The package simulation upgraded only these four packages and removed none.
+A bounded rollback was armed before installation; existing opt-ins, the kernel
+and the NPU policy remained unchanged. Both services started without restart
+loops, and the user confirmed normal touch, application scrolling and power-key
+behavior. The session can read the new capacity/status guard inputs.
+
+One accepted three-minute unplugged smoke observation temporarily reduced the
+automatic-suspend delay from 900 to 60 seconds, with independent restoration.
+There was no forced suspension or wake alarm. Clock accounting measured
+154.149 seconds of actual sleep, followed by the expected USB interrupt. The
+screen was blank before suspension, all four v3 versions remained installed on
+the same boot, and no pending RTC/NPU restoration or observer remained.
+
+The normal 900-second delay was restored. Owned restart overrides and both trial
+fallback timers were removed/stopped after verification; the qualified v2
+rollback remains available. Charging/input settings and unchanged service PIDs
+were verified. V3 is retained as a candidate for a longer natural discharge.
+No msoc-high interrupt occurred during this smoke test: it does not qualify the
+new high branch, prove a battery saving or solve the residual sleep drain.

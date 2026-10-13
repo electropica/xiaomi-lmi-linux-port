@@ -1,7 +1,9 @@
 # Guarded msoc-high resume candidate
 
-Source-only incremental patches for qualified Phosh v2 and GSD2. No ARM build,
-phone installation or target qualification has yet occurred. No measured saving.
+Incremental patches based on qualified Phosh v2 and GSD2. The four v3 runtime
+packages have now been ARM-built and installed. User interface checks and one
+normal sleep/USB-return smoke test passed; the exact msoc-high wake remains
+unqualified and there is no measured saving yet.
 
 See the [overnight evidence and boundaries](../../../docs/validation/quiet-gauge-night-2026-10-13.md).
 `identity.json` pins actual before bytes, LF-normalized before bytes and LF
