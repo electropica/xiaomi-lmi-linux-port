@@ -187,3 +187,41 @@ branch at each observed wake was not traced. It neither explains every change
 nor establishes an electrical current calibration. A falling software/shadow
 estimate must not be presented as a power-policy improvement by itself. No
 gauge state, capacity learning, battery profile or protection was modified.
+
+## Targeted power traces: scope and charge-pump ADC
+
+The initial thirty-minute RPMh capture overflowed during its initial awake
+period. The whole capture remains unqualified. A separate retained-suffix
+review found that overwritten CPU buffer prefixes end at least 352.89 seconds
+before the selected machine-suspend windows. All eight CPU buffers have zero
+commit overruns, dropped events and consumed records; retained timestamps are
+monotonic. Thirteen boundary cases reject loss reaching the selected interval
+or incomplete buffer evidence. This qualifies only the selected suffix.
+
+One retained IRQ438-following sleep interval lasted 635.277 seconds by separate
+BOOTTIME-minus-MONOTONIC accounting. No valid nonzero BCM sleep-bank command
+was observed there. This describes emitted commands, not cached requests,
+other masters, unobserved resources or physical rail current. A subsequent
+gated capture had no loss but observed no gauge wake, so it does not qualify
+the missing target sequence.
+
+A separate filtered SMBus capture observed only the charge-pump driver's
+existing transactions on adapter 5, address 0x66, register 0x14. The collector
+initiated no device transactions or register writes. The complete trace has
+no buffer loss, and its strict transaction parser passes eight boundary cases.
+
+| Driver phase | Transaction | Value | Bus result |
+| --- | --- | --- | --- |
+| Before suspend | Read | 0xa8 | 0 |
+| Before suspend | Write | 0x28 | 0 |
+| Resume, before enabling ADC | Read | 0x28 | 0 |
+| Resume | Write | 0xa8 | 0 |
+
+Bit 7 is the ADC-enable control. The successful clear and subsequent readback
+show that the ADC control was off across the observed 325.036-second sleep
+window, then enabled again on resume. This rules out a failed ADC-disable
+command for this interval; it neither identifies the exact silicon variant
+nor measures analog current or establishes a battery saving. No charger,
+calibration or protection setting was changed. The normal fifteen-minute
+idle timeout was restored, owned observers and trace instances were cleaned
+up, and no test alarm remained.
