@@ -1,4 +1,4 @@
-# Quiet-gauge overnight observation, 12–13 October 2026
+# Quiet-gauge validation, 12–13 October 2026
 
 ## Installed baseline and result
 
@@ -88,3 +88,39 @@ rollback remains available. Charging/input settings and unchanged service PIDs
 were verified. V3 is retained as a candidate for a longer natural discharge.
 No msoc-high interrupt occurred during this smoke test: it does not qualify the
 new high branch, prove a battery saving or solve the residual sleep drain.
+
+## Daytime v3 qualification: 13 October
+
+The normal-timeout passive observation ran on the same persistent kernel and
+Phosh/GSD v3, with both opt-ins, debug off and Wi-Fi left enabled. No wake alarm,
+forced suspension, capture or new power-policy change was introduced. The
+observer was armed before departure and no phone contact occurred between the
+confirmed unplug and return. Its one-hour unplug-wait limit accommodated the
+planned departure; the measurement begins at observed USB loss, not arming.
+
+The unplugged interval was 37,754.451 seconds (10 h 29 min 14 s). Reported capacity
+was 100% at departure and 75% at USB return; the latter is a charging-contaminated
+endpoint. Actual suspension totaled 36,089.465 seconds across 48 paired windows,
+95.59% of the interval. Initial automatic sleep occurred after 911.133 seconds.
+
+All 46 observed msoc-delta wakes stayed blank and resuspended. Crucially, one
+exact `441 msoc-high` wake occurred at 80% with Discharging and USB absent. The
+screen was blank before and at resume, no unblank was observed in its awake
+gap, and the next suspension began 15.366929 seconds later. The prior v2 night
+had the same reason at 80% followed by screen relight and 1,200.216 seconds
+awake. This qualifies the guarded v3 behavior for this real noncritical case;
+it does not qualify every battery level or establish a calibrated total saving.
+
+Valid battery-only counter coverage was 37,461.874 seconds; software/shadow/raw
+estimates were 59.43 / 59.42 / 88.29 mA. They include awake intervals and remain
+differently scaled gauge estimates. The day and previous night are not a
+controlled identical-duration electrical A/B, so do not claim their rate
+difference as the isolated power saving of this filter. Residual drain is
+still present despite successful suspension and the fixed screen episode.
+
+The boot and four v3 versions were unchanged, services were active with no
+restart, and analysis found no unmatched sleep window or clock warning. The
+observer finished successfully; RTC state was clear and NPU restoration was
+complete. Normal charging and input_suspend=0 were checked after return.
+The qualified v2 rollback remains available. No new short repeat is required
+merely to reproduce this already observed high-wake result.

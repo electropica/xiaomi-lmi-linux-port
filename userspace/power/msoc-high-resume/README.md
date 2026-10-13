@@ -2,8 +2,10 @@
 
 Incremental patches based on qualified Phosh v2 and GSD2. The four v3 runtime
 packages have now been ARM-built and installed. User interface checks and one
-normal sleep/USB-return smoke test passed; the exact msoc-high wake remains
-unqualified and there is no measured saving yet.
+normal sleep/USB-return smoke test passed. The subsequent daytime observation
+qualified one real msoc-high wake at 80% while discharging: the screen stayed
+blank and suspension resumed after 15.367 seconds. Residual standby drain
+remains unresolved; a calibrated total saving has not been established.
 
 See the [overnight evidence and boundaries](../../../docs/validation/quiet-gauge-night-2026-10-13.md).
 `identity.json` pins actual before bytes, LF-normalized before bytes and LF
