@@ -225,3 +225,28 @@ nor measures analog current or establishes a battery saving. No charger,
 calibration or protection setting was changed. The normal fifteen-minute
 idle timeout was restored, owned observers and trace instances were cleaned
 up, and no test alarm remained.
+
+## Auxiliary peripheral review
+
+The bound Goodix device is a platform device, not SPI0.0; SPI0.0 is the IR
+transmitter. The selected kernel configuration builds `GOODIX_FOD`. Its
+header leaves `AP_CONTROL_CLK` disabled. Probe creates the device and reads
+GPIO numbers without driving its power GPIO. Open and ioctl paths manage
+GPIO requests and power separately. A bounded, completed descriptor scan
+found no process holding the Goodix device at the inspected plugged state.
+This does not establish its initial pin level or physical sleep current;
+no device node was opened, ioctl issued, GPIO driven or driver unbound.
+
+The retained IR driver acquires its regulator at probe without enabling it;
+transmission enables it around the SPI transfer and then disables it, including
+transfer failures. A missing runtime-PM status is not proof of continuous
+power. No IR transmission was requested.
+
+The official October 7 LineageOS package contains twelve device overlays.
+The overlay identified by its model as Xiaomi lmi is entry 7, SHA-256
+`019bd837d01396d86dcecc65a39c6591fc0ceeb6aa5ef98cc7374cc6248c7466`.
+Its Goodix GPIO arguments match the retained Mobian runtime tree. All 22
+shared named regulator nodes have matching observed `regulator-always-on`
+and `regulator-boot-on` flags. This is a package-overlay comparison, not a
+reconstruction of Android's final merged runtime tree or an electrical
+measurement. It supplies no basis for removing shared-rail constraints.
