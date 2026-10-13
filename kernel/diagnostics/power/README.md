@@ -3054,3 +3054,7 @@ build is requested before the stable night observation. The qualified
 Phosh v2/GSD v1 pair remains the handset baseline for sustained standby
 observation. The review also documents why three BMS charge estimates
 are not independent calibrated current measurements.
+
+## Cross-device sleep-hook review
+
+See the [bounded Mobian/postmarketOS source review](../../../docs/validation/cross-device-sleep-hooks-2026-10-13.md). No additional Qualcomm hardware sleep hook was identified in the searched packages; CPU active-only clients and the extra NPU latfloor must not be confused with the corrected dual-context NPU requests.
