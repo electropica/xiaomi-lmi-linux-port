@@ -157,3 +157,33 @@ across real gauge resumes. Earlier complete traces qualified the initial sleep
 commands but did not capture a subsequent gauge-triggered suspension. A new
 result requires such a sequence, complete buffers and matched boundaries;
 absent or cached commands must remain unknown rather than be called zero votes.
+
+## Counter interpretation: source-supported correlation
+
+Stratifying the suspended pairs by their starting reported capacity exposes
+different trends. The raw estimate remains 83.90–84.18 mA across the five
+bands; software and shadow estimates decrease together. These bands are
+consecutive portions of one observation, not controlled comparisons.
+
+| Starting reported capacity | Software estimate | Shadow estimate | Raw estimate |
+| --- | --- | --- | --- |
+| 95–100% | 87.31 mA | 84.69 mA | 83.91 mA |
+| 90–94% | 76.15 mA | 75.31 mA | 83.96 mA |
+| 85–89% | 61.63 mA | 61.16 mA | 83.90 mA |
+| 80–84% | 48.16 mA | 47.96 mA | 83.97 mA |
+| 75–79% | 38.25 mA | 38.23 mA | 84.18 mA |
+
+The retained `fg-alg.c` is byte-identical to the
+[pinned LineageOS source](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/blob/71b13e62f057a649b77fe4062feb73ee72ad609c/drivers/power/supply/qcom/fg-alg.c),
+SHA-256 `436db2892f19c0055bcb1f21916bbfe3bbcdb9429db694aad0cabbb4c79166f1`.
+Its `cap_learning_update()` can prime `CC_SOC_SW` from `BATT_SOC` when learning
+is inactive and the battery is Discharging. The FG driver's status-change work
+calls that function; its priming callback writes `CC_SOC_SW`. Software charge
+uses that value and learned capacity, whereas shadow charge uses `BATT_SOC`
+and learned capacity. Raw charge uses `CC_SOC` and nominal capacity.
+
+This supplies a source-supported correlation mechanism; execution of that
+branch at each observed wake was not traced. It neither explains every change
+nor establishes an electrical current calibration. A falling software/shadow
+estimate must not be presented as a power-policy improvement by itself. No
+gauge state, capacity learning, battery profile or protection was modified.
