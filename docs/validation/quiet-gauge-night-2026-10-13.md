@@ -35,7 +35,7 @@ causal regression from a prior shorter, approximately 50 mA sleeping observation
 The observer finished successfully; RTC state was clear, the NPU restoration
 state was absent and normal charging/input settings were verified after return.
 
-## Narrow source candidate, not installed
+## Guarded msoc-high candidate
 
 The preserved `qpnp-fg-gen4.c` registers `msoc-high` as wakeable and directs it
 to `fg_soc_irq_handler`, which logs the IRQ and returns handled. `msoc-empty`

@@ -128,3 +128,11 @@ change. No CPU/NPU/GPU settings were changed in this review.
 The next target qualification remains the guarded `msoc-high` userspace candidate
 documented in [the overnight result](quiet-gauge-night-2026-10-13.md). No
 additional physical test follows from the script search alone.
+
+## Additional community-port mechanism: POCO X3 NFC
+
+The [surya suspend report](https://github.com/woodyst/surya-pmos/blob/d7eadb03f230506140839f18a6c0ef3c43016d7e/docs/suspend.es.md) describes a mainline SM7150 port, not this downstream SM8250 baseline. Its reported idle improvement primarily follows disabling a Bluetooth UART wake line that aborted every suspension. Our qualified clock-accounted sleeps and dormant Bluetooth UART evidence do not show that failure; no wake source was disabled here.
+
+A separate reported awake-idle saving came from loading a deferred camera provider so mainline interconnect sync_state could remove initial votes. The locked lmi source has backported sync_state infrastructure in the driver core, but lacks that mainline interconnect directory; the reviewed MSM-bus RPMh and Kona GCC/GPUCC/DISPCC/VIDEOCC drivers contain no sync_state callbacks. The documented mainline workaround therefore cannot simply be transplanted. No camera module or driver-link setting was changed.
+
+The port also reports a device-specific gauge scale correction. That factor is not a calibration for this phone and was not applied. The mechanisms are useful comparative evidence, not a demonstrated lmi fix. A read-only check before the next daytime observation found deep selected, sleep_disabled=N, console suspension enabled, and no selected boot options forcing unused clocks/domains to remain on or disabling CPU idle. These software checks are not independent physical rail measurements.
