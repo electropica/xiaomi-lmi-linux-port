@@ -11,10 +11,10 @@ packages=[
     ('upower', '1.90.9-1+lmi1', 'arm64'),
     ('libupower-glib3', '1.90.9-1+lmi1', 'arm64'),
     ('gir1.2-upowerglib-1.0', '1.90.9-1+lmi1', 'arm64'),
-    ('phosh', '0.46.0-3+deb13u1+lmigaugewake2', 'arm64'),
-    ('phosh-common', '0.46.0-3+deb13u1+lmigaugewake2', 'all'),
-    ('gnome-settings-daemon', '48.1-1+lmiquietgauge1', 'arm64'),
-    ('gnome-settings-daemon-common', '48.1-1+lmiquietgauge1', 'all'),
+    ('phosh', '0.46.0-3+deb13u1+lmigaugewake3', 'arm64'),
+    ('phosh-common', '0.46.0-3+deb13u1+lmigaugewake3', 'all'),
+    ('gnome-settings-daemon', '48.1-1+lmiquietgauge3', 'arm64'),
+    ('gnome-settings-daemon-common', '48.1-1+lmiquietgauge3', 'all'),
 ]
 files=[]
 for name, version, arch in packages:

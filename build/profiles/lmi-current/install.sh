@@ -20,10 +20,10 @@ for p in upower libupower-glib3 gir1.2-upowerglib-1.0; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = 1.90.9-1+lmi1
 done
 for p in phosh phosh-common; do
-    test "$(dpkg-query -W -f='${Version}' "$p")" = 0.46.0-3+deb13u1+lmigaugewake2
+    test "$(dpkg-query -W -f='${Version}' "$p")" = 0.46.0-3+deb13u1+lmigaugewake3
 done
 for p in gnome-settings-daemon gnome-settings-daemon-common; do
-    test "$(dpkg-query -W -f='${Version}' "$p")" = 48.1-1+lmiquietgauge1
+    test "$(dpkg-query -W -f='${Version}' "$p")" = 48.1-1+lmiquietgauge3
 done
 # Enable only the paired qualified quiet-resume paths; no debug environment.
 install -Dm644 "$src/power/phosh-quiet-resume.conf" /etc/systemd/user/mobi.phosh.Shell.service.d/60-lmi-quiet-gauge-resume.conf

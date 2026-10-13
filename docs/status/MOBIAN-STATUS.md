@@ -1,6 +1,22 @@
 # Mobian status
 
-## Later daytime boundary — 2026-10-12
+## Current installed handset and next-image pins — 2026-10-13
+
+The handset now runs Phosh/common `0.46.0-3+deb13u1+lmigaugewake3` and
+GSD/common `48.1-1+lmiquietgauge3`, with persistent quiet-resume opt-ins and
+debug off. The existing RPMh diagnostic kernel and suspend-only NPU policy
+are unchanged. USB cycles passed; a real noncritical msoc-high wake at 80%
+stayed blank and resuspended after 15.367 seconds. Daytime accounting recorded
+95.59% suspension over 10 h 29 min. Residual standby drain remains unresolved.
+
+The current image profile now pins this v3 pair. Debian package identities,
+private input sums, installed-version checks and host rejection/staging tests
+are updated together. Existing rollback packages are retained. This is a
+host-checked recipe update, not a newly built or hardware-validated image.
+Heavy image builds remain operator-run. Earlier dated sections are historical.
+See [the consolidated validation and counter limits](../validation/quiet-gauge-night-2026-10-13.md).
+
+## Historical daytime boundary — 2026-10-12
 
 An eleven-hour return showed 97% to 59%, but only 16 min 39 s of actual sleep.
 The initial explicit suspension began before screen blanking and therefore did
@@ -23,7 +39,7 @@ See the [overnight result](../validation/quiet-gauge-overnight-2026-10-12.md).
 This does not qualify a newly built image.
 
 
-## Current handset boundary — 2026-10-11
+## Historical handset boundary — 2026-10-11
 
 The handset is back on Mobian after the LineageOS battery comparison. It
 retains the installed RPMh diagnostic kernel and the NPU suspend policy.

@@ -21,7 +21,7 @@ operator-run. The generic/historical builder remains available separately.
 - Previously validated patched UPower battery-status opt-in, CPU-idle
   opt-in for the existing kernel release, and battery-only suspend after
   900 seconds; no automatic suspend while connected to AC.
-- Qualified Phosh/GSD quiet-gauge packages and persistent service opt-ins,
+- Qualified v3 Phosh/GSD quiet-gauge packages and persistent service opt-ins,
   without debug environments; screen blanking and prompt resuspension were
   validated on the handset. Fresh-image validation remains pending.
 - Selected timezone and timesyncd, plus the existing time-seed clock floor
@@ -47,10 +47,10 @@ Set `M1_CURRENT_LMI_PROFILE_INPUTS` to a private directory containing:
 - `upower_1.90.9-1+lmi1_arm64.deb`
 - `libupower-glib3_1.90.9-1+lmi1_arm64.deb`
 - `gir1.2-upowerglib-1.0_1.90.9-1+lmi1_arm64.deb`
-- `phosh_0.46.0-3+deb13u1+lmigaugewake2_arm64.deb`
-- `phosh-common_0.46.0-3+deb13u1+lmigaugewake2_all.deb`
-- `gnome-settings-daemon_48.1-1+lmiquietgauge1_arm64.deb`
-- `gnome-settings-daemon-common_48.1-1+lmiquietgauge1_all.deb`
+- `phosh_0.46.0-3+deb13u1+lmigaugewake3_arm64.deb`
+- `phosh-common_0.46.0-3+deb13u1+lmigaugewake3_all.deb`
+- `gnome-settings-daemon_48.1-1+lmiquietgauge3_arm64.deb`
+- `gnome-settings-daemon-common_48.1-1+lmiquietgauge3_all.deb`
 - `tfa98xx.cnt`, SHA256
   `07abfca151aaa296595fff35d53c2aa2999e7d16cdc373ade2fd5954ff90c9a9`
 - `SHA256SUMS` containing exactly those eight files and their recorded sums.
@@ -127,3 +127,8 @@ qualified two actual gauge resumes, prompt deep-sleep entry and USB/button/
 touch/application interaction. This does not qualify a new image: no full
 image build, flash or fresh-image test was performed for this integration.
 Long-duration standby consumption remains pending. The kernel is reused.
+
+The v3 pair also includes the qualified USB-cycle correction and noncritical
+msoc-high guard. See [installed-userspace validation](../../../docs/validation/quiet-gauge-night-2026-10-13.md).
+This profile rejects the former v2/quiet1 package identities; a new image
+containing v3 has not yet been built or hardware-validated.
