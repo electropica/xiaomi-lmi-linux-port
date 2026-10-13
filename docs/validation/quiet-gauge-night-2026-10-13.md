@@ -124,3 +124,36 @@ observer finished successfully; RTC state was clear and NPU restoration was
 complete. Normal charging and input_suspend=0 were checked after return.
 The qualified v2 rollback remains available. No new short repeat is required
 merely to reproduce this already observed high-wake result.
+
+## Separating suspended and awake counter intervals
+
+An offline re-accounting of the same daytime evidence retained 47 adjacent
+PrepareForSleep/resume endpoint pairs with USB absent, Discharging at both
+endpoints, unchanged capacity scales, non-increasing counters and more than
+99% of each interval accounted as suspended. These pairs cover 35,828.595
+seconds, including 29.662 seconds of callback-boundary awake overhead.
+The USB-return sleep window is excluded because its endpoint is charging.
+
+| Counter method | Covered interval time | Gauge-derived average |
+| --- | --- | --- |
+| Software charge counter | 9 h 57 min 09 s | 56.276 mA |
+| Shadow charge counter | 9 h 57 min 09 s | 55.741 mA |
+| Raw charge counter | 9 h 57 min 09 s | 84.009 mA |
+
+For comparison, the previously reported software estimate over all eligible
+USB-absent intervals was 59.426 mA. The remaining counter decline is therefore
+present during the suspended endpoint pairs; it cannot be attributed entirely
+to the brief gauge wake gaps. This narrows the next investigation to residual
+suspend consumption and gauge interpretation. It does not identify a specific
+powered peripheral or independently measure electrical current.
+
+The three counters use correlated internal gauge states and different capacity
+scales. Quantization, callback overhead and undetectable internal recalibration
+remain possible. Short awake gaps are unsuitable as standalone current meters.
+No isolated causal saving is claimed from this re-accounting.
+
+The next targeted observation records only RPMh commands and suspend boundaries
+across real gauge resumes. Earlier complete traces qualified the initial sleep
+commands but did not capture a subsequent gauge-triggered suspension. A new
+result requires such a sequence, complete buffers and matched boundaries;
+absent or cached commands must remain unknown rather than be called zero votes.
