@@ -428,3 +428,27 @@ physical rail current or every other master's request. The pre-suspend S4
 enable request remains valid and enabled, but that snapshot precedes device
 callbacks and does not by itself identify an unnecessary consumer in sleep.
 No new phone access, regulator write or physical test was performed.
+
+## Reconstructed Lineage base-plus-overlay power configuration
+
+To remove the earlier overlay-only limitation, the existing Lineage boot DTB
+section and the lmi package overlay were pinned to their previously retained
+hashes and merged in memory using libfdt. All three base candidates merged
+successfully; the Kona v2.1 candidate's msm-id matches the retained Mobian
+runtime property. No image was produced and no handset access was required.
+
+All 106 named regulators are present on both sides. The 374 compared explicit
+properties match in every candidate: regulator constraints/flags, selected
+initial vote fields and aggregate mode tables/thresholds. This is a bounded
+property comparison, not a proof that every regulator driver, consumer vote
+or physical rail behaves identically under both operating systems.
+
+The 977 comparable pin-configuration nodes have only two differences: the
+WCD938x reset active/sleep mux functions are gpio under the retained Mobian
+diagnostic tree and func2 in the reconstructed Lineage trees. These are the
+known reset-pinmux adaptation used for audio bring-up, not a newly discovered
+unrelated pin bias difference. The codec reset helper uses the sleep/active
+states to drive reset low/high; an identically named sleep state must not be
+assumed to be selected on every system suspension. The working audio patch
+was not reverted. Actual Android bootloader selection/later fixups and live
+electrical behavior remain outside this reconstruction.
