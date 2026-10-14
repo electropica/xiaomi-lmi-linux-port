@@ -552,3 +552,31 @@ gauge normalization and retained peripheral demand, not another identical
 automatic-suspend test. These findings alone do not justify a new kernel,
 arbitrary resource shutdown or an assertion that the physical battery is good
 or bad.
+
+### Fixed scaling does not explain the complete discharge trajectory
+
+The October 14 suspended pairs were also partitioned by departure charge
+level. All five groups have the same reported learned/design capacities,
+2,747/4,700 mAh:
+
+| Departure charge | Pairs | Software estimate | Raw estimate |
+| --- | --- | --- | --- |
+| 95–100% | 6 | 72.64 mA | 84.81 mA |
+| 90–94% | 11 | 63.58 mA | 84.86 mA |
+| 85–89% | 10 | 49.75 mA | 84.93 mA |
+| 80–84% | 11 | 38.87 mA | 85.26 mA |
+| 75–79% | 4 | 33.90 mA | 85.66 mA |
+
+These are consecutive parts of one observation, not controlled comparisons.
+The changing software/raw ratio cannot be explained by the fixed reported
+capacity ratio alone. The close agreement of the rescaled whole-period
+average is therefore insufficient to identify the mechanism. Distinct SOC
+states, priming, relaxation and unobserved internal changes remain relevant;
+none is established as the sole cause by this partition. No physical power
+improvement or battery-health conclusion follows.
+
+The source path from `fg_delta_msoc_irq_handler()` through the battery
+power-supply notification and `fg_notifier_cb()` can schedule
+`status_change_work()`. Learning/priming remains conditional, with early
+returns, coalesced work and write failures possible. This path is not proof
+that every recorded wake performed a successful priming write.
