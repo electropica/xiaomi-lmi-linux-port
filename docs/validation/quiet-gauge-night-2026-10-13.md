@@ -481,3 +481,74 @@ persists during actual suspension. Further work should distinguish peripheral
 and other-master power requests from gauge behavior, rather than repeat the
 same screen/suspend timing tests without a new causal hypothesis. CPU sleep
 residency does not itself prove all peripheral rails are electrically quiet.
+
+## Retained master residency and counter-scale audit — 2026-10-14
+
+This is an offline analysis of retained evidence, not a new handset test,
+power-policy change or battery fix.
+
+### Master statistics: distinguish displayed and stored accumulation
+
+In the retained `drivers/soc/qcom/rpmh_master_stat.c`,
+`msm_rpmh_master_stats_print_data()` already adds the current architectural
+counter minus `last_entered` when `last_entered > last_exited`. The printed
+`Sleep Accumulated Duration` therefore includes an ongoing sleep. Adding that
+contribution again to the retained text would double-count it.
+
+An older 12-minute observation contains a before/after master pair. At the
+19.2 MHz frequency used by retained `rpm_stats.c`, its displayed deltas give:
+
+| Quantity | Retained interval |
+| --- | --- |
+| Linux elapsed time | 721.244462 s |
+| Linux suspended time | 720.546600 s |
+| APSS accumulated-duration delta | 720.555921 s, about 99.905% of elapsed time |
+| ADSP accumulated-duration delta | 721.270771 s, approximately the full interval |
+
+The APSS result agrees with Linux sleep within about 9.3 ms. ADSP exceeds the
+separately recorded elapsed time by about 26 ms; clocks and master reads are
+sequential rather than atomic. This is not evidence of more than 100% physical
+residency. No fresh architectural-frequency read was performed.
+
+APSS duration/count updates are accepted only when the power-profile validity
+bits used by `msm_rpmh_master_stats_update()` are set; the source describes the
+rejected case as a sequence that did not execute cx-off. The APSS sleep-count
+delta is not a count of Linux system-suspend cycles. The observations support
+APSS collapse and ADSP-reported sleep over this older interval. They do not
+prove all retained votes, shared supplies or other masters are off. The
+October 14 full-day observation did not retain these master snapshots and
+must not inherit this interval's coverage.
+
+### Counter scaling: a numerical discrepancy is not extra electrical leakage
+
+The October 14 records consistently report learned capacity of 2,747,000 uAh
+and `charge_full_design` of 4,700,000 uAh. Over the selected suspended pairs,
+software/raw charge deltas have ratio 506946/881289 = 0.5752324, while the
+reported capacity ratio is 2747/4700 = 0.5844681.
+
+Numerically rescaling the 85.112991 mA raw estimate by that reported capacity
+ratio gives 49.745827 mA, close to the 48.959751 mA software estimate. This
+illustrates why their roughly 36 mA difference must not be interpreted as an
+additional physical load. It does not establish either estimate as calibrated
+current, prove battery degradation, or explain the residual discharge.
+
+There is a further source boundary: `fg_gen4_get_charge_raw()` calls
+`fg_gen4_get_nominal_capacity()`, which reads the nominal-capacity SRAM word.
+`POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN` can instead return the battery profile's
+`qcom,nom-batt-capacity-mah` value, falling back to the SRAM getter only when
+that profile value is unavailable. Thus `charge_full_design` is not guaranteed
+to be the exact nominal scale used by every raw read. The numerical rescaling
+above is illustrative, not an exact reconstruction of internal counter state.
+Reported capacity stability does not by itself qualify all internal scales.
+
+The learning code can prime `CC_SOC_SW` from `BATT_SOC`; its execution at each
+gauge wake has not been traced. Successful priming logs through
+`fg_dbg(..., FG_STATUS, ...)`; absence of that message in an unqualified log
+does not demonstrate absence of priming. No learning, calibration, charge
+protection or SRAM state was changed for this analysis.
+
+The next evidence requirement is a qualified distinction between internal
+gauge normalization and retained peripheral demand, not another identical
+automatic-suspend test. These findings alone do not justify a new kernel,
+arbitrary resource shutdown or an assertion that the physical battery is good
+or bad.
