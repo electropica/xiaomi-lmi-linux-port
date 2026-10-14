@@ -580,3 +580,34 @@ power-supply notification and `fg_notifier_cb()` can schedule
 `status_change_work()`. Learning/priming remains conditional, with early
 returns, coalesced work and write failures possible. This path is not proof
 that every recorded wake performed a successful priming write.
+
+### Runtime priming at cable transitions — 2026-10-14
+
+A short attended diagnostic temporarily enabled only the FG_STATUS logging
+bit through the existing FG debug mask. The kernel's successful-write log
+recorded three identical `CC_SOC_SW` priming writes in a context immediately
+followed by Discharging status at cable removal. With the recorded learned
+capacity, that written value reconstructs 2,623,277 uAh, exactly the first
+observed software counter in the discharging transition. One further priming
+write was followed by Charging status at reconnection.
+
+This is positive runtime evidence of priming at cable transitions, rather
+than merely a possible branch in source code. It does not establish a
+one-to-one relationship with gauge IRQs. Driver work and the observer's USB
+poll are not synchronized; a physical reconnect can already appear in a
+resume callback before the later `replugged` poll event. A poll-defined
+interval alone must not classify a kernel write as cable-absent.
+
+Clock accounting records 318.008 s of actual sleep within a 318.641 s
+prepare/resume window. The only resume was the final USB wake; no natural
+MSOC-delta wake occurred. Its resume endpoint was already USB-present and
+Not charging, so no qualified discharge-current average is derived from
+this sleep window. The filtered current at return also cannot be treated
+as an independent in-sleep measurement.
+
+The observer completed successfully, its restoration record passed, and the
+FG debug mask returned to zero. The normal 900-second idle policy, radios,
+governors, charge protections and capacity learning were unchanged. One
+initial suspend was requested; no RTC alarm or media capture was added.
+The next natural gauge-wake case remains unobserved by this diagnostic;
+absence of such a wake in five minutes is not evidence of absent priming.
