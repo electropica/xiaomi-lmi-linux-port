@@ -452,3 +452,32 @@ states to drive reset low/high; an identically named sleep state must not be
 assumed to be selected on every system suspension. The working audio patch
 was not reverted. Actual Android bootloader selection/later fixups and live
 electrical behavior remain outside this reconstruction.
+
+## Daytime return — 2026-10-14
+
+The explicitly requested passive daytime repeat retained the same v3 pair,
+permanent NPU suspend correction, enabled Wi-Fi and normal 15-minute automatic
+suspend policy. The unplugged interval lasted 40,043.574 seconds (11h07m24s),
+including 38,443.596 seconds of clock-accounted suspension: 96.00%. Displayed
+capacity went from 100% to 77% at the charging-contaminated USB return.
+
+All 43 eligible wakes were exact msoc-delta events. The observer recorded no
+screen unblank during their quiet intervals; each returned to suspension after
+15.186–15.409 seconds. The final USB wake was excluded. Same-boot, package and
+service qualification passed with no analysis warnings. The observer completed
+successfully; normal timeout, charging, empty RTC alarm, absent NPU recovery
+state and no trace instance were checked after retrieval.
+
+Forty-two isolated prepare/resume counter intervals covered 37,275.630 seconds,
+of which 37,249.322 seconds were actual suspension. Counter-derived averages
+were 48.960 mA (software), 48.784 mA (shadow) and 85.113 mA (raw nominal scale).
+These remain distinct correlated gauge estimates, not calibrated meters.
+The raw estimate is consistent with the preceding night/day sleep intervals;
+this repeat establishes no new saving or regression.
+
+Failed automatic suspension and screen relighting are no longer the primary
+explanation being investigated for this qualified baseline. Residual drain
+persists during actual suspension. Further work should distinguish peripheral
+and other-master power requests from gauge behavior, rather than repeat the
+same screen/suspend timing tests without a new causal hypothesis. CPU sleep
+residency does not itself prove all peripheral rails are electrically quiet.
