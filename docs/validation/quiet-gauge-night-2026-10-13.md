@@ -288,3 +288,38 @@ high power-enable drive at this plugged snapshot. Input level is not an analog
 rail measurement or a capture of the entire preceding sleep interval. No GPIO
 was requested or driven, and no fingerprint node was opened. No forced power
 change is justified by this finding.
+
+## Targeted peripheral and firmware follow-up, October 14
+
+A read-only camera wiring review mapped six described sensor nodes to ten
+unique TLMM clock/reset pins and thirteen named supplies/domains. At the
+inspected plugged idle state, all ten pins were GPIO inputs, low, pull-down;
+all thirteen supplies/domains reported disabled and zero users. This provides
+no observed high output backfeeding those mapped pins. It is not a definitive
+exclusion during every sleep interval, nor an analog leakage measurement.
+No camera was opened and no regulator or GPIO was written.
+
+The actual regulator summary distinguishes `use` from `open`: an acquired
+consumer handle is not necessarily an enable request. Configured voltages
+and zero reported current must not be treated as measured output voltage or
+zero physical draw. Prior retained sleep traces already show L5/L6 low-power
+mode requests and L17 disable; a plugged snapshot cannot replace those traces.
+
+The generic power-domain summary exposes only the MDP display domain,
+reported off-0. It contains no SLPI/SSC domain. The proposed qcom_ssc, ssc and
+slpi debugfs directories and the two checked master-stats filenames are absent.
+This does not prove missing power management or a powered-off sensor island.
+The retained sensors_ssc.c provides a boot_slpi sysfs loader with write-only
+boot/SSR controls, not the suggested debugfs client-vote list. Probe initializes
+its firmware ownership pointer to NULL; source alone does not establish live
+ownership. No boot/SSR control was read as a status value or written.
+
+The firmware sleep snapshot correlates with the final overnight interval:
+Linux accounts 774.125 seconds asleep; aosd, cxsd and ddr each report a last
+mode duration of 774 seconds, with matching time since exit. The source
+truncates seconds before converting to milliseconds. Its misleadingly named
+`actual last sleep` field is accumulated residency, not that last duration.
+This confirms temporal agreement for that window, not rail current or an
+across-night before/after count delta. Existing GPIO, radio, audio and supply
+constraints must not be changed merely because a generic checklist expects
+every non-CPU domain to be off.
