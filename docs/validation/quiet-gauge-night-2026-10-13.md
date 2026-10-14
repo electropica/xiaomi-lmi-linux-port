@@ -611,3 +611,52 @@ governors, charge protections and capacity learning were unchanged. One
 initial suspend was requested; no RTC alarm or media capture was added.
 The next natural gauge-wake case remains unobserved by this diagnostic;
 absence of such a wake in five minutes is not evidence of absent priming.
+
+### Bounding the software-versus-shadow mismatch
+
+An offline review of the 14 October daytime observation retained 90 snapshots
+with USB absent and battery status Discharging. Between the first and last
+such snapshots, charge_counter fell by 562,563 uAh, charge_counter_shadow by
+562,552 uAh and charge_now_raw by 962,582 uAh. The software-versus-shadow
+endpoint difference is therefore 11 uAh, whereas the raw-versus-software
+endpoint difference is 400,019 uAh.
+
+Across those snapshots, software minus shadow ranged from -264 to +2,822 uAh.
+For the 42 previously qualified sleep pairs, the cumulative decreases were
+506,946 uAh software, 505,124 uAh shadow and 881,289 uAh raw. Across the 43
+adjacent gauge-wake grace intervals, they were 23,477, 25,304 and 39,731 uAh,
+respectively. These phase selections do not cover every part of the day and
+must not be added as if they were a complete cable-to-cable record.
+
+A mismatch affecting only the software counter relative to shadow cannot
+numerically explain the much larger raw gap in this retained interval.
+However, shadow is BATT_SOC scaled by learned capacity, not an independent
+physical current meter. Agreement between software and shadow neither
+calibrates raw nor excludes a common hardware/model effect. The sysfs reads
+were sequential; these endpoints are recorded snapshots, not exact cable
+transition times. This uninstrumented observation does not establish whether
+priming executed at each natural gauge wake.
+
+### First natural gauge wake: bounded runtime diagnostic
+
+A subsequent observation left the normal 900-second battery idle timeout
+unchanged and made no explicit suspend request. FG_STATUS logging was enabled
+only until the first exact IRQ 438 msoc-delta resume, then restored three
+seconds later while USB was still absent. The unit exited successfully and
+the return check confirmed debug_mask=0 and completed recovery.
+
+The observed prepare/resume window was 440.149 seconds, including 439.507
+seconds actually suspended. Fourteen successful priming messages were retained
+in the diagnostic window, including cable departure and ordinary awake work;
+they are not fourteen gauge wakes. One successful write of CC_SOC_SW appears
+in the natural resume transition, after the prepare record and before the
+userspace resume callback. The callback reported USB absent and the exact
+msoc-delta reason. This is positive evidence of priming in that observed wake
+context, not proof of one write at every wake in earlier nights.
+
+Logging ended before cable return. These diagnostic samples do not qualify a
+new standby-current average or demonstrate a physical power saving. Together
+with the bounded software/shadow comparison, they support treating priming as
+part of the counter model rather than assuming that it alone explains the
+entire raw-counter gap. No profile, learned-capacity or protection value was
+changed, and no new kernel was built or flashed.
