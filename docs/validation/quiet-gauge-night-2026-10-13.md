@@ -357,3 +357,21 @@ pull-down in the subsequent plugged idle snapshot. Together with the ten
 previously mapped clock/reset pins, no high drive was observed on these
 selected camera lines. This remains a bounded idle check, not a definitive
 asleep leakage exclusion. No GPIO or camera state was changed.
+
+## Charge-pump conversion versus ADC enable
+
+Reanalysis of the retained successful register reads distinguishes charge-pump
+conversion from ADC sampling. Register 0x0c was 0x07, with CHG_EN (bit7) clear;
+register 0x0a was 0x20, with CONV_SWITCHING_STAT (bit2) clear. A retained
+resume-side converter-status log also reported 0x00. The driver skip-read and
+skip-write controls were zero. These are plugged idle and resume observations,
+not continuous conversion telemetry throughout suspension.
+
+The retained device-ID byte 0x10 matches the locked header's named BQ25970 ID
+and selects its driver family. The selector also has a fallback branch, so
+the generic driver name alone should not be used as silicon identification.
+The separate filtered suspend trace already establishes ADC disable for its
+qualified sleep interval. Neither observation measures quiescent electrical
+current or warrants disabling charger protection or repeating the same ADC
+experiment. No additional hardware register read or write was performed for
+this reanalysis; whole-register dumps can consume diagnostic flag state.
