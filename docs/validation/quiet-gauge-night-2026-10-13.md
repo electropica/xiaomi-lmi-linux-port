@@ -323,3 +323,37 @@ This confirms temporal agreement for that window, not rail current or an
 across-night before/after count delta. Existing GPIO, radio, audio and supply
 constraints must not be changed merely because a generic checklist expects
 every non-CPU domain to be off.
+
+## CNSS/MHI DRV interpretation and additional camera pins
+
+The retained CNSS driver selects MSM_PCIE_DRV_SUSPEND when DRV is connected,
+uses mhi_pm_fast_suspend(), and deliberately skips the ordinary PCI_D3hot path.
+The MHI function places host PM in M3 and device state in M3_FAST. Requiring
+ordinary device M3 or D3hot would therefore misclassify this supported path.
+
+The PCIe DRV controller waits for RPMSG acknowledgement before changing to
+its DRV link state, disabling non-suppressible local clocks, removing its bus
+vote and releasing regulator requests. Its ACK callback checks payload size,
+reply sequence and a zero status before completing the request. This source
+review does not prove every physical rail transition succeeded.
+
+The audited MHI states reader reports cached software fields only. A plugged
+idle snapshot shows pm_state M3, dev_state M3_FAST, zero wake request, zero
+device wake and zero pending packets; the Wi-Fi PCIe endpoint is runtime
+suspended. Its cumulative M3_Fast count is not a measured overnight delta.
+The root bridge's runtime-active flag alone is not proof that DRV-managed
+hardware stays electrically awake during system suspension. No PCI config,
+register dump, reset, state-trigger or vote interface was used.
+
+The existing NPU-active radio isolation already estimated 50.150 mA with
+Wi-Fi stopped versus 49.593 mA in its preceding enabled-radio interval,
+with the five reviewed radio supply/domain use counts at zero. This was a
+short sequential gauge comparison, not a calibrated association/traffic or
+long-duration control. It provides no new justification to repeat identical
+radio-off tests merely because the latest long baseline kept Wi-Fi enabled.
+
+The additional eight CCI camera bus pins101–108 are also GPIO inputs, low,
+pull-down in the subsequent plugged idle snapshot. Together with the ten
+previously mapped clock/reset pins, no high drive was observed on these
+selected camera lines. This remains a bounded idle check, not a definitive
+asleep leakage exclusion. No GPIO or camera state was changed.
