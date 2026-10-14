@@ -1,0 +1,127 @@
+--- a/src/screen-saver-manager.c
++++ b/src/screen-saver-manager.c
+@@ -18,6 +18,7 @@
+ #include "session-presence.h"
+ #include "util.h"
+ 
++#include <time.h>
+ #include <glib/gstdio.h>
+ #include <gio/gunixfdlist.h>
+ 
+@@ -89,6 +90,8 @@
+   guint    lock_delay_timer_id;
+   int      inhibit_pwr_btn_fd;
+   int      inhibit_suspend_fd;
++  gint64   lmi_sleep_before;
++  gboolean lmi_sleep_before_valid;
+   PhoshMonitor *primary_monitor;
+ 
+   PhoshDBusLoginSession *logind_session_proxy;
+@@ -545,6 +548,83 @@
+ }
+ 
+ 
++
++/* Opt-in lmi diagnostic: preserve screen blanking on an identified gauge
++ * wake only. Unknown causes, alarms, USB and failed suspends fail open.
++ * Input/power-button and call-added wake paths remain independent.
++ */
++static gboolean
++lmi_sleep_total (gint64 *total)
++{
++  struct timespec now;
++  if (clock_gettime (CLOCK_BOOTTIME, &now) != 0)
++    return FALSE;
++  *total = (gint64) now.tv_sec * G_USEC_PER_SEC + now.tv_nsec / 1000
++           - g_get_monotonic_time ();
++  return TRUE;
++}
++
++/* IRQ 441 is accepted only with a fresh, noncritical discharging reading.
++ * Missing data, low/empty events and combined IRQ reasons fail open. */
++static gboolean
++lmi_quiet_reason_allowed (const char *reason)
++{
++  g_autofree char *capacity = NULL;
++  g_autofree char *status = NULL;
++  char *end = NULL;
++  guint64 level;
++
++  if (g_strcmp0 (reason, "438 msoc-delta") == 0)
++    return TRUE;
++  if (g_strcmp0 (reason, "441 msoc-high") != 0)
++    return FALSE;
++  if (!g_file_get_contents ("/sys/class/power_supply/battery/capacity",
++                            &capacity, NULL, NULL) ||
++      !g_file_get_contents ("/sys/class/power_supply/battery/status",
++                            &status, NULL, NULL))
++    return FALSE;
++  g_strstrip (capacity);
++  if (!g_ascii_isdigit (capacity[0]) ||
++      g_strcmp0 (g_strstrip (status), "Discharging") != 0)
++    return FALSE;
++  level = g_ascii_strtoull (capacity, &end, 10);
++  return end != capacity && *end == '\0' && level >= 30 && level <= 100;
++}
++
++static gboolean
++lmi_gauge_resume_matches (gboolean opted_in, gboolean locked,
++                         gboolean before_valid, gboolean after_valid,
++                         gint64 before, gint64 after,
++                         const char *reason, const char *usb)
++{
++  return opted_in && locked && before_valid && after_valid
++         && after > before && after - before > 50000
++         && lmi_quiet_reason_allowed (reason)
++         && g_strcmp0 (usb, "0") == 0;
++}
++
++static gboolean
++lmi_is_gauge_resume (PhoshScreenSaverManager *self)
++{
++  gint64 after = 0;
++  gboolean after_valid;
++  g_autofree char *reason = NULL;
++  g_autofree char *usb = NULL;
++
++  if (g_strcmp0 (g_getenv ("LMI_PHOSH_GAUGE_WAKE_FILTER"), "1") != 0)
++    return FALSE;
++  after_valid = lmi_sleep_total (&after);
++  if (!g_file_get_contents ("/sys/kernel/wakeup_reasons/last_resume_reason",
++                            &reason, NULL, NULL) ||
++      !g_file_get_contents ("/sys/class/power_supply/usb/online", &usb, NULL, NULL))
++    return FALSE;
++  return lmi_gauge_resume_matches (TRUE,
++                                  phosh_lockscreen_manager_get_locked (self->lockscreen_manager),
++                                  self->lmi_sleep_before_valid, after_valid,
++                                  self->lmi_sleep_before, after,
++                                  g_strstrip (reason), g_strstrip (usb));
++}
++
+ static void
+ on_logind_prepare_for_sleep (PhoshScreenSaverManager *self,
+                              gboolean                 suspending,
+@@ -554,11 +634,22 @@
+ 
+   g_debug ("Got PrepareForSleep signal: %s", suspending ? "suspend" : "resume");
+   if (suspending) {
++    self->lmi_sleep_before_valid = lmi_sleep_total (&self->lmi_sleep_before);
+     phosh_lockscreen_manager_set_locked (self->lockscreen_manager, TRUE);
++    /* A quiet resume keeps active TRUE, so there is no active notification
++     * to release the newly reacquired logind delay inhibitor. */
++    if (self->active &&
++        g_strcmp0 (g_getenv ("LMI_PHOSH_GAUGE_WAKE_FILTER"), "1") == 0) {
++      phosh_clear_fd (&self->inhibit_suspend_fd, NULL);
++      g_debug ("lmi: release suspend delay inhibitor for already blank screen");
++    }
+   } else {
+     PhoshIdleManager *idle_manager;
+ 
+-    phosh_screen_saver_manager_wakeup_screen (self);
++    if (!lmi_is_gauge_resume (self))
++      phosh_screen_saver_manager_wakeup_screen (self);
++    else
++      g_debug ("lmi: keep screen blank after gauge-only resume");
+ 
+     idle_manager = phosh_idle_manager_get_default ();
+     phosh_idle_manager_reset_timers (idle_manager);

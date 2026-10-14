@@ -1,0 +1,24 @@
+{
+  "phosh": {
+    "package": "phosh",
+    "source_version": "0.46.0-3+deb13u1",
+    "candidate_version": "0.46.0-3+deb13u1+lmigaugewake3",
+    "target": "src/screen-saver-manager.c",
+    "before_raw_sha256": "a21db0bd5e152d78b6b2f05f9f8684e7d837b9f4d9c0f558685fc7d9cd9868f3",
+    "before_lf_sha256": "a21db0bd5e152d78b6b2f05f9f8684e7d837b9f4d9c0f558685fc7d9cd9868f3",
+    "after_lf_sha256": "f8cbde684bd1920eebcfab70c39d2adef8696498fadc5443e6d2bde37669f019",
+    "patch": "phosh-from-debian.patch",
+    "patch_sha256": "9f660bcf30163e33edf3e82654a600607efdcf49beb595b3e4afa62da9fda5d4"
+  },
+  "gsd": {
+    "package": "gnome-settings-daemon",
+    "source_version": "48.1-1",
+    "candidate_version": "48.1-1+lmiquietgauge3",
+    "target": "plugins/power/gsd-power-manager.c",
+    "before_raw_sha256": "22f3a9f6b3a9b5508b09be5970f7d94ed29a63d3c427a7dd85805a63b891bd5e",
+    "before_lf_sha256": "22f3a9f6b3a9b5508b09be5970f7d94ed29a63d3c427a7dd85805a63b891bd5e",
+    "after_lf_sha256": "3a776734c398cd88f64ef62116c5b6e1f1ada5165abd6f20b2fd8507e0f31fe2",
+    "patch": "gsd-from-debian.patch",
+    "patch_sha256": "1852e9ad5abd4bf1f4fc16fb65f867648007ce2186cd667e8a8a9073fea3dc55"
+  }
+}

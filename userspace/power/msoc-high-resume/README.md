@@ -18,3 +18,7 @@ Only exact single `441 msoc-high` with fresh Discharging and valid capacity
 events fail open. Existing actual-sleep, USB, lock/blank, activity and opt-in
 guards remain. This is a userspace screen/idle fix, not a gauge recalibration,
 kernel change or solution to all remaining deep-suspend drain.
+
+For rebuilding from the pinned unmodified Debian sources, use the
+[cumulative v3 patches and source verifier](../quiet-gauge-v3/README.md).
+The patches in this directory remain historical v2-to-v3 increments.
