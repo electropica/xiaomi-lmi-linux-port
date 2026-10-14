@@ -132,3 +132,7 @@ The v3 pair also includes the qualified USB-cycle correction and noncritical
 msoc-high guard. See [installed-userspace validation](../../../docs/validation/quiet-gauge-night-2026-10-13.md).
 This profile rejects the former v2/quiet1 package identities; a new image
 containing v3 has not yet been built or hardware-validated.
+
+The paired v3 packages can now be recovered from their pinned Debian source
+baselines using the [cumulative source patches](../../../userspace/power/quiet-gauge-v3/README.md).
+This does not change the private package-input manifest or qualify a new image.

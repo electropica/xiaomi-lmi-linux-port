@@ -38,3 +38,9 @@ The current image profile already pins the four v3 package identities. This
 publication adds source recovery; it is not a newly built image or a claim of
 byte-identical Debian packages. The existing runtime evidence and scope are in
 [the consolidated validation](../../../docs/validation/quiet-gauge-night-2026-10-13.md).
+
+Source recovery validation on 2026-10-14: all 12 preparation/rejection cases
+passed through the published verifier test entry point. Both resulting source
+hashes also match the retained ARM package-build trees, whose changelogs name
+the v3 versions above. No package compilation, phone installation or new
+performance measurement was performed by this source publication.

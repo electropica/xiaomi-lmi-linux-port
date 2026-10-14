@@ -1,5 +1,13 @@
 # Current validated build and userspace state
 
+## Source recovery boundary — 2026-10-14
+
+The [cumulative quiet-gauge v3 source patches](../../userspace/power/quiet-gauge-v3/README.md)
+now recover both qualified source files directly from pinned Debian baselines.
+Twelve source preparation/rejection checks passed, and output hashes match the
+retained ARM build trees. Image-profile v3 package pins are unchanged. No new
+image/package build, handset deployment or battery-saving result is claimed.
+
 ## Current installed handset and next-image pins — 2026-10-13
 
 The handset now runs Phosh/common `0.46.0-3+deb13u1+lmigaugewake3` and
