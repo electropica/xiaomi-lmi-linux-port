@@ -375,3 +375,30 @@ qualified sleep interval. Neither observation measures quiescent electrical
 current or warrants disabling charger protection or repeating the same ADC
 experiment. No additional hardware register read or write was performed for
 this reanalysis; whole-register dumps can consume diagnostic flag state.
+
+## Popup motor and codec supply policy review
+
+The retained runtime tree maps the DRV8846 motor power-enable signal to TLMM
+GPIO153. Its suspend callback returns gpio_direction_output(power_enable, 0);
+resume restores it to 1. The retained wide transition trace contains the bus
+suspend and resume callbacks with err=0. This confirms the software command
+path, not the motor rail's measured voltage or residual electrical current.
+No motor operation, GPIO write or device unbind was performed in this review.
+
+The WCD938x supply helper reduces requested regulator load only for supplies
+marked qcom,<supply>-lpm-supported. Those properties are absent from the
+retained Mobian runtime node. The lmi LineageOS package overlay has the same
+four static supply names, voltage constraints and requested loads, and also
+omits these properties. The overlay comparison is not a final merged Android
+runtime comparison. The 30000/30000/650000/30000 uA values are regulator load
+requests, not measured battery consumption, and do not establish a Mobian
+specific fault or justify transplanting a low-power flag without validation.
+
+A subsequent plugged idle read of the audited DAPM bias-level memory readers
+reports WCD938x and TFA bias Off; all 38 component contexts read are Off, with
+the card context itself Standby. The card aggregate alone is not an active
+codec or microphone indication. The existing trace also contains a successful
+WCD938x late-suspend callback, but its return value does not establish the
+conditional supply helper's execution or a physical regulator mode change.
+No audio playback, microphone recording, widget connection callback or codec
+register dump was used. Residual sleep consumption remains unresolved.
