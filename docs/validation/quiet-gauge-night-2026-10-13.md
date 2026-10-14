@@ -402,3 +402,29 @@ WCD938x late-suspend callback, but its return value does not establish the
 conditional supply helper's execution or a physical regulator mode change.
 No audio playback, microphone recording, widget connection callback or codec
 register dump was used. Residual sleep consumption remains unresolved.
+
+## Shared supply requests and cache validity
+
+The retained trial36 diagnostic snapshots include 47 aggregate regulator
+resources, with separate computed/cached active and sleep requests and validity
+masks. The locked driver takes the maximum of client requests assigned to each
+set. It does not send a separate sleep request until valid sleep parameters
+differ from active parameters. A zero cached sleep value with its validity bit
+clear therefore cannot be interpreted as a regulator-disable request.
+
+The shared S4 resource (smpa4), supplying several codec inputs and other
+consumers, has no supported-mode table in the retained runtime tree. The locked
+regulator driver disables its set_mode/set_load operations when that table is
+absent. Merely adding codec lpm-supported properties would not provide the
+assumed mode-switch operation for those S4-backed supplies. No such patch or
+new build is justified by this review.
+
+The BOB resource (bobc1) does have mode controls. Its retained computed and
+valid cached sleep mode is 2, which the PMIC5 BOB mapping defines as bypass;
+the active aggregate mode is 6 (auto). The complete trial36 trace contains
+sleep-bank BOB mode commands carrying 2. This software evidence already
+distinguishes the sleep policy from the active policy; it does not measure
+physical rail current or every other master's request. The pre-suspend S4
+enable request remains valid and enabled, but that snapshot precedes device
+callbacks and does not by itself identify an unnecessary consumer in sleep.
+No new phone access, regulator write or physical test was performed.
