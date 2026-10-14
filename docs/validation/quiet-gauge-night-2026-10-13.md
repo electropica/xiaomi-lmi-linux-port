@@ -250,3 +250,41 @@ shared named regulator nodes have matching observed `regulator-always-on`
 and `regulator-boot-on` flags. This is a package-overlay comparison, not a
 reconstruction of Android's final merged runtime tree or an electrical
 measurement. It supplies no basis for removing shared-rail constraints.
+
+## Overnight reproduction, October 13–14
+
+A passive observation used the installed v3 Phosh/GSD pair, normal fifteen-minute
+battery idle timeout, unchanged Wi-Fi-enabled state, persistent diagnostic kernel
+and NPU suspend correction. No host contact, alarm, forced suspension, trace or
+media capture occurred during the cable-free interval.
+
+The interval lasted 36,617.592 seconds (10 h 10 min 18 s). Clock accounting
+records 34,947.595 seconds of suspension, 95.44% of the interval. Displayed
+capacity was 100% at departure and 76% at charging return; the latter is not a
+pure discharge endpoint. Same boot and exact package versions were confirmed.
+Both userspace units remained active with zero restarts and debug disabled.
+
+All 47 observed eligible gauge resumes remained blank and resuspended after
+15.206–15.424 seconds: 46 exact IRQ438 delta events and one exact IRQ441 high
+at 80%, Discharging, USB absent. USB IRQ502 was excluded from this qualification.
+This reproduces the userspace wake handling, not a new electrical saving.
+
+Separately, 46 adjacent USB-absent, Discharging suspend-boundary pairs cover
+34,181.090 seconds, including 34,151.963 seconds of actual sleep. With unchanged
+capacity scales and non-increasing counters, modeled averages are 58.85 mA
+software, 58.29 mA shadow and 84.30 mA raw. The prior daytime raw estimate was
+84.01 mA. These methods are differently scaled, software/shadow can be correlated,
+and neither comparison is a calibrated physical-current measurement. Residual
+counter decline persists during real suspension; brief visible wakes do not
+explain it by themselves.
+
+The passive collector finished successfully and is inactive. RTC is empty,
+NPU recovery state absent, no trace instance remains, charging is restored and
+the normal idle timeout remains 900 seconds.
+
+A subsequent metadata-only TLMM read found the Goodix power pin27, reset pin26
+and IRQ pin23 in GPIO function0, input, low, with pull-down. There is no observed
+high power-enable drive at this plugged snapshot. Input level is not an analog
+rail measurement or a capture of the entire preceding sleep interval. No GPIO
+was requested or driven, and no fingerprint node was opened. No forced power
+change is justified by this finding.
