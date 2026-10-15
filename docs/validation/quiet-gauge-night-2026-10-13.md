@@ -682,3 +682,29 @@ counter estimates are not calibrated current measurements. The raw estimate
 remains close to the previous day's 85.113 mA; no new saving or causal fix is
 demonstrated. Stable blank-screen resuspension does not establish that every
 peripheral rail is electrically off. No new power setting was installed.
+
+
+### Manual-off boundary pair, 15 October 2026
+
+The one-shot recorder captured an unplugged shutdown endpoint and an unplugged
+startup endpoint on a different boot, using the same installed October 7 kernel.
+The startup snapshot was taken 8.383 seconds after kernel startup. Both endpoints
+reported Discharging and 92% capacity. Learned and design capacities remained
+2738 and 4700 mAh respectively. The software, shadow and raw counter decreases
+were 1952, 1745 and 3000 microamp-hours, including shutdown and startup energy.
+
+Qualification failed because the system wall clock advanced only 4.215 seconds,
+whereas the hardware RTC advanced 2176 seconds (36 minutes 16 seconds). This is
+evidence of a boot/timekeeping discontinuity; the specific cause is not yet
+established. The original strict analyzer rejects the pair and reports no rate.
+The small recorded counter changes are worth retaining, but are not a calibrated
+powered-off current measurement, a battery-health verdict, or proof of a hardware
+leak. Boot overhead and possible gauge-model initialization remain limitations.
+
+The bounded startup kernel log reports a battery-profile verification retry.
+It does not establish a completed profile reload, integrator reset, or the cause
+of the clock discontinuity. Those must not be inferred from this message alone.
+
+After retrieval, the temporary one-shot service was disabled and its verified
+script and unit removed. The private boundary records were retained. Charging
+resumed, the RTC wakealarm was empty and the fuel-gauge debug mask remained zero.
