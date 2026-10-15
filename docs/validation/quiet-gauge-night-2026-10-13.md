@@ -764,3 +764,59 @@ the manual-off rate remains intact.
 Same-boot boottime/monotonic accounting of the preceding daytime observation
 is independent of this wall-clock correction. Neither the clock issue nor the
 transient profile retry demonstrates a cause of its residual suspended drain.
+
+
+### Gauge-output consistency controls, 15 October 2026
+
+Two bounded awake observations compared trapezoidal integration of BMS
+current_now samples with counter changes. Each observation used 61 samples
+spaced two seconds apart over 120 seconds. Status, USB state, counter direction
+and reported capacity scales remained consistent within each observation.
+The discharge run held a temporary sleep/idle inhibitor; boottime and monotonic
+durations agreed within 5 microseconds. The inhibitor was released automatically,
+the observer ended successfully, and normal charging and the 900-second timeout
+were verified afterwards. No supply, governor, calibration or protection setting
+was written; no audio or video was captured.
+
+| Awake condition | Integrated current_now | Software delta | Shadow delta | Raw delta |
+| --- | ---: | ---: | ---: | ---: |
+| Normal USB charging | 22.517 mAh gained | 23.091 mAh | 25.371 mAh | 39.696 mAh |
+| Unplugged discharge | 3.113 mAh lost | 3.142 mAh | 3.974 mAh | 5.413 mAh |
+
+Software/integral ratios were 1.025 and 1.009; raw/integral ratios were 1.763
+and 1.739. Reported design/learned ratios were 1.717 and 1.720 respectively.
+Learned capacity was 2738 mAh in the charging run and 2733 mAh in the later
+discharge run, with no change inside either run. This supports a substantial
+scaling discrepancy when interpreting the raw getter as electrical charge.
+It does not prove the hardware integrator's normalization contract. Current
+and counters are correlated outputs of the same gauge, sample integration can
+miss fast variations, and these active observations do not calibrate suspended
+current. Do not directly call an 85 mA raw-derived quotient 85 mA physical drain,
+or silently replace it with an assumed capacity-rescaled physical value.
+
+An offline comparison of three retained long observations also finds a repeated
+SOC association: software estimates fall from approximately 73–76 mA in the
+95–100% band to approximately 31–38 mA in the lower observed bands, whereas raw
+estimates remain approximately 84.8–86.0 mA. These are consecutive, correlated
+intervals with temperature/voltage and initial-state differences, not randomized
+comparisons. A lower software-only estimate on a later day is insufficient
+evidence of a new policy saving.
+
+This does not erase the previous NPU result. A fresh offline qualification of
+the retained first-sleep segments of trials 29 and 30 finds 100% displayed SOC
+at both endpoints in both segments, unchanged learned/design capacities of
+2806/4700 mAh, USB absent and Discharging, and over 99.6% suspension. Raw-derived
+rates were 83.957 mA with the correction versus 145.143 mA with the original
+policy; software and shadow methods also fell (approximately 39–42%). Segment
+lengths differed (449 versus 210 seconds) and order was not randomized. Trial30
+later aborted, so it must not be called a complete matched twelve-minute trial.
+Together with the earlier immediate counter-check, the retained segments support
+the NPU policy lead without constituting independent ammeter calibration.
+
+The retained Gen4 implementation exposes current_avg by reading FG_SRAM_IBAT_FLT,
+rather than calculating an application-level average. A short plugged read
+confirmed a changing, lagging value, distinct from current_now. Its exact filter
+time constant remains unestablished. The next long passive observer is prepared
+to add current_avg only at existing events; it is not yet armed and introduces
+no additional periodic wakeup. A short post-charge observation of this filtered
+field must not be assumed to represent settled suspend current.
