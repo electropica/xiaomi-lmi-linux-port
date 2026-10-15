@@ -1,27 +1,40 @@
 # Power diagnostics and decision summary
 
-## Current decision summary — 2026-10-12
+## Current decision summary — 2026-10-15
 
-The later eleven-hour day did not reproduce the qualified quiet-night protocol:
-the initial explicit sleep started from an unblanked screen, followed by one
-gauge return and no later suspension. Keep that failure separate from the valid
-night. A complete short transition trace has no lost events or failed device-PM
-callback; residual physical current remains unknown. The GSD2 USB-cycle fix
-has now passed two repeated short cycles and a normal-timeout observation with
-a quiet gauge wake followed by resuspension. Standby consumption remains
-unresolved. A short charger-input isolation probe preserves SSH, but connected
-USB failed the subsequent paired standby comparison: the controller remains
-active and rejects system suspend with -EBUSY. See the
-[five-minute paired result](../../../docs/validation/usb-input-isolation-paired-2026-10-12.md). See the [daytime and trace boundaries](../../../docs/validation/quiet-gauge-overnight-2026-10-12.md).
+The installed handset retains the RPMh diagnostic kernel, suspend-only NPU
+policy, Phosh/common `0.46.0-3+deb13u1+lmigaugewake3` and GSD/common
+`48.1-1+lmiquietgauge3`. The normal battery idle timeout is 900 seconds.
+No new kernel or image build was qualified by the observations below.
 
+The latest passive night, 14–15 October, lasted 9 h 17 min with 95.29% actual
+suspension. All 40 exact msoc-delta wakes stayed blank and resuspended within
+15.185–15.425 seconds. Displayed capacity fell from 100% to 79% at the charging
+return poll. The observer completed, RTC wakealarm was empty and no recovery
+state remained. Residual standby drain is still unresolved.
 
-The handset runs Mobian again with the installed RPMh diagnostic kernel,
-suspend-only NPU policy and qualified Phosh/GSD quiet-resume packages.
-The latest overnight observation lasted 8 h 51 min: about 95.52% actual
-suspension, 32 gauge-only returns without recorded screen unblank, and a
-displayed fall from 100% to 83%. Counter methods gave differently modelled
-estimates near 49 and 87 mA; standby drain remains unresolved.
-See the [overnight result](../../../docs/validation/quiet-gauge-overnight-2026-10-12.md).
+Forty-one qualifying sleep pairs give differently modelled averages of
+54.134 mA software, 53.580 mA shadow and 85.523 mA raw. None is a calibrated
+physical current measurement. Software and raw use distinct counter states
+and capacity scales. Runtime diagnostics confirm successful software-counter
+priming at cable transitions and in one natural gauge-resume transition;
+this does not establish that priming explains the entire residual discharge.
+See the [consolidated v3 validation and counter limits](../../../docs/validation/quiet-gauge-night-2026-10-13.md).
+
+Automatic blank-screen resuspension is now repeatedly qualified. Do not reopen
+an old failure of that mechanism as the primary explanation without a new
+regression. Conversely, extensive APSS/ADSP sleep or matching source/config
+files do not prove that every peripheral rail is electrically off.
+
+The earlier failed daytime protocol and connected-USB experiment remain
+historical: input suspension with USB data preserved did not permit system
+suspend and is not a substitute for unplugging. See the
+[paired USB result](../../../docs/validation/usb-input-isolation-paired-2026-10-12.md).
+Existing profile, CPU-bus context, radio, NFC, CPU/core_ctl/L3 and peripheral
+checks below must be reviewed before proposing another isolation trial.
+A new trial must state a distinct causal hypothesis and an observable outcome;
+neither a generic kernel replacement nor another unchanged overnight run is
+justified merely to accumulate more samples.
 
 The Android observations below are historical comparisons, not the current
 handset OS. Repeated peripheral-isolation trials must not be rerun without a
@@ -29,11 +42,11 @@ new causal hypothesis. No battery-health verdict follows from these comparisons.
 
 | Evidence group | Observed result | Decision |
 | --- | --- | --- |
-| Mobian deep idle | Several short trials around 89–95 mA; long returns show substantial discharge despite extensive deep suspend. | The idle-drain problem is real; deep suspend alone does not resolve it. |
+| Historical Mobian deep-idle trials | Several short trials around 89–95 mA; long returns show substantial discharge despite extensive deep suspend. | The idle-drain problem is real; deep suspend alone does not resolve it. |
 | Wi-Fi isolation | About 93.1 mA radio-off versus 94.8 mA in an adjacent enabled trial. | Wi-Fi is not demonstrated as the sole cause; do not repeat the same pair without a new hypothesis. |
 | NFC isolation | VEN-low 88.8 mA versus VEN-high 90.3 mA in one adjacent pair. | NFC enable alone does not explain the residual load. |
 | CPU, ADSP and RPMh | Short trials show extensive APSS/ADSP sleep and zero final reviewed CX/MX/XO votes. | Do not assume a permanently awake CPU or cut shared power rails from awake snapshots. |
-| Gauge identity | Retained 416-byte profile matches the expected profile; learned full is about 2,820 mAh on both systems versus 4,700 mAh nominal. | Profile mismatch was not observed. Learned capacity is not an independent cell-health measurement. |
+| Gauge identity | Retained 416-byte profile matches the expected profile; historical learned values were around 2.8 Ah, while the latest Mobian night reported 2.738 Ah versus 4.7 Ah design. | Profile mismatch was not observed. Learned capacity is not an independent cell-health measurement. |
 | Manual-off comparisons | Charging/boot timing or a missing departure sample prevented a valid baseline pair. | No off-state drain or physical health conclusion; no need to repeat a flawed protocol. |
 | First LineageOS idle interval | Displayed level stayed at 79%; battery history records about 2 mAh loss over 7 min 05 s before charging. | Preliminary evidence, supported by the longer interval below; not a cell-health test. |
 | Longer LineageOS idle interval | 29 min 41 s on battery; displayed 83% unchanged before reconnect; Android reports 5.35 mAh summed gauge decreases (~10.8 mA by that accounting). | Lower apparent idle drain is supported, but an upward gauge correction prevents a reliable net endpoint-current estimate. |

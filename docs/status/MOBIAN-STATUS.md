@@ -1,13 +1,16 @@
 # Mobian status
 
-## Current installed handset and next-image pins — 2026-10-13
+## Current installed handset and next-image pins — 2026-10-15
 
 The handset now runs Phosh/common `0.46.0-3+deb13u1+lmigaugewake3` and
 GSD/common `48.1-1+lmiquietgauge3`, with persistent quiet-resume opt-ins and
 debug off. The existing RPMh diagnostic kernel and suspend-only NPU policy
-are unchanged. USB cycles passed; a real noncritical msoc-high wake at 80%
-stayed blank and resuspended after 15.367 seconds. Daytime accounting recorded
-95.59% suspension over 10 h 29 min. Residual standby drain remains unresolved.
+are unchanged. USB cycles and repeated quiet gauge resumes passed. The latest passive night
+(14–15 October) lasted 9 h 17 min with 95.29% actual suspension; all 40 exact
+msoc-delta wakes stayed blank and returned to suspend. Displayed capacity was
+100% at departure and 79% at the charging return poll. Counter estimates remain
+model-dependent; residual standby drain is unresolved. This observation does
+not qualify a new image build.
 
 The current image profile now pins this v3 pair. Debian package identities,
 private input sums, installed-version checks and host rejection/staging tests
