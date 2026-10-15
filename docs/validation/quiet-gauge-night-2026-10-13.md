@@ -708,3 +708,33 @@ of the clock discontinuity. Those must not be inferred from this message alone.
 After retrieval, the temporary one-shot service was disabled and its verified
 script and unit removed. The private boundary records were retained. Charging
 resumed, the RTC wakealarm was empty and the fuel-gauge debug mask remained zero.
+
+
+### Passive daytime follow-up, 15 October 2026
+
+The unchanged installed v3 userspace and October 7 diagnostic kernel completed
+a same-boot daytime observation with Wi-Fi enabled and the normal 900-second
+automatic-suspend timeout. Cable polling covered 45536.603 seconds (12 h 38 min
+57 s); clock accounting recorded 43911.599 seconds suspended, or 96.431%.
+Displayed capacity was 94% at the unplug observation and 71% at the charging
+return observation. The latter is not an exact pre-charge endpoint.
+
+All 44 exact IRQ 438 msoc-delta callbacks kept the screen blank and were followed
+by suspension after 15.361–15.582 seconds. One IRQ 441 msoc-high callback also
+kept the screen blank and was followed by suspension after approximately 15.38
+seconds. The cable-return wake was a typec-cc-state-change event. No unsolicited
+screen unblank is established by these recorded gauge callbacks.
+
+Across 45 eligible adjacent suspend/resume boundary pairs covering 43349.206
+seconds, software, shadow and raw counter-derived estimates were 42.040, 41.740
+and 85.529 mA respectively. Learned capacity remained 2738 mAh. These differently
+scaled, correlated gauge estimates are not independently calibrated current.
+The raw estimate is effectively unchanged from the preceding overnight value
+of 85.523 mA; the lower software estimate does not establish a new power saving.
+The high suspend fraction and quiet gauge handling remain confirmed, while the
+remaining battery loss is unresolved. No new power-policy change was tested.
+
+The observer ended successfully and was inactive at retrieval. Charging resumed;
+the normal timeout was still 900 seconds, input_suspend was zero, and no trace
+instance, RTC alarm or pending NPU recovery state remained. Private logs and
+device identifiers were excluded from this public note.
