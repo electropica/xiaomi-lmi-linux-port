@@ -86,3 +86,7 @@ install -Dm 0644 /usr/share/applications/org.gnome.Contacts.desktop /usr/local/s
 sed -i -e 's|^Exec=gnome-contacts|Exec=/usr/local/bin/lmi-contacts|' -e 's|^DBusActivatable=true$|DBusActivatable=false|' /usr/local/share/applications/org.gnome.Contacts.desktop
 grep -q '^Exec=/usr/local/bin/lmi-contacts' /usr/local/share/applications/org.gnome.Contacts.desktop
 grep -q '^DBusActivatable=false$' /usr/local/share/applications/org.gnome.Contacts.desktop
+
+
+# Protect manual and D-Bus Chatty launches and suppress the unsafe autostart.
+LMI_APPS_FILES_DIR="$apps_files" bash "$apps_files/install-chatty-safe.sh"

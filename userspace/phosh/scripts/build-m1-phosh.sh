@@ -154,7 +154,7 @@ optional_apps_enabled=0
 if [[ ${INSTALL_OPTIONAL_APPS:-} == 1 ]]; then
     install -m 0755 "$apps_dir/scripts/install.sh" "$tree/run/install-optional-apps.sh"
     install -d "$tree/run/lmi-app-files"
-    install -m 0755 "$apps_dir/files/lmi-photos" "$apps_dir/files/lmi-photos-thumbnails" "$apps_dir/files/lmi-text-editor" "$apps_dir/files/lmi-calculator" "$apps_dir/files/lmi-contacts" "$apps_dir/files/lmi-recorder" "$tree/run/lmi-app-files/"
+    install -m 0755 "$apps_dir/files/lmi-photos" "$apps_dir/files/lmi-photos-thumbnails" "$apps_dir/files/lmi-text-editor" "$apps_dir/files/lmi-calculator" "$apps_dir/files/lmi-contacts" "$apps_dir/files/lmi-recorder" "$apps_dir/files/lmi-chatty-safe" "$apps_dir/files/install-chatty-safe.sh" "$tree/run/lmi-app-files/"
     install -m 0644 "$apps_dir/files/phosh-portals.conf" "$tree/run/lmi-app-files/"
     optional_apps_enabled=1
 fi
