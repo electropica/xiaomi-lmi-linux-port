@@ -33,6 +33,11 @@ activation, and protects explicit D-Bus activation. A harmless scope probe
 confirmed memory.max=402653184 and memory.swap.max=0. The pids controller is
 not exposed by this kernel, so TasksMax must not be described as a verified
 runtime limit. No SMS, account connection, media probe or heavy build was
-performed to validate this deployment. A fresh startup and manual UI launch
-remain to be checked; this is containment of the known enumeration failure,
+performed to validate this deployment. A protected desktop-file launch subsequently acquired the application D-Bus
+name and remained at 230392 KiB RSS across six samples five seconds apart; its
+cgroup memory.max was 402653184. This is process/startup validation, not a
+complete UI or messaging test. The launcher wait timed out because its output
+pipe remained inherited by the application; the already launched process was
+then observed without launching a second copy. A fresh boot remains unchecked.
+This is containment of the known enumeration failure,
 not an upstream Chatty memory-leak fix or proof of a standby-drain correction.

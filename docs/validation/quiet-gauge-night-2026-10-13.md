@@ -738,3 +738,29 @@ The observer ended successfully and was inactive at retrieval. Charging resumed;
 the normal timeout was still 900 seconds, input_suspend was zero, and no trace
 instance, RTC alarm or pending NPU recovery state remained. Private logs and
 device identifiers were excluded from this public note.
+
+
+### Boot clock and profile retry follow-up, 15 October 2026
+
+A later read of the same boot shows battery authentication succeeding at
+6.764 seconds after the initial profile lookup/retry at 6.742 seconds. At
+7.286 seconds the driver found j11sun_4700mah, which is also the currently
+exposed battery type. The retained source schedules a retry while verification
+data is unavailable. These messages do not establish a persistent verification
+loop or justify replacing the battery profile. Finding a profile is not by
+itself proof that its SRAM contents were reloaded.
+
+The live system wall clock was approximately 2175 seconds behind the host,
+consistent with the earlier manual-off RTC/wall discrepancy. The RTC reports
+hctosys=1, while its raw epoch is not Unix-aligned on this platform; timesyncd
+was active but not synchronized. A saved clock floor existed. The data establish
+a failed elapsed-time restoration across that restart, without identifying the
+complete boot-time adjustment chain. No RTC write or battery calibration was
+performed. The system wall clock alone was resynchronized to the host through
+a ready/response handshake (24 ms response interval). This is a one-time clock
+correction, not a persistent boot-clock fix. The original strict rejection of
+the manual-off rate remains intact.
+
+Same-boot boottime/monotonic accounting of the preceding daytime observation
+is independent of this wall-clock correction. Neither the clock issue nor the
+transient profile retry demonstrates a cause of its residual suspended drain.
