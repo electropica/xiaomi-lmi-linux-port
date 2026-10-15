@@ -869,3 +869,32 @@ source at commit `71b13e62f057a649b77fe4062feb73ee72ad609c`; no source-differenc
 fix was identified. No PMIC API, register write, GPIO change or modem power
 experiment was performed. This remains an unproven lead, not an identified
 cause of the standby drain.
+
+### Instantaneous-current endpoints across existing observations
+
+An offline audit selected 129 existing natural gauge-wake pairs across three
+long observations and the filtered-current observation above. Each pair had
+USB absent, the screen blank at both boundaries, at least 120 seconds elapsed,
+more than 99% actual suspension, and valid unchanged-capacity counter results.
+No new phone collection or setting change was required.
+
+The BMS instantaneous-current readings at these resume callbacks range from
+47.851 to 51.757 mA. Per-session, five-percentage-point SOC-band medians range
+from 48.339 to 50.292 mA. These endpoint readings remain comparatively stable
+while software-counter interval estimates vary markedly with SOC: for example,
+the retained daytime observation spans approximately 72.64 to 33.90 mA in its
+software-counter bands, versus 84.81 to 85.66 mA using the raw getter.
+
+This is additional evidence against treating a falling software-counter rate
+alone as a demonstrated power saving. It does not prove that current remained
+near 50 mA throughout each suspension interval: samples are taken after resume,
+their hardware sampling age is not established, and all fields belong to the
+same gauge. They cannot replace an independently measured current integral.
+
+The reviewed driver also distinguishes `charge_full_design`, normally obtained
+from profile metadata, from the SRAM nominal-capacity word used by
+`charge_now_raw`. Consequently the displayed design/learned-capacity ratio is
+not an established exact correction for that getter. Existing SOC-band results
+already reject a single fixed conversion as a complete explanation of the
+software/raw divergence. No gauge calibration, profile rewrite or current-unit
+change is justified by this audit.
