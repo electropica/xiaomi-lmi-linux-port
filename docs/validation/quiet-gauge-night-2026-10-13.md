@@ -860,10 +860,17 @@ The retained ESOC IPC log contains initialization and registration entries,
 without a recorded power-down operation. Log absence alone cannot establish
 the electrical state of the external modem.
 
-Source inspection also shows that the SDX55 `power_down` implementation uses
-a warm reset, while the ESOC probe initially assigns `PWR_OFF` without issuing
-a physical power-down command in that probe. These implementation details
-make software state names insufficient evidence of electrical shutdown.
+Source inspection also shows that the SDX55 `power_down` implementation,
+registered as the `poff_force` operation, uses a warm reset. This is distinct
+from the normal `ESOC_PWR_OFF` path, which can request a firmware shutdown via
+sysmon or a userspace handler. It must not be described as proof that every
+graceful shutdown is merely a reset. The retained modem DT does not select
+the userspace shutdown handler; its `qcom,pil-force-shutdown` flag bypasses
+one generic SSR sysmon stage, rather than proving a physical shutdown at probe.
+The ESOC probe initially assigns `PWR_OFF` without issuing a physical power-down
+command in that probe, and the non-forced shutdown callback returns early when
+that state is already recorded. Thus a nominal off request can be a no-op;
+neither its success nor the initial state label establishes electrical shutdown.
 The reviewed ESOC/PON files are byte-identical to the corresponding LineageOS
 source at commit `71b13e62f057a649b77fe4062feb73ee72ad609c`; no source-difference
 fix was identified. No PMIC API, register write, GPIO change or modem power
