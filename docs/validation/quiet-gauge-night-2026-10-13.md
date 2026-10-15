@@ -660,3 +660,25 @@ with the bounded software/shadow comparison, they support treating priming as
 part of the counter model rather than assuming that it alone explains the
 entire raw-counter gap. No profile, learned-capacity or protection value was
 changed, and no new kernel was built or flashed.
+
+### Quiet overnight follow-up, 14–15 October 2026
+
+The passive overnight observation retained the same boot and qualified v3
+userspace baseline, with Wi-Fi left enabled and normal 900-second idle timeout.
+The poll-observed USB-absent interval lasted 33,445.869 seconds (9 h 17 min),
+including 31,870.854 seconds actually suspended (95.29%). Displayed capacity
+was 100% at the departure poll and 79% at the charging return poll; the latter
+is not an exact pre-charge endpoint.
+
+All 40 exact IRQ 438 msoc-delta resumes remained screen-blank and returned to
+suspend after 15.185–15.425 seconds. The observer exited successfully; RTC
+wakealarm was empty and no NPU recovery state remained. No accounting warnings
+or reboot occurred.
+
+Forty-one qualifying adjacent sleep pairs covered 31,788.827 seconds. Their
+counter-derived averages were 54.134 mA software, 53.580 mA shadow and 85.523 mA
+raw, with reported learned capacity fixed at 2,738 mAh. These differently scaled
+counter estimates are not calibrated current measurements. The raw estimate
+remains close to the previous day's 85.113 mA; no new saving or causal fix is
+demonstrated. Stable blank-screen resuspension does not establish that every
+peripheral rail is electrically off. No new power setting was installed.
