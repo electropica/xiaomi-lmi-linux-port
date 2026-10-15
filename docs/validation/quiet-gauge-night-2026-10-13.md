@@ -820,3 +820,52 @@ time constant remains unestablished. The next long passive observer is prepared
 to add current_avg only at existing events; it is not yet armed and introduces
 no additional periodic wakeup. A short post-charge observation of this filtered
 field must not be assumed to represent settled suspend current.
+
+### Event-only filtered-current observation, 15 October 2026
+
+A passive observation added BMS `current_avg` (`FG_SRAM_IBAT_FLT`) to the
+existing unplug, suspend and resume records. It introduced no periodic wake,
+RTC alarm, forced suspension or power-policy change. The normal 900-second
+automatic suspend delay remained enabled.
+
+The observed unplug interval was 1,877.9 seconds, including 942.9 seconds
+actually suspended. Initial automatic suspension occurred after 914.1 seconds;
+therefore the whole-run sleep fraction must not be compared directly with a
+long night dominated by suspension. One natural `msoc-delta` wake occurred:
+the screen remained blank and suspension resumed after 15.22 seconds.
+
+For the one qualified cable-free sleep pair (390.79 seconds, with only 0.59
+seconds awake at its boundaries), filtered current changed from 76.173 mA
+before suspension to 55.212 mA at the natural wake. Instantaneous current at
+that wake was 48.339 mA. Counter-derived estimates over this same interval
+were 67.21 mA (software), 59.11 mA (shadow), and 85.99 mA (raw getter).
+The learned capacity remained 2,733 mAh.
+
+These are correlated gauge outputs, not independent electrical measurements.
+The filtered-current time constant and its remaining charging-history memory
+are not established; its endpoint is not an interval integral. The second
+sleep interval ended with cable insertion and is excluded from cable-free
+current comparisons. This observation does not establish a new power saving
+or identify a consuming peripheral.
+
+The observer finished successfully on the same boot. Charging resumed,
+`input_suspend` was zero, the normal suspend delay remained 900 seconds,
+and no trace instance, RTC alarm or pending NPU restoration state remained.
+
+### External-modem state-label limitation
+
+A separate read-only check confirmed that the modem-specific PMIC PON node
+is bound to its expected driver and is distinct from the system-reset node.
+The retained ESOC IPC log contains initialization and registration entries,
+without a recorded power-down operation. Log absence alone cannot establish
+the electrical state of the external modem.
+
+Source inspection also shows that the SDX55 `power_down` implementation uses
+a warm reset, while the ESOC probe initially assigns `PWR_OFF` without issuing
+a physical power-down command in that probe. These implementation details
+make software state names insufficient evidence of electrical shutdown.
+The reviewed ESOC/PON files are byte-identical to the corresponding LineageOS
+source at commit `71b13e62f057a649b77fe4062feb73ee72ad609c`; no source-difference
+fix was identified. No PMIC API, register write, GPIO change or modem power
+experiment was performed. This remains an unproven lead, not an identified
+cause of the standby drain.
