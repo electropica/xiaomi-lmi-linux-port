@@ -954,3 +954,27 @@ observation demonstrates no additional power saving or culprit peripheral.
 
 Return checks confirmed normal charging, `input_suspend=0`, the 900-second
 delay, no RTC alarm, no trace instance and no pending NPU restoration state.
+
+### Present nominal-capacity check, 16 October 2026
+
+A bounded read of FG SRAM word 271, offset 0, returned bytes `63 12`, or
+4,707 mAh nominal capacity. The software reader selectors were restored;
+no SRAM data, profile, learned capacity or charge protection was written.
+This was a plugged read after the overnight observation, on the same boot,
+not continuous sampling of nominal capacity during that observation.
+The retained 416-byte battery profile also contains 4,707 mAh at byte 412.
+The exposed design capacity is 4,700 mAh and learned capacity is 2,733 mAh.
+
+The measured nominal/learned ratio is 1.722283. The earlier awake control's
+raw/software counter-delta ratio was 1.722788: numerical normalization by
+2,733/4,707 leaves a ratio of 1.000293 (about 0.029% above unity).
+Applying that same numerical normalization to the overnight raw estimate
+of 85.923 mA gives 49.889 mA, close to the filtered endpoint medians around
+49.7 mA. Across the five reported SOC bands, normalized raw estimates range
+from 49.858 to 49.932 mA.
+
+These are correlated gauge quantities, not an independent ammeter. This
+agreement does not establish the firmware's internal normalization, calibrate
+physical current, explain the SOC-dependent software-counter rates, or prove
+battery health. Filtered endpoints remain distinct from interval integrals.
+This is a measurement-interpretation result, not a power-saving fix.

@@ -3116,3 +3116,55 @@ A separate plugged idle check found no process holding `/dev/video*`,
 an observed capture-device holder at that instant, not all camera-related
 electrical demand in suspension. No capture, application launch, firmware
 startup, power command, driver unbind, build or flash was performed.
+
+### Source comparison and DSP lifecycle boundary, 16 October 2026
+
+Git tree identities were compared between base commit
+`a5b3099017ae581aae8bf597b2f9c8c765026af1` and Lineage reference commit
+`71b13e62f057a649b77fe4062feb73ee72ad609c` in
+[`LineageOS/android_kernel_xiaomi_sm8250`](https://github.com/LineageOS/android_kernel_xiaomi_sm8250).
+The entire source subtrees below have identical Git tree identities:
+
+- `drivers/soc`, `drivers/esoc`, `drivers/spmi`, and `kernel/power`;
+- `drivers/clk/qcom` and `drivers/scsi/ufs`;
+- `drivers/power/supply/qcom`, `drivers/power/supply/ti`, and `drivers/usb/phy`.
+
+Within the Qualcomm DTS directory, differences are confined to two
+`kona-7230-iot-*` files and a camera subtree change consisting only of
+`kona-camera-sensor-rb5-nopop.dtsi`. The lmi/common board source descriptions
+and battery profiles therefore do not provide a differing power sequence
+between these commits. Source identity does not establish identical installed
+configurations, local patches, merged runtime DTs, binaries or firmware state.
+
+Changed leaves were fetched and checked against their Git blob identities.
+Reviewed changes cover cpuidle's single-state path, regulator-provider and
+startup-delay handling, wake-IRQ locking, DSI clock type signatures, KGSL
+memory/performance-counter safety and error checks in USB/thermal drivers.
+None of the reviewed hunks has been demonstrated to explain the measured
+standby demand. Regulator changes still require mapping to actual providers
+before any relevance can be claimed. This comparison does not justify a
+generic replacement-kernel build as an established fix.
+
+A live plugged check also found the non-NPU both-context `gpubw` target at
+zero under `bw_vbif`, the fourth NPU latency-floor target at zero under
+`powersave`, and the secure firmware-loader `scm_pas` bus votes at zero.
+These are plugged observations, not measurements of physical rail current
+during suspension.
+
+The CDSP loader was reviewed before considering a start/stop experiment.
+Its sysfs store reports the write count even after a failed startup; a failed
+`subsystem_get()` leaves an error pointer in the loader. The framework's
+`subsystem_put()` does check `IS_ERR_OR_NULL()` and returns without using that
+pointer: the loader omission alone does not establish an invalid dereference.
+Write success nevertheless cannot be used as evidence of firmware startup.
+After a successful unload, the loader also does not reset its global loaded
+state. The current crash policy is `SYSTEM`, and required firmware is absent
+from the configured firmware search directories, although split vendor
+payloads exist. No DSP firmware was started and no search path was changed.
+
+Finally, `pil_shutdown()` returns void and records a failed secure shutdown
+internally, while the subsystem wrapper reports success. Consequently,
+`OFFLINE` alone would not establish successful secure shutdown. A useful
+experiment needs both a qualified recovery path and observation of the secure
+operation; starting firmware merely to obtain a different software label is
+not a demonstrated power-saving intervention.
