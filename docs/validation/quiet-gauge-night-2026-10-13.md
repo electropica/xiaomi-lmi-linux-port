@@ -1003,3 +1003,23 @@ loss is fictitious, or justifies multiplying the displayed percentage by 1.72.
 The next passive record adds the existing `real_capacity`, `capacity_raw`,
 `cc_soc` and `scale_mode_en` surfaces at its existing event callbacks to separate
 these reporting paths. These remain model-derived quantities, not calibration.
+
+### Learned-capacity consistency check, 16 October 2026
+
+The retained FG revision binding points to PM8150B SID 2, revision block
+`0x100`. A read of digital major revision `0x103` returned 2, selecting the
+Gen4 v2 SRAM layout. Reading its `ACT_BATT_CAP` word 287 returned `ad 0a`,
+or 2,733 mAh, matching the exported learned capacity of 2,733,000 uAh before
+and after the read. The software reader selectors were restored exactly;
+no SRAM data, learned-capacity, profile or calibration write was made.
+
+This rejects a present discrepancy between the checked SRAM capacity and
+the exported learned value. It does not validate learning accuracy, prove
+the physical cell capacity, or establish historical consistency during all
+earlier trials. The 4,707 mAh nominal versus 2,733 mAh learned distinction
+remains a separate counter-conversion issue.
+
+The next passive record includes direct MSOC reporting (`real_capacity`)
+and `cc_soc` in centi-percent, alongside the displayed capacity. The
+`capacity_raw` property must not be interpreted as uniformly high-resolution:
+the source can return rounded property capacity times 100 when unplugged.
