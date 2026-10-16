@@ -905,3 +905,52 @@ not an established exact correction for that getter. Existing SOC-band results
 already reject a single fixed conversion as a complete explanation of the
 software/raw divergence. No gauge calibration, profile rewrite or current-unit
 change is justified by this audit.
+
+### Overnight filtered-current return, 16 October 2026
+
+The event-only observer completed on the same boot and stopped successfully
+after USB return. It added `current_avg` reads to existing event records,
+without a new wake alarm, periodic wake or power-policy change. Wi-Fi remained
+enabled and the automatic suspend delay remained 900 seconds.
+
+| Observation | Result |
+| --- | --- |
+| Poll-observed cable-free duration | 31,997.45 s (8 h 53 min 17 s) |
+| Actual suspension | 30,407.44 s, 95.03% of that interval |
+| First suspension after unplug | 914.15 s |
+| Displayed capacity | 99% at unplug, 78% at charging return |
+| Qualified cable-free sleep pairs | 42, covering 29,956.13 s |
+| Learned capacity reported throughout | 2,733 mAh |
+
+All 41 exact `msoc-delta` wakes kept the screen blank and returned to
+suspension after 15.18–15.43 seconds. One exact `msoc-high` wake at displayed
+80% also stayed blank and resuspended after 15.38 seconds. No record reported
+an unblanked screen between first suspension and USB return. The displayed
+capacity at return is charging-contaminated and is not an exact pre-charge
+endpoint.
+
+The added filtered-current readings provide a useful distinction:
+
+| Displayed SOC band | Natural endpoints | Filtered endpoint median | Software-counter interval estimate | Raw-getter interval estimate |
+| --- | ---: | ---: | ---: | ---: |
+| 95–100% | 7 | 50.055 mA | 76.95 mA | 85.93 mA |
+| 90–94% | 10 | 49.857 mA | 67.58 mA | 86.00 mA |
+| 85–89% | 10 | 49.671 mA | 56.04 mA | 85.87 mA |
+| 80–84% | 11 | 49.652 mA | 45.97 mA | 85.90 mA |
+| 75–79% | 4 | 49.651 mA | 40.19 mA | 85.96 mA |
+
+For the 37 natural endpoints occurring at least one hour after unplug, the
+filtered-current median was 49.679 mA, with range 49.503–51.725 mA. One hour
+is a descriptive reporting boundary, not an established filter-settling
+threshold. Endpoint statistics are unweighted samples after resume; the
+counter estimates instead use duration-weighted charge differences.
+
+This strengthens the evidence that a falling software-counter estimate alone
+must not be reported as improved electrical consumption. It does not establish
+a calibrated whole-suspend current: the filter time constant, sampling age and
+charging-history memory are not fully characterized, and all outputs share
+the same gauge. The residual overnight discharge remains unresolved; this
+observation demonstrates no additional power saving or culprit peripheral.
+
+Return checks confirmed normal charging, `input_suspend=0`, the 900-second
+delay, no RTC alarm, no trace instance and no pending NPU restoration state.
