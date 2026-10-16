@@ -1,5 +1,17 @@
 # Mobian status
 
+## Measurement interpretation update — 2026-10-16
+
+The latest overnight record spent 95.03% of the observed interval suspended.
+Filtered gauge endpoints were near 50 mA. A present SRAM nominal-capacity
+read of 4,707 mAh versus 2,733 mAh learned numerically explains much of the
+raw/software counter-scale difference; 85.923 mA raw becomes 49.889 mA after
+that numerical normalization. These correlated quantities are not independent
+current calibration. The displayed percentage follows a separate MSOC/smoothing
+path, so its observed decline cannot simply be divided by the capacity ratio.
+Residual standby drain remains unresolved; no new power-saving fix is claimed.
+See [the consolidated measurement limits](../validation/quiet-gauge-night-2026-10-13.md).
+
 ## Current installed handset and next-image pins — 2026-10-15
 
 The handset now runs Phosh/common `0.46.0-3+deb13u1+lmigaugewake3` and

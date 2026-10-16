@@ -978,3 +978,28 @@ agreement does not establish the firmware's internal normalization, calibrate
 physical current, explain the SOC-dependent software-counter rates, or prove
 battery health. Filtered endpoints remain distinct from interval integrals.
 This is a measurement-interpretation result, not a power-saving fix.
+
+### Charge counters and displayed percentage are separate paths
+
+The base `qpnp-fg-gen4.c` source uses the following conversions:
+
+| Exported property | Internal state | Capacity multiplier |
+| --- | --- | --- |
+| `charge_now_raw` | `CC_SOC` | nominal capacity |
+| `charge_counter` | `CC_SOC_SW` | learned capacity |
+| `charge_counter_shadow` | `BATT_SOC` | learned capacity |
+
+The first two divide by the 30-bit SOC full scale, and the shadow getter uses
+the 32-bit battery-SOC full scale. Thus equal changes of normalized internal
+states would produce different exported charge changes when nominal and
+learned capacity differ. The states themselves are not interchangeable.
+
+The `CAPACITY` property instead starts from MSOC (with special cases and
+optional scaling/linearization), then can use Xiaomi's smoothed `batt_soc` or
+`smooth_batt_soc`. It is not simply `charge_now_raw / charge_full`. The smoothing
+code limits steps and uses charge direction and elapsed time; it can therefore
+lag a gauge estimate. None of this proves that the observed overnight display
+loss is fictitious, or justifies multiplying the displayed percentage by 1.72.
+The next passive record adds the existing `real_capacity`, `capacity_raw`,
+`cc_soc` and `scale_mode_en` surfaces at its existing event callbacks to separate
+these reporting paths. These remain model-derived quantities, not calibration.
