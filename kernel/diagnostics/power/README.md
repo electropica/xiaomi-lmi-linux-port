@@ -3071,3 +3071,48 @@ are not independent calibrated current measurements.
 ## Cross-device sleep-hook review
 
 See the [bounded Mobian/postmarketOS source review](../../../docs/validation/cross-device-sleep-hooks-2026-10-13.md). No additional Qualcomm hardware sleep hook was identified in the searched packages; CPU active-only clients and the extra NPU latfloor must not be confused with the corrected dual-context NPU requests.
+
+### External-modem control and observation boundary — 2026-10-16
+
+A bounded control-path review found no qualified userspace power-off/recovery
+experiment for the presently unbooted external-modem path:
+
+| Interface | Established behavior and limit |
+| --- | --- |
+| ESOC debug `command_mask` | Masks a command rather than executing it; the retained binary config does not enable `ESOC_MDM_DBG_ENG`. |
+| `ESOC_CMD_EXE` ioctl | Requires ownership of the ESOC command engine. Registration rejects an existing owner with `EBUSY`. The live `mdm-4x` driver is bound and its probe registers that engine. No registration or command ioctl was attempted. |
+| SSR public `state` | Read-only in the reviewed driver; its initial label is not an electrical shutdown test. |
+| `qpnp_pon_modem_pwr_off()` | Performs immediate PMIC reset/shutdown actions, rather than exposing a measured power state. No call was made; a board-supported shutdown and repower sequence remains unestablished. |
+
+The historical implementation choice is intentional: the
+[Kona reset change](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/commit/ff1d28007c6e1f067e38be66bf2770ce9c7facf8)
+replaces cold reset with warm reset, and the subsequent
+[GPIO cleanup](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/commit/97952988ae7e8786ad3b5dea6be441349b5b5223)
+removes the reset-GPIO path in favor of SPMI. The
+[generic modem PMIC API addition](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/commit/47598dd0e8099a6e36dfa09e3e0098e48e721f87)
+does not by itself qualify arbitrary shutdown/repower actions on this board.
+An available API and a function named `power_down` are insufficient grounds
+for substituting `PON_POWER_OFF_SHUTDOWN` into the SDX55 path.
+
+A read-only inspection used fixed-offset `pread()` on regmap `registers`,
+without changing debugfs selectors or writing hardware registers. The SID8
+PON type/subtype reads succeeded. Type/subtype reads at 23 candidate SID9
+regulator blocks were unavailable (`XX`), not zero-valued rail-state results.
+A temporary, PID/address-filtered existing `spmi_read_end` tracepoint confirmed
+`ret=0` for SID8 address `0x0804` and `ret=-19` (`ENODEV`) for SID9 `0x1404`.
+In the reviewed arbiter, address-to-channel lookup can reject a peripheral
+with `ENODEV` before issuing its transaction. This does not prove a physical
+PMIC absence or electrical shutdown, and does not identify every inaccessible
+candidate block as a regulator. No voltage/enable value was changed.
+The private trace instance was disabled and removed; no dynamic probe remained.
+
+The next modem-specific evidence requirement is a board-supported way to
+observe or change its actual power state, with an established repower path.
+Neither a blind force-off command nor a new overnight run with unchanged
+observability meets that requirement. The modem remains an unproven lead.
+
+A separate plugged idle check found no process holding `/dev/video*`,
+`/dev/media*`, `/dev/v4l-subdev*`, `cam_req_mgr` or `cam_sync` open. This excludes
+an observed capture-device holder at that instant, not all camera-related
+electrical demand in suspension. No capture, application launch, firmware
+startup, power command, driver unbind, build or flash was performed.
