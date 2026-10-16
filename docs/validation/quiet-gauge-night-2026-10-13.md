@@ -1023,3 +1023,40 @@ The next passive record includes direct MSOC reporting (`real_capacity`)
 and `cc_soc` in centi-percent, alongside the displayed capacity. The
 `capacity_raw` property must not be interpreted as uniformly high-resolution:
 the source can return rounded property capacity times 100 when unplugged.
+
+### Daytime reporting-path observation, 16 October 2026
+
+The same-boot passive observation covered 36,258.335 seconds (10 h 04 min
+18 s), including 34,593.339 seconds suspended (95.408%). Initial suspension
+occurred 912.148 seconds after the USB polling event. All 47 exact natural
+gauge wakes (46 `msoc-delta`, one `msoc-high`) stayed software-blank and
+resuspended within 15.188–15.427 seconds. No unblank record was observed after
+initial suspension and before USB return. This is software accounting, not
+an optical display measurement or an independent electrical measurement.
+
+The additional reporting fields were present in all 104 event records. At
+discharging records, displayed capacity and direct MSOC reporting differed
+by 0–1 percentage point, median zero. Both were 76% at the final pre-return
+prepare-sleep record; the subsequent USB-return records showed 76% displayed
+and 75% direct MSOC. This argues against a simple display-layer doubling of
+percentage loss during this observation. MSOC itself remains model-derived.
+
+Learned capacity changed from 2,733 mAh at arming to 2,710 mAh by the first
+record with USB absent, 3.071 seconds before the explicit polling `unplugged`
+event. It then remained constant in the observed discharge. The transition
+must not be described as definitely occurring before physical unplugging.
+Using 2,710/4,707 for numerical normalization, raw-counter band estimates
+become 49.464–49.724 mA. The 42 qualified filtered endpoints at least an hour
+after the polling unplug event have median 49.457 mA, range 49.280–50.869 mA.
+The hour boundary is descriptive, not an established filter-settling time.
+
+The software-counter band estimates still vary strongly with SOC, while raw
+estimates and filtered endpoints are comparatively stable. These correlated
+gauge paths cannot establish calibrated physical current, capacity accuracy,
+cell health or a new power-saving result. USB-return endpoints are not clean
+unplugged endpoints. Neither replacing all historic rates by one fixed ratio
+nor dividing percentage loss by 1.72 is justified.
+
+The observer finished successfully and was inactive after return. Charging,
+`input_suspend=0`, the normal 900-second suspend timeout, an empty RTC alarm,
+no trace instance and no NPU recovery file were verified. No new test was armed.
