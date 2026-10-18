@@ -1,5 +1,14 @@
 # Camera userspace status
 
+## Complete image built; hardware test pending — 2026-10-18
+
+The operator's `mobian-lmi-complete-20261018` image now includes Snapshot
+48.0.1-1, the rear-camera bundle and foreground/lock-aware launcher. Offline
+inspection confirms their presence; filesystem and image roundtrip checks
+passed. No acquisition was started. The new lifecycle remains unqualified
+until post-flash tests, and existing front/zoom/flash/video limits still apply.
+
+
 ## Fresh-image integration boundary — 2026-10-18
 
 The handset is back on Mobian `20261018-r1`. Package and fixed-path inspection

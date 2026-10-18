@@ -71,3 +71,13 @@ before camera compilation. Apt dependency installation is noninteractive with
 PTY logging disabled. Native Phosh packages completed on the second operator
 attempt and will be reused; the camera dependency step was interrupted and
 has not yet produced a completed image.
+
+## Operator build completed
+
+The subsequent operator run finished successfully on 2026-10-18 with
+`COMPLETE_IMAGE_WITH_NATIVE_HOME_AND_SNAPSHOT`. The 3,660,046,632-byte sparse
+image has SHA-256
+`67413598eab1cf646e9f8c22606aa29d33a52d8e9d37a933c2571e8cc97d7a85`.
+Filesystem checks, raw/sparse comparison and offline package/profile inspection
+passed. Post-flash touchscreen and camera lifecycle tests remain pending.
+Earlier failure/recovery paragraphs above record preparation history.

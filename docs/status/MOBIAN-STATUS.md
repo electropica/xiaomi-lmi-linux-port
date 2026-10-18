@@ -1,5 +1,28 @@
 # Mobian status
 
+## Complete image successfully built — 2026-10-18
+
+The operator completed `mobian-lmi-complete-20261018` with exit status zero and
+the `COMPLETE_IMAGE_WITH_NATIVE_HOME_AND_SNAPSHOT` marker. Filesystem checks
+and the builder's raw/sparse roundtrip passed. The sparse artifact is
+3,660,046,632 bytes with SHA-256
+`67413598eab1cf646e9f8c22606aa29d33a52d8e9d37a933c2571e8cc97d7a85`;
+its checksum was independently re-read after build completion.
+
+Offline rootfs inspection confirms Phosh/common
+`0.46.0-3+deb13u1+lmigaugewake3+homedrag1`, GSD
+`48.1-1+lmiquietgauge3`, UPower `1.90.9-1+lmi1` and Snapshot `48.0.1-1`.
+The complete-profile marker, camera bundle manifest, launcher and service are
+present. The old resource-only home overlay is absent as required by the native
+widget bindings. The existing RPMh boot/kernel is reused, not rebuilt.
+
+This is a successful integrated image build, not post-flash hardware
+qualification. Native touch drag, Snapshot foreground/background/exit behavior
+and retained application/battery behavior must be checked after installation.
+Front-camera, camera zoom/flash, reliable video and corrected autonomy are not
+claimed. No phone flash or acquisition was performed during artifact checks.
+
+
 ## Complete-build chroot terminal repair — 2026-10-18
 
 The operator's next attempt completed the native Phosh packages, then stopped
