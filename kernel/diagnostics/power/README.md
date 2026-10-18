@@ -3318,3 +3318,8 @@ updates its request at START. Selecting powersave already reduces the request
 to zero in the qualified suspend hook. No additional residual-drain mechanism
 has been demonstrated, and no sysfs pwr cycle or new hardware test was run.
 Do not read NPU caps as a passive snapshot: its getter also powers the core.
+
+
+The attended recovery-control source and operator limits are retained in
+[recovery-control](../../../userspace/power/diagnostics/recovery-control/README.md).
+This is opt-in diagnostic tooling, not an automatic startup service.
