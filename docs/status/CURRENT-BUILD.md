@@ -1,5 +1,22 @@
 # Current validated build and userspace state
 
+## Next complete-image preparation — 2026-10-18
+
+The operator requested native favorite drag ordering and application shortcuts
+placed in the unused home area. A [native candidate](../../userspace/phosh/home-drag-candidate/README.md)
+is prepared against the retained quiet-gauge v3 source, with pinned inputs.
+Order/placement logic tests, syntax-only checks of both modified C translation
+units using the retained ARM build environment, and strict schema validation
+passed. The operator-run package build is the next gate; no native drag feature
+is installed or hardware-qualified. The existing resource-only dock stays active.
+
+The next full image must also address the missing camera. Package inspection
+confirms the usual checklist applications are installed, but `gnome-snapshot`
+and its diagnostic rear-camera bridge are absent. The retained camera path
+requires backend/lifecycle integration, not merely adding the package or icon.
+The previous private accepted-trial sources/binaries were located; no new
+acquisition or recording was started. Full image readiness is not yet claimed.
+
 ## Post-flash home navigation adaptation — 2026-10-18
 
 The handset now uses a scoped resource-only favorites-home/application-drawer
