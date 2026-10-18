@@ -63,5 +63,11 @@ the completed image. Build success must include filesystem checks, sparse
 roundtrip and the final `COMPLETE_IMAGE_WITH_NATIVE_HOME_AND_SNAPSHOT` marker.
 
 Existing image output paths are refused. Finished package/bundle artifacts
-can be reused after identity checks; a partial camera bundle must be examined
-before a retry. No cleanup or deletion is performed automatically.
+can be reused after identity checks; partial camera preparation is reused only after matching every prepared
+source/runtime asset against fresh preparation. Altered assets are refused. No cleanup or deletion is performed automatically.
+
+The retained ARM chroot receives private proc/devpts mounts and a PTY probe
+before camera compilation. Apt dependency installation is noninteractive with
+PTY logging disabled. Native Phosh packages completed on the second operator
+attempt and will be reused; the camera dependency step was interrupted and
+has not yet produced a completed image.

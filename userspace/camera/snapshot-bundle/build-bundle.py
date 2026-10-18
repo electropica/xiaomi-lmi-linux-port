@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Operator-run camera bundle compilation; no device access or image flashing."""
-import argparse,ast,hashlib,json,os,shutil,subprocess
+import argparse,ast,hashlib,json,os,shutil,subprocess,tempfile
 from pathlib import Path
 
 def replace(text,old,new):
@@ -8,7 +8,22 @@ def replace(text,old,new):
     return text.replace(old,new)
 
 def prepare(repo,out):
-    assert not out.exists();out.mkdir(parents=True)
+    if out.exists():
+        assert out.is_dir() and not out.is_symlink(), 'Regular bundle directory required'
+        # Resume only when every prepared source/runtime asset still matches.
+        # Generated binaries may be rebuilt; no prior input is deleted.
+        with tempfile.TemporaryDirectory(prefix='lmi-camera-resume-') as temporary:
+            expected=Path(temporary)/'prepared'
+            prepare(repo,expected)
+            for source in expected.rglob('*'):
+                target=out/source.relative_to(expected)
+                assert not target.is_symlink(), target
+                if source.is_file():
+                    assert target.is_file() and target.read_bytes()==source.read_bytes(), target
+                else:assert target.is_dir(), target
+        print('VERIFIED_CAMERA_PREPARATION_RESUMED',flush=True)
+        return out/'source/userspace/camera/diagnostics'
+    assert not out.is_symlink();out.mkdir(parents=True)
     src=out/'source/userspace/camera/diagnostics';src.mkdir(parents=True)
     original=repo/'userspace/camera/diagnostics'
     for name in ['camera-module-capture.c','camera-module-enumerate.c','camera-qti-bridge.cpp','camera-qti-bridge.h','camera-yuv-neon.h','frame-pacing.h','native-pipewire-ppm-test.c','private-context-test.c','lmi-snapshot-tuning.c']:
@@ -51,8 +66,13 @@ polkit.addRule(function(action, subject) {
     return src
 
 def build(repo,root,out,libcxx,toolchain):
-    src=prepare(repo,out)
     assert os.getuid()==0
+    assert os.readlink('/proc/self/ns/mnt')!=os.readlink('/proc/1/ns/mnt'), 'Private mount namespace required'
+    subprocess.run(['python3',str(repo/'userspace/camera/snapshot-bundle/prepare-chroot.py'),str(root)],check=True)
+    src=prepare(repo,out)
+    for name in ['camera-module-capture','liblmi_qti_bridge.so','lmi-camera-private-context-test.so','native-pipewire-source','snapshot-focus','lmi-snapshot-tuning.so','SHA256SUMS','BUILD-INPUTS.json']:
+        target=out/name
+        assert not target.is_symlink() and (not target.exists() or target.is_file()),target
     assert libcxx.is_file() and libcxx.read_bytes()[:4]==b'\x7fELF'
     cc=toolchain/'aarch64-linux-android35-clang';cxx=toolchain/'aarch64-linux-android35-clang++'
     subprocess.run([str(cxx),'-shared','-fPIC','-O2','-D_LIBCPP_ABI_NAMESPACE=__1','-Wall','-Wextra','-Werror','-nostdlib++',str(src/'camera-qti-bridge.cpp'),str(libcxx),'-ldl','-Wl,-soname,liblmi_qti_bridge.so','-o',str(out/'liblmi_qti_bridge.so')],check=True)
@@ -60,8 +80,13 @@ def build(repo,root,out,libcxx,toolchain):
     subprocess.run([str(cc),'-shared','-fPIC','-O2','-Wall','-Wextra','-Werror',str(src/'private-context-test.c'),'-ldl','-o',str(out/'lmi-camera-private-context-test.so')],check=True)
     # Dependencies are installed only in the retained build chroot, never on the phone.
     if not (root/'usr/include/pipewire-0.3/pipewire/pipewire.h').exists():
-        subprocess.run(['chroot',str(root),'/usr/bin/env','DEBIAN_FRONTEND=noninteractive','apt-get','install','-y','--no-install-recommends','libpipewire-0.3-dev'],check=True)
-    scratch=root/'build/lmi-complete-camera';assert not scratch.exists();scratch.mkdir()
+        subprocess.run(['chroot',str(root),'/usr/bin/env','DEBIAN_FRONTEND=noninteractive','apt-get','-o','Dpkg::Use-Pty=0','install','-y','--no-install-recommends','libpipewire-0.3-dev'],check=True,stdin=subprocess.DEVNULL)
+    scratch=root/'build/lmi-complete-camera'
+    assert not scratch.is_symlink()
+    scratch.mkdir(exist_ok=True)
+    assert scratch.is_dir()
+    for name in ['native-pipewire-ppm-test.c','frame-pacing.h','lmi-snapshot-tuning.c','snapshot-focus.c','native-pipewire-source','snapshot-focus','lmi-snapshot-tuning.so']:
+        assert not (scratch/name).is_symlink()
     for name in ['native-pipewire-ppm-test.c','frame-pacing.h','lmi-snapshot-tuning.c']:shutil.copy2(src/name,scratch/name)
     shutil.copy2(out/'snapshot-focus.c',scratch/'snapshot-focus.c')
     protocol='/build/phosh-0.46.0/obj-aarch64-linux-gnu/protocol'

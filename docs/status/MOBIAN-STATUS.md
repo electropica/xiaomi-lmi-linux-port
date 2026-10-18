@@ -1,5 +1,23 @@
 # Mobian status
 
+## Complete-build chroot terminal repair — 2026-10-18
+
+The operator's next attempt completed the native Phosh packages, then stopped
+while installing camera build dependencies in the retained ARM chroot. The
+chroot lacked mounted devpts and proc; apt reported `posix_openpt (19)` and
+the inspected processes were stopped. A private live mount repair passed its
+PTY probe, but resuming exposed a pending KeyboardInterrupt and ended the
+build. No automatic full-build restart was performed.
+
+The recipe now prepares private proc/devpts mounts and a matching ptmx bind,
+probes the chroot PTY, and disables apt's optional PTY logging for this dependency
+step. Repeating mount preparation passes. The interrupted chroot's dpkg audit
+is empty. Camera preparation can resume only after all source/runtime assets
+match fresh preparation; a tampered partial bundle is rejected. The existing
+partial bundle passes those checks. Completed Phosh packages are reused by
+the same complete-build command. Image generation remains pending.
+
+
 ## Native drag null-application regression fixed — 2026-10-18
 
 The operator's combined package/image build stopped at the upstream

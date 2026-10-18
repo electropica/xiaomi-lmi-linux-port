@@ -37,6 +37,8 @@ done
 # Serialize later use of the shared ARM build root as well.
 exec 9>/run/lmi-phosh-gauge-build.lock
 flock -n 9 || { echo 'Shared ARM build root is busy.' >&2; exit 1; }
+# apt and the ARM compiler run in a real chroot, not an empty /dev/pts tree.
+python3 "$repo/userspace/camera/snapshot-bundle/prepare-chroot.py" "$root"
 # One private bundle and input directory per named image, outside Git.
 export M1_COMPLETE_CAMERA_BUNDLE="/home/linuxagent/$3-camera-bundle"
 if [[ ! -e $M1_COMPLETE_CAMERA_BUNDLE/SHA256SUMS ]]; then
