@@ -11,6 +11,12 @@ def main():
     files = repo / 'userspace/apps/files'
     builder = (repo / 'userspace/phosh/scripts/build-m1-phosh.sh').read_text()
     installer = Path(__file__).with_name('install.sh').read_text()
+    # Fresh M0 trees do not contain mobian. The Chatty installer needs that
+    # account and home even when all package dependencies are already cached.
+    account = builder.index('useradd --uid 1000 --user-group --create-home')
+    app_install = builder.index('LMI_APPS_FILES_DIR=/run/lmi-app-files /run/install-optional-apps.sh')
+    if account >= app_install:
+        raise SystemExit('Mobian account must be created before app integration')
     required = set(re.findall(r'"\$apps_files/([A-Za-z0-9_.-]+)"', installer))
     if not required:
         raise SystemExit('No installer app-file dependencies found; review parser scope')

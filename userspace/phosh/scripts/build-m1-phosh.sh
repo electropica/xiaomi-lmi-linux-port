@@ -203,14 +203,15 @@ apt-get install --no-install-recommends -y \
     unzip=6.0-29+deb13u1
 test -z "$(dpkg --audit)"
 if [[ $INSTALL_DEBUG_TOOLS == 1 ]]; then /run/install-debug-tools.sh; fi
-if [[ $INSTALL_OPTIONAL_APPS == 1 ]]; then
-    LMI_APPS_FILES_DIR=/run/lmi-app-files /run/install-optional-apps.sh
-fi
+# App integrations install per-user launchers and require the account first.
 if ! getent passwd 1000 >/dev/null; then
     useradd --uid 1000 --user-group --create-home --shell /bin/bash mobian
 fi
 test "$(getent passwd 1000 | cut -d: -f1)" = mobian
 usermod -aG audio,video,render,input,plugdev mobian
+if [[ $INSTALL_OPTIONAL_APPS == 1 ]]; then
+    LMI_APPS_FILES_DIR=/run/lmi-app-files /run/install-optional-apps.sh
+fi
 if [[ $M1_CURRENT_PROFILE == 1 ]]; then
     /bin/bash /run/lmi-current-profile/profile/install.sh
 fi

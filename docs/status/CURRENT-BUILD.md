@@ -1,3 +1,12 @@
+## October 18 build interruption
+
+The first current-image attempt stopped before image generation. Its fresh M0
+rootfs had no `mobian` account, while optional Chatty integration required that
+account before the builder created it. No raw or sparse image was produced.
+Account creation/group setup now precedes optional app integration; the app
+staging check also rejects the wrong order. The next full build remains
+operator-run. This correction does not change the phone or kernel.
+
 ## Current image rebuild preparation — 2026-10-18
 
 The operator restored the retained October 9 userdata and the existing RPMh
