@@ -43,28 +43,8 @@ done
 install -o mobian -g mobian -m644 "$src/audio/lmi-krecorder.conf" "$home/.config/krecorder.conf"
 install -Dm755 "$src/apps/lmi-flashlight.py" /usr/local/bin/lmi-flashlight
 install -Dm644 "$src/apps/lmi-flashlight.desktop" /usr/local/share/applications/lmi-flashlight.desktop
-install -Dm755 "$src/apps/lmi-chatty-safe" /usr/local/bin/lmi-chatty-safe
-install -d -m755 /usr/local/lib/lmi-chatty/gstreamer
-count=0
-for p in /usr/lib/aarch64-linux-gnu/gstreamer-1.0/*.so; do
-    test -f "$p"
-    case "${p##*/}" in libgstvideo4linux2.so|libgstuvch264.so) continue;; esac
-    ln -s "$p" /usr/local/lib/lmi-chatty/gstreamer/"${p##*/}"
-    count=$((count+1))
-done
-test "$count" -gt 0
-test ! -e /usr/local/lib/lmi-chatty/gstreamer/libgstvideo4linux2.so
-test ! -e /usr/local/lib/lmi-chatty/gstreamer/libgstuvch264.so
-install -d -o mobian -g mobian -m755 "$home/.local" "$home/.local/share" \
-    "$home/.local/share/applications" "$home/.local/share/dbus-1" "$home/.local/share/dbus-1/services"
-desktop="$home/.local/share/applications/sm.puri.Chatty.desktop"
-install -o mobian -g mobian -m644 /usr/share/applications/sm.puri.Chatty.desktop "$desktop"
-test "$(grep -Fxc 'Exec=chatty %u' "$desktop")" = 1
-sed -i 's|^Exec=chatty %u$|Exec=/usr/local/bin/lmi-chatty-safe %u|' "$desktop"
-printf '[D-BUS Service]\nName=sm.puri.Chatty\nExec=/usr/local/bin/lmi-chatty-safe --gapplication-service\n' \
-    > "$home/.local/share/dbus-1/services/sm.puri.Chatty.service"
-chown mobian:mobian "$home/.local/share/dbus-1/services/sm.puri.Chatty.service"
-chmod 644 "$home/.local/share/dbus-1/services/sm.puri.Chatty.service"
+# Use the complete shared fix, including desktop activation and daemon autostart.
+LMI_APPS_FILES_DIR="$src/apps" bash "$src/apps/install-chatty-safe.sh"
 install -Dm755 "$src/power/lmi-cpu-idle" /usr/local/sbin/lmi-cpu-idle
 install -Dm644 "$src/power/lmi-cpu-idle.service" /etc/systemd/system/lmi-cpu-idle.service
 install -Dm644 /dev/null /etc/lmi/cpu-idle-opt-in

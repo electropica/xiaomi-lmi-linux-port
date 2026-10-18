@@ -136,3 +136,11 @@ containing v3 has not yet been built or hardware-validated.
 The paired v3 packages can now be recovered from their pinned Debian source
 baselines using the [cumulative source patches](../../../userspace/power/quiet-gauge-v3/README.md).
 This does not change the private package-input manifest or qualify a new image.
+
+### Fresh-image Chatty activation guard (2026-10-18)
+
+The profile now invokes the shared Chatty installer instead of rewriting its
+desktop and D-Bus files with a partial duplicate. This retains
+`DBusActivatable=false` and the per-user daemon autostart mask. The shared
+installer is copied and checked during profile staging. This is a recipe
+correction; a new image build and post-flash qualification remain pending.

@@ -1,3 +1,19 @@
+## Current image rebuild preparation — 2026-10-18
+
+The operator restored the retained October 9 userdata and the existing RPMh
+boot after LineageOS October 7 (no OTA). The retained v3 Phosh/GSD pair and
+production opt-ins were reinstalled; both live service environments were
+verified without debug. The suspend-only NPU hook was restored with original
+awake bandwidth policy. The operator confirmed normal interface interaction.
+No new battery result follows from this restoration.
+
+The current-image profile now reuses the complete shared Chatty installer,
+retaining its daemon autostart mask and desktop activation guard instead of
+partially overwriting them. Nine profile staging/rejection tests pass. The
+original paired Android reports match the hashes retained with the October 9
+image. The next userdata build remains operator-run; it has not yet been
+built, flashed or hardware-qualified. The existing RPMh kernel is reused.
+
 # Current validated build and userspace state
 
 ## Source recovery boundary — 2026-10-14

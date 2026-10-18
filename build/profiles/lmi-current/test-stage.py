@@ -26,6 +26,11 @@ class StageTests(unittest.TestCase):
         for name in ['phosh-quiet-resume.conf','gsd-quiet-resume.conf']:
             self.assertEqual((self.dest/'power'/name).read_bytes(),(stage.resolve().parents[3]/'kernel/diagnostics/power/userspace'/name).read_bytes())
         self.assertTrue((self.dest/'apps/lmi-flashlight.py').is_file())
+        self.assertEqual((self.dest/'apps/install-chatty-safe.sh').read_bytes(),
+                         (stage.resolve().parents[3]/'userspace/apps/files/install-chatty-safe.sh').read_bytes())
+        installer=(self.dest/'profile/install.sh').read_text()
+        self.assertIn('bash "$src/apps/install-chatty-safe.sh"',installer)
+        self.assertNotIn('Exec=/usr/local/bin/lmi-chatty-safe %u|',installer)
         self.assertTrue((self.dest/'audio/91-lmi-microphone.conf').is_file())
         self.assertTrue((self.dest/'power/lmi-cpu-idle.service').is_file())
         for name, subdir in [('lmi-npu-suspend','scripts'), ('lmi-npu-suspend-hook','files'), ('90-lmi-npu-suspend.conf','files')]:

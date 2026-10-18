@@ -44,7 +44,7 @@ a.destination.mkdir(parents=True)
 shutil.copytree(repo/'build/profiles/lmi-current', a.destination/'profile')
 shutil.copytree(repo/'userspace/audio/files', a.destination/'audio')
 (a.destination/'apps').mkdir()
-for name in ['lmi-flashlight.py','lmi-flashlight.desktop','lmi-chatty-safe']:
+for name in ['lmi-flashlight.py','lmi-flashlight.desktop','lmi-chatty-safe','install-chatty-safe.sh']:
     shutil.copy2(repo/'userspace/apps/files'/name, a.destination/'apps'/name)
 (a.destination/'power').mkdir()
 for name in ['phosh-quiet-resume.conf','gsd-quiet-resume.conf']:
