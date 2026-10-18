@@ -1,5 +1,24 @@
 # Camera userspace status
 
+## Fresh-image integration boundary — 2026-10-18
+
+The handset is back on Mobian `20261018-r1`. Package and fixed-path inspection
+confirmed that `gnome-snapshot` and the earlier diagnostic rear-camera runtime
+are absent. The missing application is not hidden by the new all-apps drawer.
+The other ordinary checklist packages are present; package presence alone does
+not renew their complete functional qualification.
+
+The operator requested a complete next image, including the camera. The
+accepted fixed-FPS/NEON trial assets, producer and scoped Snapshot tuning
+library were located in retained private material. The official Debian
+`gnome-snapshot=48.0.1-1` package and its dependency bundle are retained too.
+No camera, microphone or recording was started during this inventory.
+
+A stable Snapshot launch/foreground/exit lifecycle and fresh hardware check
+remain necessary before treating these diagnostic components as integrated.
+Installing only the Snapshot package or restoring the obsolete custom frontend
+would not satisfy that request. The next complete image is not ready yet.
+
 ## Current decision summary — 2026-10-08
 
 The handset is currently running LineageOS for the battery comparison, not
