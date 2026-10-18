@@ -153,3 +153,11 @@ active opt-ins, Chatty autostart/desktop protections, masked indexer and NPU
 opt-in without post-flash installation. The existing RPMh boot was retained.
 Fresh-image sleep/resume and long-duration drain remain to be qualified; see
 [the current build record](../../../docs/status/CURRENT-BUILD.md).
+
+### Fresh-image sleep qualification (2026-10-18)
+
+An attended 18-minute observation passed automatic sleep at the normal delay,
+one quiet `msoc-delta` resume with prompt resuspension, two NPU hook apply/restore
+cycles and USB return. The operator confirmed normal interaction and screen
+power-button behavior afterwards. This qualifies those fresh-image transitions,
+not long-duration autonomy. See [the current build record](../../../docs/status/CURRENT-BUILD.md).

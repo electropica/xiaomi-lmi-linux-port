@@ -1,5 +1,31 @@
 # Current validated build and userspace state
 
+## Fresh-image automatic sleep and gauge wake — 2026-10-18
+
+The first passive observation of `mobian-lmi-current-20261018-r1` lasted
+1,104.60 seconds cable-free, with the normal 900-second battery suspend delay
+and Wi-Fi left enabled. The screen lock became active about 13 seconds after
+the unplug poll; automatic PrepareForSleep followed at 913.20 seconds.
+
+Boottime-minus-monotonic deltas show 174.60 seconds actually suspended over
+two cycles. The first sleep lasted 157.80 seconds and ended on `msoc-delta`.
+No WakeUpScreen or unlocked-state signal appeared between that gauge wake
+and the next sleep request, which followed about 15.21 seconds later. The
+second sleep lasted 16.80 seconds and ended on the USB Type-C cable return.
+These are software transition observations, not a direct optical screen trace.
+
+The journal confirms two NPU zero-target applications and two original-policy
+restorations. Awake governors/targets match their reviewed performance
+baseline, no recovery is pending, the RTC alarm is empty and the passive
+collector finished. The operator then confirmed normal touch/application
+interaction and screen power-button behavior.
+
+This qualifies automatic sleep, one quiet gauge resume and recovery after
+USB return on the integrated fresh image. It does not establish long-duration
+autonomy or calibrated physical drain. The prior residual-consumption
+investigation remains unresolved; USB-return battery endpoints may already
+be affected by charging.
+
 ## Fresh current image boot validation — 2026-10-18
 
 The operator successfully built and flashed `mobian-lmi-current-20261018-r1`
