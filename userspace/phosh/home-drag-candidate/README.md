@@ -1,8 +1,13 @@
 # Native home drag candidate
 
-## homedrag6: move between saved surfaces (operator build pending)
+## homedrag6: move between saved surfaces (installed and confirmed)
 
-Homedrag5 is installed; five favorites fit on the handset. The operator then
+The homedrag6 pair is installed after an operator build with 36/36 tests.
+Contacts was physically moved favorites → home → favorites: both moves remove
+the source shortcut. Saved settings confirm the final five favorites and no
+Contacts home shortcut. The earlier five-icon fit remains qualified.
+
+Homedrag5 had established that five favorites fit on the handset. The operator then
 clarified that dragging a favorite to home must remove it from the dock. The
 previous copy behavior is replaced with an origin-aware transfer between home
 and favorites. Drawer drags remain copies; moving within either saved surface
@@ -14,8 +19,9 @@ unchanged. A full five-entry dock cannot consume a home shortcut. Already-
 present destination entries permit moving away the other saved copy.
 
 Compiled source-removal and grouped-commit/concurrent-source tests accompany
-the change. The same WSL command below now builds homedrag6; handset transfer
-validation remains pending. No additional package was built autonomously.
+the change. The same WSL command below builds homedrag6; operator-built
+packages and the stated bidirectional handset transfer checks now pass. No
+additional package was built autonomously.
 
 
 ## homedrag5: fit five icons and avoid deferred removal starvation

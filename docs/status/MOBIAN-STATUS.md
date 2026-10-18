@@ -1,6 +1,24 @@
 # Mobian status
 
-## Homedrag5 installed; cross-surface copy semantics clarified — 2026-10-18
+## Homedrag6 installed; bidirectional shortcut transfers confirmed — 2026-10-18
+
+The operator subsequently built homedrag6 with all 36 package tests passing.
+The new pair is installed; only Phosh restarted, while the Phoc PID and handset
+boot ID stayed unchanged. Package audit and running executable checks pass.
+The homedrag5 pair is retained for explicit recovery, and the transient timer
+was stopped after health checks. Verified homedrag6 package SHA-256:
+
+- Phosh arm64: `074e1aa1282b485ca65d36a1bcbb1af4b777e39d0bcc1bd261b433a183cec302`.
+- Common all: `9bafbb64d3a0db9718e41861b1cca7734b20b7a8dc5c8526866b983b6de84f18`.
+
+**Operator-confirmed:** Contacts moves from favorites to an empty home cell
+and disappears from favorites; the reverse move restores it to favorites and
+clears its home cell. Saved settings after that round trip confirm five
+favorites with Contacts present and no Contacts shortcut on home. The earlier
+five-icon screen fit remains qualified. Drawer copies, existing home shortcut
+removal and a rejected cross-surface drop at capacity have not all been
+physically retested on this exact pair; the corresponding source tests remain
+separate evidence. No battery, camera or new full-image validation is implied.
 
 The operator built homedrag5 with 36/36 package tests passing. The pair was
 installed and only the user shell restarted; Phoc PID and handset boot ID did
@@ -19,7 +37,7 @@ this is the implemented cross-surface copy behavior, not duplicate home-slot
 entries. These statements do not prove that every earlier menu-delay report
 had the same cause; no separate menu-delay success is claimed.
 
-Prepared homedrag6 marks saved shortcut origins and transfers between dock and
+Homedrag6 marks saved shortcut origins and transfers between dock and
 home instead of copying. Drawer drags still copy, and same-surface drags still
 reorder/move. Destination and source snapshots are checked before writing;
 delayed GSettings updates are committed together or reverted if either write
@@ -27,8 +45,8 @@ is refused. A full dock or failed destination does not remove the source.
 Existing destination shortcuts permit removing the other saved copy without
 adding another destination entry. Compiled tests cover commit and cancellation
 on a concurrent source edit, source removal/list shape, geometry and the
-existing shortcut-removal protections. Package build and physical transfer
-checks remain pending; the phone continues on normal homedrag5.
+existing shortcut-removal protections. The subsequent package build and bidirectional physical transfer checks pass
+as detailed above; older homedrag5 state below is historical.
 
 The complete-image recipe now selects homedrag6 plus the same Phoc correction.
 Actual homedrag5/Phoc/camera inputs passed temporary profile staging; no full
