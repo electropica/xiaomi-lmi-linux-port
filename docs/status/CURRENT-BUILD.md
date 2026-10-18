@@ -1,6 +1,20 @@
 # Current validated build and userspace state
 
-## Restart button prepared; homedrag6 remains installed — 2026-10-18
+## Restart button installed; menu confirmation check pending — 2026-10-18
+
+The operator built the homedrag7 pair with all 36 package tests passing.
+It is now installed, with the running executable verified, empty dpkg audit,
+quiet opt-in retained and no diagnostic overlay. Only Phosh restarted; the
+compositor PID and handset boot ID stayed unchanged. The homedrag6 fallback
+pair is retained, and the rollback timer was stopped after health checks.
+Package SHA-256:
+
+- Phosh arm64: `e04f6d8348d4ca9b3a23208bf60f8591b5414f28ccc34c3f30dd2d7e764c1760`.
+- Common all: `3ef839c1f5ec25d4e3d8d6ce7a4fe7e955eb1a8345249a9c35410af6efded8f9`.
+
+Physical button visibility and confirmation cancellation await the operator.
+No reboot action has been triggered by the agent. Preparation notes below
+are historical where they describe the package as not yet installed.
 
 At the operator's request, homedrag7 adds a Restart button to the long-press
 power menu. It calls the existing phosh_session_manager_reboot method, using

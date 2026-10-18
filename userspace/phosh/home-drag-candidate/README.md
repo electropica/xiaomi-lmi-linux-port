@@ -1,6 +1,11 @@
 # Native home drag candidate
 
-## homedrag7: native Restart button (operator build pending)
+## homedrag7: native Restart button (installed; physical check pending)
+
+The operator-built pair passes 36/36 tests and is installed with executable
+health verified. Only the user shell restarted; no handset reboot occurred.
+Button/confirmation cancellation checks are pending. Older build-pending
+statements below describe preparation history.
 
 Adds Restart to the long-press power menu, translated through the existing
 French catalog. It calls the existing session-manager reboot flow and is
