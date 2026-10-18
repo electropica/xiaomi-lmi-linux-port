@@ -14,6 +14,7 @@ python3 "$task/prepare.py" "$root" "$task"
 unshare --mount --fork --propagation private bash -s -- "$root" "$repo" <<'NS'
 set -euo pipefail
 python3 "$2/userspace/camera/snapshot-bundle/prepare-chroot.py" "$1"
+mount -t tmpfs -o mode=1777,nosuid,nodev,size=256m tmpfs "$1/dev/shm"
 chroot "$1" /bin/bash -s <<'CHROOT'
 set -euo pipefail
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

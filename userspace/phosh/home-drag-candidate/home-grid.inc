@@ -13,9 +13,14 @@ lmi_home_rebuild (PhoshAppGrid *self)
     g_autoptr (GDesktopAppInfo) app = *slots[i] ? g_desktop_app_info_new (slots[i]) : NULL;
     GtkWidget *cell;
     GtkWidget *target;
+    GtkWidget *box;
 
     if (app) {
       cell = phosh_app_grid_button_new (G_APP_INFO (app));
+      g_object_set_data (G_OBJECT (cell), "lmi-home-remove-slot", GINT_TO_POINTER (i + 1));
+      box = GTK_WIDGET (gtk_widget_get_template_child (cell, PHOSH_TYPE_APP_GRID_BASE_BUTTON, "box"));
+      gtk_widget_set_valign (box, GTK_ALIGN_CENTER);
+      gtk_box_set_spacing (GTK_BOX (box), 3);
       target = GTK_WIDGET (gtk_widget_get_template_child (cell, PHOSH_TYPE_APP_GRID_BASE_BUTTON, "button"));
       g_signal_connect (cell, "app-launched", G_CALLBACK (app_launched_cb), self);
     } else {

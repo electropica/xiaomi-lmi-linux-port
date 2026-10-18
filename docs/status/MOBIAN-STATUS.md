@@ -1,5 +1,44 @@
 # Mobian status
 
+## Phoc DnD enabled; home interaction follow-up prepared — 2026-10-18
+
+The operator built Phoc `0.46.0-1+lmishelldnd1`; package SHA-256 is
+`e862d58b20aa274b01184e89e0b3d25048de951fb70f161235854fe4fe970ac6`.
+Installed dependencies were already satisfied and only Phoc changed. The stock
+0.46.0-1 package was retained and verified for recovery. Activating the session
+was followed by a complete handset reboot (uptime confirmed); the cause is not
+established and no reboot command was issued. After reconnecting, both Phoc
+and Phosh were active with running executables matching their installed files,
+an empty package audit and quiet-gauge opt-ins retained. The transient rollback
+timer did not survive the reboot; the explicit rollback script/package remains.
+
+The operator confirms home drag/drop now works. Favorite reorder initially
+required an upward detour. Temporarily forcing the global home drag mode to
+NONE enabled direct lateral reorder; the probe was then removed and normal
+Phosh restored. This confirms a second gesture arbitration issue in addition
+to the compositor routing defect.
+
+Prepared Phosh `homedrag3` adds a home-only “Retirer de l’accueil” menu action,
+compact icon/name grouping, an explicit 48px drag preview in every direction,
+and disables the global layer drag while the overview is fully unfolded.
+Folded app-edge behavior remains unchanged in source; its physical validation
+is pending. Removal checks the exact slot and desktop ID, runs after menu
+activation returns, and rejects an intervening settings change. It does not
+uninstall the application or alter favorites.
+
+The updated app-grid-button test (including removal and concurrent-settings
+protection) was compiled and passes. A no-rebuild run of the 36 available Phosh
+tests passes; other statically linked tests were not all rebuilt in that run.
+A complete package build with all normal tests and the physical checks remain
+pending. The retained complete-image profile still selects homedrag2 and has
+not yet been promoted to this new candidate.
+
+The Phoc package's upstream test command was space-indented and parsed as a
+Make variable assignment, so packaging alone had not run the tests. The recipe
+now uses a tab, an unused Xvfb display, and private /dev/shm. Running the 17
+already-built tests with those resources passes all 17; initial missing-shared-
+memory failures are not counted as compositor regressions.
+
 ## Native drag v2 hardware failure; Phoc routing candidate — 2026-10-18
 
 The operator confirms that homedrag2 still cannot deposit shortcuts or reorder

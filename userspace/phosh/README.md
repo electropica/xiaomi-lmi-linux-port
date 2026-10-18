@@ -1,8 +1,9 @@
 # Mobian M1 Phosh image
 
-Current home drag/drop remains broken on hardware with homedrag2. See the
-[Phoc routing candidate](phoc-layer-dnd-candidate/README.md) for the targeted
-operator package build and validation boundaries.
+Home drag/drop now works with Phoc lmishelldnd1. The
+[homedrag3 follow-up](home-drag-candidate/README.md) prepares shortcut removal,
+compact labels and direct lateral reorder; its operator package build and
+physical checks remain pending.
 
 > This document contains chronological M1 bring-up history as well as the active recipe. Earlier milestone limitations are historical unless repeated in `docs/status/CURRENT-BUILD.md` or a later validation record. See `docs/status/CURRENT-BUILD.md` for the current validated build and `docs/architecture/ARCHITECTURE.md` for current paths.
 

@@ -1,5 +1,33 @@
 # Native home drag candidate
 
+## homedrag3 follow-up (operator build pending)
+
+Phoc lmishelldnd1 is installed and the operator confirms actual DnD works.
+A temporary global home gesture isolation test also confirms direct lateral
+favorite reorder; the diagnostic module/drop/timer has been removed.
+
+The next Phosh/common pair adds:
+
+- home shortcut context menu: **Retirer de l’accueil**, without uninstalling;
+- compact icon/name grouping inside each stretched home grid cell;
+- explicit 48px drag preview independent of movement direction;
+- global layer drag disabled only when the overview is fully unfolded, keeping
+  the app-edge behavior while folded. Recheck app-edge return on hardware.
+
+Run in Ubuntu WSL:
+
+```sh
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/userspace/phosh/home-drag-candidate/build-arm64.sh
+```
+
+This builds only the paired homedrag3 packages with normal tests, not a kernel
+or complete image. All previous quiet-gauge changes remain pinned. A targeted
+compiled test verifies slot removal, preservation of another shortcut and
+refusal to overwrite concurrent settings. Physical removal, icon/label spacing,
+preview visibility and folded-edge behavior remain pending package install.
+The complete-image profile is still homedrag2 until this candidate is qualified.
+
+
 Candidate `homedrag2` for Phosh 0.46.0 quiet-gauge v3. The first integrated
 image installed `homedrag1`, but its hardware test failed: the icon followed
 the finger while the drawer stayed above the home. The v2 correction is

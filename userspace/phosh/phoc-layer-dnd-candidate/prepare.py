@@ -25,5 +25,10 @@ assert hashlib.sha256(cursor.read_bytes()).hexdigest()==patched
 rules=src/'debian/rules';text=rules.read_text()
 if '\tdh $@\n' in text:text=text.replace('\tdh $@\n','\tdh $@ --builddirectory=_build\n');rules.write_text(text)
 assert '\tdh $@ --builddirectory=_build\n' in rules.read_text()
-assert 'xvfb-run ninja -C _build test' in rules.read_text()
+# Debian's space-indented LC_ALL assignment is parsed as a make variable,
+# leaving the test override empty. A recipe must start with a tab.
+text=rules.read_text()
+text=text.replace('        LC_ALL=C.UTF-8 xvfb-run ninja -C _build test', '\tLC_ALL=C.UTF-8 xvfb-run -a ninja -C _build test')
+rules.write_text(text)
+assert '\tLC_ALL=C.UTF-8 xvfb-run -a ninja -C _build test' in text
 print('PHOC_SOURCE_VERIFIED; UPSTREAM_TESTS_ENABLED')

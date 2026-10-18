@@ -73,8 +73,18 @@ lmi_home_drag_begin (GtkWidget *widget, GdkDragContext *context, gpointer unused
   const char *id = g_object_get_data (G_OBJECT (widget), "lmi-home-app-id");
   g_autoptr (GDesktopAppInfo) app = id ? g_desktop_app_info_new (id) : NULL;
 
-  if (app && g_app_info_get_icon (G_APP_INFO (app)))
-    gtk_drag_set_icon_gicon (context, g_app_info_get_icon (G_APP_INFO (app)), 16, 16);
+  if (app && g_app_info_get_icon (G_APP_INFO (app))) {
+    GtkIconTheme *theme = gtk_icon_theme_get_for_screen (gtk_widget_get_screen (widget));
+    g_autoptr (GtkIconInfo) icon = gtk_icon_theme_lookup_by_gicon (theme,
+                                    g_app_info_get_icon (G_APP_INFO (app)),
+                                    48, GTK_ICON_LOOKUP_FORCE_SIZE);
+    g_autoptr (GdkPixbuf) preview = icon ? gtk_icon_info_load_icon (icon, NULL) : NULL;
+
+    if (preview)
+      gtk_drag_set_icon_pixbuf (context, preview, 24, 24);
+    else
+      gtk_drag_set_icon_gicon (context, g_app_info_get_icon (G_APP_INFO (app)), 24, 24);
+  }
 
   for (GtkWidget *parent = widget; parent; parent = gtk_widget_get_parent (parent)) {
     GObject *deck = g_object_get_data (G_OBJECT (parent), "lmi-home-drag-deck");

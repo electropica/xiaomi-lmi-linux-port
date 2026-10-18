@@ -1,6 +1,9 @@
 # Phoc shell-layer data-device drag candidate
 
-Status: source candidate only; no Phoc package built or installed yet.
+Status: operator-built and installed; home DnD confirmed on hardware.
+Direct lateral favorite reorder additionally needs the Phosh homedrag3 gesture
+follow-up. The session activation was followed by an unexpected full reboot;
+the handset then booted with the candidate active. Cause remains unestablished.
 
 Phosh homedrag2 starts native DnD and reveals home, but the operator cannot
 reorder favorites or deposit shortcuts. Real callback counters showed one
@@ -31,7 +34,9 @@ Debian source archives and the original cursor source are SHA-256 pinned.
 Preparation is resumable and rejects an unexpected cursor edit. proc/devpts
 are prepared only in a private mount namespace. Dependency installation is
 noninteractive. Upstream tests remain enabled; the Debian build directory is
-made explicitly `_build` to match its test invocation. Compilation uses two
+made explicitly `_build` to match its test invocation. The space-indented
+upstream test command is also changed into a real tab-indented Make recipe
+(otherwise it is parsed as a variable assignment and runs no tests). Compilation uses two
 jobs. The script produces only `phoc_0.46.0-1+lmishelldnd1_arm64.deb`, prints
 its checksum and does not install/restart the phone or build a kernel/image.
 Keep stock Phoc available for rollback before any later installation.
@@ -45,7 +50,9 @@ Keep stock Phoc available for rollback before any later installation.
   delivery, compositor lifetime, gesture arbitration or physical drop success.
 - Fresh preparation, identical resume and rejection of a tampered source pass
   in a disposable tree. Shell/Python syntax checks pass.
-- Full package compilation and upstream compositor tests are pending.
+- Operator package build succeeded. The space-indented upstream Make rule had
+  not run tests; it is repaired in this recipe. All 17 already-built tests
+  subsequently pass with private /dev/shm and an available Xvfb display.
 
 After installation, verify both favorite reorder and drawer-to-home drop,
 shortcut persistence, ordinary drawer swipe, lock/unlock, and touchscreen.
