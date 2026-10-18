@@ -1,5 +1,20 @@
 # lmi application checklist — October 3, 2026
 
+## Native navigation check — 2026-10-18
+
+On the freshly flashed `20261018-r1` image, the operator confirmed that a
+swipe up from the bottom edge of an open application reveals running
+applications and the app grid. The existing Phosh overview therefore covers
+the requested drawer access and leaves the current application in the
+background without closing it. No navigation patch or additional app was
+installed for this check.
+
+A global left-edge-to-right minimize gesture was also requested. Inspection
+of the installed Phosh/Phoc settings did not identify an existing configurable
+binding for it. This separate gesture is not implemented or validated. Any
+future adaptation must avoid stealing horizontal navigation from applications
+and must preserve lock-screen and keyboard behavior.
+
 Each application is tested separately. Successful startup does not validate
 every function. Confirmations obtained before a reboot are distinguished from
 checks on the current boot. No personal account, message or contact is created
