@@ -3192,3 +3192,38 @@ internally, while the subsystem wrapper reports success. Consequently,
 experiment needs both a qualified recovery path and observation of the secure
 operation; starting firmware merely to obtain a different software label is
 not a demonstrated power-saving intervention.
+
+
+### Recovery control prepared; residual drain unresolved — 2026-10-18
+
+Read-only inspection of the installed recovery established that its kernel
+(53,456,920 bytes, SHA-256
+`632247727d42157c7e01a99317ba9c10a6c0dc941201722aa3a380d02483a1cc`)
+and base DTB section (1,424,944 bytes, SHA-256
+`dc0dabd0671edb7a5e5b5db494f2471e1ba547255323c9afd9f3599ebe9ba5fd`)
+match the retained official Lineage boot image. Recovery also embeds a separate
+recovery DTBO section. Selected overlays and runtime power policy are not
+established by this identity check. No recovery boot or power measurement has
+been performed as part of this preparation.
+
+A recovery control could avoid both reinstalling Android and constructing a
+hybrid Mobian ramdisk. First inspect its actual suspend support, RTC, radio,
+NPU requests, display state and battery counters using native Windows ADB.
+Do not compare corrected Mobian against an unmatched performance/max NPU
+configuration. Exclude USB charging endpoints and qualify actual suspension;
+recovery alone does not reproduce full Android initialization or prove a
+particular kernel defect. Heavy builds remain operator-run; no flash needed
+for this preflight.
+
+Additional read-only checks found no new established cause: the known
+SoundWire device-address/port-request leak fix is already present; inspected
+SoundWire controllers and codec macros were runtime-suspended. Across 64
+cached bus clients, no new unexplained nonzero request was found at plugged
+idle. These cached requests do not prove the entire suspend state. Inspected
+ADSP/Venus payload copies and GPU executable ZAP content matched their Android
+counterparts; ZAP authentication metadata differed. No firmware replacement
+is justified by those observations. ESR pulse/timer enable bits were clear
+in the sampled plugged state, which does not exclude activity during sleep.
+
+No power settings, firmware, calibration or protection values were changed
+for these checks. The residual standby consumption remains unresolved.
