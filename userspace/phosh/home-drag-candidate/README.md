@@ -1,5 +1,25 @@
 # Native home drag candidate
 
+## homedrag5: fit five icons and avoid deferred removal starvation
+
+The installed homedrag4 accepts a fifth favorite, but runtime measurements and
+a screenshot show right-edge clipping. GtkFlowBoxChild theme padding was not
+included in the earlier width calculation. Home and favorite cells now remove
+that padding through scoped style providers. Compiled tests using the actual
+Phosh button factories and stylesheet measure four home cells at 354px and
+five favorites at 344px; both fit the 360px logical display including margins.
+
+Intermittent removal delays were reported. The deferred action now runs at
+normal main-loop priority, retaining idle/deferred execution and the existing
+slot/concurrent-change checks. A bounded busy-loop-source regression test
+covers starvation; this does not yet prove the user's intermittent trigger.
+
+The WSL command below now builds homedrag5. No package/image was built by the
+agent. Actual five-icon fit and prompt repeated removal remain to be checked
+on hardware after installation. The temporary geometry/action observer has
+been fully removed; the phone continues on normal homedrag4.
+
+
 ## homedrag4: up to five favorites (operator package build pending)
 
 Adds drawer-to-dock drops on an existing favorite or dock whitespace. New

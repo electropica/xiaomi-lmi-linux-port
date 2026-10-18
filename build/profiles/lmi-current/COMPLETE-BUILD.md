@@ -103,3 +103,11 @@ The input manifest now includes the Phoc package (nine total inputs); staging
 rejects its absence. Stable non-complete image behavior remains unchanged.
 The already-built complete image still contains homedrag1; it is not rewritten
 by these recipe changes. No new image build is necessary to test the new pair.
+
+
+The subsequent next-build selection is homedrag5 plus the same Phoc candidate.
+Homedrag4 added the fifth favorite but exposed
+right-edge clipping and intermittent shortcut-removal delay. The homedrag5
+source follow-up removes cell theme padding and raises deferred removal to
+normal main-loop priority. Its compiled geometry/busy-loop tests pass; package
+and physical checks are pending. No existing image has been overwritten.

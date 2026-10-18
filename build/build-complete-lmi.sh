@@ -25,7 +25,7 @@ unset M1_COMPLETE_LMI_PROFILE M1_COMPLETE_CAMERA_BUNDLE
 python3 "$repo/build/profiles/lmi-current/test-stage.py" "$M1_CURRENT_LMI_PROFILE_INPUTS"
 python3 "$repo/build/profiles/lmi-current/test-complete-stage.py" "$M1_CURRENT_LMI_PROFILE_INPUTS"
 python3 "$repo/userspace/apps/scripts/check-builder-staging.py"
-version=0.46.0-3+deb13u1+lmigaugewake3+homedrag4
+version=0.46.0-3+deb13u1+lmigaugewake3+homedrag5
 phosh="$root/build/phosh_${version}_arm64.deb"
 common="$root/build/phosh-common_${version}_all.deb"
 if [[ ! -f $phosh || ! -f $common ]]; then

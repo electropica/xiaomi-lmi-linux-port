@@ -29,6 +29,7 @@ lmi_home_rebuild (PhoshAppGrid *self)
       gtk_widget_set_size_request (target, 84, 84);
       gtk_container_add (GTK_CONTAINER (cell), target);
     }
+    lmi_home_compact_cell (cell);
     lmi_home_enable_target (target, NULL, i);
     gtk_container_add (GTK_CONTAINER (priv->lmi_home_slots), cell);
     gtk_widget_show_all (cell);

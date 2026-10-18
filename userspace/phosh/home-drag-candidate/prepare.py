@@ -3,7 +3,7 @@
 import argparse,hashlib,json,xml.etree.ElementTree as E
 from pathlib import Path
 
-VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag4'
+VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag5'
 QUIET='f8cbde684bd1920eebcfab70c39d2adef8696498fadc5443e6d2bde37669f019'
 
 def once(text,before,after):
@@ -51,6 +51,7 @@ def prepare(source,output,ui):
 
   lmi_home_enable_source (button, info);
   lmi_home_enable_target (button, info ? g_app_info_get_id (info) : NULL, -1);
+  lmi_home_compact_cell (widget);
   /* Five favorites fit a 360px logical screen without wrapping. */
   g_object_set (gtk_widget_get_parent (button), "natural-size", 64, "width-request", 64, NULL);
   gtk_image_set_pixel_size (GTK_IMAGE (phosh_app_grid_base_button_get_child (
@@ -88,8 +89,9 @@ def prepare(source,output,ui):
     anchor='  btn = phosh_app_grid_button_new (NULL);\n  g_assert_null (phosh_app_grid_button_get_app_info (\n                   PHOSH_APP_GRID_BUTTON (btn)));\n  gtk_widget_destroy (btn);'
     outputs['tests/test-app-grid-button.c']=once(test,anchor,anchor+'\n\n  btn = phosh_app_grid_button_new_favorite (NULL);\n  g_assert_null (phosh_app_grid_button_get_app_info (\n                   PHOSH_APP_GRID_BUTTON (btn)));\n  gtk_widget_destroy (btn);')
     test=outputs['tests/test-app-grid-button.c']
+    test=once(test,'#include "favorite-list-model.h"','#include "favorite-list-model.h"\n#include "lmi-home-dnd.h"')
     test=once(test,'int\nmain (', (assets/'test-remove.inc').read_text()+'\n\n'+'int\nmain (')
-    test=once(test,'  gtk_test_init (&argc, &argv, NULL);','  gtk_test_init (&argc, &argv, NULL);\n  g_test_add_func ("/phosh/app-grid-button/home-remove", test_phosh_home_remove);')
+    test=once(test,'  gtk_test_init (&argc, &argv, NULL);','  gtk_test_init (&argc, &argv, NULL);\n  g_test_add_func ("/phosh/app-grid-button/home-remove", test_phosh_home_remove);\n  g_test_add_func ("/phosh/app-grid-button/home-row-width", test_phosh_home_row_width);')
     outputs['tests/test-app-grid-button.c']=test
     schema=(source/'data/mobi.phosh.shell.gschema.xml').read_text()
     key='''    <key name="lmi-home-slots" type="as">

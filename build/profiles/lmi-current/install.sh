@@ -25,7 +25,7 @@ for p in upower libupower-glib3 gir1.2-upowerglib-1.0; do
 done
 phosh_version=0.46.0-3+deb13u1+lmigaugewake3
 if [[ -f $src/COMPLETE_PROFILE ]]; then
-    phosh_version+=+homedrag4
+    phosh_version+=+homedrag5
     test "$(dpkg-query -W -f='${Version}' phoc)" = 0.46.0-1+lmishelldnd1
 fi
 for p in phosh phosh-common; do

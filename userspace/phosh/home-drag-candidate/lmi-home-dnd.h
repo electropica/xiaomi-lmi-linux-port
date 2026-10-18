@@ -4,6 +4,19 @@
 #include <gio/gdesktopappinfo.h>
 #include "lmi-home-order.h"
 
+/* GtkFlowBoxChild theme padding otherwise widens four 84px home cells
+ * to 378px and forces the whole home beyond a 360px logical display. */
+static inline void
+lmi_home_compact_cell (GtkWidget *cell)
+{
+  g_autoptr (GtkCssProvider) css = gtk_css_provider_new ();
+
+  gtk_css_provider_load_from_data (css, "* { padding: 0; margin: 0; min-width: 0; }", -1, NULL);
+  gtk_style_context_add_provider (gtk_widget_get_style_context (cell),
+                                  GTK_STYLE_PROVIDER (css),
+                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+}
+
 static const GtkTargetEntry lmi_home_targets[] = {
   { (char *) "application/x-lmi-phosh-app", GTK_TARGET_SAME_APP, 0 }
 };

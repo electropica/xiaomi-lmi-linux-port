@@ -1,5 +1,41 @@
 # Mobian status
 
+## Five-favorite dock installed; width and removal-delay follow-up — 2026-10-18
+
+The homedrag4 pair was operator-built with 36/36 Phosh tests passing and
+installed without changing the compositor PID or handset boot ID. Verified
+package SHA-256:
+
+- Phosh arm64: `cd7f3400e8deaf348f6839bedb00b37a0f00543a7abaf54dd79bca6c91596141`.
+- Common all: `fb3fa9f5956aaced9eaa55acb0648cbc86616eec6e6a7f7b1bfe5bb70af940fd`.
+
+The operator successfully added a fifth favorite. The initial replacement
+report was withdrawn; settings retained five favorites without replacement,
+while the attempted extra Settings shortcut was in the separate home grid.
+The fifth dock icon nevertheless extends beyond the right edge. A private
+screenshot confirms clipping. Runtime measurements show 90px allocations for
+84px home cells and 69–70px favorite cells despite their 64px requested size:
+GtkFlowBoxChild theme padding expands the layout beyond the 360px display.
+
+Shortcut removal also showed intermittent delays of several seconds. A shell
+restart with a read-only observer made it work again; no removal fix had been
+installed at that point. The observer recorded matching slot/desktop IDs on a
+successful activation. The low-priority deferred removal is a possible delay
+mechanism; the user's exact intermittent trigger is not established. The
+observer/drop and its rollback timer have since been removed.
+
+Prepared homedrag5 removes theme padding from home/favorite cells only and
+schedules deferred removal at normal main-loop priority, still after menu
+activation returns. Compiled regression tests pass: four real home buttons
+need 354px and five favorites 344px (plus 6px external dock margins). Removal
+also passes with a continuously ready normal-priority source; concurrent
+settings protection is retained. **The homedrag5 package build and hardware
+validation are pending.** The phone remains on normal homedrag4. No kernel or
+image was rebuilt. The next complete recipe selects Phoc lmishelldnd1 plus
+homedrag5; real homedrag4/Phoc/camera inputs also passed temporary full-profile
+staging before that selection was advanced.
+
+
 ## Five favorites by drag prepared — 2026-10-18
 
 The operator requested up to five favorites added directly by drag. Candidate

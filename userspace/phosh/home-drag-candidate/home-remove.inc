@@ -21,6 +21,6 @@ lmi_home_remove_activated (GSimpleAction *action, GVariant *parameter, gpointer 
   drop->after = g_strdupv (drop->before);
   g_free (drop->after[slot]);
   drop->after[slot] = g_strdup ("");
-  /* Rebuild only after the menu activation has returned. */
-  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, lmi_home_drop_apply, drop, lmi_home_drop_free);
+  /* Run after menu activation returns, without being starved by frame work. */
+  g_idle_add_full (G_PRIORITY_DEFAULT, lmi_home_drop_apply, drop, lmi_home_drop_free);
 }
