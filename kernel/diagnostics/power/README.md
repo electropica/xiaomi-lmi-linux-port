@@ -3234,7 +3234,8 @@ An attended test in the existing Lineage 23.2 recovery measured 180.094 seconds
 of deep suspend within a 181.140-second unplugged interval. Its kernel and base
 DTB match the retained official Lineage boot image. This did not install a new
 Mobian image, kernel or userspace package; the installed Mobian reference below
-is unchanged. The phone remains in recovery pending the normal return to Mobian.
+is unchanged. The operator has since returned normally to Mobian; kernel, installed package
+versions, 900-second sleep timeout, empty RTC alarm and charging were verified.
 
 For the control only, sleep_disabled was set to N and the three NPU devfreq
 clients used powersave with zero requested frequency. Original recovery values
@@ -3272,7 +3273,7 @@ A periodic timer's presence does not by itself prove ownership of the first IRQ.
 
 Both endpoints were Discharging with USB offline. BMS software charge decreased
 by 2655 microamp-hours, shadow by3475, and nominal-scaled raw by4612. The raw
-rate of91.6595 mA expressed on the learned2710/nominal4707 scale is52.7727 mA,
+rate of91.6595 mA expressed on the learned2710/nominal4707 scale is52.7719 mA,
 consistent with the software52.7658 mA accounting; shadow is69.0626 mA.
 Those shared-driver gauge quantities do not constitute independent current
 calibration. Filtered current still had its prior charging sign, so it is not
@@ -3289,3 +3290,31 @@ may omit vendor initialization/HAL policy and runtime overlays can differ. It
 supports investigating shared platform state and initialization differences,
 while retaining the longer Lineage idle evidence and its gauge-correction limits.
 It does not justify blindly copying an Android post_boot script or cutting rails.
+
+
+### Return to Mobian and initialization boundary — 2026-10-18
+
+The operator returned normally from recovery to the installed Mobian boot.
+Read-only checks confirm the expected a5b3099017ae diagnostic kernel,
+homedrag7 Phosh, lmishelldnd1 Phoc, quietgauge3 settings daemon, 900-second
+battery timeout, sleep_disabled=N, an empty RTC alarm and USB charging.
+The NPU core reports off and the installed NPU suspend hook hash matches
+`b14a921f3a681e8c7e6ce52b3342d0bd016e589cf87f92c58593e2c0850f7a9c`.
+The three awake performance governors are expected outside its sleep hook.
+No recovery collector survives the reboot and no new measurement is armed.
+
+The preserved recovery firmware sleep record independently reports180000ms
+in each named aosd/cxsd/ddr record, with count2. This corroborates the latest
+long suspend record; it is not a rail-current measurement or a newly captured
+before/after firmware-counter delta.
+
+A targeted post_boot review identified the Android NPU pwr1/pwr0 sequence
+around bw_hwmon setup. The current driver already calls npu_hw_info_init,
+which enables/disables core power, before npu_pwrctrl_init attaches devbw
+clients and marks bwmon_enabled. Therefore missing any initial power cycle
+is not established. A later cycle can additionally suspend attached devfreq
+clients, but the performance governor ignores SUSPEND/RESUME events and only
+updates its request at START. Selecting powersave already reduces the request
+to zero in the qualified suspend hook. No additional residual-drain mechanism
+has been demonstrated, and no sysfs pwr cycle or new hardware test was run.
+Do not read NPU caps as a passive snapshot: its getter also powers the core.

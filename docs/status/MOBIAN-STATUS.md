@@ -6,7 +6,8 @@ An attended test in the existing Lineage 23.2 recovery measured 180.094 seconds
 of deep suspend within a 181.140-second unplugged interval. Its kernel and base
 DTB match the retained official Lineage boot image. This did not install a new
 Mobian image, kernel or userspace package; the installed Mobian reference below
-is unchanged. The phone remains in recovery pending the normal return to Mobian.
+is unchanged. The operator has since returned normally to Mobian; kernel, installed package
+versions, 900-second sleep timeout, empty RTC alarm and charging were verified.
 
 For the control only, sleep_disabled was set to N and the three NPU devfreq
 clients used powersave with zero requested frequency. Original recovery values
