@@ -161,3 +161,15 @@ one quiet `msoc-delta` resume with prompt resuspension, two NPU hook apply/resto
 cycles and USB return. The operator confirmed normal interaction and screen
 power-button behavior afterwards. This qualifies those fresh-image transitions,
 not long-duration autonomy. See [the current build record](../../../docs/status/CURRENT-BUILD.md).
+
+### Favorites home and application drawer (2026-10-18)
+
+The next image stages the resource-only [home drawer](../../../userspace/phosh/files/home-drawer/README.md)
+and its Phosh service override. Favorites occupy the bottom of the home page,
+with the upward chevron below them; the full app grid is on the next vertical
+page. The native `app-filter-mode=[]` preference shows all applications and
+hides the adaptive-only button. Existing favorites remain user-managed.
+The operator validated the home/drawer and favorite launch/close/return on the
+current phone. Final dock placement was verified by a native Phosh screenshot. These UI
+changes were applied after flashing r1; the r1 image does not contain them.
+The next integrated image remains unbuilt; no new battery result is claimed.

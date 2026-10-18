@@ -1,12 +1,27 @@
 # lmi application checklist — October 3, 2026
 
+## Favorites home and separate drawer — 2026-10-18
+
+The operator clarified that the full application grid must be hidden from the
+home page. A scoped Phosh resource overlay now separates favorites and the
+full grid using the installed HdyDeck widget, without rebuilding packages.
+The operator confirmed the separate drawer, favorite launch/close/return and
+the disappearance of the adaptive-app filter button. The native all-apps
+setting is persistent; the temporary rollback timer was stopped after adoption.
+
+Favorites were subsequently aligned at the bottom of the home page. Following
+operator feedback, the drawer chevron was moved below the favorites. That
+final placement was verified by a native Phosh screenshot. The quiet-gauge opt-in remains
+present in the active Phosh environment. No post-UI battery test or new full
+image build is claimed. Global left-edge minimization is still unimplemented.
+
 ## Native navigation check — 2026-10-18
 
 On the freshly flashed `20261018-r1` image, the operator confirmed that a
 swipe up from the bottom edge of an open application reveals running
-applications and the app grid. The existing Phosh overview therefore covers
-the requested drawer access and leaves the current application in the
-background without closing it. No navigation patch or additional app was
+applications and the app grid. The native overview leaves the current application in the
+background without closing it, but this did not meet the later-clarified
+request for an icon-free home with a separate application drawer. No navigation patch or additional app was
 installed for this check.
 
 A global left-edge-to-right minimize gesture was also requested. Inspection

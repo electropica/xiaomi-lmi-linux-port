@@ -1,0 +1,6 @@
+{
+  "phosh_package": "0.46.0-3+deb13u1+lmigaugewake3",
+  "resource": "/mobi/phosh/ui/app-grid.ui",
+  "baseline_sha256": "4d9e22e325b7b8b536c01179413cfb7f8a70260f6a7a42e52fbfd7331e779ad8",
+  "overlay_sha256": "f874e20a4f5fb5572ef6fb46a8d80e241b45b01c390aa16dca7009bc4136ce3b"
+}

@@ -1,5 +1,19 @@
 # Current validated build and userspace state
 
+## Post-flash home navigation adaptation — 2026-10-18
+
+The handset now uses a scoped resource-only favorites-home/application-drawer
+overlay. The operator validated opening the drawer and launching/closing a
+favorite. Favorites were then bottom-aligned and the chevron moved below them
+at the operator's request; final placement was verified by a native Phosh screenshot.
+All applications are enabled and the adaptive-only button is natively hidden.
+The active Phosh environment retains its quiet-gauge opt-in.
+
+The installed UI adaptation is persistent and its trial rollback timer stopped.
+Sources/defaults are staged by the next-image profile, but the flashed r1
+image predates them. No kernel/package build, new flash or post-UI battery
+qualification was performed. See the [application checklist](../validation/lmi-app-checklist-2026-10-03.md).
+
 ## Fresh-image automatic sleep and gauge wake — 2026-10-18
 
 The first passive observation of `mobian-lmi-current-20261018-r1` lasted

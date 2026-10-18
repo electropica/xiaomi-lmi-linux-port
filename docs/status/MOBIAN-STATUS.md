@@ -1,5 +1,19 @@
 # Mobian status
 
+## Favorites home and separate drawer — 2026-10-18
+
+The operator requested hiding the complete grid from the home page. A scoped
+resource overlay now keeps favorites in a bottom dock and the full app grid in
+a vertical drawer; its chevron is below the favorites. The operator confirmed
+drawer access and favorite launch/close/return, and the final alignment was
+checked with a native Phosh screenshot. All applications are shown and the
+adaptive-only filter button is hidden using the native setting.
+
+The layout is persistent on the handset and staged for the next image. The
+flashed `20261018-r1` image predates this adaptation. Quiet-gauge opt-in remains
+active, but no new battery result after the UI change is claimed. No package
+or kernel build was needed. Global lateral minimization is unimplemented.
+
 ## Fresh-image automatic sleep and gauge wake — 2026-10-18
 
 The first passive observation of `mobian-lmi-current-20261018-r1` lasted

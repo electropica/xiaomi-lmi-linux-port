@@ -32,6 +32,9 @@ class StageTests(unittest.TestCase):
         self.assertIn('bash "$src/apps/install-chatty-safe.sh"',installer)
         self.assertNotIn('Exec=/usr/local/bin/lmi-chatty-safe %u|',installer)
         self.assertTrue((self.dest/'audio/91-lmi-microphone.conf').is_file())
+        for name in ['app-grid.ui', '70-lmi-home-drawer.conf', '95_lmi-home-drawer.gschema.override']:
+            self.assertEqual((self.dest/'home-drawer'/name).read_bytes(),
+                             (stage.resolve().parents[3]/'userspace/phosh/files/home-drawer'/name).read_bytes())
         self.assertTrue((self.dest/'power/lmi-cpu-idle.service').is_file())
         for name, subdir in [('lmi-npu-suspend','scripts'), ('lmi-npu-suspend-hook','files'), ('90-lmi-npu-suspend.conf','files')]:
             self.assertEqual((self.dest/'power'/name).read_bytes(),

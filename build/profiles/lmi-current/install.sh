@@ -25,6 +25,10 @@ done
 for p in gnome-settings-daemon gnome-settings-daemon-common; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = 48.1-1+lmiquietgauge3
 done
+# Resource-only home: favorites dock, full application drawer, no adaptive filter.
+install -Dm644 "$src/home-drawer/app-grid.ui" /usr/local/share/lmi-home-drawer/ui/app-grid.ui
+install -Dm644 "$src/home-drawer/70-lmi-home-drawer.conf" /etc/systemd/user/mobi.phosh.Shell.service.d/70-lmi-home-drawer.conf
+install -Dm644 "$src/home-drawer/95_lmi-home-drawer.gschema.override" /usr/share/glib-2.0/schemas/95_lmi-home-drawer.gschema.override
 # Enable only the paired qualified quiet-resume paths; no debug environment.
 install -Dm644 "$src/power/phosh-quiet-resume.conf" /etc/systemd/user/mobi.phosh.Shell.service.d/60-lmi-quiet-gauge-resume.conf
 install -Dm644 "$src/power/gsd-quiet-resume.conf" /etc/systemd/user/org.gnome.SettingsDaemon.Power.service.d/60-lmi-quiet-gauge-resume.conf
@@ -59,6 +63,7 @@ install -Dm644 /dev/null /etc/lmi/npu-suspend-opt-in
 install -Dm644 "$src/power/94_lmi-current-power.gschema.override" \
     /usr/share/glib-2.0/schemas/94_lmi-current-power.gschema.override
 glib-compile-schemas --strict /usr/share/glib-2.0/schemas
+test "$(env GSETTINGS_BACKEND=memory gsettings get sm.puri.phosh app-filter-mode)" = "@as []"
 test "$(env GSETTINGS_BACKEND=memory gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type)" = "'suspend'"
 test "$(env GSETTINGS_BACKEND=memory gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type)" = "'nothing'"
 test "$(env GSETTINGS_BACKEND=memory gsettings get sm.puri.phosh.notifications wakeup-screen-triggers)" = "@as []"

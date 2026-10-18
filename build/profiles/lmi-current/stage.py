@@ -43,6 +43,7 @@ if a.destination.exists(): raise SystemExit('Refusing existing profile staging d
 a.destination.mkdir(parents=True)
 shutil.copytree(repo/'build/profiles/lmi-current', a.destination/'profile')
 shutil.copytree(repo/'userspace/audio/files', a.destination/'audio')
+shutil.copytree(repo/'userspace/phosh/files/home-drawer', a.destination/'home-drawer')
 (a.destination/'apps').mkdir()
 for name in ['lmi-flashlight.py','lmi-flashlight.desktop','lmi-chatty-safe','install-chatty-safe.sh']:
     shutil.copy2(repo/'userspace/apps/files'/name, a.destination/'apps'/name)
