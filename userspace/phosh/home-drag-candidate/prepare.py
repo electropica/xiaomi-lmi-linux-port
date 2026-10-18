@@ -3,7 +3,7 @@
 import argparse,hashlib,json,xml.etree.ElementTree as E
 from pathlib import Path
 
-VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag3'
+VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag4'
 QUIET='f8cbde684bd1920eebcfab70c39d2adef8696498fadc5443e6d2bde37669f019'
 
 def once(text,before,after):
@@ -51,11 +51,19 @@ def prepare(source,output,ui):
 
   lmi_home_enable_source (button, info);
   lmi_home_enable_target (button, info ? g_app_info_get_id (info) : NULL, -1);
+  /* Five favorites fit a 360px logical screen without wrapping. */
+  g_object_set (gtk_widget_get_parent (button), "natural-size", 64, "width-request", 64, NULL);
+  gtk_image_set_pixel_size (GTK_IMAGE (phosh_app_grid_base_button_get_child (
+                                      PHOSH_APP_GRID_BASE_BUTTON (widget))), 48);
   return widget;'''
     c=once(c,old,new)
     c=once(c,'static void\nfavorite_remove_activated','#include "lmi-home-remove.inc"\n\nstatic void\nfavorite_remove_activated')
     c=once(c,'  { .name = "favorite-remove", .activate = favorite_remove_activated },','  { .name = "home-remove", .activate = lmi_home_remove_activated },\n  { .name = "favorite-remove", .activate = favorite_remove_activated },')
     c=once(c,'  g_menu_remove_all (priv->folders);','  GAction *remove = g_action_map_lookup_action (priv->action_map, "home-remove");\n  g_simple_action_set_enabled (G_SIMPLE_ACTION (remove),\n                               g_object_get_data (G_OBJECT (self), "lmi-home-remove-slot") != NULL);\n\n  g_menu_remove_all (priv->folders);')
+    c=once(c,'  phosh_favorite_list_model_add_app (NULL, priv->info);',
+        '  g_autoptr (GSettings) settings = g_settings_new ("sm.puri.phosh");\n  g_auto (GStrv) favorites = g_settings_get_strv (settings, "favorites");\n\n  if (g_strv_length (favorites) >= LMI_FAVORITE_LIMIT) return;\n  phosh_favorite_list_model_add_app (NULL, priv->info);')
+    c=once(c,'  g_menu_remove_all (priv->folders);',
+        '  g_autoptr (GSettings) settings = g_settings_new ("sm.puri.phosh");\n  g_auto (GStrv) favorites = g_settings_get_strv (settings, "favorites");\n  GAction *add = g_action_map_lookup_action (priv->action_map, "favorite-add");\n  g_simple_action_set_enabled (G_SIMPLE_ACTION (add),\n                               !priv->is_favorite && g_strv_length (favorites) < LMI_FAVORITE_LIMIT);\n\n  g_menu_remove_all (priv->folders);')
     outputs={'src/app-grid-button.c':c}
     home=(source/'src/home.c').read_text()
     home=once(home,'  if (phosh_overview_has_running_activities (PHOSH_OVERVIEW (self->overview)) == FALSE &&\n    self->state == PHOSH_HOME_STATE_UNFOLDED', '  /* The app grid owns its icon drags; keep the edge gesture when folded. */\n  if (self->state == PHOSH_HOME_STATE_UNFOLDED')
@@ -96,6 +104,9 @@ def prepare(source,output,ui):
     space.attrib={'class':'GtkFlowBox','id':'lmi_home_slots'}
     for p in list(space):space.remove(p)
     for name,value in [('visible','1'),('hexpand','1'),('vexpand','1'),('homogeneous','1'),('min-children-per-line','4'),('max-children-per-line','4'),('selection-mode','none'),('activate-on-single-click','0'),('column-spacing','6'),('row-spacing','8')]:E.SubElement(space,'property',name=name).text=value
+    favs=next(o for o in root.iter('object') if o.get('id')=='favs')
+    for prop in favs.findall('property'):
+        if prop.get('name')=='max-children-per-line':prop.text='5'
     E.indent(root,space='  ');outputs['src/ui/app-grid.ui']=E.tostring(root,encoding='unicode')+'\n'
     for name,target in [('lmi-home-order.h','src/lmi-home-order.h'),('lmi-home-dnd.h','src/lmi-home-dnd.h'),('home-grid.inc','src/lmi-home-grid.inc'),('home-remove.inc','src/lmi-home-remove.inc')]:outputs[target]=(assets/name).read_text()
     output.mkdir(parents=True)

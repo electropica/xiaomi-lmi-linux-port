@@ -24,6 +24,24 @@ int main (void)
   g_assert_null (lmi_home_place (slots, "A.desktop", 0));
   g_assert_null (lmi_home_place (slots, "C.desktop", LMI_HOME_SLOT_COUNT));
   g_assert_null (lmi_home_place (slots, "", 1));
-  g_print ("FAVORITE_ORDER_AND_HOME_SLOT_TESTS_OK\n");
+  const char *four[] = {"A.desktop", "B.desktop", "C.desktop", "D.desktop", NULL};
+  const char *none[] = {NULL};
+  g_auto (GStrv) fifth = lmi_favorites_place (four, "E.desktop", NULL);
+  g_auto (GStrv) inserted = lmi_favorites_place (four, "E.desktop", "B.desktop");
+  g_auto (GStrv) reordered = lmi_favorites_place ((const char * const *) fifth, "A.desktop", "E.desktop");
+  g_auto (GStrv) first = lmi_favorites_place (none, "A.desktop", NULL);
+
+  g_assert_cmpuint (g_strv_length (fifth), ==, 5);
+  g_assert_cmpstr (fifth[4], ==, "E.desktop");
+  g_assert_cmpstr (inserted[1], ==, "E.desktop");
+  g_assert_cmpstr (inserted[2], ==, "B.desktop");
+  g_assert_null (lmi_favorites_place ((const char * const *) fifth, "F.desktop", NULL));
+  g_assert_cmpuint (g_strv_length (reordered), ==, 5);
+  g_assert_cmpstr (reordered[4], ==, "A.desktop");
+  g_assert_cmpstr (first[0], ==, "A.desktop");
+  g_assert_cmpstr (four[0], ==, "A.desktop");
+  g_assert_null (lmi_favorites_place (four, "E.desktop", "absent.desktop"));
+  g_assert_null (lmi_favorites_place (four, "", NULL));
+  g_print ("FAVORITE_ORDER_HOME_SLOT_AND_FIVE_FAVORITE_LIMIT_TESTS_OK\n");
   return 0;
 }

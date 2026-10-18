@@ -115,6 +115,7 @@ lmi_home_drag_received (GtkWidget *widget, GdkDragContext *context, int x, int y
 {
   const char *source = lmi_home_source_id (context);
   const char *favorite = g_object_get_data (G_OBJECT (widget), "lmi-favorite-target");
+  gboolean dock = favorite || g_object_get_data (G_OBJECT (widget), "lmi-favorite-dock");
   int slot = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (widget), "lmi-home-slot")) - 1;
   int size = gtk_selection_data_get_length (selection);
   LmiHomeDrop *drop;
@@ -123,13 +124,13 @@ lmi_home_drag_received (GtkWidget *widget, GdkDragContext *context, int x, int y
   if (!source || size <= 0 || size > 1024) goto reject;
   payload = g_strndup ((const char *) gtk_selection_data_get_data (selection), size);
   if (strlen (payload) != (gsize) size || !g_str_equal (source, payload)) goto reject;
-  if (!favorite && slot < 0) goto reject;
+  if (!dock && slot < 0) goto reject;
 
   drop = g_new0 (LmiHomeDrop, 1);
   drop->settings = g_settings_new ("sm.puri.phosh");
-  drop->key = g_strdup (favorite ? "favorites" : "lmi-home-slots");
+  drop->key = g_strdup (dock ? "favorites" : "lmi-home-slots");
   drop->before = g_settings_get_strv (drop->settings, drop->key);
-  drop->after = favorite ? lmi_favorites_move ((const char * const *) drop->before, source, favorite)
+  drop->after = dock ? lmi_favorites_place ((const char * const *) drop->before, source, favorite)
                          : lmi_home_place ((const char * const *) drop->before, source, slot);
   if (!drop->after) {
     lmi_home_drop_free (drop);
@@ -149,6 +150,15 @@ lmi_home_enable_target (GtkWidget *widget, const char *favorite, int slot)
     g_object_set_data_full (G_OBJECT (widget), "lmi-favorite-target", g_strdup (favorite), g_free);
   else
     g_object_set_data (G_OBJECT (widget), "lmi-home-slot", GINT_TO_POINTER (slot + 1));
+  gtk_drag_dest_set (widget, GTK_DEST_DEFAULT_ALL, lmi_home_targets,
+                     G_N_ELEMENTS (lmi_home_targets), GDK_ACTION_MOVE);
+  g_signal_connect (widget, "drag-data-received", G_CALLBACK (lmi_home_drag_received), NULL);
+}
+
+static inline void
+lmi_home_enable_favorites_dock (GtkWidget *widget)
+{
+  g_object_set_data (G_OBJECT (widget), "lmi-favorite-dock", GINT_TO_POINTER (1));
   gtk_drag_dest_set (widget, GTK_DEST_DEFAULT_ALL, lmi_home_targets,
                      G_N_ELEMENTS (lmi_home_targets), GDK_ACTION_MOVE);
   g_signal_connect (widget, "drag-data-received", G_CALLBACK (lmi_home_drag_received), NULL);

@@ -25,7 +25,7 @@ unset M1_COMPLETE_LMI_PROFILE M1_COMPLETE_CAMERA_BUNDLE
 python3 "$repo/build/profiles/lmi-current/test-stage.py" "$M1_CURRENT_LMI_PROFILE_INPUTS"
 python3 "$repo/build/profiles/lmi-current/test-complete-stage.py" "$M1_CURRENT_LMI_PROFILE_INPUTS"
 python3 "$repo/userspace/apps/scripts/check-builder-staging.py"
-version=0.46.0-3+deb13u1+lmigaugewake3+homedrag2
+version=0.46.0-3+deb13u1+lmigaugewake3+homedrag4
 phosh="$root/build/phosh_${version}_arm64.deb"
 common="$root/build/phosh-common_${version}_all.deb"
 if [[ ! -f $phosh || ! -f $common ]]; then
@@ -34,6 +34,9 @@ fi
 for package in "$phosh" "$common"; do
     test "$(dpkg-deb -f "$package" Version)" = "$version"
 done
+phoc="$root/build/phoc_0.46.0-1+lmishelldnd1_arm64.deb"
+test -f "$phoc" || { echo "Build the reviewed Phoc shell-DnD package first." >&2; exit 1; }
+test "$(dpkg-deb -f "$phoc" Version)" = 0.46.0-1+lmishelldnd1
 # Serialize later use of the shared ARM build root as well.
 exec 9>/run/lmi-phosh-gauge-build.lock
 flock -n 9 || { echo 'Shared ARM build root is busy.' >&2; exit 1; }
@@ -48,16 +51,16 @@ if [[ ! -e $M1_COMPLETE_CAMERA_BUNDLE/SHA256SUMS ]]; then
 fi
 python3 "$repo/userspace/camera/snapshot-bundle/check-bundle.py" "$M1_COMPLETE_CAMERA_BUNDLE"
 inputs="/home/linuxagent/$3-inputs"
-python3 - "$M1_CURRENT_LMI_PROFILE_INPUTS" "$inputs" "$phosh" "$common" <<'PYINPUT'
+python3 - "$M1_CURRENT_LMI_PROFILE_INPUTS" "$inputs" "$phosh" "$common" "$phoc" <<'PYINPUT'
 from pathlib import Path
 import hashlib,shutil,sys
-old,new,phosh,common=map(Path,sys.argv[1:])
+old,new,phosh,common,phoc=map(Path,sys.argv[1:])
 files=[]
 for line in (old/'SHA256SUMS').read_text().splitlines():
     digest,name=line.split('  ',1)
-    if not name.startswith(('phosh_','phosh-common_')):files.append(old/name)
-files += [phosh,common]
-assert len(files)==8 and len({p.name for p in files})==8
+    if not name.startswith(('phosh_','phosh-common_','phoc_')):files.append(old/name)
+files += [phosh,common,phoc]
+assert len(files)==9 and len({p.name for p in files})==9
 assert not new.is_symlink()
 new.mkdir(exist_ok=True)
 for p in files:

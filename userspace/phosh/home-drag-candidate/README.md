@@ -1,6 +1,24 @@
 # Native home drag candidate
 
-## homedrag3 follow-up (operator build pending)
+## homedrag4: up to five favorites (operator package build pending)
+
+Adds drawer-to-dock drops on an existing favorite or dock whitespace. New
+favorites are inserted or appended, existing favorites are reordered, and a
+sixth entry is rejected without losing saved desktop IDs. Menu additions obey
+the same limit. Favorite icons are 48px with 64px clamps and a five-column
+maximum so they fit the 360px logical display in one row.
+
+Ordering/limit host tests cover an empty dock, fifth entry, insertion, reorder
+at capacity, rejection of a sixth and invalid input. The targeted GTK button
+test also compiles/runs. Package build and five-icon handset checks are pending.
+The same WSL build command below now produces the homedrag4 pair.
+
+
+## homedrag3 follow-up (installed; removal confirmed)
+
+The homedrag3 pair is now built (36/36 tests), installed and the operator
+confirms home shortcut removal works. Lateral preview, spacing and folded-edge
+behavior still await physical confirmation. No complete image was rebuilt.
 
 Phoc lmishelldnd1 is installed and the operator confirms actual DnD works.
 A temporary global home gesture isolation test also confirms direct lateral

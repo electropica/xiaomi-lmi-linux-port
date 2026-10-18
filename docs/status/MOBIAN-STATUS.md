@@ -1,6 +1,37 @@
 # Mobian status
 
-## Phoc DnD enabled; home interaction follow-up prepared — 2026-10-18
+## Five favorites by drag prepared — 2026-10-18
+
+The operator requested up to five favorites added directly by drag. Candidate
+homedrag4 accepts a new desktop ID on a favorite or dock whitespace, preserves
+existing reorder and rejects a sixth entry. Menu addition observes the same
+limit. The dock uses 48px icons, 64px clamps and a five-column maximum. Source
+preparation and ordering/limit host tests pass; package creation and physical
+five-icon checks remain pending. The handset still runs the physically checked
+homedrag3 plus Phoc lmishelldnd1. The next complete-image recipe selects these
+Phoc fixes and homedrag4 so it cannot silently omit dock additions.
+
+
+## Phoc DnD and homedrag3 installed; shortcut removal confirmed — 2026-10-18
+
+The operator built the homedrag3 pair with all 36 normal Phosh tests passing.
+Verified package SHA-256:
+
+- Phosh arm64: `a4bb37f88da8f42f4073395006e851fad934581f8821a75315135e5a2ccfc294`.
+- Common all: `7529cac7002fc28342277afa573e26d6b09bf3a394966d9078ae3f42eabcd82b`.
+
+Both were installed; the apt simulation selected only the pair. The running
+Phosh executable matches the new installed binary, the package audit is empty,
+quiet-gauge opt-in remains active and no diagnostic module/resource overlay
+is loaded. Restarting only the user shell kept the same Phoc PID and handset
+boot ID. The rollback timer was stopped after health checks; paired homedrag2
+packages and the explicit rollback script remain available.
+
+**The operator confirms “Retirer de l’accueil” removes the shortcut.** The operator also confirms direct lateral reorder with a visible preview,
+compact label spacing, return from an application by the bottom-edge swipe,
+and drawer opening. Persistence across another session has not been retested. No complete image
+was rebuilt or re-flashed. The next full-image recipe selects Phoc lmishelldnd1 and the homedrag4
+five-favorite follow-up; no new image has been built.
 
 The operator built Phoc `0.46.0-1+lmishelldnd1`; package SHA-256 is
 `e862d58b20aa274b01184e89e0b3d25048de951fb70f161235854fe4fe970ac6`.
@@ -18,7 +49,7 @@ NONE enabled direct lateral reorder; the probe was then removed and normal
 Phosh restored. This confirms a second gesture arbitration issue in addition
 to the compositor routing defect.
 
-Prepared Phosh `homedrag3` adds a home-only “Retirer de l’accueil” menu action,
+Phosh `homedrag3` adds a home-only “Retirer de l’accueil” menu action,
 compact icon/name grouping, an explicit 48px drag preview in every direction,
 and disables the global layer drag while the overview is fully unfolded.
 Folded app-edge behavior remains unchanged in source; its physical validation
@@ -29,8 +60,8 @@ uninstall the application or alter favorites.
 The updated app-grid-button test (including removal and concurrent-settings
 protection) was compiled and passes. A no-rebuild run of the 36 available Phosh
 tests passes; other statically linked tests were not all rebuilt in that run.
-A complete package build with all normal tests and the physical checks remain
-pending. The retained complete-image profile still selects homedrag2 and has
+The subsequent operator package build passed all normal tests; remaining
+physical checks are listed above. The retained complete-image profile still selects homedrag2 and has
 not yet been promoted to this new candidate.
 
 The Phoc package's upstream test command was space-indented and parsed as a

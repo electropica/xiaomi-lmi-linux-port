@@ -34,6 +34,38 @@ lmi_favorites_move (const char * const *before, const char *source, const char *
   return after;
 }
 
+/* Add from the drawer or reorder an existing favorite. Never truncate IDs. */
+#define LMI_FAVORITE_LIMIT 5
+static inline char **
+lmi_favorites_place (const char * const *before, const char *source, const char *target)
+{
+  guint count;
+  int from = -1, to = -1;
+  char **after;
+
+  if (!before || !source || !*source) return NULL;
+  count = g_strv_length ((char **) before);
+  for (guint i = 0; i < count; i++) {
+    if (g_str_equal (before[i], source)) {
+      if (from >= 0) return NULL;
+      from = i;
+    }
+    if (target && g_str_equal (before[i], target)) {
+      if (to >= 0) return NULL;
+      to = i;
+    }
+  }
+  if (target && to < 0) return NULL;
+  if (from >= 0)
+    return lmi_favorites_move (before, source, target ? target : before[count - 1]);
+  if (count >= LMI_FAVORITE_LIMIT) return NULL;
+  if (to < 0) to = count;
+  after = g_new0 (char *, count + 2);
+  for (guint i = 0, j = 0; i < count + 1; i++)
+    after[i] = i == (guint) to ? g_strdup (source) : g_strdup (before[j++]);
+  return after;
+}
+
 static inline char **
 lmi_home_place (const char * const *before, const char *source, guint target)
 {

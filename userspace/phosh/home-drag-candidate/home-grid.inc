@@ -50,5 +50,6 @@ lmi_home_setup (PhoshAppGrid *self)
                             G_CALLBACK (lmi_home_settings_changed), self, G_CONNECT_SWAPPED);
   /* Only actual slots/favorites accept drops; the deck must not steal them. */
   g_object_set_data (G_OBJECT (self), "lmi-home-drag-deck", priv->lmi_favorites_drawer);
+  lmi_home_enable_favorites_dock (priv->favs);
   lmi_home_rebuild (self);
 }

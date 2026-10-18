@@ -90,3 +90,16 @@ which automatically exposes the actual home drop cells. Host tests pass;
 operator package build and physical retest remain pending. This does not
 change the recorded identity of the already built image. A subsequent complete
 image must use a new unused output name.
+
+
+### Current next-build selection — 2026-10-18
+
+The next complete recipe selects Phosh/common homedrag4 and Phoc
+0.46.0-1+lmishelldnd1 together. Phoc DnD and the preceding homedrag3 removal,
+compact labels, lateral preview/reorder and app-edge/drawer behavior are
+operator-confirmed on the handset. Homedrag4 adds drawer-to-dock insertion up
+to five favorites; its package and physical five-icon validation remain pending.
+The input manifest now includes the Phoc package (nine total inputs); staging
+rejects its absence. Stable non-complete image behavior remains unchanged.
+The already-built complete image still contains homedrag1; it is not rewritten
+by these recipe changes. No new image build is necessary to test the new pair.

@@ -6,12 +6,16 @@ test -f /run/lmi-current-profile/inputs/SHA256SUMS
 test -f /usr/sbin/policy-rc.d
 src=/run/lmi-current-profile
 (cd "$src/inputs"; sha256sum -c SHA256SUMS)
+extra=()
+if [[ -f $src/COMPLETE_PROFILE ]]; then
+    extra+=("$src/inputs/phoc_0.46.0-1+lmishelldnd1_arm64.deb")
+fi
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y --no-remove --no-install-recommends python3-gi gir1.2-gtk-3.0 psmisc \
     "$src"/inputs/upower_*.deb "$src"/inputs/libupower-glib3_*.deb \
     "$src"/inputs/gir1.2-upowerglib-1.0_*.deb \
     "$src"/inputs/phosh_*.deb "$src"/inputs/phosh-common_*.deb \
-    "$src"/inputs/gnome-settings-daemon_*.deb "$src"/inputs/gnome-settings-daemon-common_*.deb
+    "$src"/inputs/gnome-settings-daemon_*.deb "$src"/inputs/gnome-settings-daemon-common_*.deb "${extra[@]}"
 test -z "$(dpkg --audit)"
 # The 4.19 extractor lacks Landlock and failed PIDFD reaping exhausted user tasks.
 # Keep files/databases; disable only incompatible background metadata indexing.
@@ -21,7 +25,8 @@ for p in upower libupower-glib3 gir1.2-upowerglib-1.0; do
 done
 phosh_version=0.46.0-3+deb13u1+lmigaugewake3
 if [[ -f $src/COMPLETE_PROFILE ]]; then
-    phosh_version+=+homedrag2
+    phosh_version+=+homedrag4
+    test "$(dpkg-query -W -f='${Version}' phoc)" = 0.46.0-1+lmishelldnd1
 fi
 for p in phosh phosh-common; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = "$phosh_version"

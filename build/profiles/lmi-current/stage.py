@@ -12,7 +12,7 @@ camera_bundle=None
 if complete:
     camera_bundle=Path(os.environ['M1_COMPLETE_CAMERA_BUNDLE'])
     subprocess.run(['python3',str(repo/'userspace/camera/snapshot-bundle/check-bundle.py'),str(camera_bundle)],check=True)
-phosh_version='0.46.0-3+deb13u1+lmigaugewake3'+('+homedrag2' if complete else '')
+phosh_version='0.46.0-3+deb13u1+lmigaugewake3'+('+homedrag4' if complete else '')
 packages=[
     ('upower', '1.90.9-1+lmi1', 'arm64'),
     ('libupower-glib3', '1.90.9-1+lmi1', 'arm64'),
@@ -22,6 +22,8 @@ packages=[
     ('gnome-settings-daemon', '48.1-1+lmiquietgauge3', 'arm64'),
     ('gnome-settings-daemon-common', '48.1-1+lmiquietgauge3', 'all'),
 ]
+if complete:
+    packages.append(('phoc', '0.46.0-1+lmishelldnd1', 'arm64'))
 files=[]
 for name, version, arch in packages:
     f=a.inputs/(name+'_'+version+'_'+arch+'.deb')
@@ -75,9 +77,9 @@ if complete:
     (a.destination/'camera').mkdir()
     for name in sorted(module.NAMES|{'SHA256SUMS'}):
         shutil.copy2(camera_bundle/name,a.destination/'camera'/name)
-    (a.destination/'COMPLETE_PROFILE').write_text('native-home-drag-and-snapshot-v2\n')
+    (a.destination/'COMPLETE_PROFILE').write_text('native-home-drag-and-snapshot-v4\n')
     profile=a.destination/'PROFILE.txt'
     text=profile.read_text().replace('Camera Snapshot bridge remains experimental and is not installed by this profile.',
         'Experimental Snapshot rear-camera bridge is installed; the new foreground lifecycle and native drag gestures require post-flash testing.')
-    profile.write_text(text+'Native Phosh home drag candidate homedrag2: persistent home slots, favorite reorder, built-in drawer/dock UI; old resource overlay deliberately omitted.\n')
+    profile.write_text(text+'Native Phosh home drag homedrag4: persistent home slots, up to five favorites added by drag, favorite reorder, shortcut removal, compact labels, native drawer/dock UI and Phoc shell-layer DnD grab routing; old resource overlay deliberately omitted.\n')
 print('CURRENT_PROFILE_INPUTS_VALIDATED')
