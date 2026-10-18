@@ -1849,3 +1849,21 @@ slightly while instantaneous current declined slightly. All original policies
 were restored and the owned inhibitor removed. No permanent core_ctl policy
 is adopted; this does not solve the residual deep-suspend drain.
 See [the diagnostic record](../../kernel/diagnostics/power/README.md).
+
+
+### Elapsed-since-unplug confound in the short recovery control — 2026-10-18
+
+Re-reading the retained long Android daytime trial adds an important boundary:
+its first hourly gauge quotient was44.99 mA, then18.00,15.00 and10.00 mA in
+subsequent hourly windows. Early rounded history charge updates went from2626
+to2625 mAh at10.547s and2620 mAh at229.279s after departure. The history is too
+coarse for a synchronized three-minute comparison and includes gauge behavior;
+these values are not independently calibrated current measurements.
+
+Consequently, the approximately53mA short recovery result demonstrates the
+quantity under that short protocol, not persistently elevated recovery demand
+or proof of missing Android initialization. A future discriminating control
+must match elapsed time since unplug and gauge/SOC conditions, preferably using
+already scheduled longer observations rather than repeating short controls.
+Retain shared-platform and initialization hypotheses without treating either as
+established by the recovery result. No additional hardware trial was started.
