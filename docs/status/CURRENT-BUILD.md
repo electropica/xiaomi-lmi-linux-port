@@ -1,5 +1,25 @@
 # Current validated build and userspace state
 
+## Complete-image boot and failed drag test — 2026-10-18
+
+The operator flashed and booted `mobian-lmi-complete-20261018`. SSH inspection
+confirmed the expected homedrag1 Phosh/common, quiet-gauge GSD, UPower and
+Snapshot versions, an empty dpkg audit, both quiet-resume opt-ins, 900-second
+battery suspend default, all-apps mode and absence of the old home overlay.
+Chatty was not running; metadata indexing remained masked. The document portal
+reported a FUSE mount failure and getty@tty1 lacked its terminal; these remain
+separate open issues, not successful app qualification.
+
+An initial positive drag report was withdrawn by the operator. Home-slot
+settings remained empty. The icon followed the finger but the drawer did not
+hide and no shortcut was deposited. **Native home drag is not validated.**
+Candidate homedrag2 now reveals home on drag start and removes the broad deck
+drop target. All 36 Phosh tests and the profile staging checks pass; package
+creation, installation and the new hardware trial remain pending. The next
+complete-image profile selects the paired homedrag2 packages. The already
+built/flashed image remains identified as homedrag1, with its original checksum.
+
+
 ## Complete image successfully built — 2026-10-18
 
 The operator completed `mobian-lmi-complete-20261018` with exit status zero and

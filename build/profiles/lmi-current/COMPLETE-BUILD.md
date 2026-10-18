@@ -81,3 +81,12 @@ image has SHA-256
 Filesystem checks, raw/sparse comparison and offline package/profile inspection
 passed. Post-flash touchscreen and camera lifecycle tests remain pending.
 Earlier failure/recovery paragraphs above record preparation history.
+
+## Next native drag repair
+
+The built/flashed image above contains homedrag1. Its physical drag test
+failed because the drawer remained visible. The recipe now selects homedrag2,
+which automatically exposes the actual home drop cells. Host tests pass;
+operator package build and physical retest remain pending. This does not
+change the recorded identity of the already built image. A subsequent complete
+image must use a new unused output name.

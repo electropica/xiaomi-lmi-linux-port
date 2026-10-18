@@ -59,6 +59,14 @@ lmi_home_drag_data_get (GtkWidget *widget, GdkDragContext *context,
                             8, (const guchar *) id, strlen (id));
 }
 
+static inline gboolean
+lmi_home_show_drag_destination (gpointer data)
+{
+  /* Switch after GTK has established the drag context; retain the source. */
+  g_object_set (data, "visible-child-name", "home", NULL);
+  return G_SOURCE_REMOVE;
+}
+
 static inline void
 lmi_home_drag_begin (GtkWidget *widget, GdkDragContext *context, gpointer unused)
 {
@@ -67,6 +75,14 @@ lmi_home_drag_begin (GtkWidget *widget, GdkDragContext *context, gpointer unused
 
   if (app && g_app_info_get_icon (G_APP_INFO (app)))
     gtk_drag_set_icon_gicon (context, g_app_info_get_icon (G_APP_INFO (app)), 16, 16);
+
+  for (GtkWidget *parent = widget; parent; parent = gtk_widget_get_parent (parent)) {
+    GObject *deck = g_object_get_data (G_OBJECT (parent), "lmi-home-drag-deck");
+    if (!deck) continue;
+    g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, lmi_home_show_drag_destination,
+                     g_object_ref (deck), g_object_unref);
+    break;
+  }
 }
 
 static inline void

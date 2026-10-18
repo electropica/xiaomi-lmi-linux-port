@@ -30,42 +30,6 @@ lmi_home_rebuild (PhoshAppGrid *self)
   }
 }
 
-static gboolean
-lmi_home_reveal_for_drag (gpointer data)
-{
-  PhoshAppGrid *self = PHOSH_APP_GRID (data);
-  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
-
-  priv->lmi_drag_home_timer = 0;
-  g_object_set (priv->lmi_favorites_drawer, "visible-child-name", "home", NULL);
-  return G_SOURCE_REMOVE;
-}
-
-static gboolean
-lmi_home_drag_motion (GtkWidget *widget, GdkDragContext *context, int x, int y,
-                       guint time, PhoshAppGrid *self)
-{
-  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
-
-  if (!lmi_home_source_id (context)) return FALSE;
-  if (y < 48) {
-    if (!priv->lmi_drag_home_timer)
-      priv->lmi_drag_home_timer = g_timeout_add (500, lmi_home_reveal_for_drag, self);
-  } else {
-    g_clear_handle_id (&priv->lmi_drag_home_timer, g_source_remove);
-  }
-  gdk_drag_status (context, GDK_ACTION_MOVE, time);
-  return TRUE;
-}
-
-static void
-lmi_home_drag_leave (GtkWidget *widget, GdkDragContext *context, guint time,
-                      PhoshAppGrid *self)
-{
-  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
-  g_clear_handle_id (&priv->lmi_drag_home_timer, g_source_remove);
-}
-
 static void
 lmi_home_settings_changed (PhoshAppGrid *self, const char *key, GSettings *settings)
 {
@@ -79,9 +43,7 @@ lmi_home_setup (PhoshAppGrid *self)
 
   g_signal_connect_object (priv->settings, "changed::lmi-home-slots",
                             G_CALLBACK (lmi_home_settings_changed), self, G_CONNECT_SWAPPED);
-  gtk_drag_dest_set (priv->lmi_favorites_drawer, 0, lmi_home_targets,
-                     G_N_ELEMENTS (lmi_home_targets), GDK_ACTION_MOVE);
-  g_signal_connect (priv->lmi_favorites_drawer, "drag-motion", G_CALLBACK (lmi_home_drag_motion), self);
-  g_signal_connect (priv->lmi_favorites_drawer, "drag-leave", G_CALLBACK (lmi_home_drag_leave), self);
+  /* Only actual slots/favorites accept drops; the deck must not steal them. */
+  g_object_set_data (G_OBJECT (self), "lmi-home-drag-deck", priv->lmi_favorites_drawer);
   lmi_home_rebuild (self);
 }

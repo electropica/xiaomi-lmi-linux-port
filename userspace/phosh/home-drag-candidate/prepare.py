@@ -3,7 +3,7 @@
 import argparse,hashlib,json,xml.etree.ElementTree as E
 from pathlib import Path
 
-VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag1'
+VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag2'
 QUIET='f8cbde684bd1920eebcfab70c39d2adef8696498fadc5443e6d2bde37669f019'
 
 def once(text,before,after):
@@ -54,12 +54,10 @@ def prepare(source,output,ui):
     outputs={'src/app-grid-button.c':c}
     c=(source/'src/app-grid.c').read_text()
     c=once(c,'#include "favorite-list-model.h"','#include "favorite-list-model.h"\n#include "lmi-home-dnd.h"')
-    c=once(c,'  GtkWidget *favs_revealer;','  GtkWidget *favs_revealer;\n  GtkWidget *lmi_home_slots;\n  GtkWidget *lmi_favorites_drawer;\n  guint lmi_drag_home_timer;')
+    c=once(c,'  GtkWidget *favs_revealer;','  GtkWidget *favs_revealer;\n  GtkWidget *lmi_home_slots;\n  GtkWidget *lmi_favorites_drawer;')
     c=once(c,'static GtkWidget *\ncreate_favorite_launcher','#include "lmi-home-grid.inc"\n\nstatic GtkWidget *\ncreate_favorite_launcher')
     start=c.index('static void\nphosh_app_grid_init');end=c.index('static void\nphosh_app_grid_dispose',start)
     body=c[start:end];body=once(body,'  toggle_favorites_revealer (self);','  toggle_favorites_revealer (self);\n  lmi_home_setup (self);');c=c[:start]+body+c[end:]
-    start=c.index('static void\nphosh_app_grid_dispose');end=c.index('static void\nphosh_app_grid_finalize',start)
-    body=c[start:end];body=once(body,'  g_clear_handle_id (&priv->debounce, g_source_remove);','  g_clear_handle_id (&priv->debounce, g_source_remove);\n  g_clear_handle_id (&priv->lmi_drag_home_timer, g_source_remove);');c=c[:start]+body+c[end:]
     c=once(c,'  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, favs);','  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_home_slots);\n  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_favorites_drawer);\n  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, favs);')
     outputs['src/app-grid.c']=c
     test=(source/'tests/test-app-grid-button.c').read_text()
