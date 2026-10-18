@@ -1,5 +1,22 @@
 # Mobian status
 
+## Restart button prepared; homedrag6 remains installed — 2026-10-18
+
+At the operator's request, homedrag7 adds a Restart button to the long-press
+power menu. It calls the existing phosh_session_manager_reboot method, using
+GNOME Session's normal end-session flow rather than forcing a reboot. The
+existing French catalog translates Restart as Redémarrer. The action is
+disabled while locked, matching the existing Power Off policy.
+
+The new manager/resource code compiles. XML/action/locked-state checks and the
+9 stable + 6 complete profile staging checks pass. No restart action was
+invoked, no package was built autonomously and nothing was installed on the
+handset for this addition. The operator-run homedrag7 pair build and physical
+menu/confirmation checks remain pending. The next complete recipe selects
+homedrag7 with the previously qualified Phoc; the handset remains on qualified
+homedrag6. All home/favorite fixes and quiet-gauge source pins are retained.
+
+
 ## Homedrag6 installed; bidirectional shortcut transfers confirmed — 2026-10-18
 
 The operator subsequently built homedrag6 with all 36 package tests passing.

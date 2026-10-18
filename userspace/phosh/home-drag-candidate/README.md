@@ -1,5 +1,15 @@
 # Native home drag candidate
 
+## homedrag7: native Restart button (operator build pending)
+
+Adds Restart to the long-press power menu, translated through the existing
+French catalog. It calls the existing session-manager reboot flow and is
+disabled on the lock screen. Manager/resource compilation and static action
+checks pass; no reboot was issued. The command below now builds homedrag7.
+The handset remains on the qualified homedrag6 pair until operator build and
+installation; check button visibility and cancel the normal confirmation first.
+
+
 ## homedrag6: move between saved surfaces (installed and confirmed)
 
 The homedrag6 pair is installed after an operator build with 36/36 tests.

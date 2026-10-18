@@ -3,7 +3,7 @@
 import argparse,hashlib,json,xml.etree.ElementTree as E
 from pathlib import Path
 
-VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag6'
+VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag7'
 QUIET='f8cbde684bd1920eebcfab70c39d2adef8696498fadc5443e6d2bde37669f019'
 
 def once(text,before,after):
@@ -15,9 +15,11 @@ def prepare(source,output,ui):
     assert hashlib.sha256((source/'src/screen-saver-manager.c').read_bytes()).hexdigest()==QUIET
     assert (source/'debian/changelog').read_text().splitlines()[0]=='phosh (0.46.0-3+deb13u1+lmigaugewake3) UNRELEASED; urgency=medium'
     assets=Path(__file__).parent
-    paths=['src/home.c','src/ui/app-grid-button.ui','tests/test-app-grid-button.c','src/app-grid.c','src/app-grid-button.c','src/ui/app-grid.ui','data/mobi.phosh.shell.gschema.xml']
+    paths=['src/power-menu-manager.c','src/ui/power-menu.ui','src/home.c','src/ui/app-grid-button.ui','tests/test-app-grid-button.c','src/app-grid.c','src/app-grid-button.c','src/ui/app-grid.ui','data/mobi.phosh.shell.gschema.xml']
     before={p:hashlib.sha256((source/p).read_bytes()).hexdigest() for p in paths}
     expected={
+        'src/power-menu-manager.c':'5513da4c1870fbc1445e08ad998a70b9f11a960113d8ddbc8cd8b288ff26cabd',
+        'src/ui/power-menu.ui':'9aa1be60e07c9acee6abae2a7d47cf786d8cb2f87c28ad0638f0922cd3a2081f',
         'src/home.c':'195850693746df310dcea46cecf1fb76f6c53fa115ccfd70323cc7036db3dabf',
         'src/ui/app-grid-button.ui':'bae4207416087217554f0586da11191cc627185c3def5680d69c8b3c3e48324d',
         'tests/test-app-grid-button.c':'5cdfad9e94095d5347f50ccf0346fea2f2b9ec87d1b3989b3dc09949364a6fc5',
@@ -94,6 +96,41 @@ def prepare(source,output,ui):
     test=once(test,'int\nmain (', (assets/'test-remove.inc').read_text()+'\n\n'+'int\nmain (')
     test=once(test,'  gtk_test_init (&argc, &argv, NULL);','  gtk_test_init (&argc, &argv, NULL);\n  g_test_add_func ("/phosh/app-grid-button/home-remove", test_phosh_home_remove);\n  g_test_add_func ("/phosh/app-grid-button/home-row-width", test_phosh_home_row_width);\n  g_test_add_func ("/phosh/app-grid-button/home-transfer", test_phosh_home_transfer);')
     outputs['tests/test-app-grid-button.c']=test
+    manager=(source/'src/power-menu-manager.c').read_text()
+    reboot='''static void
+on_reboot_activated (GSimpleAction *action, GVariant *param, gpointer data)
+{
+  PhoshPowerMenuManager *self = PHOSH_POWER_MENU_MANAGER (data);
+  PhoshSessionManager *sm = phosh_shell_get_session_manager (phosh_shell_get_default ());
+
+  g_return_if_fail (PHOSH_IS_POWER_MENU_MANAGER (self));
+  close_menu (self);
+  phosh_session_manager_reboot (sm);
+}
+
+
+'''
+    manager=once(manager,'static void\non_suspend_activated',reboot+'static void\non_suspend_activated')
+    manager=once(manager,'  { .name = "poweroff", .activate = on_power_off_activated },','  { .name = "poweroff", .activate = on_power_off_activated },\n  { .name = "reboot", .activate = on_reboot_activated },')
+    manager=once(manager,'  action = g_action_map_lookup_action (G_ACTION_MAP (self->menu_actions), "poweroff");\n  g_simple_action_set_enabled (G_SIMPLE_ACTION (action), !locked);','  action = g_action_map_lookup_action (G_ACTION_MAP (self->menu_actions), "poweroff");\n  g_simple_action_set_enabled (G_SIMPLE_ACTION (action), !locked);\n  action = g_action_map_lookup_action (G_ACTION_MAP (self->menu_actions), "reboot");\n  g_simple_action_set_enabled (G_SIMPLE_ACTION (action), !locked);')
+    outputs['src/power-menu-manager.c']=manager
+    import copy
+    power=E.fromstring((source/'src/ui/power-menu.ui').read_text())
+    grid=next(o for o in power.iter('object') if o.get('class')=='GtkGrid')
+    child=next(c for c in grid.findall('child') if c.find('object').get('id')=='btn_lock')
+    child=copy.deepcopy(child);button=child.find('object');button.set('id','btn_reboot')
+    next(p for p in button.findall('property') if p.get('name')=='action-name').text='power-menu.reboot'
+    for o in button.iter('object'):
+        for prop in o.findall('property'):
+            if prop.get('name')=='icon-name':prop.text='system-reboot-symbolic'
+            if prop.get('name')=='label':prop.text='Restart'
+    packing=child.find('packing')
+    for prop in packing.findall('property'):
+        if prop.get('name')=='left-attach':prop.text='0'
+        if prop.get('name')=='top-attach':prop.text='2'
+    E.SubElement(packing,'property',name='width').text='2'
+    grid.append(child);E.indent(power,space='  ')
+    outputs['src/ui/power-menu.ui']=E.tostring(power,encoding='unicode')+'\n'
     schema=(source/'data/mobi.phosh.shell.gschema.xml').read_text()
     key='''    <key name="lmi-home-slots" type="as">
       <default>['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']</default>
