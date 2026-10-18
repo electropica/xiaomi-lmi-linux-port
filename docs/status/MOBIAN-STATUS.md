@@ -1,5 +1,21 @@
 # Mobian status
 
+## Native drag null-application regression fixed — 2026-10-18
+
+The operator's combined package/image build stopped at the upstream
+`app-grid-button/null_app_info` test. Native drag setup called
+`g_app_info_get_id(NULL)`, which is invalid although constructing a Phosh
+button without app info is supported. Both launcher and favorite paths now
+preserve that contract. The existing null-info test also exercises a favorite.
+
+The failed build tree and prepared-input identities were repaired together.
+A fresh preparation from the verified original sources matches those repaired
+inputs exactly; the quiet-gauge source hash remains unchanged. After targeted
+recompilation/relinking, all **36 Phosh tests pass**, with zero failures or
+skips. No test was disabled. The full package/image build remains operator-run;
+restart the same complete-build command. No phone state was changed.
+
+
 ## Combined full-image recipe prepared — 2026-10-18
 
 The [complete operator entry point](../../build/profiles/lmi-current/COMPLETE-BUILD.md)

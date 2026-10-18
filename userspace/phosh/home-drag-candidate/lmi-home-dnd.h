@@ -72,7 +72,7 @@ lmi_home_drag_begin (GtkWidget *widget, GdkDragContext *context, gpointer unused
 static inline void
 lmi_home_enable_source (GtkWidget *button, GAppInfo *app)
 {
-  const char *id = g_app_info_get_id (app);
+  const char *id = app ? g_app_info_get_id (app) : NULL;
 
   if (!id || !*id) return;
   g_object_set_data_full (G_OBJECT (button), "lmi-home-app-id", g_strdup (id), g_free);

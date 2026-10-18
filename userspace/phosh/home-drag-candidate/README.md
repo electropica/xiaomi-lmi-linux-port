@@ -26,3 +26,13 @@ the affected original source files, checks both initial and resumed inputs,
 then builds the Phosh packages. It never contacts a phone or builds an image.
 Do not manually install the packages alone: their template/schema and the
 existing runtime resource overlay must be updated together after review.
+
+## Package-test regression repair — 2026-10-18
+
+The first package build caught an invalid `g_app_info_get_id(NULL)` in drag
+setup. Null app-info constructors remain supported for both ordinary and
+favorite buttons. Source preparation now carries an extension to the existing
+upstream null-info test. Fresh source preparation matches the repaired build
+inputs, the quiet-gauge source is unchanged, and all 36 Phosh tests pass after
+incremental recompilation/relinking. No checks were disabled. This does not
+replace post-flash touchscreen gesture validation.

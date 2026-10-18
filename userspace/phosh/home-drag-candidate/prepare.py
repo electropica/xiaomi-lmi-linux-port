@@ -15,9 +15,10 @@ def prepare(source,output,ui):
     assert hashlib.sha256((source/'src/screen-saver-manager.c').read_bytes()).hexdigest()==QUIET
     assert (source/'debian/changelog').read_text().splitlines()[0]=='phosh (0.46.0-3+deb13u1+lmigaugewake3) UNRELEASED; urgency=medium'
     assets=Path(__file__).parent
-    paths=['src/app-grid.c','src/app-grid-button.c','src/ui/app-grid.ui','data/mobi.phosh.shell.gschema.xml']
+    paths=['tests/test-app-grid-button.c','src/app-grid.c','src/app-grid-button.c','src/ui/app-grid.ui','data/mobi.phosh.shell.gschema.xml']
     before={p:hashlib.sha256((source/p).read_bytes()).hexdigest() for p in paths}
     expected={
+        'tests/test-app-grid-button.c':'5cdfad9e94095d5347f50ccf0346fea2f2b9ec87d1b3989b3dc09949364a6fc5',
         'src/app-grid.c':'6a8d619de8fb24bb9fbcd322b2dd70e283535568918b0783ba1d5432ad09198f',
         'src/app-grid-button.c':'0eeeb3371757346c86313bceb6afb8da2a61a216899aeb6fc961b8da9e399438',
         'src/ui/app-grid.ui':'abbcd12612c8ff86f8b4a1ea46c3577ab5ea3fd4615e266043a8b7661ae11fac',
@@ -47,7 +48,7 @@ def prepare(source,output,ui):
                                       PHOSH_TYPE_APP_GRID_BASE_BUTTON, "button"));
 
   lmi_home_enable_source (button, info);
-  lmi_home_enable_target (button, g_app_info_get_id (info), -1);
+  lmi_home_enable_target (button, info ? g_app_info_get_id (info) : NULL, -1);
   return widget;'''
     c=once(c,old,new)
     outputs={'src/app-grid-button.c':c}
@@ -61,6 +62,9 @@ def prepare(source,output,ui):
     body=c[start:end];body=once(body,'  g_clear_handle_id (&priv->debounce, g_source_remove);','  g_clear_handle_id (&priv->debounce, g_source_remove);\n  g_clear_handle_id (&priv->lmi_drag_home_timer, g_source_remove);');c=c[:start]+body+c[end:]
     c=once(c,'  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, favs);','  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_home_slots);\n  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_favorites_drawer);\n  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, favs);')
     outputs['src/app-grid.c']=c
+    test=(source/'tests/test-app-grid-button.c').read_text()
+    anchor='  btn = phosh_app_grid_button_new (NULL);\n  g_assert_null (phosh_app_grid_button_get_app_info (\n                   PHOSH_APP_GRID_BUTTON (btn)));\n  gtk_widget_destroy (btn);'
+    outputs['tests/test-app-grid-button.c']=once(test,anchor,anchor+'\n\n  btn = phosh_app_grid_button_new_favorite (NULL);\n  g_assert_null (phosh_app_grid_button_get_app_info (\n                   PHOSH_APP_GRID_BUTTON (btn)));\n  gtk_widget_destroy (btn);')
     schema=(source/'data/mobi.phosh.shell.gschema.xml').read_text()
     key='''    <key name="lmi-home-slots" type="as">
       <default>['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']</default>

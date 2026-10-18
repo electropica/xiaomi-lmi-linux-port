@@ -51,7 +51,10 @@ complete-profile staging tests verify exact package selection and rejection
 of corrupted/missing bundles, wrong binary architecture and manifest paths.
 Test fixtures are metadata only and are never used in the real image.
 
-The complete package/image build is **not yet run**. Native touchscreen drag
+The first complete-build attempt stopped in the Phosh unit tests before
+package generation. Its null app-info regression is fixed; all 36 Phosh tests
+now pass after incremental recompilation/relinking. Restart the same operator
+command. The complete package/image build is **not yet finished**. Native touchscreen drag
 behavior and the newly combined Snapshot foreground/exit lifecycle require
 post-flash tests. Prior camera trials establish a useful rear preview, not
 front-camera, zoom/flash controls, reliable recording or improved autonomy.
