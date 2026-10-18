@@ -144,3 +144,12 @@ desktop and D-Bus files with a partial duplicate. This retains
 `DBusActivatable=false` and the per-user daemon autostart mask. The shared
 installer is copied and checked during profile staging. This is a recipe
 correction; a new image build and post-flash qualification remain pending.
+
+### First integrated-image boot (2026-10-18)
+
+The operator built and flashed the `20261018-r1` userdata image and confirmed
+normal interface responsiveness. SSH confirmed the integrated v3 package pair,
+active opt-ins, Chatty autostart/desktop protections, masked indexer and NPU
+opt-in without post-flash installation. The existing RPMh boot was retained.
+Fresh-image sleep/resume and long-duration drain remain to be qualified; see
+[the current build record](../../../docs/status/CURRENT-BUILD.md).

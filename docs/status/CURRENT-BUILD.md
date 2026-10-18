@@ -1,3 +1,27 @@
+# Current validated build and userspace state
+
+## Fresh current image boot validation — 2026-10-18
+
+The operator successfully built and flashed `mobian-lmi-current-20261018-r1`
+(userdata only) and reported a responsive, normal interface. Build exit status
+was zero; filesystem checks and the builder's raw/sparse roundtrip passed.
+The 3,648,024,868-byte sparse image has SHA-256
+`d89ac3319e94a57955f560875cc15fbaf2fa2d728d1112de1b5d9b644460163b`.
+
+SSH inspection after this fresh boot confirmed Phosh/common
+`0.46.0-3+deb13u1+lmigaugewake3`, GSD/common `48.1-1+lmiquietgauge3`
+and UPower `1.90.9-1+lmi1`. Both quiet-resume service opt-ins are active;
+package audit is empty. Chatty's daemon autostart is hidden, its desktop
+activation guard is present, and no Chatty process started automatically.
+The incompatible indexer is masked. The NPU suspend opt-in is present with
+no pending recovery. The existing RPMh kernel was retained.
+
+The normal battery suspend delay is 900 seconds, with no automatic suspend
+on AC. A first automatic-sleep observation is now pending; this boot check
+does not yet qualify fresh-image suspend/resume, application functionality,
+long-duration drain or the experimental camera bridge. Earlier October 18
+preparation/interruption entries below describe superseded build attempts.
+
 ## October 18 build interruption
 
 The first current-image attempt stopped before image generation. Its fresh M0
@@ -23,7 +47,6 @@ original paired Android reports match the hashes retained with the October 9
 image. The next userdata build remains operator-run; it has not yet been
 built, flashed or hardware-qualified. The existing RPMh kernel is reused.
 
-# Current validated build and userspace state
 
 ## Source recovery boundary — 2026-10-14
 
