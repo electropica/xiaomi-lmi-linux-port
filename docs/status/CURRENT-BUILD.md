@@ -1,5 +1,30 @@
 # Current validated build and userspace state
 
+## Native drag v2 installed; physical retest pending — 2026-10-18
+
+The operator built the homedrag2 Phosh/common pair. Verified package SHA-256:
+
+- Phosh arm64: `0f614db3616380c0935b298c6a975e0c47437931a57998d6e29ad91f2db555d7`.
+- Common all: `e26cdcc6ff9dc9ce8d0fc856dc71fb9ac18bfb09a1dbb83824da829c6e70a57b`.
+
+The two packages were installed on the complete-image handset. Apt's simulated
+plan selected only that pair, but real local installation hit an internal path
+error. The armed fallback restored v1 successfully. A subsequent offline dpkg
+installation of the same verified pair succeeded and the package audit is empty.
+
+Phosh restarted with a stable PID and an executable matching the installed
+file; its automatic-home-reveal marker is present. Both quiet-gauge opt-ins
+remain active, the old UI overlay is absent, the normal 900-second suspend
+default is preserved and no NPU recovery is pending. The temporary restart
+permission override was removed. The rollback timer was stopped after these
+health checks; the old pair remains available for explicit recovery.
+
+This qualifies package installation and shell startup only. Real automatic
+drawer dismissal, shortcut deposition/persistence and favorite reorder await
+the operator's physical test. No camera acquisition, new flash or kernel
+change was performed.
+
+
 ## Complete-image boot and failed drag test — 2026-10-18
 
 The operator flashed and booted `mobian-lmi-complete-20261018`. SSH inspection

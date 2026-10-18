@@ -3,7 +3,8 @@
 Candidate `homedrag2` for Phosh 0.46.0 quiet-gauge v3. The first integrated
 image installed `homedrag1`, but its hardware test failed: the icon followed
 the finger while the drawer stayed above the home. The v2 correction is
-prepared/tested on the host, not yet packaged or hardware-qualified.
+packaged and installed on the handset; startup is healthy, while the physical
+drag/drop retest remains pending.
 
 - Favorite buttons become local drag sources/targets; dropping one favorite
   on another changes its saved order without deleting missing desktop entries.
@@ -52,3 +53,11 @@ favorites receive drops. No sensor/camera or battery policy is changed.
 All 36 Phosh tests pass after targeted recompilation/relinking; stable and
 complete staging tests pass too. Real deposit persistence and favorite reorder
 still need handset tests after the operator builds the v2 pair.
+
+## V2 deployment gate
+
+The operator built the v2 pair and it was installed together. The runtime
+executable matches the installed package, quiet-gauge opt-ins are preserved,
+and no stale UI overlay is present. The temporary automatic rollback was
+stopped after successful software startup checks. Touch drop persistence and
+favorite reorder remain unqualified until the physical retest.
