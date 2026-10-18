@@ -1,6 +1,6 @@
 # Mobian status
 
-## Restart button installed; menu confirmation check pending — 2026-10-18
+## Restart button and cancellable confirmation validated — 2026-10-18
 
 The operator built the homedrag7 pair with all 36 package tests passing.
 It is now installed, with the running executable verified, empty dpkg audit,
@@ -12,7 +12,8 @@ Package SHA-256:
 - Phosh arm64: `e04f6d8348d4ca9b3a23208bf60f8591b5414f28ccc34c3f30dd2d7e764c1760`.
 - Common all: `3ef839c1f5ec25d4e3d8d6ce7a4fe7e955eb1a8345249a9c35410af6efded8f9`.
 
-Physical button visibility and confirmation cancellation await the operator.
+The operator confirms the Restart button is present and its confirmation can
+be cancelled. Actual reboot execution has not been tested in this check.
 No reboot action has been triggered by the agent. Preparation notes below
 are historical where they describe the package as not yet installed.
 
