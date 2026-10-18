@@ -1,5 +1,29 @@
 # Power diagnostics and decision summary
 
+## Short automatic-suspend control after homedrag7 — 2026-10-18
+
+An attended control with the installed homedrag7/qualified Phoc stack used a
+battery inactivity timeout of 60 seconds, restored automatically to 900 seconds
+on completion. Wi-Fi remained enabled. No forced suspend, RTC alarm, media
+activity or CPU/NPU policy change was introduced by this collector.
+
+Automatic PrepareForSleep arrived 60.219 seconds after unplug detection.
+BOOTTIME minus MONOTONIC deltas establish 151.410 seconds actually suspended;
+the only observed resume was USB return (`typec-cc-state-change`). The detected
+unplug-to-replug interval was 216.413 seconds, including the initial awake wait.
+The collector exited successfully, charging resumed, the handset boot identity
+was unchanged, and no RTC alarm, trace instance or pending NPU recovery state
+remained. The operator confirmed normal touch, application launch and scrolling
+afterward.
+
+This validates one accelerated automatic-suspend transition after the interface
+updates. It does not revalidate the normal fifteen-minute delay, gauge-wake
+resuspension or sustained battery drain. No natural gauge wake occurred in this
+short interval. USB-return current is charging-contaminated; no calibrated
+consumption or autonomy claim is made. ScreenSaver Active is lock state, not
+a physical panel-power measurement. Residual standby demand remains unresolved.
+
+
 ## Current decision summary — 2026-10-15
 
 The installed handset retains the RPMh diagnostic kernel, suspend-only NPU
