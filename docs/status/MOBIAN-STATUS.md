@@ -1,5 +1,16 @@
 # Mobian status
 
+## Combined full-image recipe prepared — 2026-10-18
+
+The [complete operator entry point](../../build/profiles/lmi-current/COMPLETE-BUILD.md)
+now combines native Phosh home/favorite drag package compilation, experimental
+Snapshot rear-camera bundle compilation and full image generation. It retains
+the current battery and application fixes and reuses the installed RPMh kernel.
+The native UI and schema are paired; the older resource overlay is omitted.
+No build, flash or acquisition was started by the agent. Native drag gestures
+and the newly integrated camera lifecycle remain pending post-flash tests.
+
+
 ## Favorites home and separate drawer — 2026-10-18
 
 The operator requested hiding the complete grid from the home page. A scoped

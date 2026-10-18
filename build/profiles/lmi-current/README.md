@@ -1,6 +1,11 @@
 # Integrated current lmi image profile
 
-Use `build/build-current-lmi.sh` for the current operator image. It selects
+For the requested full next image, use the [combined entry point](COMPLETE-BUILD.md),
+`build/build-complete-lmi.sh`: it compiles the native home-drag and camera
+components before generating the image. Compilation and hardware checks remain
+pending. The original stable profile below remains separately available.
+
+Use `build/build-current-lmi.sh` for the stable operator image. It selects
 the existing Phosh builder and installs this profile **inside the image
 before filesystem and sparse-image generation**. No post-flash patch sequence
 is required for the components listed below. Heavy image builds remain

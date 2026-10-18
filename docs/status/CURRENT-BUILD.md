@@ -1,5 +1,16 @@
 # Current validated build and userspace state
 
+## Combined full-image recipe prepared — 2026-10-18
+
+The [complete operator entry point](../../build/profiles/lmi-current/COMPLETE-BUILD.md)
+now combines native Phosh home/favorite drag package compilation, experimental
+Snapshot rear-camera bundle compilation and full image generation. It retains
+the current battery and application fixes and reuses the installed RPMh kernel.
+The native UI and schema are paired; the older resource overlay is omitted.
+No build, flash or acquisition was started by the agent. Native drag gestures
+and the newly integrated camera lifecycle remain pending post-flash tests.
+
+
 ## Next complete-image preparation — 2026-10-18
 
 The operator requested native favorite drag ordering and application shortcuts
@@ -15,7 +26,7 @@ confirms the usual checklist applications are installed, but `gnome-snapshot`
 and its diagnostic rear-camera bridge are absent. The retained camera path
 requires backend/lifecycle integration, not merely adding the package or icon.
 The previous private accepted-trial sources/binaries were located; no new
-acquisition or recording was started. Full image readiness is not yet claimed.
+acquisition or recording was started. The combined recipe is now prepared; compilation and post-flash qualification remain pending.
 
 ## Post-flash home navigation adaptation — 2026-10-18
 

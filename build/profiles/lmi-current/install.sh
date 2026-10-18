@@ -19,15 +19,25 @@ systemctl --global mask localsearch-3.service
 for p in upower libupower-glib3 gir1.2-upowerglib-1.0; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = 1.90.9-1+lmi1
 done
+phosh_version=0.46.0-3+deb13u1+lmigaugewake3
+if [[ -f $src/COMPLETE_PROFILE ]]; then
+    phosh_version+=+homedrag1
+fi
 for p in phosh phosh-common; do
-    test "$(dpkg-query -W -f='${Version}' "$p")" = 0.46.0-3+deb13u1+lmigaugewake3
+    test "$(dpkg-query -W -f='${Version}' "$p")" = "$phosh_version"
 done
 for p in gnome-settings-daemon gnome-settings-daemon-common; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = 48.1-1+lmiquietgauge3
 done
-# Resource-only home: favorites dock, full application drawer, no adaptive filter.
-install -Dm644 "$src/home-drawer/app-grid.ui" /usr/local/share/lmi-home-drawer/ui/app-grid.ui
-install -Dm644 "$src/home-drawer/70-lmi-home-drawer.conf" /etc/systemd/user/mobi.phosh.Shell.service.d/70-lmi-home-drawer.conf
+# Native drag builds own their matching UI/schema; an old overlay would break bindings.
+if [[ -f $src/COMPLETE_PROFILE ]]; then
+    test ! -e /etc/systemd/user/mobi.phosh.Shell.service.d/70-lmi-home-drawer.conf
+    test ! -e /usr/local/share/lmi-home-drawer/ui/app-grid.ui
+    bash "$src/camera/install.sh"
+else
+    install -Dm644 "$src/home-drawer/app-grid.ui" /usr/local/share/lmi-home-drawer/ui/app-grid.ui
+    install -Dm644 "$src/home-drawer/70-lmi-home-drawer.conf" /etc/systemd/user/mobi.phosh.Shell.service.d/70-lmi-home-drawer.conf
+fi
 install -Dm644 "$src/home-drawer/95_lmi-home-drawer.gschema.override" /usr/share/glib-2.0/schemas/95_lmi-home-drawer.gschema.override
 # Enable only the paired qualified quiet-resume paths; no debug environment.
 install -Dm644 "$src/power/phosh-quiet-resume.conf" /etc/systemd/user/mobi.phosh.Shell.service.d/60-lmi-quiet-gauge-resume.conf
@@ -84,4 +94,9 @@ install -Dm755 "$src/profile/lmi-venus-firmware-prepare" /usr/local/sbin/lmi-ven
 install -Dm644 "$src/profile/lmi-venus-firmware-prepare.service" /etc/systemd/system/lmi-venus-firmware-prepare.service
 systemctl enable lmi-venus-firmware-prepare.service
 install -Dm644 "$src/PROFILE.txt" /usr/share/lmi-current-profile/PROFILE.txt
+if [[ -f $src/COMPLETE_PROFILE ]]; then
+    install -Dm644 "$src/COMPLETE_PROFILE" /usr/share/lmi-current-profile/COMPLETE_PROFILE
+    install -Dm644 "$src/camera/SHA256SUMS" /usr/share/lmi-current-profile/CAMERA-SHA256SUMS
+    env GSETTINGS_BACKEND=memory gsettings list-keys sm.puri.phosh | grep -qx lmi-home-slots
+fi
 printf 'CURRENT_LMI_PROFILE_INSTALLED\n'

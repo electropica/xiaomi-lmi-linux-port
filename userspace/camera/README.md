@@ -14,10 +14,11 @@ library were located in retained private material. The official Debian
 `gnome-snapshot=48.0.1-1` package and its dependency bundle are retained too.
 No camera, microphone or recording was started during this inventory.
 
-A stable Snapshot launch/foreground/exit lifecycle and fresh hardware check
-remain necessary before treating these diagnostic components as integrated.
-Installing only the Snapshot package or restoring the obsolete custom frontend
-would not satisfy that request. The next complete image is not ready yet.
+A foreground-owned Snapshot launcher and fixed camera bundle are now included
+in the [combined build recipe](../../build/profiles/lmi-current/COMPLETE-BUILD.md).
+No compilation, image flash or acquisition has run for this integration.
+The new lifecycle needs a fresh hardware check after the operator builds and
+flashes the image. Installing the package alone would not satisfy the request.
 
 ## Current decision summary — 2026-10-08
 

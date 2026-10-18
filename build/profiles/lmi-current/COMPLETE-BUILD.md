@@ -1,0 +1,64 @@
+# Complete operator image — 2026-10-18
+
+`build/build-complete-lmi.sh BASE_RAW M0_EXT4 OUTPUT_NAME` is the combined
+operator-run entry point. Run as root in a private mount namespace, with the
+same external base, preserved M0, paired Android partition reports, SSH public
+key and interactively supplied Mobian password as the current image recipe.
+It performs no phone operation, flash or kernel build.
+
+Additional external inputs:
+
+- `M1_CURRENT_LMI_PROFILE_INPUTS`: the verified stable eight-file package and
+  firmware input manifest used by the previous image.
+- `M1_CAMERA_ANDROID_LIBCXX`: the matching external Android system libc++.so
+  needed to link the OEM QTI bridge; never add this library to Git.
+- Existing ARM build root `/home/linuxagent/phosh-gauge-wake-build/rootfs`
+  containing quiet-gauge v3 sources, build dependencies and generated Wayland
+  protocol sources; the native drag candidate checks its source identities.
+- Android NDK r27d (default retained toolchain path, optionally
+  `M1_ANDROID_TOOLCHAIN`).
+
+The command builds Phosh/common
+`0.46.0-3+deb13u1+lmigaugewake3+homedrag1`, compiles the Snapshot rear-camera
+bundle, creates a separate private eight-input manifest, then runs the full
+userspace/image builder. Package dependencies are installed noninteractively.
+It retains normal optional applications and their scoped fixes, audio,
+Recorder, torch, Chatty guards, fonts/locales, quiet-gauge v3 GSD/Phosh,
+UPower, CPU-idle, suspend-only NPU policy, clock floor and current Android
+mount layout. The already installed RPMh kernel is reused.
+
+The candidate owns its matching UI/schema: bottom favorites, chevron below,
+separate all-app drawer, favorite drag ordering and sixteen persistent home
+slots. The previous resource-only UI overlay is deliberately omitted, since
+it lacks the widgets bound by the new C implementation. Global horizontal
+minimization is not added.
+
+Snapshot (`gnome-snapshot=48.0.1-1`) is installed together with the experimental
+rear-only bridge and scoped rendering/audio tuning. Opening its desktop icon
+starts the adapter; the root sensor service requires a recent foreground lease
+from that launcher. Background/exit revokes the lease and stops the backend.
+The service is not enabled at boot. No obsolete custom camera frontend,
+Megapixels, test recording, private desktop database or personal media is added.
+The bridge is specific to the preserved Android runtime and exact existing
+kernel. It uses the accepted fixed-30 sensor request, NEON conversion and
+40 ms native producer polling; these do not establish 720p/30 video output.
+
+## Validation boundary
+
+Source preparation, zero-fuzz patch application, ARM syntax checks, strict
+schema checks and host order/placement tests passed. Stable-profile tests and
+complete-profile staging tests verify exact package selection and rejection
+of corrupted/missing bundles, wrong binary architecture and manifest paths.
+Test fixtures are metadata only and are never used in the real image.
+
+The complete package/image build is **not yet run**. Native touchscreen drag
+behavior and the newly combined Snapshot foreground/exit lifecycle require
+post-flash tests. Prior camera trials establish a useful rear preview, not
+front-camera, zoom/flash controls, reliable recording or improved autonomy.
+The current working installation remains unchanged until the operator flashes
+the completed image. Build success must include filesystem checks, sparse
+roundtrip and the final `COMPLETE_IMAGE_WITH_NATIVE_HOME_AND_SNAPSHOT` marker.
+
+Existing image output paths are refused. Finished package/bundle artifacts
+can be reused after identity checks; a partial camera bundle must be examined
+before a retry. No cleanup or deletion is performed automatically.
