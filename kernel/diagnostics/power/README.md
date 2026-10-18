@@ -3227,3 +3227,65 @@ in the sampled plugged state, which does not exclude activity during sleep.
 
 No power settings, firmware, calibration or protection values were changed
 for these checks. The residual standby consumption remains unresolved.
+
+### Recovery kernel control: residual demand reproduced — 2026-10-18
+
+An attended test in the existing Lineage 23.2 recovery measured 180.094 seconds
+of deep suspend within a 181.140-second unplugged interval. Its kernel and base
+DTB match the retained official Lineage boot image. This did not install a new
+Mobian image, kernel or userspace package; the installed Mobian reference below
+is unchanged. The phone remains in recovery pending the normal return to Mobian.
+
+For the control only, sleep_disabled was set to N and the three NPU devfreq
+clients used powersave with zero requested frequency. Original recovery values
+(Y and three performance governors) were restored and read back; the owned RTC
+alarm was cleared, USB charging resumed, and the collector finished. Bluetooth
+was blocked and no WLAN interface was present in recovery.
+
+The software counter estimates approximately 52.8 mA. The nominal-scaled raw
+counter estimates 91.7 mA, equivalent to 52.8 mA when expressed on the same
+2710/4707 learned/nominal capacity scale. Shadow accounting gives 69.1 mA.
+These are correlated gauge estimates, not independent calibrated measurements.
+The filtered current was still affected by the preceding charge transition and
+is not a steady-state result. The interval was short and started at displayed
+100%; it is not directly equivalent to the prior long Android idle trials.
+
+This reproduces roughly the corrected Mobian order of demand without Phosh or
+GNOME settings daemons, using the Lineage recovery kernel. It argues against a
+cause requiring those userspace services or only the Mobian kernel additions,
+but does not establish a specific hardware leak or exclude shared kernel,
+firmware, gauge behavior, runtime-tree or full-Android initialization differences.
+Residual drain remains unresolved. See the power diagnostics README for details.
+
+
+
+### Recovery control completed — 2026-10-18
+
+The first attempt resumed after 31.654 seconds on IRQ pm8xxx_rtc_alarm and was
+rejected as an incomplete three-minute control. The recovery QTI health service
+had a CLOCK_BOOTTIME_ALARM timerfd with a 60-second interval, a plausible earlier
+alarm source. It was not disabled. The revised collector allows repeated
+suspensions until a bounded BOOTTIME deadline, records every wake, and preserves
+health monitoring. The completed second attempt needed just one suspension:
+180.093640868 seconds asleep, 181.14 seconds between unplugged endpoints.
+A periodic timer's presence does not by itself prove ownership of the first IRQ.
+
+Both endpoints were Discharging with USB offline. BMS software charge decreased
+by 2655 microamp-hours, shadow by3475, and nominal-scaled raw by4612. The raw
+rate of91.6595 mA expressed on the learned2710/nominal4707 scale is52.7727 mA,
+consistent with the software52.7658 mA accounting; shadow is69.0626 mA.
+Those shared-driver gauge quantities do not constitute independent current
+calibration. Filtered current still had its prior charging sign, so it is not
+used as a steady-state observation. Wake endpoint current briefly changed from
+50.8 mA to232.9 mA during the duplicate endpoint reads, illustrating why awake
+snapshots must not be substituted for average suspended consumption.
+
+Temporary sleep/NPU settings were restored and verified, the RTC alarm is empty,
+charging resumed and no collector remains active. No flash, factory reset,
+firmware replacement, heavy build or user-data inspection was performed.
+
+The result is a short recovery control, not full Android equivalence: recovery
+may omit vendor initialization/HAL policy and runtime overlays can differ. It
+supports investigating shared platform state and initialization differences,
+while retaining the longer Lineage idle evidence and its gauge-correction limits.
+It does not justify blindly copying an Android post_boot script or cutting rails.

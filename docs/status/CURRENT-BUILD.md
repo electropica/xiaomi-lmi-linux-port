@@ -1,5 +1,34 @@
 # Current validated build and userspace state
 
+## Recovery kernel control: residual demand reproduced — 2026-10-18
+
+An attended test in the existing Lineage 23.2 recovery measured 180.094 seconds
+of deep suspend within a 181.140-second unplugged interval. Its kernel and base
+DTB match the retained official Lineage boot image. This did not install a new
+Mobian image, kernel or userspace package; the installed Mobian reference below
+is unchanged. The phone remains in recovery pending the normal return to Mobian.
+
+For the control only, sleep_disabled was set to N and the three NPU devfreq
+clients used powersave with zero requested frequency. Original recovery values
+(Y and three performance governors) were restored and read back; the owned RTC
+alarm was cleared, USB charging resumed, and the collector finished. Bluetooth
+was blocked and no WLAN interface was present in recovery.
+
+The software counter estimates approximately 52.8 mA. The nominal-scaled raw
+counter estimates 91.7 mA, equivalent to 52.8 mA when expressed on the same
+2710/4707 learned/nominal capacity scale. Shadow accounting gives 69.1 mA.
+These are correlated gauge estimates, not independent calibrated measurements.
+The filtered current was still affected by the preceding charge transition and
+is not a steady-state result. The interval was short and started at displayed
+100%; it is not directly equivalent to the prior long Android idle trials.
+
+This reproduces roughly the corrected Mobian order of demand without Phosh or
+GNOME settings daemons, using the Lineage recovery kernel. It argues against a
+cause requiring those userspace services or only the Mobian kernel additions,
+but does not establish a specific hardware leak or exclude shared kernel,
+firmware, gauge behavior, runtime-tree or full-Android initialization differences.
+Residual drain remains unresolved. See the power diagnostics README for details.
+
 ## Short automatic-suspend control after homedrag7 — 2026-10-18
 
 An attended control with the installed homedrag7/qualified Phoc stack used a
