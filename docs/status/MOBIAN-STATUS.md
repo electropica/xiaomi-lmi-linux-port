@@ -1,5 +1,23 @@
 # Mobian status
 
+## Native drag v2 hardware failure; Phoc routing candidate — 2026-10-18
+
+The operator confirms that homedrag2 still cannot deposit shortcuts or reorder
+favorites: a small drag icon appears, but releasing has no effect. A real
+callback trace observed drag begin and home reveal, with no destination receive
+or settings-apply callback. Two reversible gesture isolation probes failed to
+restore drops; all probe overrides and timers are removed.
+
+The pinned Phoc 0.46.0 source bypasses grabs on shell layer surfaces, including
+potentially the data-device grab. A targeted candidate preserves DnD grabs and
+yields layer swipe arbitration during DnD. Its host routing regression test
+fails on the original and passes after the patch; preparation/resume/tamper
+checks pass. **Package build, upstream tests and handset validation remain
+pending.** No kernel change or new image is required for this trial. See
+[Phoc DnD candidate](../../userspace/phosh/phoc-layer-dnd-candidate/README.md).
+The handset remains on normal homedrag2; the complete image previously flashed
+still contains homedrag1. Earlier pending-test statements below are historical.
+
 ## Native drag v2 installed; physical retest pending — 2026-10-18
 
 The operator built the homedrag2 Phosh/common pair. Verified package SHA-256:

@@ -1,0 +1,59 @@
+--- a/src/cursor.c
++++ b/src/cursor.c
+@@ -361,6 +361,10 @@
+   if (!surface)
+     return false;
+ 
++  /* Data-device DnD must keep its grab on shell layer surfaces too. */
++  if (seat->seat->drag)
++    return false;
++
+   struct wlr_surface *root = wlr_surface_get_root_surface (surface);
+   struct wlr_layer_surface_v1 *layer_surface = wlr_layer_surface_v1_try_from_wlr_surface (root);
+ 
+@@ -376,6 +380,10 @@
+   // ignore seat grab when interacting with layer-surface
+ 
+   if (!surface)
++    return false;
++
++  /* Data-device DnD must keep its grab on shell layer surfaces too. */
++  if (seat->seat->drag)
+     return false;
+ 
+   struct wlr_surface *root = wlr_surface_get_root_surface (surface);
+@@ -1036,6 +1044,9 @@
+   g_assert (PHOC_IS_CURSOR (self));
+ 
+   priv->drag_surface = NULL;
++  if (self->seat->seat->drag)
++    return;
++
+   layer_surface = phoc_desktop_layer_surface_at (desktop, lx, ly, NULL, NULL);
+   if (!layer_surface)
+     return;
+@@ -1062,6 +1073,14 @@
+   g_assert (PHOC_IS_GESTURE (gesture));
+   g_assert (PHOC_IS_CURSOR (self));
+   priv = phoc_cursor_get_instance_private (self);
++
++  /* Do not cancel the client touch sequence owned by data-device DnD. */
++  if (self->seat->seat->drag) {
++    if (priv->drag_surface)
++      phoc_draggable_layer_surface_drag_end (priv->drag_surface, 0, 0);
++    priv->drag_surface = NULL;
++    return;
++  }
+ 
+   if (!priv->drag_surface)
+     return;
+@@ -1133,6 +1152,9 @@
+   double lx, ly;
+ 
+   g_assert (PHOC_IS_GESTURE_SWIPE (swipe_gesture));
++
++  if (self->seat->seat->drag)
++    return;
+ 
+   sequence = phoc_gesture_get_last_updated_sequence (PHOC_GESTURE (swipe_gesture));
+   if (!phoc_gesture_get_point (PHOC_GESTURE (swipe_gesture), sequence, &lx, &ly)) {

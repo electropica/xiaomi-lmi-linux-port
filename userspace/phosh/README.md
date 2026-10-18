@@ -1,5 +1,9 @@
 # Mobian M1 Phosh image
 
+Current home drag/drop remains broken on hardware with homedrag2. See the
+[Phoc routing candidate](phoc-layer-dnd-candidate/README.md) for the targeted
+operator package build and validation boundaries.
+
 > This document contains chronological M1 bring-up history as well as the active recipe. Earlier milestone limitations are historical unless repeated in `docs/status/CURRENT-BUILD.md` or a later validation record. See `docs/status/CURRENT-BUILD.md` for the current validated build and `docs/architecture/ARCHITECTURE.md` for current paths.
 
 This recipe derives a fresh M1 image from the validated M0 DISPLAY preflight
