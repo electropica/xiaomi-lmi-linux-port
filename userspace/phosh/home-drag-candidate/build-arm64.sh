@@ -6,7 +6,7 @@ test "$#" -eq 0
 root=/home/linuxagent/phosh-gauge-wake-build/rootfs
 task=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 repo=$(CDPATH= cd -- "$task/../../.." && pwd)
-stage="$root/build/lmi-home-drag5-inputs"
+stage="$root/build/lmi-home-drag6-inputs"
 test "$(chroot "$root" dpkg --print-architecture)" = arm64
 exec 9>/run/lmi-phosh-gauge-build.lock
 flock -n 9 || { echo 'Phosh build already running.' >&2; exit 1; }
@@ -16,9 +16,9 @@ from pathlib import Path
 import hashlib,json,subprocess,sys,shutil,tempfile
 root,stage,task=map(Path,sys.argv[1:]);src=root/'build/phosh-0.46.0'
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
-prior=root/'build/lmi-home-drag4-inputs'
+prior=root/'build/lmi-home-drag5-inputs'
 old=json.loads((prior/'identity.json').read_text()) if (prior/'identity.json').is_file() else None
-if old:assert old['version']=='0.46.0-3+deb13u1+lmigaugewake3+homedrag4'
+if old:assert old['version']=='0.46.0-3+deb13u1+lmigaugewake3+homedrag5'
 if not stage.exists():
     source=src
     with tempfile.TemporaryDirectory(prefix='lmi-home-v2-baseline-') as temporary:
@@ -33,7 +33,7 @@ if not stage.exists():
             (source/'debian/changelog').write_text('phosh (0.46.0-3+deb13u1+lmigaugewake3) UNRELEASED; urgency=medium\n')
         subprocess.run(['python3',str(task/'prepare.py'),'--source',str(source),'--ui','/home/linuxagent/xiaomi-lmi-linux-port/userspace/phosh/files/home-drawer/app-grid.ui','--output',str(stage)],check=True)
 m=json.loads((stage/'identity.json').read_text())
-assert m['version']=='0.46.0-3+deb13u1+lmigaugewake3+homedrag5'
+assert m['version']=='0.46.0-3+deb13u1+lmigaugewake3+homedrag6'
 assert sha(src/'src/screen-saver-manager.c')==m['quiet_source_sha256']
 version=m['version'];head=(src/'debian/changelog').read_text().splitlines()[0]
 accepted=['0.46.0-3+deb13u1+lmigaugewake3',version]+([old['version']] if old else [])
@@ -52,7 +52,7 @@ for name,digest in m['before'].items():
         b.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(original,b)
 for name in m['after']:shutil.copyfile(stage/name,src/name)
 if head!='phosh ('+version+') UNRELEASED; urgency=medium':
-    subprocess.run(['chroot',str(root),'/bin/sh','-c','cd /build/phosh-0.46.0 && DEBFULLNAME="Local lmi" DEBEMAIL="local@example.invalid" dch --newversion "$1" --distribution UNRELEASED "Remove FlowBox cell padding for five-column fit and avoid low-priority shortcut removal delays."','sh',version],check=True)
+    subprocess.run(['chroot',str(root),'/bin/sh','-c','cd /build/phosh-0.46.0 && DEBFULLNAME="Local lmi" DEBEMAIL="local@example.invalid" dch --newversion "$1" --distribution UNRELEASED "Transfer shortcuts between dock and home atomically; copy only when dragging from the application drawer."','sh',version],check=True)
 for name,after in m['after'].items():assert sha(src/name)==after
 assert sha(src/'src/screen-saver-manager.c')==m['quiet_source_sha256']
 # Re-run build/tests incrementally; do not use a stale debhelper build stamp.
@@ -75,9 +75,9 @@ unshare --mount --fork --propagation private bash -c '
 ' bash "$root" "$repo"
 for package in phosh phosh-common; do
     arch=arm64; [[ $package == phosh-common ]] && arch=all
-    file="$root/build/${package}_0.46.0-3+deb13u1+lmigaugewake3+homedrag5_${arch}.deb"
+    file="$root/build/${package}_0.46.0-3+deb13u1+lmigaugewake3+homedrag6_${arch}.deb"
     test -f "$file"
-    test "$(dpkg-deb -f "$file" Version)" = '0.46.0-3+deb13u1+lmigaugewake3+homedrag5'
+    test "$(dpkg-deb -f "$file" Version)" = '0.46.0-3+deb13u1+lmigaugewake3+homedrag6'
     sha256sum "$file"
 done
 printf 'HOME_DRAG_PACKAGES_BUILT\nNo phone installation or full image build performed.\n'

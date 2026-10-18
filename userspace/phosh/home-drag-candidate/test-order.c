@@ -42,6 +42,17 @@ int main (void)
   g_assert_cmpstr (four[0], ==, "A.desktop");
   g_assert_null (lmi_favorites_place (four, "E.desktop", "absent.desktop"));
   g_assert_null (lmi_favorites_place (four, "", NULL));
+  g_auto (GStrv) removed_fav = lmi_shortcut_remove (four, "B.desktop", FALSE);
+  g_auto (GStrv) removed_home = lmi_shortcut_remove (slots, "A.desktop", TRUE);
+  const char *duplicate[] = {"A.desktop", "A.desktop", NULL};
+
+  g_assert_cmpuint (g_strv_length (removed_fav), ==, 3);
+  g_assert_cmpstr (removed_fav[1], ==, "C.desktop");
+  g_assert_cmpuint (g_strv_length (removed_home), ==, 16);
+  g_assert_cmpstr (removed_home[0], ==, "");
+  g_assert_cmpstr (removed_home[1], ==, "B.desktop");
+  g_assert_null (lmi_shortcut_remove (duplicate, "A.desktop", FALSE));
+  g_assert_null (lmi_shortcut_remove (four, "missing.desktop", FALSE));
   g_print ("FAVORITE_ORDER_HOME_SLOT_AND_FIVE_FAVORITE_LIMIT_TESTS_OK\n");
   return 0;
 }

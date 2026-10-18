@@ -111,3 +111,10 @@ right-edge clipping and intermittent shortcut-removal delay. The homedrag5
 source follow-up removes cell theme padding and raises deferred removal to
 normal main-loop priority. Its compiled geometry/busy-loop tests pass; package
 and physical checks are pending. No existing image has been overwritten.
+
+
+The latest next-build selection is homedrag6 with the same Phoc package.
+Homedrag5's five-icon fit is physically confirmed. Homedrag6 changes cross-
+surface copies into transfers between favorites and home, while drawer drags
+continue to copy; grouped source/destination checks are tested. Its operator
+package build and physical transfer checks remain pending.

@@ -69,3 +69,60 @@ test_phosh_home_row_width (void)
   }
   gtk_style_context_remove_provider_for_screen (screen, GTK_STYLE_PROVIDER (css));
 }
+
+static LmiHomeDrop *
+test_transfer_snapshot (void)
+{
+  LmiHomeDrop *drop = g_new0 (LmiHomeDrop, 1);
+
+  drop->settings = g_settings_new ("sm.puri.phosh");
+  drop->key = g_strdup ("lmi-home-slots");
+  drop->before = g_settings_get_strv (drop->settings, drop->key);
+  drop->after = lmi_home_place ((const char * const *) drop->before, "demo.app.First.desktop", 3);
+  drop->source_key = g_strdup ("favorites");
+  drop->source_before = g_settings_get_strv (drop->settings, drop->source_key);
+  drop->source_after = lmi_shortcut_remove ((const char * const *) drop->source_before,
+                                           "demo.app.First.desktop", FALSE);
+  return drop;
+}
+
+static void
+test_phosh_home_transfer (void)
+{
+  g_autoptr (GSettings) settings = g_settings_new ("sm.puri.phosh");
+  const char *home[] = {"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", NULL};
+  const char *favorites[] = {"demo.app.First.desktop", "demo.app.Second.desktop", NULL};
+  const char *changed[] = {"demo.app.First.desktop", "demo.app.Second.desktop", "other.desktop", NULL};
+  g_auto (GStrv) saved_home = g_settings_get_strv (settings, "lmi-home-slots");
+  g_auto (GStrv) saved_favs = g_settings_get_strv (settings, "favorites");
+  g_auto (GStrv) got_home = NULL;
+  g_auto (GStrv) got_favs = NULL;
+  LmiHomeDrop *drop;
+
+  g_settings_set_strv (settings, "lmi-home-slots", home);
+  g_settings_set_strv (settings, "favorites", favorites);
+  drop = test_transfer_snapshot ();
+  lmi_home_drop_apply (drop);
+  lmi_home_drop_free (drop);
+  got_home = g_settings_get_strv (settings, "lmi-home-slots");
+  got_favs = g_settings_get_strv (settings, "favorites");
+  g_assert_cmpstr (got_home[3], ==, "demo.app.First.desktop");
+  g_assert_cmpuint (g_strv_length (got_favs), ==, 1);
+  g_assert_cmpstr (got_favs[0], ==, "demo.app.Second.desktop");
+  g_clear_pointer (&got_home, g_strfreev);
+  g_clear_pointer (&got_favs, g_strfreev);
+
+  /* A source change cancels both writes, including the destination insert. */
+  g_settings_set_strv (settings, "lmi-home-slots", home);
+  g_settings_set_strv (settings, "favorites", favorites);
+  drop = test_transfer_snapshot ();
+  g_settings_set_strv (settings, "favorites", changed);
+  lmi_home_drop_apply (drop);
+  lmi_home_drop_free (drop);
+  got_home = g_settings_get_strv (settings, "lmi-home-slots");
+  got_favs = g_settings_get_strv (settings, "favorites");
+  g_assert_cmpstr (got_home[3], ==, "");
+  g_assert_true (g_strv_equal ((const char * const *) got_favs, changed));
+  g_settings_set_strv (settings, "lmi-home-slots", (const char * const *) saved_home);
+  g_settings_set_strv (settings, "favorites", (const char * const *) saved_favs);
+}

@@ -26,6 +26,9 @@ typedef struct {
   char *key;
   char **before;
   char **after;
+  char *source_key;
+  char **source_before;
+  char **source_after;
 } LmiHomeDrop;
 
 static inline gboolean
@@ -34,11 +37,27 @@ lmi_home_drop_apply (gpointer data)
   LmiHomeDrop *drop = data;
   g_auto (GStrv) current = g_settings_get_strv (drop->settings, drop->key);
 
-  /* Do not overwrite a simultaneous settings change. Rebuild after drag-end. */
-  if (g_strv_equal ((const char * const *) current,
-                    (const char * const *) drop->before))
-    g_settings_set_strv (drop->settings, drop->key,
-                        (const char * const *) drop->after);
+  g_auto (GStrv) source_current = drop->source_key ?
+    g_settings_get_strv (drop->settings, drop->source_key) : NULL;
+
+  /* Validate both snapshots before committing either side of a move. */
+  if (!g_strv_equal ((const char * const *) current,
+                     (const char * const *) drop->before))
+    return G_SOURCE_REMOVE;
+  if (drop->source_key &&
+      !g_strv_equal ((const char * const *) source_current,
+                     (const char * const *) drop->source_before))
+    return G_SOURCE_REMOVE;
+  g_settings_delay (drop->settings);
+  if (!g_settings_set_strv (drop->settings, drop->key,
+                            (const char * const *) drop->after) ||
+      (drop->source_key &&
+       !g_settings_set_strv (drop->settings, drop->source_key,
+                             (const char * const *) drop->source_after))) {
+    g_settings_revert (drop->settings);
+    return G_SOURCE_REMOVE;
+  }
+  g_settings_apply (drop->settings);
   return G_SOURCE_REMOVE;
 }
 
@@ -50,6 +69,9 @@ lmi_home_drop_free (gpointer data)
   g_free (drop->key);
   g_strfreev (drop->before);
   g_strfreev (drop->after);
+  g_free (drop->source_key);
+  g_strfreev (drop->source_before);
+  g_strfreev (drop->source_after);
   g_free (drop);
 }
 
@@ -127,6 +149,8 @@ lmi_home_drag_received (GtkWidget *widget, GdkDragContext *context, int x, int y
                         gpointer unused)
 {
   const char *source = lmi_home_source_id (context);
+  GtkWidget *source_widget = gtk_drag_get_source_widget (context);
+  const char *origin = source_widget ? g_object_get_data (G_OBJECT (source_widget), "lmi-home-origin-key") : NULL;
   const char *favorite = g_object_get_data (G_OBJECT (widget), "lmi-favorite-target");
   gboolean dock = favorite || g_object_get_data (G_OBJECT (widget), "lmi-favorite-dock");
   int slot = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (widget), "lmi-home-slot")) - 1;
@@ -145,12 +169,33 @@ lmi_home_drag_received (GtkWidget *widget, GdkDragContext *context, int x, int y
   drop->before = g_settings_get_strv (drop->settings, drop->key);
   drop->after = dock ? lmi_favorites_place ((const char * const *) drop->before, source, favorite)
                          : lmi_home_place ((const char * const *) drop->before, source, slot);
+  /* A drawer drag copies; a drag between saved surfaces transfers the shortcut. */
+  if (origin && !g_str_equal (origin, drop->key)) {
+    if (!g_str_equal (origin, "favorites") && !g_str_equal (origin, "lmi-home-slots")) {
+      lmi_home_drop_free (drop);
+      goto reject;
+    }
+    /* An already-present destination still permits removing the other copy. */
+    if (!drop->after && ((dock && favorite && g_str_equal (favorite, source)) ||
+                        (!dock && g_strv_length (drop->before) == LMI_HOME_SLOT_COUNT &&
+                         slot >= 0 && slot < LMI_HOME_SLOT_COUNT &&
+                         g_str_equal (drop->before[slot], source))))
+      drop->after = g_strdupv (drop->before);
+    drop->source_key = g_strdup (origin);
+    drop->source_before = g_settings_get_strv (drop->settings, origin);
+    drop->source_after = lmi_shortcut_remove ((const char * const *) drop->source_before,
+                                             source, g_str_equal (origin, "lmi-home-slots"));
+    if (!drop->source_after) {
+      lmi_home_drop_free (drop);
+      goto reject;
+    }
+  }
   if (!drop->after) {
     lmi_home_drop_free (drop);
     goto reject;
   }
   gtk_drag_finish (context, TRUE, FALSE, time);
-  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, lmi_home_drop_apply, drop, lmi_home_drop_free);
+  g_idle_add_full (G_PRIORITY_DEFAULT, lmi_home_drop_apply, drop, lmi_home_drop_free);
   return;
 reject:
   gtk_drag_finish (context, FALSE, FALSE, time);

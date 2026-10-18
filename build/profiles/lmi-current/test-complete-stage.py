@@ -12,11 +12,11 @@ class CompleteTests(unittest.TestCase):
   self.inputs=self.root/'inputs';shutil.copytree(stable,self.inputs)
   for name,arch in [('phosh','arm64'),('phosh-common','all'),('phoc','arm64')]:
    tree=self.root/name;(tree/'DEBIAN').mkdir(parents=True)
-   version='0.46.0-1+lmishelldnd1' if name=='phoc' else '0.46.0-3+deb13u1+lmigaugewake3+homedrag5'
+   version='0.46.0-1+lmishelldnd1' if name=='phoc' else '0.46.0-3+deb13u1+lmigaugewake3+homedrag6'
    (tree/'DEBIAN/control').write_text(f'Package: {name}\nVersion: {version}\nArchitecture: {arch}\nMaintainer: Test <test@example.invalid>\nDescription: metadata-only preflight fixture\n')
    subprocess.run(['dpkg-deb','--build',str(tree),str(self.inputs/f'{name}_{version}_{arch}.deb')],check=True,capture_output=True)
   names=[line.split('  ',1)[1] for line in (stable/'SHA256SUMS').read_text().splitlines()]
-  names=[n.replace('lmigaugewake3_','lmigaugewake3+homedrag5_') for n in names]
+  names=[n.replace('lmigaugewake3_','lmigaugewake3+homedrag6_') for n in names]
   names.append('phoc_0.46.0-1+lmishelldnd1_arm64.deb')
   (self.inputs/'SHA256SUMS').write_text(''.join(hashlib.sha256((self.inputs/n).read_bytes()).hexdigest()+'  '+n+'\n' for n in names))
   self.bundle=self.root/'bundle';self.bundle.mkdir()
@@ -41,7 +41,7 @@ class CompleteTests(unittest.TestCase):
   self.assertTrue((self.dest/'COMPLETE_PROFILE').is_file())
   self.assertTrue((self.dest/'inputs/phoc_0.46.0-1+lmishelldnd1_arm64.deb').is_file())
   self.assertEqual((self.dest/'camera/SHA256SUMS').read_bytes(),(self.bundle/'SHA256SUMS').read_bytes())
-  self.assertTrue((self.dest/'inputs/phosh_0.46.0-3+deb13u1+lmigaugewake3+homedrag5_arm64.deb').is_file())
+  self.assertTrue((self.dest/'inputs/phosh_0.46.0-3+deb13u1+lmigaugewake3+homedrag6_arm64.deb').is_file())
  def test_missing_phoc_prevents_staging(self):
   (self.inputs/'phoc_0.46.0-1+lmishelldnd1_arm64.deb').unlink()
   self.assertNotEqual(self.run_stage().returncode,0);self.assertFalse(self.dest.exists())
@@ -52,7 +52,7 @@ class CompleteTests(unittest.TestCase):
   (self.bundle/'snapshot-focus').write_bytes(b'not an ARM executable');self.manifest()
   self.assertNotEqual(self.run_stage().returncode,0);self.assertFalse(self.dest.exists())
  def test_missing_native_pair_prevents_staging(self):
-  next(self.inputs.glob('phosh-common_*homedrag5*')).unlink()
+  next(self.inputs.glob('phosh-common_*homedrag6*')).unlink()
   self.assertNotEqual(self.run_stage().returncode,0);self.assertFalse(self.dest.exists())
  def test_manifest_path_traversal_prevents_staging(self):
   with (self.bundle/'SHA256SUMS').open('a') as f:f.write('0'*64+'  ../outside\n')

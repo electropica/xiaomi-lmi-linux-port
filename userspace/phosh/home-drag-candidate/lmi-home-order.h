@@ -99,3 +99,32 @@ lmi_home_place (const char * const *before, const char *source, guint target)
   }
   return after;
 }
+
+/* Remove exactly one source shortcut; preserve empty fixed home slots. */
+static inline char **
+lmi_shortcut_remove (const char * const *before, const char *id, gboolean home)
+{
+  int found = -1;
+  guint count;
+  char **after;
+
+  if (!before || !id || !*id) return NULL;
+  count = g_strv_length ((char **) before);
+  if (home && count != LMI_HOME_SLOT_COUNT) return NULL;
+  for (guint i = 0; i < count; i++) {
+    if (!g_str_equal (before[i], id)) continue;
+    if (found >= 0) return NULL;
+    found = i;
+  }
+  if (found < 0) return NULL;
+  if (home) {
+    after = g_strdupv ((char **) before);
+    g_free (after[found]);
+    after[found] = g_strdup ("");
+  } else {
+    after = g_new0 (char *, count);
+    for (guint i = 0, j = 0; i < count; i++)
+      if (i != (guint) found) after[j++] = g_strdup (before[i]);
+  }
+  return after;
+}

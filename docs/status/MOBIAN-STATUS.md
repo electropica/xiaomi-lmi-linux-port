@@ -1,5 +1,40 @@
 # Mobian status
 
+## Homedrag5 installed; cross-surface copy semantics clarified — 2026-10-18
+
+The operator built homedrag5 with 36/36 package tests passing. The pair was
+installed and only the user shell restarted; Phoc PID and handset boot ID did
+not change. Running executable/package checks pass, dpkg audit is empty, quiet
+opt-in is preserved and no temporary GTK module/resource overlay is loaded.
+Verified package SHA-256:
+
+- Phosh arm64: `75582138890c0a849b1fb95507f51bb11c265f9aace2022f6fd36241b53104a7`.
+- Common all: `d97e103657f541cf670f2eae8b106ac3c3d9477b59fd0d734884d2a941ccc437`.
+
+**The operator confirms all five favorites now fit entirely on screen.** The
+reported intermittent removal problem was not declared fixed by the operator.
+Further clarification identifies a shortcut remaining in favorites after a
+drag to home. Settings confirm Snapshot in both favorites and one home slot:
+this is the implemented cross-surface copy behavior, not duplicate home-slot
+entries. These statements do not prove that every earlier menu-delay report
+had the same cause; no separate menu-delay success is claimed.
+
+Prepared homedrag6 marks saved shortcut origins and transfers between dock and
+home instead of copying. Drawer drags still copy, and same-surface drags still
+reorder/move. Destination and source snapshots are checked before writing;
+delayed GSettings updates are committed together or reverted if either write
+is refused. A full dock or failed destination does not remove the source.
+Existing destination shortcuts permit removing the other saved copy without
+adding another destination entry. Compiled tests cover commit and cancellation
+on a concurrent source edit, source removal/list shape, geometry and the
+existing shortcut-removal protections. Package build and physical transfer
+checks remain pending; the phone continues on normal homedrag5.
+
+The complete-image recipe now selects homedrag6 plus the same Phoc correction.
+Actual homedrag5/Phoc/camera inputs passed temporary profile staging; no full
+image/kernel build or flash was performed.
+
+
 ## Five-favorite dock installed; width and removal-delay follow-up — 2026-10-18
 
 The homedrag4 pair was operator-built with 36/36 Phosh tests passing and

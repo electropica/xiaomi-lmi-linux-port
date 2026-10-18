@@ -3,7 +3,7 @@
 import argparse,hashlib,json,xml.etree.ElementTree as E
 from pathlib import Path
 
-VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag5'
+VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag6'
 QUIET='f8cbde684bd1920eebcfab70c39d2adef8696498fadc5443e6d2bde37669f019'
 
 def once(text,before,after):
@@ -51,6 +51,7 @@ def prepare(source,output,ui):
 
   lmi_home_enable_source (button, info);
   lmi_home_enable_target (button, info ? g_app_info_get_id (info) : NULL, -1);
+  g_object_set_data (G_OBJECT (button), "lmi-home-origin-key", "favorites");
   lmi_home_compact_cell (widget);
   /* Five favorites fit a 360px logical screen without wrapping. */
   g_object_set (gtk_widget_get_parent (button), "natural-size", 64, "width-request", 64, NULL);
@@ -91,7 +92,7 @@ def prepare(source,output,ui):
     test=outputs['tests/test-app-grid-button.c']
     test=once(test,'#include "favorite-list-model.h"','#include "favorite-list-model.h"\n#include "lmi-home-dnd.h"')
     test=once(test,'int\nmain (', (assets/'test-remove.inc').read_text()+'\n\n'+'int\nmain (')
-    test=once(test,'  gtk_test_init (&argc, &argv, NULL);','  gtk_test_init (&argc, &argv, NULL);\n  g_test_add_func ("/phosh/app-grid-button/home-remove", test_phosh_home_remove);\n  g_test_add_func ("/phosh/app-grid-button/home-row-width", test_phosh_home_row_width);')
+    test=once(test,'  gtk_test_init (&argc, &argv, NULL);','  gtk_test_init (&argc, &argv, NULL);\n  g_test_add_func ("/phosh/app-grid-button/home-remove", test_phosh_home_remove);\n  g_test_add_func ("/phosh/app-grid-button/home-row-width", test_phosh_home_row_width);\n  g_test_add_func ("/phosh/app-grid-button/home-transfer", test_phosh_home_transfer);')
     outputs['tests/test-app-grid-button.c']=test
     schema=(source/'data/mobi.phosh.shell.gschema.xml').read_text()
     key='''    <key name="lmi-home-slots" type="as">

@@ -22,6 +22,7 @@ lmi_home_rebuild (PhoshAppGrid *self)
       gtk_widget_set_valign (box, GTK_ALIGN_CENTER);
       gtk_box_set_spacing (GTK_BOX (box), 3);
       target = GTK_WIDGET (gtk_widget_get_template_child (cell, PHOSH_TYPE_APP_GRID_BASE_BUTTON, "button"));
+      g_object_set_data (G_OBJECT (target), "lmi-home-origin-key", "lmi-home-slots");
       g_signal_connect (cell, "app-launched", G_CALLBACK (app_launched_cb), self);
     } else {
       cell = gtk_flow_box_child_new ();
