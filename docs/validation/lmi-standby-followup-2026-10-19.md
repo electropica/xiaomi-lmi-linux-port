@@ -143,3 +143,21 @@ No calibration, daemon startup, charge setting, hardware data register, build,
 flash or new battery test was performed. The two-hour control remains declined;
 no substitute repeated half-hour trial is pending. This caller is a bounded
 Android-initialization comparison lead, not a confirmed fix.
+
+
+### Calibration model-name gate qualified
+
+Further static ELF table analysis identifies property 92 (model_name, domain 6)
+as having no IIO fallback pointer. Resolver 0x3cd10 returns -EINVAL when the
+charge_pump_master/model_name sysfs path is absent and this pointer is NULL;
+the string getter propagates failure and CP initialization branches away at
+0x2dd94, before the calibration setter. IIO support for other properties does
+not rescue this particular lookup. A nonempty Android calibration-force
+property can bypass it, and its runtime value remains unknown.
+
+A bounded follow-up searched 44 preserved full-Android text/JSON records
+(1,290,511 bytes): no calibration-force property or calibration-execution log
+was found. The records confirm BQ2597x wake-lock and hvdcp_opti process activity,
+not a successful calibration. Missing fields in these historical captures
+prevent a negative execution claim. No new phone test or calibration write
+is justified by this result alone.
