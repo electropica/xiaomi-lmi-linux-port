@@ -1,5 +1,16 @@
 # Mobian status
 
+## October 19: diagnostic getter correction and UART follow-up
+
+The added charge_done read is not guaranteed passive: its charger getter can
+change watchdog/vote/charge state under specific conditions. The kernel's own
+FG and uevent paths also invoke it; an observer-caused transition is unproven.
+The first night record is preserved with this qualification, and a corrected
+collector without the explicit field is now observing after operator unplug.
+Retained QUP histories end in zero requests and the driver has a zero bucket;
+no new UART fix, kernel build or residual-drain solution is demonstrated.
+See [the bounded review](../validation/lmi-standby-followup-2026-10-19.md) for the source findings and measurement limits.
+
 ## October 19: residual accounting isolated from awake gaps
 
 Forty-two qualified suspend brackets still give 47.86 mA software-counter

@@ -217,7 +217,7 @@ client vote or falls back to the battery-profile client vote; main voltage_max
 reads the charger's FV parameter; BMS constant_charge_voltage reads FG SRAM
 VBATT_FULL. A selected live FV-vote read confirms NON_FFC_VFLOAT_VOTER wins
 at 4.450 V over the 4.480 V profile/hardware-limit requests. These properties
-are not contradictory simultaneous charger setpoints. No vote was changed.
+are not contradictory simultaneous charger setpoints. No explicit vote setter was issued; the later CHARGE_DONE getter qualification below applies.
 
 The October 19 daytime observer was armed at 99%/Charging. Its USB-zero
 departure snapshot was 100%, approximately 4.473 V and still negative
@@ -266,3 +266,77 @@ change nor requesting a new kernel build is justified by this source finding
 alone. No UART patch, unbind, reset or hardware test was performed.
 
 External reference: [RP5 diagnostic source](https://github.com/mihaivladan/rp5-ufs-kernel-test/tree/main/rocknix).
+
+
+### Diagnostic correction: CHARGE_DONE is not a side-effect-free getter
+
+The retained qpnp-smb5 battery property dispatch routes CHARGE_DONE to
+smblib_get_prop_batt_charge_done(). On terminated charge, that getter can
+program the watchdog to 128 seconds, release CHG_AWAKE_VOTER and disable
+fastcharge. Under its separate main-charger-suspended/power-good/terminated
+condition, it can request FORCE_RECHARGE and return zero. A sysfs read of
+battery/charge_done therefore must not be described as guaranteed passive.
+
+The kernel already invokes this getter from FG get_batt_psy_props(). Normal
+power_supply_changed_work() also emits a uevent, whose property loop calls
+the registered getters, including CHARGE_DONE when reached. This is not a
+proven initialization step missing under Mobian, and the existence of side
+effects does not show that our additional reads caused a charge transition.
+Earlier statements about issuing no charge/vote writes describe explicit
+tool actions; they do not establish that this getter has no internal effects.
+
+The added charge_done field was removed from a corrected collector. Its
+retained charge_type getter was checked separately: it reads charger status
+and client-vote state without issuing a setter in the reviewed implementation.
+After operator reconnection, the first observer was fetched once and confirmed
+inactive/Result=success. The corrected observer was armed and the operator
+confirmed another unplug. No kernel, charging protection, radio, timeout or
+watchdog-setting command was issued by the correction. No new build was run.
+
+The first observation lasts 10,043.048 seconds from unplug to USB return, on the
+same boot. Fourteen sleep windows account for 8,923.070 suspended seconds,
+including the normal initial fifteen-minute wait. Thirteen natural wake
+reasons are msoc-delta; the final reason is USB return. All 36 recorded
+charge_done values are zero. This does not rule out a conditional getter path
+that itself returns zero, nor establish a clean side-effect-free baseline.
+
+Qualified USB-zero software/shadow/raw counter quotients are respectively
+70.889/70.940/96.165 mA. Thirteen nearly fully suspended adjacent brackets
+give 64.457/63.884/86.057 mA. Nine filtered resume endpoints more than an hour
+after unplug have median 49.528 mA (49.433–49.639). The first two quantities
+retain SOC-model effects and the raw quantity a nominal-capacity scale;
+these are correlated gauge estimates, not independently calibrated physical
+current. This record is explicitly qualified and is not a new power-saving
+result. The corrected night observation has no result yet.
+
+### UART zero-vote follow-up
+
+The retained GENI bandwidth table begins with a real zero bucket, followed by
+19.2, 50, 100, 150, 200 and 236 MHz. Thus the hypothesis that an active request
+and zero are necessarily mapped to the same nonzero lowest bucket does not
+hold for this implementation. Source withdrawal still requires successful
+resource callbacks and bus updates; its error-return caveat remains noted.
+
+The previously retained October 18 client-history snapshot contains all three
+QUP wrappers. Their final recorded AB and IB requests are zero; the retained
+histories contain respectively 10/22, 20/39 and 14/30 zero-request records.
+An older Bluetooth snapshot also showed the HS UART runtime-suspended and
+Bluetooth soft-blocked. These are historical Linux request/runtime snapshots,
+not fresh measurements of the current night, physical regulator states, or
+votes from every firmware master. They do not support importing the RP5
+active-only UART change or ordering a kernel build for a demonstrated lmi leak.
+
+### Charge-restart interpretation remains conditional
+
+The charger source has temperature-dependent voltage-recharge handling. Its
+normal fallback is 4,380 mV when the feature is enabled and the BMS does not
+provide RECHARGE_VBAT; cold and warm cases differ. A prior full-charge snapshot
+at about 4,360 mV is compatible with a later recharge under such a policy,
+but the selected live threshold and this exact transition were not recorded.
+The feature can be disabled by a negative configured value, so the source
+constant alone must not be asserted as the active setting. No threshold change
+or claim that this explains unplugged residual consumption is justified.
+
+After the next explicit replug, inspect only the cached battery/recharge_vbat
+getter, already recorded charge_type/status, and relevant existing votes if
+needed. Do not probe charge_done again merely to qualify this transition.
