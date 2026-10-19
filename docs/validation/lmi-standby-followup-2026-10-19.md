@@ -251,11 +251,18 @@ not fresh runtime-binding proof. The external platform-suspend experiment also
 supplies downstream-style entry semantics missing from its mainline baseline;
 it is not a demonstrated fix for this project's already observed deep sleep.
 
-The external UART always-versus-active-only bandwidth-vote change is a distinct
-comparison to finish. Our serial runtime-suspend function calls
-se_geni_resources_off(). Its downstream resource implementation is located at
-drivers/platform/msm/qcom-geni-se.c; its exact unvote and failure behavior has
-not yet been qualified in this follow-up. No UART patch, unbind, reset or test
-was performed. Do not infer live sleep votes from source call presence.
+The external UART always-versus-active-only bandwidth-vote change was followed
+through the retained resource manager, drivers/platform/msm/qcom-geni-se.c.
+Serial runtime suspend calls se_geni_resources_off(), which calls
+se_geni_clks_off(). The latter disables engine/AHB clocks and invokes
+geni_se_rmv_ab_ib() to withdraw the bus-bandwidth contribution. Registration's
+active_only=0 alone therefore does not demonstrate a retained nonzero vote.
+
+There is an error-reporting caveat: se_geni_resources_off() logs a clock/unvote
+failure but then replaces its return code with the pinctrl-selection result.
+This can mask the earlier error at its caller. No such live failure or residual
+UART sleep vote has been established here. Neither importing the mainline tag
+change nor requesting a new kernel build is justified by this source finding
+alone. No UART patch, unbind, reset or hardware test was performed.
 
 External reference: [RP5 diagnostic source](https://github.com/mihaivladan/rp5-ufs-kernel-test/tree/main/rocknix).
