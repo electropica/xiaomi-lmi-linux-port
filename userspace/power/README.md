@@ -374,3 +374,9 @@ slightly while instantaneous current declined slightly. All original policies
 were restored and the owned inhibitor removed. No permanent core_ctl policy
 is adopted; this does not solve the residual deep-suspend drain.
 See [the diagnostic record](../../kernel/diagnostics/power/README.md).
+
+
+## Offline wall-clock recovery
+
+See [clock](clock/README.md) for per-device RTC/UTC restoration. It changes
+system time only and is not a battery-current correction.

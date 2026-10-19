@@ -1,0 +1,23 @@
+[Unit]
+Description=Restore offline wall clock using a trusted RTC anchor
+DefaultDependencies=no
+After=local-fs.target
+Before=sysinit.target time-set.target systemd-timesyncd.service
+ConditionPathExists=/var/lib/lmi-time/rtc-anchor.json
+ConditionPathExists=/sys/class/rtc/rtc0/since_epoch
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/lmi-rtc-time-anchor restore
+TimeoutStartSec=5s
+User=root
+CapabilityBoundingSet=CAP_SYS_TIME
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectClock=no
+ProtectKernelTunables=yes
+
+[Install]
+WantedBy=sysinit.target

@@ -20,6 +20,7 @@ gpu_dir="$repo_dir/userspace/gpu/files"
 wifi_dir="$repo_dir/userspace/wifi"
 bluetooth_dir="$repo_dir/userspace/bluetooth"
 display_dir="$repo_dir/userspace/display"
+power_clock_dir="$repo_dir/userspace/power/clock"
 # Locale controls interface/formatting; font coverage is independent.
 m1_locale=${M1_LOCALE:-fr_FR.UTF-8}
 m1_xkb_layout=${M1_XKB_LAYOUT:-fr}
@@ -274,6 +275,27 @@ install -D -o root -g root -m 0644 "$phosh_files/user-runtime-dir-1000-m1.conf" 
 install -D -o root -g root -m 0600 "$phosh_files/accountsservice-mobian.ini" "$tree/var/lib/AccountsService/users/mobian"
 sed -i "s/^Language=.*/Language=$m1_locale/" "$tree/var/lib/AccountsService/users/mobian"
 install -D -o root -g root -m 0644 "$phosh_files/networkmanager-usb0-unmanaged.conf" "$tree/etc/NetworkManager/conf.d/10-m1-usb0-unmanaged.conf"
+
+install -D -o root -g root -m 0755 "$power_clock_dir/rtc-time-anchor.py" "$tree/usr/local/libexec/lmi-rtc-time-anchor"
+install -D -o root -g root -m 0644 "$power_clock_dir/lmi-rtc-time-restore.service" "$tree/etc/systemd/system/lmi-rtc-time-restore.service"
+# A UTC/RTC anchor belongs to one handset; a build must not invent it.
+if [[ -n ${M1_RTC_TIME_ANCHOR_FILE:-} ]]; then
+    test -f "$M1_RTC_TIME_ANCHOR_FILE"
+    python3 - "$M1_RTC_TIME_ANCHOR_FILE" "$power_clock_dir/rtc-time-anchor.py" <<'ANCHOR_PY'
+import importlib.util, json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+assert path.stat().st_size <= 4096
+spec = importlib.util.spec_from_file_location('anchor', sys.argv[2])
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+state = json.loads(path.read_text())
+assert isinstance(state['rtc_name'], str) and 0 < len(state['rtc_name']) < 256
+module.evaluate(state, state['rtc_name'], state['rtc_epoch'], state['unix_epoch'])
+ANCHOR_PY
+    install -d -o root -g root -m 0700 "$tree/var/lib/lmi-time"
+    install -o root -g root -m 0600 "$M1_RTC_TIME_ANCHOR_FILE" "$tree/var/lib/lmi-time/rtc-anchor.json"
+    sha256sum "$M1_RTC_TIME_ANCHOR_FILE" | cut -d ' ' -f 1 > "$work/rtc-time-anchor.sha256"
+fi
+
 install -D -o root -g root -m 0644 "$gpu_dir/udev/70-lmi-gpu-access.rules" "$tree/etc/udev/rules.d/70-lmi-gpu-access.rules"
 install -D -o root -g root -m 0755 "$android_mounts_source" "$tree/usr/local/sbin/lmi-android-wifi-mounts"
 cmp -s "$android_mounts_source" "$tree/usr/local/sbin/lmi-android-wifi-mounts"
@@ -306,12 +328,13 @@ chroot "$tree" systemctl enable seatd.service
 chroot "$tree" systemctl enable NetworkManager.service
 chroot "$tree" systemctl enable qrtr-ns.service
 chroot "$tree" systemctl enable systemd-timesyncd.service
+chroot "$tree" systemctl enable lmi-rtc-time-restore.service
 chroot "$tree" systemctl enable wpa_supplicant.service
 chroot "$tree" systemctl enable phosh-m0.service
 chroot "$tree" systemctl enable lmi-adsp-btfm.service
 chroot "$tree" systemctl --global enable xdg-user-dirs-lmi.service
 chroot "$tree" systemctl disable weston-m0.service || true
-systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service lmi-cnss-daemon.service lmi-cnss-fs-ready.service lmi-wlan-on.service NetworkManager.service wpa_supplicant.service systemd-timesyncd.service upower.service lmi-adsp-firmware-prepare.service lmi-pd-mapper.service lmi-adsp-btfm.service || {
+systemd-analyze --root="$tree" verify phosh-m0.service seatd.service lmi-splash-release.service user@1000.service user-runtime-dir@1000.service lmi-android-wifi-mounts.service lmi-wlan-firmware-prepare.service qrtr-ns.service lmi-cnss-daemon.service lmi-cnss-fs-ready.service lmi-wlan-on.service NetworkManager.service wpa_supplicant.service systemd-timesyncd.service lmi-rtc-time-restore.service upower.service lmi-adsp-firmware-prepare.service lmi-pd-mapper.service lmi-adsp-btfm.service || {
     rc=$?
     echo "WARNING: systemd-analyze verify returned $rc; continuing because known host/rootfs diagnostics may be non-fatal" >&2
 }

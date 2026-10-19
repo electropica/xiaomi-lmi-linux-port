@@ -50,3 +50,10 @@ A short100%SOC test and charge-filter transients do not reproduce long Android
 idle trials. Recovery kernel/baseDTB identity does not prove runtime overlay or
 full-Android initialization equivalence. Return normally to the installed OS
 after retrieval and verify its kernel, policies and interface separately.
+
+
+## Extended variant
+
+measure-r3.sh / arm-r3.py / fetch-r3.py add1800,3600,7200s choices and per-wake
+accounting. Only1800s has hardware validation. Longer variants are host-only
+validated. Read EXTENDED-PLAN.md and retain its elapsed-time limits.

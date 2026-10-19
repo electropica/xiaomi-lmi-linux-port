@@ -1889,3 +1889,32 @@ This supports continued operation of automatic resuspension and the NPU hook
 after returning from recovery. It does not resolve residual demand or create
 a matched consumption comparison with Lineage/recovery. No new test, policy
 change, build, flash or recording was started during retrieval.
+
+
+## Recovery half-hour control and offline time repair — 2026-10-19
+
+R3 completed1801.29s between USB-off/Discharging endpoints, with1795.751s
+actually suspended (99.693%). Seven resumes: six RTC and one msoc-delta.
+Original recovery sleep/NPU settings were restored, RTC cleared, charging verified.
+Operator returned normally to Mobian; kernel, homedrag7/Phoc/GSD versions,900s
+inactivity timeout and NPU hook were verified. No further trial is active.
+
+Software-counter rates in successive ten-minute windows were51.14,50.88,50.99mA;
+overall51.00mA. Raw nominal-scaled rates were88.05,88.38,88.03mA on a different
+capacity scale. Filtered endpoints rose from charging history toward19.51,47.60,
+49.88mA. They are not integrated interval current. Shared-gauge estimates do not
+constitute electrical calibration. No falling half-hour demand was observed,
+but this does not reproduce the later1-2h Android regime or identify a culprit.
+
+Europe/Paris was correct after return, but system time lagged the trusted host
+by about82min with timesyncd active and NTPSynchronized=no. CLOCK_REALTIME was
+corrected to within a second of the host without PMIC RTC writes. A private
+trusted UTC/RTC anchor and conditional boot oneshot were installed, verified,
+enabled and executed successfully. Seven pure model tests pass. A fresh boot
+through the new service has not yet been physically tested. It adds no periodic
+process or wake alarm. Generic images skip it until a trusted per-device anchor
+is captured; same-phone rebuilds can supply M1_RTC_TIME_ANCHOR_FILE privately.
+
+Sources: userspace/power/diagnostics/recovery-control and userspace/power/clock.
+The image recipe includes the helper and conditional service; no heavy build,
+image generation or flash was started. Longer recovery variants remain unvalidated.
