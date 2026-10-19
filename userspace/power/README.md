@@ -1,5 +1,15 @@
 # UPower battery status opt-in for the validated lmi kernel
 
+## Daytime follow-up: quiet natural resumes — 2026-10-19
+
+All 42 natural gauge resumes returned toward suspension within 15.209–15.442 s.
+No unplugged WakeUpScreen request was observed; UI versus MSOC differed by at
+most one percentage point. Residual demand remains unresolved. The specific
+newer UFS bulk-clock bug is absent from the retained downstream lane helpers.
+A separate FG calibration interface remains an unverified comparison question,
+with read-only follow-up prepared and no calibration or power-policy write.
+See [the bounded review](../../docs/validation/lmi-standby-followup-2026-10-19.md) for evidence and limits.
+
 ## Passive daytime observation — 2026-10-19
 
 The unchanged homedrag7/qualified Phoc Mobian installation completed a passive
