@@ -1867,3 +1867,25 @@ must match elapsed time since unplug and gauge/SOC conditions, preferably using
 already scheduled longer observations rather than repeating short controls.
 Retain shared-platform and initialization hypotheses without treating either as
 established by the recovery result. No additional hardware trial was started.
+
+
+### Passive overnight observation after recovery return — 2026-10-19
+
+No collector was armed for this unplugged night. At the attended return,
+Mobian retained the same boot as the prior recovery-return check and reported
+84% while already charging. This is not a discharging return endpoint and no
+precise loss/current or autonomy estimate is derived from it.
+
+The retained journal contains31 complete deep-suspend pairs. Their rounded
+wall-clock durations sum to31124s within a31596s observed window, approximately
+98.51%; this window excludes unobserved initial unplug/idle time. Firmware sleep
+records show31 entries and31116000ms accumulated for the named aosd/cxsd/ddr
+records, corroborating extensive sleep without calibrating electrical demand.
+Thirty wakes were msoc-delta and the final wake was USB typec-cc-state-change.
+Journal resuspension delays were15-16s. All31 NPU zero-target markers and31
+restoration markers were present. The RTC alarm was empty on retrieval.
+
+This supports continued operation of automatic resuspension and the NPU hook
+after returning from recovery. It does not resolve residual demand or create
+a matched consumption comparison with Lineage/recovery. No new test, policy
+change, build, flash or recording was started during retrieval.
