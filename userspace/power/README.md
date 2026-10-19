@@ -1,5 +1,34 @@
 # UPower battery status opt-in for the validated lmi kernel
 
+## Passive daytime observation — 2026-10-19
+
+The unchanged homedrag7/qualified Phoc Mobian installation completed a passive
+10 h 11 min unplugged observation. Displayed capacity was 100% at unplug and
+79% at the last unplugged sample, about 2 min 40 s before detected USB return.
+The initial current still carried the preceding charging transition; it is not
+an instantaneous discharge measurement.
+
+There were 43 paired suspend/resume windows, accounting for 35,078.686 seconds
+actually suspended within 36,668.696 seconds from unplug to replug (95.66%).
+This includes the normal initial fifteen-minute awake delay. Resume reasons
+were 41 msoc-delta, one msoc-high and one USB return. No unpaired callback was
+found. These clock deltas establish suspension, not physical panel power.
+
+Qualified unplugged counter intervals give software 51.05 mA and shadow
+50.67 mA estimates. Raw nominal-scale accounting gives 90.39 mA; it is not a
+second independent ammeter. Learned capacity stayed 2710 mAh, design 4700 mAh.
+Across 37 resume endpoints more than an hour after unplug, filtered current
+had a median of 49.322 mA (49.273–51.787 mA). Endpoint readings are not continuous
+interval-average measurements. This is consistent with the residual order of
+demand in the half-hour recovery control; the sessions are not matched causal
+A/B tests and do not identify a responsible peripheral or prove calibration.
+
+The same handset boot was retained. The observer exited successfully, no RTC
+alarm or pending NPU restoration state remained, and Wi-Fi remained enabled.
+No build, flash, forced suspend, scheduled RTC wake, media capture or power-policy
+change was introduced for this observation. Residual standby drain remains
+unresolved despite working automatic suspension and gauge-wake resuspension.
+
 UPower 1.90.9 overrides a battery's reported state with `Discharging` when
 `current_now` is negative, except for `Full`. The observed downstream lmi
 kernel uses negative current while charging and positive current while
