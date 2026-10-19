@@ -7,7 +7,9 @@ No unplugged WakeUpScreen request was observed; UI versus MSOC differed by at
 most one percentage point. Residual demand remains unresolved. The specific
 newer UFS bulk-clock bug is absent from the retained downstream lane helpers.
 A separate FG calibration interface remains an unverified comparison question,
-with read-only follow-up prepared and no calibration or power-policy write.
+with read-only follow-up now completed and no calibration or power-policy write.
+The cached level is -22; the parallel-measurement vote and hardware bit are off.
+These plugged readbacks do not establish an Android initialization omission.
 See [the bounded review](../validation/lmi-standby-followup-2026-10-19.md) for evidence and limits.
 
 ## Passive daytime observation — 2026-10-19

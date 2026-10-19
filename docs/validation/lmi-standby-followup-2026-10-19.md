@@ -55,3 +55,34 @@ Equivalent full-Android evidence is needed before interpreting a difference.
 Plugged readback cannot establish unplugged register state. No calibration,
 PBS trigger, profile reset, charge-protection change, hardware write, build or
 new battery test was run. The operator may unplug; no collector is active.
+
+## Read-only handset follow-up completed
+
+On the same Mobian boot after the operator confirmed USB return, the cached
+calibrate property reads -22. The live DT contains force-calib-level 130 and a
+PBS phandle. This confirms no successful calibration-setter invocation in this
+driver instance; it does not prove missing or inaccurate hardware calibration.
+
+The FG_SMB_MEAS_EN vote is zero with no effective client. There is no power
+supply named parallel: only batt_verify, battery, bms, bq2597x-standalone, dc,
+main, pc_port and usb. The retained fg-util.c helper looks up exactly parallel,
+so that worker's availability condition is false in this observed topology.
+A single targeted read of BATT_INFO_FG_CNV_CHAR_CFG at 0x41b7 returned 0x02:
+SMB_MEASURE_EN_BIT(bit2) is clear. The regmap reader address/count selectors
+were restored and verified; no hardware data register was written. This is a
+plugged/awake snapshot, not direct evidence from inside suspension.
+
+A bounded read of 17 selected battery/thermal vendor binaries (~10 MB) and 98 init
+and thermal configuration files (~273 KB) found no direct calibration invocation.
+The health service's sole matching text, "Calibration required", is also the
+standard [AOSP BatteryMonitor health-enum label](https://android.googlesource.com/platform/system/core/+/android16-qpr2-release/healthd/BatteryMonitor.cpp),
+not evidence of calibration execution. Its selected health interface shared
+library contains no matching reference. This is bounded negative evidence;
+computed paths, dynamically loaded components and other vendor binaries are
+not exhaustively excluded. No proprietary binary is included in this repository.
+
+No calibration experiment is justified from these findings. The possible
+longer recovery comparison has been deferred at the operator's request because
+two hours is too long. Repeating the existing half-hour control would not test
+the previously observed full-Android change after one hour. No new battery test,
+reboot, build, flash or power-policy change is pending.
