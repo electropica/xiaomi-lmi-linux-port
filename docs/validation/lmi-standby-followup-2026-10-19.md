@@ -86,3 +86,60 @@ longer recovery comparison has been deferred at the operator's request because
 two hours is too long. Repeating the existing half-hour control would not test
 the previously observed full-Android change after one hour. No new battery test,
 reboot, build, flash or power-policy change is pending.
+
+## Separating awake and suspended accounting
+
+Offline re-accounting of the October 19 record isolates 42 adjacent
+PrepareForSleep/resume pairs with USB-zero discharging endpoints and stable
+capacity scales. They cover 34,947.255 seconds, of which 34,921.467 were actually
+suspended (99.926%). Software accounting gives 47.86 mA, shadow 47.27 mA and
+nominal-scaled raw 86.08 mA. The awake groups account for 52.965 mAh of qualified
+software-counter decreases, versus 464.559 mAh in suspend brackets. Their sum
+matches the previously qualified whole-session decreases for each counter.
+A software-counter increase is excluded by the same qualification rules.
+
+Thus removing the initial awake wait and inter-suspend awake gaps does not
+remove the residual counter-estimated demand. This is still model-based charge
+accounting, not a calibrated electrical current measurement. Endpoint updates
+and gauge corrections prevent exact attribution of short awake gaps.
+
+## A real Android calibration caller identified, execution unproven
+
+An expanded static review inspected constant/dynamic-string sections in 296
+vendor executables (32.4 MB, no execution). It found a relevant caller inside
+hvdcp_opti, whose private binary SHA256 is
+ eca52d713010f7768a28fe0123382495cae7303c1351e4f5e59c7834adf60f09.
+The binary and disassembly remain private and are not included in Git.
+
+ELF relative relocations and the setter's disassembly identify property 29 in a
+24-byte property table: name calibrate, domain 2. The domain table maps 2 to
+/sys/class/power_supply/bms/. At call 0x2dde4, index 29 is passed to the generic
+setter at 0x3d0cc. The alternate IIO name is in_index_calibrate_level_input.
+This is stronger than the earlier string-only search: the identified static
+path can address the BMS calibration setter.
+
+Its CP initialization is conditional. It probes charge_pump_master/model_name,
+checks for SMB1390 and parallel-output mode, and also reads the Android
+persist.vendor.cp.calib_force/calib_disable/calib_level properties. Failure to
+read the model in the ordinary non-forced branch bypasses the calibration
+write. Current Mobian exposes bq2597x-standalone, with no charge_pump_master,
+parallel or /dev/qg. Alternative IIO dispatch and Android's active persistent
+properties are not qualified by this inspection.
+
+The current vendor defaults set persist.vendor.hvdcp_opti.disallowed=1; the
+binary consults this in HVDCP strategy paths. This does not prove the entire
+daemon is disabled or that its CP path never executes. Preserved full-Android
+battery statistics do contain a process accounting entry for hvdcp_opti, which
+establishes prior process activity, not calibration execution or its outcome.
+No matching calibration-forcing default was found in the selected property files.
+
+Only a small private SOH state file was found in the daemon's persist folder;
+its contents were preserved without alteration. Its historical model values
+must not be reported as a current physical battery-health percentage. Current
+DT has multi-profile-load disabled, and the selected live profile is j11sun.
+There is no demonstrated omitted age-profile switch in this readback.
+
+No calibration, daemon startup, charge setting, hardware data register, build,
+flash or new battery test was performed. The two-hour control remains declined;
+no substitute repeated half-hour trial is pending. This caller is a bounded
+Android-initialization comparison lead, not a confirmed fix.

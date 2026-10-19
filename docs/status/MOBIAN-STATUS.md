@@ -1,5 +1,14 @@
 # Mobian status
 
+## October 19: residual accounting isolated from awake gaps
+
+Forty-two qualified suspend brackets still give 47.86 mA software-counter
+estimates; the residual is not confined to the initial awake wait. Static
+analysis found a real, conditional BMS calibration caller in Android hvdcp_opti.
+Its applicability and execution on lmi remain unproven; no calibration or charge
+setting was changed. The long recovery test remains deferred. See the
+[bounded analysis](../validation/lmi-standby-followup-2026-10-19.md). No new build or flash is required by this finding.
+
 ## Daytime follow-up: quiet natural resumes — 2026-10-19
 
 All 42 natural gauge resumes returned toward suspension within 15.209–15.442 s.
