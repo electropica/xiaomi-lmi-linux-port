@@ -41,3 +41,12 @@ A service-manager `RuntimeMaxSec` is an outer lifetime guard, not a way to inter
 ## Limits
 
 This candidate only tests whether `current_avg` changes across a bounded mixed-access window relative to its time-control order. It does not estimate current through suspend, establish DMA causality, or calibrate gauge counters. Eight callbacks cap attempts but do not define a wall duration or guarantee eight usable pairs. T/C durations and wake contexts must overlap before comparison; otherwise report inconclusive. No claim from simulated tests substitutes for later review of a real observer integration.
+
+## Offline result analysis
+
+[The analyzer](ANALYZER.md) consumes a fetched JSONL trace without modifying it.
+It preserves partial attempts, rejects malformed/truncated streams, and reports
+only descriptive T/C distributions by wake reason with timing-overlap checks.
+It does not infer missing SOC/temperature context or physical standby current.
+The analyzer adds 13 tests to the 17 runtime/probe tests; all 30 pass natively
+on the host. The live handset collector is not changed by this addition.

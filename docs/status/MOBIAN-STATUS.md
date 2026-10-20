@@ -1,5 +1,14 @@
 # Mobian status
 
+## October 20: offline read-control analyzer ready
+
+The candidate now includes an offline JSONL analyzer with incomplete-stream and
+read-error qualification, descriptive timing/wake groups, and input-preservation
+checks. All 30 simulated runtime/probe/analyzer tests pass on native Linux.
+A cross-check retained eight callbacks emitted by the actual lifecycle engine
+with a fake backend. No real read-control result has been fetched yet and the
+handset collector was not changed. See [analysis usage and limits](../../userspace/power/diagnostics/gauge-read-control-candidate/ANALYZER.md).
+
 ## October 20: read-control candidate validated offline
 
 A separate diagnostic observer candidate now preserves resume-entry timestamps,
