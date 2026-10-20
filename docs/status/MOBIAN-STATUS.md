@@ -1,5 +1,15 @@
 # Mobian status
 
+## October 20: corrected overnight accounting and SRAM access review
+
+The corrected overnight observer has completed: 7 h 17 min unplugged, about 95%
+suspended. Late filtered-wake samples remain near 49.3 mA; these are gauge
+estimates, not independent physical current. Source review completed the DMA
+access/release path and corrected a missing-function claim. No matching SRAM
+access errors were found in the retained boot journal. Cached recharge_vbat is
+negative, so the dynamic 4380 mV fallback is not active at that snapshot. No fix,
+new build or charger-policy change follows. See [the bounded review](../validation/lmi-standby-followup-2026-10-20.md).
+
 ## October 19: diagnostic getter correction and UART follow-up
 
 The added charge_done read is not guaranteed passive: its charger getter can
