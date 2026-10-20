@@ -56,7 +56,7 @@ not an assertion about every transition in today's image.
 | FSA4480 USB-C analog mux at I2C5:0x42 | Bound live; S: defaults at probe, USB notifier, freezable workqueue | Correct disconnected analog routing with no unintended work/vote | Compare default/disconnected settings and notifier path; no proof of sleep analog current | Newly consolidated gap |
 | SMB5 charger / Qnovo / PD PHY | S: charge_done side effects known; explicit collector call removed | Normal protection and appropriate no-input mode | Retain protections; distinguish kernel work from observer-caused effects | Open |
 | BQ25970 charge-pump family | S/A/T: conversion inactive snapshots; qualified ADC-disable trace | No unintended conversion/ADC activity in sleep | Quiescent current and other modes not measured; do not rerun same ADC test | Bounded, not excluded |
-| I2C PMIC at smb1390_slave node | Live I2C5:0x18 binds `drivers/mfd/qcom-i2c-pmic.c`; source populates child devices and changes IRQ masks on suspend/resume. Its created charge_pump_slave child has no bound-driver link in this snapshot | Intended parent and slave-child policy | Establish whether the unbound child is expected and what manages its hardware defaults; parent IRQ masking is not proof of converter shutdown | Newly consolidated gap |
+| I2C PMIC at smb1390_slave node | Parent i2c_pmic bound; charge_pump_slave child unbound. Child driver disabled in both running Mobian and retained Lineage configs. Parent without interrupt-controller can populate children without hardware detection | Intended policy for physically fitted components | Not a demonstrated Mobian-only missing-driver issue; registration does not prove chip presence or its electrical state | Qualified, not a new patch |
 | FG gen4 / BMS / model accounting | S/A/C: learned/nominal scales, direct/filtered reads, read side effects and calibration callers qualified | Correct estimation and temporary telemetry cleanup | Planned incremental read-order test; no independent electrical calibration available | Active investigation |
 | DS28E16 battery authentication / one-wire | Bound live; S: initial verification with at most five delayed retries in inspected worker | No unexplained recurrent verification activity | Checked worker alone is bounded, not an endless periodic poll; other calls and runtime activity remain to map | Newly consolidated gap |
 | Thermal ADC / TSENS / BCL / QMI sensors | Bound live; BCL coarse resolution already qualified | Necessary protection/monitoring without unintended clients | Separate protection from sampling/client activity; never disable protections as a diagnostic shortcut | Open |
@@ -77,14 +77,17 @@ not an assertion about every transition in today's image.
 4. Choose a new physical comparison only after naming a candidate state and
    predicted difference. Prefer one bounded observation covering multiple
    passive transitions rather than disabling components one by one blindly.
-5. A subsequent grouped one-hour trial is observing after the operator's
+5. A subsequent grouped one-hour trial completed after the operator's
    unplug: Wi-Fi off, exposed rfkill blocked, audio services and camera monitor
    stopped, no capture/PCM holder at arming, vibration/lighting commanded off,
    location requests disabled and GeoClue masked. This is not a universal
    hardware power-off: no NFC rfkill or IIO sensor proxy was exposed, and
    GNSS/SSC firmware or every camera rail is not demonstrated off. Automatic
    suspension temporarily uses 60 seconds, with restoration to 900 seconds.
-   Results remain pending; the separate read-order run is deferred. The
+   Late filtered resume samples remained around 49 mA, with 95.96% of the whole
+   window suspended. The settings were restored and verified. See the
+   [result and accounting qualifications](lmi-minimal-scope-result-2026-10-20.md).
+   The separate read-order run remains deferred. The
    inventory itself added no alarm or power-policy change.
 
 The first grouped-trial arming attempt failed before observation on a generic

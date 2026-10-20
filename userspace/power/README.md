@@ -467,3 +467,5 @@ this tests read sensitivity, not calibrated current during suspension.
 ## Systematic peripheral standby audit
 
 The [peripheral checklist](../../docs/validation/lmi-standby-peripheral-checklist-2026-10-20.md) separates inventory, awake snapshots, suspend traces and unresolved physical power states. Its companion driver coverage list retains every bound class from the selected bus inventory. No inventory row alone excludes a physical consumer.
+
+The [grouped October 20 result](../../docs/validation/lmi-minimal-scope-result-2026-10-20.md) did not demonstrate a reduction in late filtered gauge samples. Hardware that was not actually isolated remains open; all controlled settings were restored.

@@ -1,3 +1,15 @@
+## October 20: grouped isolation completed; residual remains unresolved
+
+The one-hour grouped software-control observation retained late filtered
+gauge samples around 49 mA; 95.96% of the full window was suspended. Settings
+and services were restored and checked. Software/shadow/raw counter-derived
+rates were approximately 86 mA in qualified sleep brackets at SOC100–96%,
+so modeled accounting must remain separate from filtered endpoints and any
+claim of physical current. The unbound SMB1390 child has its driver disabled
+in both retained Lineage and running Mobian configurations; parent registration
+does not prove a fitted chip. No fix or new kernel build is established.
+See the [result and limits](../validation/lmi-minimal-scope-result-2026-10-20.md).
+
 # Mobian status
 
 ## October 20: first read-control run ended before sampling
