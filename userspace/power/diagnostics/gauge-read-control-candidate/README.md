@@ -62,3 +62,11 @@ polls. After confirmation, reconnect still stops measurement immediately.
 This revision is not installed or armed. It adds two lifecycle regression tests:
 19 runtime/probe tests plus 13 analyzer tests, all 32 passing on the native host.
 See [the first-run qualification](../../../../docs/validation/lmi-read-control-first-run-2026-10-20.md).
+
+## Getter audit qualification
+
+Both arms access FG SRAM through their common filtered-current reads and
+possibly battery-status health handling. The experiment contrasts the three
+middle counter getters with three direct-current getters; it is not a
+no-SRAM baseline. See [the source review](../../../../docs/validation/lmi-read-control-getter-review-2026-10-20.md)
+for conditional getter effects and the low-battery reported-USB limitation.
