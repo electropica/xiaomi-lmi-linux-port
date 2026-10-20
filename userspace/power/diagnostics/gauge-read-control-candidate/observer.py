@@ -14,6 +14,7 @@ MAX_TOTAL_SECONDS = PARENT_LIFETIME_SECONDS
 MAX_PARENT_METADATA_READS = 20000
 PARENT_METADATA_READ_MAX_SECONDS = 0.25
 POLL_INTERVAL_SECONDS = 5
+MIN_UNPLUG_STABLE_SECONDS = 20
 
 
 class LifecycleEngine:
@@ -36,6 +37,7 @@ class LifecycleEngine:
         self.armed_at = None
         self.control = None
         self.parent_metadata_reads = 0
+        self._unplug_candidate = None
         self.records = []
         self.stopped = False
         self.stop_reason = None
@@ -73,6 +75,7 @@ class LifecycleEngine:
             **self.control_options)
         row = {"event": "armed", **self.armed_at,
                "limits": {"unplug_wait_s": MAX_UNPLUG_WAIT_SECONDS,
+                          "unplug_stability_s": MIN_UNPLUG_STABLE_SECONDS,
                           "total_from_arm_s": MAX_TOTAL_SECONDS,
                           "natural_resume_attempts": self.control.max_callbacks,
                           "probe_property_reads": self.control.read_budget,
@@ -157,9 +160,30 @@ class LifecycleEngine:
             row["event"] = "poll-invalid-usb"
             self._record_and_stop(row, "invalid_usb_value")
             return False
-        if self.phase == WAITING_UNPLUG and usb == "0":
+        if self.phase == WAITING_UNPLUG:
+            if usb == "1":
+                if self._unplug_candidate is not None:
+                    row["event"] = "unplug-candidate-cancelled"
+                    row["candidate_start"] = self._unplug_candidate
+                    self._unplug_candidate = None
+                    if not self._emit(row):
+                        self.finish("sink_error")
+                        return False
+                return True
+            if self._unplug_candidate is None:
+                self._unplug_candidate = after
+                row["event"] = "unplug-candidate"
+                if not self._emit(row):
+                    self.finish("sink_error")
+                    return False
+                return True
+            elapsed = after["boottime"] - self._unplug_candidate["boottime"]
+            if elapsed < MIN_UNPLUG_STABLE_SECONDS:
+                return True
             self.phase = OBSERVING
             row["event"] = "unplugged"
+            row["candidate_start"] = self._unplug_candidate
+            row["observed_stability_seconds"] = elapsed
             row["boottime"] = after["boottime"]
             row["monotonic"] = after["monotonic"]
             row["epoch"] = after["epoch"]
@@ -291,7 +315,7 @@ def _run_linux_adapter():
     from gi.repository import Gio, GLib
 
     root = Path("/sys/class/power_supply")
-    log_path = Path("/var/tmp/lmi-gauge-read-control-candidate-20261020.jsonl")
+    log_path = Path("/var/tmp/lmi-gauge-read-control-candidate-20261020b.jsonl")
     os.umask(0o077)
     log = log_path.open("x", encoding="utf-8")
     loop = GLib.MainLoop()

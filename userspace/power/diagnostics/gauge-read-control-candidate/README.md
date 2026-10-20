@@ -50,3 +50,15 @@ only descriptive T/C distributions by wake reason with timing-overlap checks.
 It does not infer missing SOC/temperature context or physical standby current.
 The analyzer adds 13 tests to the 17 runtime/probe tests; all 30 pass natively
 on the host. The live handset collector is not changed by this addition.
+
+## Initial USB cycle handling (October 20 revision)
+
+The first handset run stopped after a five-second USB0 window and produced no
+probe samples. The initial wait now requires USB0 observations at least 20
+seconds apart without an observed intervening USB1. Brief initial cycles reset
+the wait; no gauge reads occur until confirmation. Existing awake-only polls
+are reused, so this adds no hardware wake and cannot detect transitions between
+polls. After confirmation, reconnect still stops measurement immediately.
+This revision is not installed or armed. It adds two lifecycle regression tests:
+19 runtime/probe tests plus 13 analyzer tests, all 32 passing on the native host.
+See [the first-run qualification](../../../../docs/validation/lmi-read-control-first-run-2026-10-20.md).

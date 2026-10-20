@@ -1,5 +1,14 @@
 # Mobian status
 
+## October 20: first read-control run ended before sampling
+
+An early USB disconnect/reconnect cycle stopped the observer after five seconds,
+with zero natural-resume probe attempts. The trace is preserved and inconclusive;
+service success is not measurement success. A revised waiting phase tolerates
+brief initial cycles by requiring a 20-second USB0 confirmation interval, while
+retaining immediate stop on reconnect after measurement starts. All 32 host-only
+tests pass. The revision is not installed/armed. See [the result and limits](../validation/lmi-read-control-first-run-2026-10-20.md).
+
 ## October 20: offline read-control analyzer ready
 
 The candidate now includes an offline JSONL analyzer with incomplete-stream and

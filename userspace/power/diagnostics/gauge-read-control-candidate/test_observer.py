@@ -96,6 +96,9 @@ class ObserverIntegrationTests(unittest.TestCase):
         self.assertTrue(engine.poll_while_awake())
         reader.usb = "0"
         self.assertTrue(engine.poll_while_awake())
+        self.assertEqual(engine.phase, observer.WAITING_UNPLUG)
+        clock.advance(observer.MIN_UNPLUG_STABLE_SECONDS)
+        self.assertTrue(engine.poll_while_awake())
         self.assertEqual(engine.phase, observer.OBSERVING)
 
     def test_waiting_or_plugged_state_never_measures_gauge(self):
@@ -108,6 +111,9 @@ class ObserverIntegrationTests(unittest.TestCase):
         engine.poll_while_awake()
         self.assertEqual(reader.gauge_calls, [])
         reader.usb = "0"
+        engine.poll_while_awake()
+        self.assertEqual(engine.phase, observer.WAITING_UNPLUG)
+        clock.advance(observer.MIN_UNPLUG_STABLE_SECONDS)
         engine.poll_while_awake()
         self.assertEqual(engine.phase, observer.OBSERVING)
         self.assertEqual(reader.gauge_calls, [])
@@ -155,8 +161,10 @@ class ObserverIntegrationTests(unittest.TestCase):
     def test_reconnect_inside_probe_is_traced_then_stops_without_more_reads(self):
         clock, reader, sink, engine = self.make_engine()
         engine.arm()
-        reader.usb_script = ["1", "0", "0", "0", "1"]
+        reader.usb_script = ["1", "0", "0", "0", "0", "1"]
         engine.poll_while_awake()
+        engine.poll_while_awake()
+        clock.advance(observer.MIN_UNPLUG_STABLE_SECONDS)
         engine.poll_while_awake()
         engine.on_prepare_for_sleep(True)
         before_resume = len(reader.calls)
