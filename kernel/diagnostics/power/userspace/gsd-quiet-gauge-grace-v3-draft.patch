@@ -1,0 +1,170 @@
+diff --git a/plugins/power/gsd-power-manager.c b/plugins/power/gsd-power-manager.c
+index ed71b3c..8270283 100644
+--- a/plugins/power/gsd-power-manager.c
++++ b/plugins/power/gsd-power-manager.c
+@@ -222,6 +222,7 @@ struct _GsdPowerManager
+         gboolean                 lmi_screen_blank_before;
+         gboolean                 lmi_resume_activity_seen;
+         gboolean                 lmi_skip_normal_illumination;
++        guint64                  lmi_inhibit_generation;
+         gboolean                 lmi_quiet_unidle;
+ 
+         guint                    xscreensaver_watchdog_timer_id;
+@@ -2166,6 +2167,27 @@ temporary_unidle_done_cb (GsdPowerManager *manager)
+         return FALSE;
+ }
+ 
++static guint
++lmi_quiet_grace_seconds (gboolean quiet)
++{
++        const gchar *value;
++        gchar *end = NULL;
++        guint64 seconds;
++
++        if (!quiet)
++                return POWER_UP_TIME_ON_AC;
++        value = g_getenv ("LMI_GSD_QUIET_GAUGE_GRACE_SECONDS");
++        if (!value || !*value)
++                return POWER_UP_TIME_ON_AC;
++        /* Accept only decimal integers: no signs, whitespace or suffixes. */
++        for (const gchar *p = value; *p; p++)
++                if (!g_ascii_isdigit (*p))
++                        return POWER_UP_TIME_ON_AC;
++        seconds = g_ascii_strtoull (value, &end, 10);
++        if (!end || *end || seconds < 2 || seconds > POWER_UP_TIME_ON_AC)
++                return POWER_UP_TIME_ON_AC;
++        return (guint) seconds;
++}
+ static void
+ set_temporary_unidle_on_ac (GsdPowerManager *manager,
+                             gboolean         enable)
+@@ -2188,7 +2210,7 @@ set_temporary_unidle_on_ac (GsdPowerManager *manager,
+                         manager->previous_idle_mode = manager->current_idle_mode;
+                         idle_set_mode (manager, GSD_POWER_IDLE_MODE_NORMAL);
+                 }
+-                manager->temporary_unidle_on_ac_id = g_timeout_add_seconds (POWER_UP_TIME_ON_AC,
++                manager->temporary_unidle_on_ac_id = g_timeout_add_seconds (lmi_quiet_grace_seconds (manager->lmi_skip_normal_illumination),
+                                                                                   (GSourceFunc) temporary_unidle_done_cb,
+                                                                                   manager);
+                 g_source_set_name_by_id (manager->temporary_unidle_on_ac_id, "[gnome-settings-daemon] temporary_unidle_done_cb");
+@@ -2746,6 +2768,54 @@ inhibit_suspend_done (GObject      *source,
+         }
+ }
+ 
++/* Opt-in shortened grace must not accept an obsolete asynchronous FD. */
++typedef struct {
++        GsdPowerManager *manager;
++        guint64 generation;
++} LmiSuspendInhibitRequest;
++
++static gboolean
++lmi_guard_inhibitor_reply (void)
++{
++        return g_strcmp0 (g_getenv ("LMI_GSD_QUIET_GAUGE_RESUME"), "1") == 0 &&
++               lmi_quiet_grace_seconds (TRUE) < POWER_UP_TIME_ON_AC;
++}
++
++static void
++lmi_inhibit_suspend_done (GObject *source,
++                          GAsyncResult *result,
++                          gpointer user_data)
++{
++        LmiSuspendInhibitRequest *request = user_data;
++        GsdPowerManager *manager = request->manager;
++        g_autoptr (GUnixFDList) fd_list = NULL;
++        g_autoptr (GVariant) reply = NULL;
++        g_autoptr (GError) error = NULL;
++        gint index;
++        gint fd = -1;
++        gboolean current;
++
++        reply = g_dbus_proxy_call_with_unix_fd_list_finish (
++                G_DBUS_PROXY (source), &fd_list, result, &error);
++        if (reply != NULL) {
++                g_variant_get (reply, "(h)", &index);
++                fd = g_unix_fd_list_get (fd_list, index, &error);
++        }
++        current = request->generation == manager->lmi_inhibit_generation &&
++                  manager->inhibit_suspend_taken;
++        if (!current) {
++                if (fd >= 0)
++                        close (fd);
++        } else if (fd < 0) {
++                manager->inhibit_suspend_taken = FALSE;
++                g_warning ("Quiet-grace suspend inhibitor request failed: %s",
++                           error ? error->message : "no file descriptor");
++        } else {
++                manager->inhibit_suspend_fd = fd;
++        }
++        g_object_unref (manager);
++        g_free (request);
++}
+ /* We take a delay inhibitor here, which causes logind to send a
+  * PrepareForSleep signal, which gives us a chance to lock the screen
+  * and do some other preparations.
+@@ -2759,6 +2829,18 @@ inhibit_suspend (GsdPowerManager *manager)
+         }
+         g_debug ("Adding suspend delay inhibitor");
+         manager->inhibit_suspend_taken = TRUE;
++        if (lmi_guard_inhibitor_reply ()) {
++                LmiSuspendInhibitRequest *request = g_new0 (LmiSuspendInhibitRequest, 1);
++                request->manager = g_object_ref (manager);
++                request->generation = ++manager->lmi_inhibit_generation;
++                g_dbus_proxy_call_with_unix_fd_list (
++                        manager->logind_proxy, "Inhibit",
++                        g_variant_new ("(ssss)", "sleep", g_get_user_name (),
++                                       "GNOME needs to lock the screen", "delay"),
++                        0, G_MAXINT, NULL, NULL,
++                        lmi_inhibit_suspend_done, request);
++                return;
++        }
+         g_dbus_proxy_call_with_unix_fd_list (manager->logind_proxy,
+                                              "Inhibit",
+                                              g_variant_new ("(ssss)",
+@@ -2777,6 +2859,11 @@ inhibit_suspend (GsdPowerManager *manager)
+ static void
+ uninhibit_suspend (GsdPowerManager *manager)
+ {
++        if (manager->lmi_inhibit_generation != 0) {
++                /* Invalidate pending replies before an early no-FD return. */
++                manager->lmi_inhibit_generation++;
++                manager->inhibit_suspend_taken = FALSE;
++        }
+         if (manager->inhibit_suspend_fd == -1) {
+                 g_debug ("no suspend delay inhibitor");
+                 return;
+@@ -2787,6 +2874,21 @@ uninhibit_suspend (GsdPowerManager *manager)
+         manager->inhibit_suspend_taken = FALSE;
+ }
+ 
++static void
++lmi_shutdown_suspend_inhibitor (GsdPowerManager *manager)
++{
++        if (manager->lmi_inhibit_generation != 0) {
++                /* Replies after shutdown must not install a new descriptor. */
++                manager->lmi_inhibit_generation++;
++                manager->inhibit_suspend_taken = FALSE;
++        }
++        if (manager->inhibit_suspend_fd != -1) {
++                close (manager->inhibit_suspend_fd);
++                manager->inhibit_suspend_fd = -1;
++                manager->inhibit_suspend_taken = FALSE;
++        }
++}
++
+ static void
+ sync_lid_inhibitor (GsdPowerManager *manager)
+ {
+@@ -3373,11 +3475,7 @@ gsd_power_manager_shutdown (GApplication *app)
+                 manager->inhibit_lid_switch_fd = -1;
+                 manager->inhibit_lid_switch_taken = FALSE;
+         }
+-        if (manager->inhibit_suspend_fd != -1) {
+-                close (manager->inhibit_suspend_fd);
+-                manager->inhibit_suspend_fd = -1;
+-                manager->inhibit_suspend_taken = FALSE;
+-        }
++        lmi_shutdown_suspend_inhibitor (manager);
+ 
+         g_clear_object (&manager->logind_proxy);
+ 
