@@ -98,6 +98,36 @@ This failed attempt is not a consumption measurement.
 
 ## Evidence references
 
+### Offline auxiliary source review
+
+A fresh, bounded review traced the four retained driver implementations. It
+does not demonstrate a cause of the residual gauge estimate:
+
+- AW8697 `activate=0` cancels the duration timer, changes cached state and
+  queues vibrator work. The worker's stop path requests controller standby,
+  not verified supply removal. The I2C registration has no PM callback.
+- AW2015 brightness work disables the controller when all channel-enable bits
+  are clear. Its breathing/pattern engine can progress in hardware. No suspend
+  callback is registered; shutdown/reset is a different path. Zero requested
+  brightness must be interpreted with queued work and all controller channels.
+- AKM09970 probe temporarily powers the device to check its ID, then explicitly
+  powers down and initializes the power-enabled state false. User activation
+  can later enable continuous measurement, IRQ, timer and work; deactivation
+  reverses them. Active/suspend pin definitions alone do not prove a suspend
+  transition: the I2C registration has no PM callback. Its cached `chip_rev` and
+  `debug` show methods do not perform a sensor transaction.
+- FSA4480 initializes defaults, then handles USB-mode changes on a freezable
+  workqueue with a temporary wake reference. The no-adapter path requests
+  disconnected routing. There is no cached routing getter or PM callback in
+  the inspected source, and no proof of physical rail shutdown.
+
+Missing PM callbacks alone do not establish a bug when a device is already in
+standby. The review does not authorize register dumps or new controls. No
+additional phone observation is made during the unplugged hour. Follow-up
+state/consumer checks, if useful, wait until the operator reconnects.
+
+### Retained validation notes
+
 - [Earlier peripheral, supply, pin and firmware review](quiet-gauge-night-2026-10-13.md)
 - [Complete transition and USB-cycle qualification](quiet-gauge-overnight-2026-10-12.md)
 - [UFS and charger/gauge follow-up](lmi-standby-followup-2026-10-19.md)
