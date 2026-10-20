@@ -2015,3 +2015,7 @@ is captured; same-phone rebuilds can supply M1_RTC_TIME_ANCHOR_FILE privately.
 Sources: userspace/power/diagnostics/recovery-control and userspace/power/clock.
 The image recipe includes the helper and conditional service; no heavy build,
 image generation or flash was started. Longer recovery variants remain unvalidated.
+
+## October 20: systematic peripheral audit ledger
+
+A [common checklist](../validation/lmi-standby-peripheral-checklist-2026-10-20.md) now consolidates existing standby evidence and unverified peripheral states. The connected software inventory has 849 compatible DT nodes and 697 entries across 15 selected buses (607 bound). These are software entries, not physical chip counts or measured sleep power. A grouped reversible one-hour observation is pending; no residual-drain fix or new build is claimed.
