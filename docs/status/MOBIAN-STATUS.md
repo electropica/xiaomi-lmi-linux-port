@@ -1,3 +1,11 @@
+## October 20: eight natural-wake read-control probes completed
+
+Four extra counter-read bursts and four direct-current controls produced no
+immediate before/after change in either current channel. The millisecond
+comparison does not exclude delayed/common read effects or calibrate physical
+standby current. Cleanup passed; normal policy remains installed. See the
+[result and limits](../validation/lmi-read-control-result-2026-10-20.md).
+
 ## October 20: grouped isolation completed; residual remains unresolved
 
 The one-hour grouped software-control observation retained late filtered
