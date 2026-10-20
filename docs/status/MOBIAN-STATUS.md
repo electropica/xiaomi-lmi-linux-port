@@ -1,5 +1,13 @@
 # Mobian status
 
+## October 20: read-control candidate validated offline
+
+A separate diagnostic observer candidate now preserves resume-entry timestamps,
+probes before parent gauge reads, and stops on reconnect, read error, budgets,
+deadlines or eight attempts. All 17 simulated tests pass; no phone service or
+physical trial was started. It is excluded from the current build/install path.
+See the [candidate and limits](../../userspace/power/diagnostics/gauge-read-control-candidate/README.md).
+
 ## October 20: corrected overnight accounting and SRAM access review
 
 The corrected overnight observer has completed: 7 h 17 min unplugged, about 95%

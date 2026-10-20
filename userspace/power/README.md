@@ -451,3 +451,15 @@ See [the diagnostic record](../../kernel/diagnostics/power/README.md).
 
 See [clock](clock/README.md) for per-device RTC/UTC restoration. It changes
 system time only and is not a battery-current correction.
+
+## Offline candidate: bounded gauge read-order control
+
+[The candidate](diagnostics/gauge-read-control-candidate/README.md) integrates
+an injectable observer lifecycle with the balanced natural-wake read probe.
+All 17 fake-backend tests pass on the host. It is not installed, armed or
+validated on the handset, and is not included in the image/install path.
+It makes no charger, calibration, governor, radio or suspend-policy changes.
+The Linux adapter requires explicit --run and a separate reviewed arming
+preflight; ordinary import/tests perform no device access. Eight callbacks
+cap attempts, not duration. Compare only overlapping wake/timing context;
+this tests read sensitivity, not calibrated current during suspension.
