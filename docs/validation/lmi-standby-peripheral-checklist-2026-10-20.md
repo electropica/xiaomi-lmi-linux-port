@@ -142,3 +142,5 @@ auxiliary-sources-private.json under the coordinator's peripheral-audit folder.
 These raw connected observations are retained locally, not published as proof
 of physical sleep-current exclusion. No new power setting, unbind, calibration,
 build, flash, camera capture, microphone recording or register dump was used.
+
+The [subsequent idle-path review](lmi-standby-idle-followup-2026-10-20.md) qualifies touch/display journal evidence, auxiliary ownership, the SSC character interface and ordinary codec reset/supply paths. No new power fix or physical-current exclusion is established.
