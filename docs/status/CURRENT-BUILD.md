@@ -1,5 +1,16 @@
 # Current validated build and userspace state
 
+## October 21: full Android initialization captured
+
+Full LineageOS startup and root ADB are confirmed after the dedicated-partition
+migration. The plugged-in initialization snapshot also reports calibrate=-22,
+no charge_pump_master/parallel supply and no calibration-force property. These
+facts alone do not explain the standby gap or justify forced calibration.
+Android exposes no debugfs filesystem in the inspected runtime; register/SRAM
+comparison remains unavailable. No calibration or hardware data write occurred.
+See [bounded evidence](../validation/lmi-android-init-2026-10-21.md).
+
+
 ## October 21: dedicated Mobian boot verified; Android/menu pending
 
 The operator applied the GPT change, formatted Android data, flashed only the
