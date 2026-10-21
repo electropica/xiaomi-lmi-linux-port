@@ -4,7 +4,7 @@ Dedicated recipe for the requested on-phone Android/Mobian menu: Mobian by
 default after 15 seconds, without a PC once qualified and installed.
 
 **Current deliverable: operator-buildable temporary menu probe. It is not yet
-a persistent dual-OS boot manager. No firmware has been built or tested here.**
+a persistent dual-OS boot manager. The operator built the probe successfully; handset testing remains pending.**
 
 ## First build: display, input and countdown
 
@@ -111,3 +111,25 @@ This recipe does not alter the installed boot, recovery, ABL, XBL or GPT.
 All direct submodules are recorded in sources.lock.json, fetched at gitlinks,
 never updated with --remote. Proprietary upstream EFI binaries stay in the local
 ignored external build directory; do not add them or generated images to Git.
+
+## First operator build result
+
+The October 21 operator build completed using Debian Clang 14.0.6 / Python
+3.11.2. boot-lmi.img is 7059456 bytes, SHA256
+f39e2c65a434a90ae3d8a11cfa2b40e6113f6eee27eb6e73bd5b54cdcbd713a1.
+The image and source-patch manifest were independently re-read. The compact
+firmware volume fits its 7 MiB region; linker RWX warnings did not abort the
+build. This is build evidence, not proof that the target firmware runs.
+
+The exact image was transferred to Windows Downloads as
+`lmi-menu-smoke-20261021.img` and hash-verified. `test-menu-windows.py` defaults
+to a host-only plan; `--execute` qualifies the existing dedicated Mobian endpoint
+and installed RPMh boot prefix, reboots to Fastboot, checks lmi/partition size
+and requests only a temporary boot. It contains no flash command. Run it from
+Windows, not inside WSL. The observed installed RPMh boot remains unchanged;
+return through its normal cold-boot path has not yet been observed after migration.
+
+During the first probe, leave the screen untouched to evaluate the countdown.
+Then report whether the menu appeared and whether Mobian returned. If the
+screen remains black, do not keep retrying or flash the probe: return to
+Fastboot and temporarily boot the already qualified dedicated Mobian image.

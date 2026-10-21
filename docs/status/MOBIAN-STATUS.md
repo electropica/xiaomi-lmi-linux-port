@@ -2130,3 +2130,13 @@ be installed persistently. Android chainloading, UEFI display/input and a real
 handset dual-OS menu remain unvalidated. The source parser does not process our
 v2 DTB field; explicit component/DTBO handoff is still required. No firmware was
 compiled or booted during preparation. See [recipe](../../build/boot-menu/README.md).
+
+## October 21: first handset-menu probe compiled
+
+The operator's isolated EDK2 build completed. The 7059456-byte temporary probe
+has SHA256 f39e2c65a434a90ae3d8a11cfa2b40e6113f6eee27eb6e73bd5b54cdcbd713a1;
+the host independently re-read it and the exact patch manifest, then verified
+the Windows transfer. No UEFI handset boot has occurred yet. This is still a
+menu/countdown probe, not Android chainloading or a persistent dualboot menu.
+The Windows operator helper has passed host-only plan mode. See the dedicated
+[recipe and build result](../../build/boot-menu/README.md#first-operator-build-result).
