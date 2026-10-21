@@ -1,0 +1,53 @@
+{
+  "host_checks_passed": true,
+  "patch_source_guards": {
+    "src/main/uefimain.c": {
+      "before": "c1ead24406bb08031f7141e2ca0f05775990de6d15b2b296dc17be27711a9ded",
+      "after": "829960254b436d7e8019ba2d95c958a3e4365112a1b51189fd59ec74460bcc07"
+    },
+    "src/confd/uefi.c": {
+      "before": "e91131e046123cb4f439071af94ee7cdc318ed62c0990c4fe962ad9a82a18973",
+      "after": "113856e9e09c8f5da553c88e53d933baaf0ddcbfb72ad693988abc00c8672129"
+    }
+  },
+  "payloads": {
+    "mobian": {
+      "kernel": {
+        "bytes": 45359128,
+        "sha256": "87c53d33202d4607591fa0ba6d2bf091dc2dfc4673a3326436740a1f0e7bae6a"
+      },
+      "initrd": {
+        "bytes": 8805650,
+        "sha256": "5622088331db3e8dbd0266dedb5e1606747fdf0fa74cf7c0797ad22dd3042530"
+      },
+      "dtb": {
+        "bytes": 477290,
+        "sha256": "74edf0671376aa58df50897766500d04840af13d4bf27d0f78598ab7343d02f9"
+      },
+      "cmdline.txt": {
+        "bytes": 470,
+        "sha256": "4baece28d39c91f3d15922be9d04271a6aeaeca0a5541ebd8f8f42ecb65ccf63"
+      }
+    },
+    "android": {
+      "kernel": {
+        "bytes": 53456920,
+        "sha256": "632247727d42157c7e01a99317ba9c10a6c0dc941201722aa3a380d02483a1cc"
+      },
+      "initrd": {
+        "bytes": 1494000,
+        "sha256": "830c6f7d90622961cb926de37c95391e492b4432b271c40ca6ef4b2ff1bfbaa8"
+      },
+      "dtb": {
+        "bytes": 1424944,
+        "sha256": "dc0dabd0671edb7a5e5b5db494f2471e1ba547255323c9afd9f3599ebe9ba5fd"
+      },
+      "cmdline.txt": {
+        "bytes": 340,
+        "sha256": "676e84da25608632f8e14e810fad2fc240b137653337a334ef10779c5b18338a"
+      }
+    }
+  },
+  "os_chainload_validated": false,
+  "firmware_compiled": false
+}

@@ -1,9 +1,13 @@
 {
-  "status": "requirements_only_not_installed",
+  "status": "temporary_menu_probe_recipe_not_built",
   "location": "handset",
-  "entries": ["mobian", "android"],
+  "entries": [
+    "mobian",
+    "android"
+  ],
   "default": "mobian",
   "timeout_seconds": 15,
   "pc_required": false,
-  "qualified_boot_manager": null
+  "qualified_boot_manager": null,
+  "recipe": "../boot-menu/README.md"
 }

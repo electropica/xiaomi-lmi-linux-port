@@ -1,46 +1,21 @@
-# Requested autonomous handset menu — October 21, 2026
+# Requested handset menu: current implementation boundary
 
-The operator wants Android/Mobian selection on the handset, with a 15-second
-timeout and **Mobian as default**. The prior Android-default proposal is
-superseded. boot-menu-policy.json records requirements only; no current boot
-component reads it. Do not report the policy file as a working menu.
+The operator requests Android/Mobian selection with Mobian default after 15
+seconds. Both OSes now boot on the dedicated layout and the PC-controlled
+RAM-boot round trip is validated. That does not install a handset boot menu.
 
-The dedicated Mobian first boot is already qualified independently of a menu.
-The current active kernel exposes `# CONFIG_KEXEC is not set` in /proc/config.gz;
-a kexec menu cannot simply be enabled by configuration in this installation.
-Changing boot initialization before the Android power-reference capture can also
-confound that comparison. Keep direct-image boots as the initial reference.
+The dedicated [boot-menu recipe](../boot-menu/README.md) pins the lmi EDK2 and
+SimpleInit sources and provides an operator-run isolated build. Its first stage
+is a temporary display/input/countdown probe that returns to the already
+installed Mobian boot. It is not a persistent dual-OS selector and must not be
+flashed. No UEFI build or handset probe has yet been executed.
 
-Two primary-source leads were reviewed, not installed:
+Source review found that the pinned SimpleInit aboot parser does not process
+the v2 DTB field of our actual images. The recipe therefore includes a guarded
+offline component extractor and documents the remaining RAM-asset and explicit
+DTB/DTBO handoff work. It does not pretend that merely adding two abootimg paths
+makes our downstream OS images bootable.
 
-- [k30pro-linux-dualboot](https://github.com/chenpp1999/k30pro-linux-dualboot)
-  documents an Android-first layout with Linux in recovery and one-shot BCB
-  switching on this model. It is not evidence of our requested normal-power-on
-  timed menu. Its README does not qualify overwriting our retained recovery.
-- [EDK2-MSM](https://github.com/edk2-porting/edk2-msm) contains a specific
-  [lmi device configuration](https://github.com/edk2-porting/edk2-msm/blob/master/configs/devices/lmi.conf)
-  and lmi memory-map implementation. The project describes multi-boot support,
-  but presence of a target is not proof that our two downstream boot images,
-  display/input and firmware handoff work. Its lmi wrapper declares boot-header
-  version 1 and Android 11; ours use header 2 and Android 16 userspace.
-  The [published SimpleInit example](https://github.com/edk2-porting/renegade-project.org/blob/master/en/multiboot.md)
-  demonstrates Android image and Linux entries on SDM845/Polaris, not lmi.
-
-Next qualification must establish an lmi payload built from pinned sources,
-compatible display/buttons, loading both exact boot images without rewriting
-boot per selection, device-tree/command-line handoff, timeout semantics and
-an independent rescue path. A temporary Fastboot test precedes any persistent
-installation. No ABL/XBL write, recovery replacement, firmware download/boot,
-kexec kernel build or persistent menu installation has been performed.
-
-## Initial Android handoff
-
-After the handset systemctl help was checked, the Mobian-to-Fastboot request
-used `systemctl --reboot-argument=bootloader reboot` successfully. The older
-positional form is rejected by this installed systemd; the PC selector has
-been corrected to match. A guarded temporary Fastboot boot then sent the pinned
-official Lineage boot image without flashing any partition. The operator
-reports the Android setup wizard is in progress. Default boot remains unchanged;
-Android startup/access qualification is not complete and the selector stays
-locked. Five additional mocked transport tests pass, including no-flash
-temporary mode, default-change lock, bad-size rejection and retry guard.
+Current Mobian has CONFIG_KEXEC unset. Existing recovery, ABL, XBL, GPT and the
+installed boot were not modified by this recipe preparation. The earlier
+Android-default installation proposal is superseded; user policy is Mobian.

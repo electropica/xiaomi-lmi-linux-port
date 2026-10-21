@@ -2119,3 +2119,14 @@ service is enabled. The anchor check differs by less than one second; this new
 reference has not yet been validated through another boot. The hardware RTC
 counter was not written. NTP is active but network synchronization is not
 confirmed.
+
+## October 21: dedicated handset-menu recipe prepared, not built
+
+The new build/boot-menu directory contains pinned upstream sources, an isolated
+operator-run Debian bookworm build, a temporary menu probe, guarded boot-v2
+component extraction and seven host parsing tests. The untouched probe requests
+Mobian after 15 seconds by restarting the existing boot partition; it must not
+be installed persistently. Android chainloading, UEFI display/input and a real
+handset dual-OS menu remain unvalidated. The source parser does not process our
+v2 DTB field; explicit component/DTBO handoff is still required. No firmware was
+compiled or booted during preparation. See [recipe](../../build/boot-menu/README.md).

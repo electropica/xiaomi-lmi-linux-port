@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "device": "lmi",
+  "repository": "https://github.com/edk2-porting/edk2-msm.git",
+  "revision": "e1952621f419f8db60ed28271264e1b5184c571d",
+  "submodules": {
+    "Common/edk2": "e7aac7fc137e247edad22f7ee53b9a1fba227397",
+    "Common/edk2-platforms": "982212662c71b6c734b7578526071d6b78da3bcc",
+    "GPLDrivers/Library/SimpleInit": "29e062805776db5ab7a61d07ef040d43aed71161",
+    "Platform/EFI_Binaries": "d097b8a8bf3641e5e0c8b36ef1ac9d7cc1a0bd94",
+    "tools/Installer": "79968774636af5ce259c66928716eacdc9c1b815"
+  },
+  "os_images": {
+    "mobian": "75bb65facbd4146d4a1e668039ef52433ef90c2b6bdb07f2c59980caf3191374",
+    "android": "9d7dd4823860f7ad73c82542669620b2cee1ca466789958175be63bb77e85411"
+  },
+  "phase": "temporary_menu_smoke_not_persistent_dualboot",
+  "default": "mobian",
+  "timeout_seconds": 15,
+  "patched_source_hashes": {
+    "src/main/uefimain.c": {
+      "before": "c1ead24406bb08031f7141e2ca0f05775990de6d15b2b296dc17be27711a9ded",
+      "after": "829960254b436d7e8019ba2d95c958a3e4365112a1b51189fd59ec74460bcc07"
+    },
+    "src/confd/uefi.c": {
+      "before": "e91131e046123cb4f439071af94ee7cdc318ed62c0990c4fe962ad9a82a18973",
+      "after": "113856e9e09c8f5da553c88e53d933baaf0ddcbfb72ad693988abc00c8672129"
+    }
+  }
+}
