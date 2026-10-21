@@ -61,3 +61,14 @@ source patch/restoration, unchanged-map checks and shell syntax pass on the host
 The EFI adapter previously passed targeted Clang 14 ARM64 syntax checking with
 the generated flags and -Werror. The larger predecessor compiled and failed
 before the menu. The compact firmware is not yet compiled or target-tested.
+
+## Compact candidate compiled; temporary handset test pending
+
+The compact build completed: 25993216 bytes, SHA256
+a6b4e95476d8161ea89034915029d3fbc536e4f278ecb753e274ba800befe267.
+The compressed volume uses 25070792 of 33554432 bytes. All ten modified-source
+hashes match the manifest, and the upstream lmi memory map is independently
+byte-identical. Windows transfer and host-only launcher preflight passed.
+The new test-lineage-compact-windows.py pins this specific image; the older
+failed candidate's launcher remains disabled. No compact handset boot has yet
+occurred and no persistent boot change is made.

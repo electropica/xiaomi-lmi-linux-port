@@ -1,0 +1,12 @@
+{
+  "phase": "experimental-lineage-ram-handoff",
+  "bytes": 25993216,
+  "sha256": "a6b4e95476d8161ea89034915029d3fbc536e4f278ecb753e274ba800befe267",
+  "no_phone_contact": true,
+  "compiler": "Debian clang version 14.0.6",
+  "python": "Python 3.11.2",
+  "candidate_variant": "android-only-original-memory-map-32MiB-FD",
+  "patched_source_hashes_verified": 10,
+  "upstream_lmi_memory_map_unchanged": true,
+  "handset_validation": "pending"
+}

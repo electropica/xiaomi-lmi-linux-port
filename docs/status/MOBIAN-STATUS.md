@@ -2222,3 +2222,14 @@ limits FD to 32 MiB, fitting the upstream lmi reservation without changing its
 memory map. Compact bounds tests, real-input packaging, exact source restoration
 and unchanged-map checks pass. No compact firmware has yet been built or tested.
 See [current candidate](../../build/boot-menu/chainload/COMPACT.md).
+
+## Compact candidate compiled; temporary handset test pending
+
+The compact build completed: 25993216 bytes, SHA256
+a6b4e95476d8161ea89034915029d3fbc536e4f278ecb753e274ba800befe267.
+The compressed volume uses 25070792 of 33554432 bytes. All ten modified-source
+hashes match the manifest, and the upstream lmi memory map is independently
+byte-identical. Windows transfer and host-only launcher preflight passed.
+The new test-lineage-compact-windows.py pins this specific image; the older
+failed candidate's launcher remains disabled. No compact handset boot has yet
+occurred and no persistent boot change is made.
