@@ -9,7 +9,7 @@ initramfs function changes. Host tests check these invariants and boot ID.
 ## Proposed arrangement
 
 - Keep Android's existing system/vendor/firmware layout. Android uses a smaller
-  `userdata`, with its normal F2FS/encryption policy, and the normal boot image.
+  `userdata`, with its normal F2FS/encryption policy and its own boot image.
 - Reserve a **separate 16 GiB physical partition named `mobian`** at the end of
   the current userdata range. It contains the existing nested boot/root format.
 - Mobian's dedicated boot waits only for `mobian`, checks exact container size
@@ -18,9 +18,9 @@ initramfs function changes. Host tests check these invariants and boot ID.
   Normal root expansion remains limited to the dedicated loop/container.
 - First version: Windows PC selects either OS using `fastboot boot`. There is
   no newly developed on-phone boot menu, no A/B assumption and no replacement
-  of the Lineage recovery. A power-on without the PC uses the default installed
-  Android boot. Temporary Mobian boot will therefore not survive a cold reboot
-  as the default selection; the persistent Mobian files remain in `mobian`.
+  of the Lineage recovery. The operator subsequently requested Mobian as the
+  default and an autonomous handset menu with a 15-second timeout. Those default
+  boot/menu changes are not yet installed. See [the qualification boundary](BOOT-MENU.md).
 
 The live GPT has 4096-byte logical sectors and 64 entries; userdata is entry
 34 and last. A text-only proposal keeps its start, reduces its end, and adds

@@ -1,0 +1,9 @@
+{
+  "status": "requirements_only_not_installed",
+  "location": "handset",
+  "entries": ["mobian", "android"],
+  "default": "mobian",
+  "timeout_seconds": 15,
+  "pc_required": false,
+  "qualified_boot_manager": null
+}
