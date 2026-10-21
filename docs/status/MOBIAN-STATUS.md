@@ -2193,3 +2193,16 @@ bundle creation (116559872 bytes), C bounds checks and source patch/restoration
 checks pass. The candidate firmware has NOT been compiled or target-tested;
 it is temporary-only and must not be flashed. The existing Mobian cold-reboot
 default is retained while Android handoff is qualified.
+
+## Experimental Lineage menu build completed
+
+The operator's second attempt completed after the include-order correction.
+The final boot image is 47302656 bytes, SHA256
+2d4284b5fc26fb8e90c529eb714e5d9076b8b01331bc707d00758dd94335ef11.
+The compressed FV occupies 46301152 bytes of its 128 MiB reservation. All 11
+patched-source hashes match their build manifest; the verified asset bundle
+SHA256 is f274b93fee79315b9f4cdf8e45d08a09a12f027a922e8dc7961ca8ed111f2892.
+The Windows copy and host-only helper preflight also match. Neither the expanded
+firmware nor LineageOS handoff has yet been booted on this handset. The Windows
+helper is pinned to this image and contains no flash command. Use Volume/Power
+to select LineageOS, then activate Boot. A focus change cancels the countdown.
