@@ -1,5 +1,23 @@
 # Current validated build and userspace state
 
+## October 21: dual-boot build candidate prepared, not installed
+
+The operator requested a fresh complete image rather than a live-system backup.
+The [dual-boot candidate](../../build/dualboot/README.md) reuses the current RPMh
+kernel and DTB, with a narrowly changed initramfs discovery function restricted
+to a proposed dedicated 16 GiB `mobian` partition. The full-image entry point
+retains the qualified homedrag7/Phoc/GSD/application layers. Fourteen host tests,
+fifteen existing staging tests and installer dependency staging pass.
+
+No full image or kernel build, repartition, format, flash, reboot or Android
+installation was performed for this preparation. The existing Mobian remains
+the installed reference. The GPT proposal is text-only and requires fresh
+recovery qualification before migration. The Windows OS-selection controller
+is mocked-test-qualified only and locked until both actual OS boots/accesses
+are validated. Initial selection uses a connected PC/Fastboot, not an on-phone
+boot menu. There is no demonstrated battery saving from this design.
+
+
 ## October 19: diagnostic getter correction and UART follow-up
 
 The added charge_done read is not guaranteed passive: its charger getter can
