@@ -1,0 +1,16 @@
+{
+  "upstream_sha256": "ad66475a52972cc455f697610076528a5dbc7285af00d1f19d287ba792103e88",
+  "patched_sha256": "c27071fbb7864140f54421e6af2568a975c9fb5b12f7bf768a4d9c7461314e2c",
+  "fd_sha256": "bb42edc6550e4bdbd76d2c29e6b031c115201ef0cfbf908c3fdc9a3666499e41",
+  "results": {
+    "old": [
+      "OLD_REJECTS_REAL_LARGE_FILE"
+    ],
+    "patched": [
+      "PATCHED_FINDS_REAL_LARGE_FILE_AND_CORRECT_SECTION_BOUNDARY",
+      "NORMAL_FILE_COMPATIBILITY_PASS",
+      "TRUNCATION_OVERFLOW_INVALID_LENGTHS_REJECTED"
+    ]
+  },
+  "hardware_validation": false
+}

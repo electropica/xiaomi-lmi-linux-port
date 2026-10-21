@@ -65,3 +65,15 @@ sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --buil
 
 The manifest variant ends in prepi-ffs3-fstab1. Qualify the resulting image and
 use a fresh Windows temporary launcher. No experimental menu is ready to flash.
+
+## Android logical-fstab image compiled; handset test pending
+
+The operator built fstab1: 25993216 bytes, SHA256
+eae891e3bbe03d2b15857a11319000da4eca81adac009d093126593bb548ad1f.
+All fifteen source hashes match, the lmi memory map is unchanged and PrePi
+replay passes on the rebuilt FD. Windows transfer and plan-only launcher
+preflight passed. test-lineage-fstab-windows.py pins this exact image and
+requires the SSH guard-completion marker before waiting for Fastboot.
+No phone command or flash was performed during qualification. The removal of
+the legacy DT table and progress past first-stage logical mounting remain
+pending handset observation; Android userspace is not yet validated.
