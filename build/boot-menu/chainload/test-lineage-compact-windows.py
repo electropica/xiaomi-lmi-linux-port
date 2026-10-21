@@ -11,6 +11,8 @@ def run(args,timeout=15,check=True):
 
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('--execute',action='store_true');a=ap.parse_args()
+ if a.execute:
+  raise SystemExit('RETIRED: this image failed before the menu; no phone contact performed. Await a rebuilt FFS3-qualified image.')
  downloads=Path.home()/'Downloads';image=downloads/'lmi-menu-lineage-compact-20261021.img'
  fb=downloads/'platform-tools/fastboot.exe'
  raw=image.read_bytes()

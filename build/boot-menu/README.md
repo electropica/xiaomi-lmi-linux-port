@@ -3,8 +3,12 @@
 Dedicated recipe for the requested on-phone Android/Mobian menu: Mobian by
 default after 15 seconds, without a PC once qualified and installed.
 
-**Current deliverable: operator-buildable temporary menu probe. It is not yet
-a persistent dual-OS boot manager. The operator built the probe successfully; handset testing remains pending.**
+**Current deliverable: the small temporary menu probe has validated display,
+Volume/Power navigation and the 15-second Mobian default. The experimental
+LineageOS-bearing candidates failed before the menu. A host-qualified PrePi
+FFS3 reader correction is ready for an operator build; see
+[chainload/COMPACT.md](chainload/COMPACT.md). This is not yet a persistent
+dual-OS boot manager.**
 
 ## First build: display, input and countdown
 

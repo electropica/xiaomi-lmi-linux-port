@@ -1,5 +1,34 @@
 # Compact Android-only candidate after the pre-menu failure
 
+## Current: compact candidate also failed; PrePi FFS3 correction ready
+
+The compact image a6b4e95476d8161ea89034915029d3fbc536e4f278ecb753e274ba800befe267
+also stayed black before any menu. The operator recovered installed Mobian by
+holding Power. Its launcher is retired and refuses execution before phone contact.
+No experimental image was flashed. Neither failure tested the Android handoff.
+
+The compiled FD contains a 25024772-byte firmware-volume file using the PI
+EFI_FFS_FILE_HEADER2 format (32-byte header, LARGE_FILE attribute, Size[3] zero).
+The pinned EmbeddedPkg PrePi reader only handles 24-byte file headers: it computes
+checksum 165 instead of zero, ignores ExtendedSize and starts the body eight bytes
+too early. This is a reproducible startup defect before DXE or the menu; it does
+not establish that no later startup defect remains.
+
+patch-prepi.py adds bounded large-file traversal, complete-header checksums and
+correct section/file-info offsets against an exact upstream SHA256. Existing
+SECTION2 support is retained. The source manifest now restores Common/edk2 edits
+as well as the superproject and SimpleInit; unfamiliar changes stop restoration
+before any file is changed.
+
+Host validation: the actual old C reader rejects the compiled compact FD; the
+patched reader finds its large file and correct content boundary. Ordinary files,
+truncated/overflowing/invalid sizes, eleven-file exact restoration and tamper
+rejection pass. Clang 14 ARM64 syntax checking of the full patched FwVol.c passes
+with the existing generated compiler flags and -Werror. See
+prepi-host-replay-20261021.json and test-prepi.py. No new firmware build or phone
+test has been run for this correction. Use the operator build command below;
+wait for a newly verified artifact and launcher before any temporary boot.
+
 The first complete candidate, SHA256
 2d4284b5fc26fb8e90c529eb714e5d9076b8b01331bc707d00758dd94335ef11,
 stayed black **before the menu appeared**. ADB, Fastboot and SSH were absent.
@@ -37,7 +66,7 @@ The private inputs are already staged under the external build directory:
 
 The builder no longer requires or bundles Mobian's boot components. Output is
 output/boot-lmi-lineage-test.img and output/lineage-artifact-manifest.json. The
-manifest identifies android-only-original-memory-map-32MiB-FD. A fresh Windows
+manifest identifies android-only-original-memory-map-32MiB-FD-prepi-ffs3. A fresh Windows
 transfer/helper is needed after verifying the new artifact; do not reuse the
 retired helper or flash any experimental candidate.
 
@@ -60,15 +89,5 @@ Compact actual-input bundle creation, C parser malformed-input/bounds tests,
 source patch/restoration, unchanged-map checks and shell syntax pass on the host.
 The EFI adapter previously passed targeted Clang 14 ARM64 syntax checking with
 the generated flags and -Werror. The larger predecessor compiled and failed
-before the menu. The compact firmware is not yet compiled or target-tested.
-
-## Compact candidate compiled; temporary handset test pending
-
-The compact build completed: 25993216 bytes, SHA256
-a6b4e95476d8161ea89034915029d3fbc536e4f278ecb753e274ba800befe267.
-The compressed volume uses 25070792 of 33554432 bytes. All ten modified-source
-hashes match the manifest, and the upstream lmi memory map is independently
-byte-identical. Windows transfer and host-only launcher preflight passed.
-The new test-lineage-compact-windows.py pins this specific image; the older
-failed candidate's launcher remains disabled. No compact handset boot has yet
-occurred and no persistent boot change is made.
+before the menu. The first compact firmware also failed before the menu; the
+FFS3-corrected version remains pending compilation and handset validation.

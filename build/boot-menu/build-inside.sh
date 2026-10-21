@@ -26,6 +26,7 @@ assert not git('-C','edk2-msm','diff','--name-only','--ignore-submodules=dirty')
 # Reject pre-existing submodule edits except the intentional menu patches.
 changed=git('-C','edk2-msm/GPLDrivers/Library/SimpleInit','diff','--name-only').splitlines()
 assert set(changed)<= {'src/main/uefimain.c','src/confd/uefi.c','src/gui/interface/core/bootmenu.c'},changed
+assert not git('-C','edk2-msm/Common/edk2','diff','--name-only'), 'Unexpected EDK2 core edits after restoration'
 PY
 python3 /recipe/apply-menu.py /source/edk2-msm > /output/patch-manifest.json
 if [[ ${LMI_MENU_LINEAGE:-0} == 1 ]]; then
@@ -46,7 +47,7 @@ p=Path('/output/boot-lmi-lineage-test.img' if lineage else '/output/boot-lmi.img
 assert raw[:8]==b'ANDROID!' and 0<len(raw)<=134217728
 assert struct.unpack_from('<I',raw,40)[0]==1
 result={'phase':'experimental-lineage-ram-handoff' if lineage else 'temporary-menu-smoke-not-dualboot','bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest(),'no_phone_contact':True,'compiler':subprocess.check_output(['clang','--version'],text=True).splitlines()[0],'python':subprocess.check_output(['python3','--version'],text=True).strip()}
-if lineage:result['candidate_variant']='android-only-original-memory-map-32MiB-FD'
+if lineage:result['candidate_variant']='android-only-original-memory-map-32MiB-FD-prepi-ffs3'
 Path('/output/lineage-artifact-manifest.json' if lineage else '/output/artifact-manifest.json').write_text(json.dumps(result,indent=2))
 print(json.dumps(result,indent=2))
 PY

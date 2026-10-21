@@ -2233,3 +2233,22 @@ byte-identical. Windows transfer and host-only launcher preflight passed.
 The new test-lineage-compact-windows.py pins this specific image; the older
 failed candidate's launcher remains disabled. No compact handset boot has yet
 occurred and no persistent boot change is made.
+
+## Boot menu: pre-menu FFS3 defect reproduced and corrected (2026-10-21)
+
+Both experimental LineageOS-bearing RAM boots stayed black before any menu;
+the operator returned to installed Mobian with a long Power press. Their
+launchers are retired. The original small menu's Volume/Power navigation and
+15-second automatic Mobian return remain hardware validated. Android handoff
+and persistent dualboot menu installation remain unvalidated.
+
+The compact FD's 25024772-byte compressed FV uses a 32-byte FILE_HEADER2.
+Pinned PrePi uses 24-byte headers, computes checksum 165 instead of zero and
+misreads file size/body offset. Replaying the actual C functions against this
+FD reproduces rejection; the correction finds the file and proper boundary.
+Normal-file compatibility, malformed lengths, exact eleven-file restoration
+and refusal of unreviewed edits pass. Full patched FwVol.c passes targeted
+Clang 14 ARM64 syntax checking with the existing build flags and -Werror.
+No corrected firmware build or phone test has been performed. Recipe and
+validation evidence: build/boot-menu/chainload/COMPACT.md. No kernel rebuild,
+flash or partition change is part of this correction.

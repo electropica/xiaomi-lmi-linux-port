@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """Apply/restore only hash-qualified changes in the disposable build tree."""
 from pathlib import Path
-import argparse,hashlib,json,subprocess
+import argparse,hashlib,json,subprocess,importlib.util
 sha=lambda b:hashlib.sha256(b).hexdigest()
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('source',type=Path);ap.add_argument('--manifest',type=Path,required=True);ap.add_argument('--restore-only',action='store_true');a=ap.parse_args()
  base=a.source/'GPLDrivers/Library/SimpleInit';here=Path(__file__).resolve().parent
+ def repo_for(info):
+  if info.get('edk2_core'):return a.source/'Common/edk2'
+  return a.source if info.get('edk2') else base
  if a.restore_only:
   if not a.manifest.exists():return
   record=json.loads(a.manifest.read_text())
   # Refuse all restoration if any reviewed output was changed afterwards.
   for path,info in record.items():
-   f=(a.source if info.get('edk2') else base)/path
+   f=repo_for(info)/path
    assert f.is_file() and sha(f.read_bytes())==info['after'], 'Unreviewed source edit: '+path
   for path,info in record.items():
-   repo=a.source if info.get('edk2') else base
+   repo=repo_for(info)
    f=repo/path
    if info['new_file']:f.unlink()
    else:
@@ -72,8 +75,15 @@ FILE FREEFORM = 4f9fd886-1b54-4e6c-9df8-2c6466521227 {
 }
 '''
   edits[path]=(new.encode(),{'after':sha(new.encode()),'upstream':sha(original),'new_file':False,'edk2':True})
+ # The compressed FV now exceeds 16 MiB: pinned PrePi lacks FILE_HEADER2.
+ spec=importlib.util.spec_from_file_location('prepi',here/'patch-prepi.py')
+ prepi=importlib.util.module_from_spec(spec);spec.loader.exec_module(prepi)
+ original=subprocess.check_output(['git','-C',str(a.source/'Common/edk2'),'show','HEAD:'+prepi.PATH])
+ assert (a.source/'Common/edk2'/prepi.PATH).read_bytes()==original
+ raw=prepi.patch(original)
+ edits[prepi.PATH]=(raw,{'after':sha(raw),'upstream':sha(original),'new_file':False,'edk2_core':True})
  # Validate all inputs before mutating any source.
- for path,(raw,info) in edits.items():((a.source if info.get('edk2') else base)/path).write_bytes(raw)
+ for path,(raw,info) in edits.items():(repo_for(info)/path).write_bytes(raw)
  a.manifest.write_text(json.dumps({p:i for p,(_,i) in edits.items()},indent=2))
  print('EXPERIMENTAL_LINEAGE_SOURCE_PREPARED')
 if __name__=='__main__':main()
