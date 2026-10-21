@@ -51,7 +51,7 @@ def main():
    new=diag.patch_entry(new)
   else:
    assert old==original.decode().replace('\r\n','\n')
-   new=old+'\n/* LMI_LINEAGE_RAM_HANDOFF_V1 */\n#include "lmi-boot-diagnostic.h"\n#include "lmi-bundle-loader.h"\n'
+   new=old+'\n/* LMI_LINEAGE_RAM_HANDOFF_V1 */\n#include "lmi-boot-diagnostic.h"\n#include "lmi-bundle-loader.h"\n#include "lmi-android-fstab.h"\n'
   edits[path]=(new.encode(),{'after':sha(new.encode()),'upstream':sha(original),'new_file':False})
  path='src/linux-boot/linux.c';original=subprocess.check_output(['git','-C',str(base),'show','HEAD:'+path])
  assert (base/path).read_bytes()==original
@@ -63,7 +63,7 @@ def main():
  assert (base/path).read_bytes()==original
  raw=dtbopatch.patch(original.decode().replace('\r\n','\n')).encode()
  edits[path]=(raw,{'after':sha(raw),'upstream':sha(original),'new_file':False})
- for name in ['bundle-format.h','lmi-bundle-loader.h','lmi-boot-diagnostic.h']:
+ for name in ['bundle-format.h','lmi-bundle-loader.h','lmi-boot-diagnostic.h','lmi-android-fstab.h']:
   path='src/linux-boot/'+name;assert not (base/path).exists()
   raw=(here/name).read_bytes();edits[path]=(raw,{'after':sha(raw),'new_file':True})
  path='src/linux-boot/SimpleInitBootLinux.inf'

@@ -8,6 +8,8 @@
   "candidate_variant": "android-only-original-memory-map-32MiB-FD-prepi-ffs3-dtbo1",
   "patched_source_hashes_verified": 14,
   "upstream_lmi_memory_map_unchanged": true,
-  "handset_validation": "pending",
-  "temporary_boot_only": true
+  "handset_validation": "android_kernel_and_first_stage_init_execute_then_abort_physical_system_vendor_wait",
+  "temporary_boot_only": true,
+  "android_kernel_executed": true,
+  "android_userspace_boot_complete": false
 }

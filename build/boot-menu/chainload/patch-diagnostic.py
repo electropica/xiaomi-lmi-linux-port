@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Diagnostic-only additions to already qualified SimpleInit handoff sources."""
 def patch_entry(text):
-    text=text.replace('int run_boot_linux(boot_config*boot){','extern void lmi_boot_stage(const char*stage);\nextern void lmi_boot_failed(void);\n\nint run_boot_linux(boot_config*boot){')
+    text=text.replace('int run_boot_linux(boot_config*boot){','extern void lmi_boot_stage(const char*stage);\nextern void lmi_boot_failed(void);\nextern int linux_boot_lmi_android_fstab(linux_boot*lb);\n\nint run_boot_linux(boot_config*boot){')
     for needle,label in [('if(!(cfg=linux_config_new_from_confd(boot->key)))','01 configuration'),('if(!(lb=linux_boot_new(cfg)))','02 boot object'),('if(linux_boot_lmi_bundle(lb,boot->ident)!=0)','03 verified RAM bundle'),('if(linux_boot_execute(lb)!=0)','15 execute / ARM handoff validation')]:
         assert text.count('\t'+needle)==1
         text=text.replace('\t'+needle,'\tlmi_boot_stage("'+label+'");\n\t'+needle)
     assert text.count('\tdone:\n')==1
+    text=text.replace('\tlmi_boot_stage("15 execute / ARM handoff validation");','\tlmi_boot_stage("14 Android logical ramdisk fstab");\n\tif(linux_boot_lmi_android_fstab(lb)!=0)\n\t\tEDONE(tlog_error("prepare Android logical ramdisk fstab failed"));\n\tlmi_boot_stage("15 execute / ARM handoff validation");')
     return text.replace('\tdone:\n','\tdone:\n\tlmi_boot_failed();\n')
 
 def patch_prepare(text):

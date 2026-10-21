@@ -64,3 +64,25 @@ guard-completion marker before waiting for Fastboot; an absent USB link is no
 longer mistaken for a possibly successful reboot. No phone command or flash was
 performed in qualification. Actual DTBO application and Android handoff remain
 pending; the diagnostic stage/error panel is retained.
+
+## Android kernel and first-stage init confirmed; logical mount fix prepared
+
+The dtbo1 test returned to Fastboot. Installed Mobian was recovered; private
+archived console-ramoops shows the exact Lineage kernel running /init, then
+a ten-second wait for physical system/vendor devices and InitFatalReboot with
+bootloader target at about 12.3 seconds. This confirms Android kernel/first-stage
+execution, not a completed Android boot. No experimental firmware was flashed.
+
+All three pinned Android DTBs retain a physical ext4 vendor DT fstab; the pinned
+ramdisk has the correct logical first-stage fstab, including erofs vendor.
+Lineage prioritizes the DT table. The new Android-only stage-14 correction
+removes that exact known legacy subtree in RAM, leaving the original ramdisk,
+AVB policy, super metadata, GPT and installed boot unchanged. Unknown tables
+are rejected. No command-line cleanup is included.
+
+Actual C/libfdt tests on all three real DTBs plus the board-matched lmi overlay
+pass, with every unrelated property unchanged. Wrong-OS and unexpected-path
+guards, four-unit ARM64 syntax and fifteen-file exact restoration/tamper tests
+pass. No fstab1 build or hardware test has yet occurred. See
+build/boot-menu/chainload/ANDROID-FIRST-MOUNT.md. The operator command is unchanged;
+new variant ends in prepi-ffs3-fstab1. Later Android startup issues may remain.

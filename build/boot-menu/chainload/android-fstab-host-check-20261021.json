@@ -1,0 +1,24 @@
+{
+  "actual_c_fix_on_real_dtb_and_overlay": [
+    {
+      "base_offset": 0,
+      "board_matched_overlay": 7,
+      "other_properties_unchanged": true,
+      "unexpected_path_and_other_os_rejected": true
+    },
+    {
+      "base_offset": 477290,
+      "board_matched_overlay": 7,
+      "other_properties_unchanged": true,
+      "unexpected_path_and_other_os_rejected": true
+    },
+    {
+      "base_offset": 954576,
+      "board_matched_overlay": 7,
+      "other_properties_unchanged": true,
+      "unexpected_path_and_other_os_rejected": true
+    }
+  ],
+  "pinned_ramdisk_has_logical_system_vendor": true,
+  "hardware_validation": false
+}

@@ -3,12 +3,11 @@
 Dedicated recipe for the requested on-phone Android/Mobian menu: Mobian by
 default after 15 seconds, without a PC once qualified and installed.
 
-**Current deliverable: the small temporary menu probe has validated display,
-Volume/Power navigation and the 15-second Mobian default. The experimental
-LineageOS-bearing candidates failed before the menu. A host-qualified PrePi
-FFS3 reader correction is ready for an operator build; see
-[chainload/COMPACT.md](chainload/COMPACT.md). This is not yet a persistent
-dual-OS boot manager.**
+**Current status: the menu and Android kernel/first-stage init execute on the
+handset. Android then aborts while waiting for physical system/vendor because
+the legacy DT fstab shadows its logical ramdisk fstab. A host-qualified RAM-only
+correction is ready for the operator build; see [ANDROID-FIRST-MOUNT.md](chainload/ANDROID-FIRST-MOUNT.md).
+Full Android userspace and persistent menu installation remain unvalidated.**
 
 ## First build: display, input and countdown
 
