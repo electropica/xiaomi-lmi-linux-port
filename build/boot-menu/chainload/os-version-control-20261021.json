@@ -1,0 +1,33 @@
+{
+  "input_sha256": "eae891e3bbe03d2b15857a11319000da4eca81adac009d093126593bb548ad1f",
+  "output_sha256": "71e226f1a8adaf5d0574d1311d686143694404f49ab62df5d343c8a36c3c5196",
+  "android_sha256": "9d7dd4823860f7ad73c82542669620b2cee1ca466789958175be63bb77e85411",
+  "bytes": 25993216,
+  "old": {
+    "packed": 369099112,
+    "version": [
+      11,
+      0,
+      0
+    ],
+    "patch_year": 2022,
+    "patch_month": 8
+  },
+  "new": {
+    "packed": 536871337,
+    "version": [
+      16,
+      0,
+      0
+    ],
+    "patch_year": 2026,
+    "patch_month": 9
+  },
+  "only_os_version_field_changed": true,
+  "changed_offsets": [
+    44,
+    47
+  ],
+  "hardware_validation": false,
+  "no_flash": true
+}

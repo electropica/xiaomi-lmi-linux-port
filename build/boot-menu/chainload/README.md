@@ -1,10 +1,10 @@
 # Experimental LineageOS entry after the validated menu probe
 
-**Current status: Android kernel/init execution is confirmed. fstab1 reaches
-recovery with init_user0_failed; the exact data-initialization error is unknown.
-A no-flash direct stock-Android control is prepared; see
-[ANDROID-DATA-CONTROL.md](ANDROID-DATA-CONTROL.md). Full Android startup and
-persistent menu installation remain unvalidated.**
+**Current status: stock Android boots successfully with encrypted data.
+The menu path reaches recovery with init_user0_failed. An isolated OS-version
+header control is prepared without rebuilding firmware; see
+[ANDROID-OS-VERSION-CONTROL.md](ANDROID-OS-VERSION-CONTROL.md). Its outcome
+and persistent menu installation remain unvalidated.**
 
 Revision 2's untouched 15-second default and return to Mobian are now confirmed
 by the operator; SSH confirms root /dev/loop0p2 and running Phosh after return.

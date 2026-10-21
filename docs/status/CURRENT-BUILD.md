@@ -1744,3 +1744,17 @@ verification. This will distinguish a menu-specific failure from normal Android
 startup failure. See build/boot-menu/chainload/ANDROID-DATA-CONTROL.md. No new
 build required. Execution and full Android startup remain pending. Security
 context/key-management differences are hypotheses, not established causes.
+
+## Stock Android succeeds; OS-version header control prepared
+
+Original Lineage boots; operator confirmation and native Windows root ADB
+independently establish boot_completed=1 and encrypted F2FS /data mounted.
+Live DT and selected technical parameters are saved privately. The menu header
+reports Android 11 / August 2022, versus stock Android 16 / September 2026.
+A control copy aligns only this field; only offsets 44 and 47 differ, with
+all remaining bytes identical. No compilation, partition change or key change.
+Derived SHA256: 71e226f1a8adaf5d0574d1311d686143694404f49ab62df5d343c8a36c3c5196.
+The Android-start Windows RAM launcher passes plan-only verification. Actual
+outcome remains pending. Hardware-key version context and inherited AVB
+metadata are hypotheses; no AVB bypass is proposed. Standard builder unchanged
+until validation. See build/boot-menu/chainload/ANDROID-OS-VERSION-CONTROL.md.
