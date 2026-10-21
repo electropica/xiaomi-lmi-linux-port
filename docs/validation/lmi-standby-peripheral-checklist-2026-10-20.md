@@ -27,6 +27,7 @@ not an assertion about every transition in today's image.
 
 | Block / actual implementation | Existing evidence | Expected idle/suspend behavior to verify | Remaining gap / next evidence | Priority |
 |---|---|---|---|---|
+| Graphical session / Phosh / Phoc | C: complete same-kernel three-phase A/B/A, all phases about 99.5% suspended, software estimates 49.87 / 51.49 / 52.04 mA | No unintended retained client or graphics request in sleep | No saving demonstrated by stopping the session; does not electrically exclude shared resources or gauge-model effects | Deprioritize another GUI shutdown test |
 | Application CPUs, cpuidle, system collapse | T: actual suspension and firmware residency correlate; C: CPU/core_ctl controls already attempted | Enter permitted low-power states; restore normal interaction | Keep system residency as a control; avoid another identical CPU-policy test without new evidence | Existing control |
 | NPU and NPU interconnect | T/C: standby vote reduction installed; normal-use restoration validated | Release unnecessary sleep votes; restore active votes | Requalify after a policy change, not a new blind disable | Existing control |
 | DDR, LLCC/L3, bus bandwidth, SMMUs | S/T: firmware sleep evidence, RPMh requests; L3 control already tried | Sleep-bank requests consistent with required retained memory and clients | Associate remaining requests with actual consumers and firmware ownership; no physical-current attribution yet | Open |
@@ -183,3 +184,5 @@ idles, calls _slumber, and selects SUSPEND without checking that NAP bit.
 This distinguishes a possible awake-idle policy from a demonstrated deep-sleep
 failure. It does not justify toggling the bit or claiming the GPU electrically
 excluded. No new unplugged comparison was requested for this negative check.
+
+The [completed same-kernel graphical/headless A/B/A](lmi-headless-aba-result-2026-10-21.md) reports no demonstrated reduction after stopping Phosh/Phoc; all phases and restoration passed.
