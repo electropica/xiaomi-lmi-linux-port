@@ -26,6 +26,8 @@ def main():
   a.manifest.unlink();return
  assert not a.manifest.exists(),'Restore previous qualified patch first'
  edits={};new_files={}
+ spec=importlib.util.spec_from_file_location('diag',here/'patch-diagnostic.py')
+ diag=importlib.util.module_from_spec(spec);spec.loader.exec_module(diag)
  for path in ['src/main/uefimain.c','src/gui/interface/core/bootmenu.c','src/boot/linux.c','src/linux-boot/aboot.c']:
   f=base/path;old=f.read_text();original=subprocess.check_output(['git','-C',str(base),'show','HEAD:'+path])
   if path.endswith('uefimain.c'):
@@ -46,11 +48,16 @@ def main():
    new=new.replace(oldline,'''\tif(linux_boot_lmi_bundle(lb,boot->ident)!=0)
 \t\tEDONE(tlog_error("verified lmi RAM bundle unavailable"));
 '''+oldline)
+   new=diag.patch_entry(new)
   else:
    assert old==original.decode().replace('\r\n','\n')
-   new=old+'\n/* LMI_LINEAGE_RAM_HANDOFF_V1 */\n#include "lmi-bundle-loader.h"\n'
+   new=old+'\n/* LMI_LINEAGE_RAM_HANDOFF_V1 */\n#include "lmi-boot-diagnostic.h"\n#include "lmi-bundle-loader.h"\n'
   edits[path]=(new.encode(),{'after':sha(new.encode()),'upstream':sha(original),'new_file':False})
- for name in ['bundle-format.h','lmi-bundle-loader.h']:
+ path='src/linux-boot/linux.c';original=subprocess.check_output(['git','-C',str(base),'show','HEAD:'+path])
+ assert (base/path).read_bytes()==original
+ raw=diag.patch_prepare(original.decode().replace('\r\n','\n')).encode()
+ edits[path]=(raw,{'after':sha(raw),'upstream':sha(original),'new_file':False})
+ for name in ['bundle-format.h','lmi-bundle-loader.h','lmi-boot-diagnostic.h']:
   path='src/linux-boot/'+name;assert not (base/path).exists()
   raw=(here/name).read_bytes();edits[path]=(raw,{'after':sha(raw),'new_file':True})
  path='src/linux-boot/SimpleInitBootLinux.inf'

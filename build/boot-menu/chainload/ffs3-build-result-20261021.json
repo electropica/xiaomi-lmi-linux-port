@@ -8,6 +8,7 @@
   "candidate_variant": "android-only-original-memory-map-32MiB-FD-prepi-ffs3",
   "patched_source_hashes_verified": 11,
   "upstream_lmi_memory_map_unchanged": true,
-  "handset_validation": "pending",
-  "temporary_boot_only": true
+  "handset_validation": "menu_display_confirmed_lineage_selection_returns_to_uefi_setup",
+  "temporary_boot_only": true,
+  "android_handoff_validated": false
 }

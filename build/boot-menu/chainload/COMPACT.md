@@ -103,3 +103,20 @@ image transfer and plan-only launcher preflight passed. The new launcher is
 test-lineage-ffs3-windows.py; both earlier experimental launchers remain retired.
 Handset menu display, Android handoff and persistent installation are not yet
 validated. No phone command or flash was performed during these checks.
+
+## Menu confirmed; LineageOS selection returns to UEFI setup
+
+The operator explicitly confirmed the FFS3-corrected menu appears. Selecting
+LineageOS then displays EDK2 setup (Device Manager / Boot Manager / Boot
+Maintenance Manager), not Android. Installed Mobian has been restarted and
+remains usable. No experimental firmware was flashed. Kernel execution is not
+demonstrated and the exact returned error is not yet known.
+
+A diagnostic-only recipe update records the last attempted launch stage and
+shows the latest six warnings/errors from RAM for up to 120 seconds on a
+returned failure. All three C units pass Clang 14 ARM64 -Werror syntax checks;
+thirteen-file exact restoration and tamper rejection pass. No diagnostic build
+or handset test has yet occurred. See chainload/HANDOFF-DIAGNOSTIC.md under
+build/boot-menu. Next operator build uses the same --build --with-lineage command;
+the manifest variant ends in prepi-ffs3-diag1. This is instrumentation, not a
+claimed Android boot fix. No flash, kernel rebuild or partition change required.

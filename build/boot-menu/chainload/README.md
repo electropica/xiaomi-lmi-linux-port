@@ -1,11 +1,10 @@
 # Experimental LineageOS entry after the validated menu probe
 
-**Current status: both the large and first compact candidates failed before
-displaying the menu; their launchers are retired. A pinned PrePi FFS3 reader
-defect is reproduced on the compiled compact FD and corrected in the recipe.
-Host C replay and ARM64 syntax checks pass; the correction is not yet built or
-tested on the handset. See [COMPACT.md](COMPACT.md). The original design notes
-below are historical.**
+**Current status: the FFS3-corrected candidate displays our menu on the
+handset. Selecting LineageOS returns to UEFI setup; Android handoff remains
+unvalidated. A host-qualified diagnostic-only recipe is ready for an operator
+build; see [HANDOFF-DIAGNOSTIC.md](HANDOFF-DIAGNOSTIC.md). The earlier black-screen
+candidates remain retired.**
 
 Revision 2's untouched 15-second default and return to Mobian are now confirmed
 by the operator; SSH confirms root /dev/loop0p2 and running Phosh after return.

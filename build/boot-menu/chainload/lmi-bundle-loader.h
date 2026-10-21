@@ -10,8 +10,12 @@ static void*lmi_bundle_buffer=NULL;
 static UINTN lmi_bundle_bytes=0;
 static int lmi_bundle_source(linux_load_from*from,const void*b,size_t len,const char*name){
     const void*data=NULL;size_t size=0;uint32_t expected=0;UINT32 actual=0;
-    if(lmi_bundle_find(b,len,name,&data,&size,&expected))return -1;
-    if(EFI_ERROR(gBS->CalculateCrc32((VOID*)data,size,&actual))||actual!=expected)return -1;
+    if(lmi_bundle_find(b,len,name,&data,&size,&expected)){
+        tlog_error("LMI bundle component absent/invalid: %s",name);return -1;
+    }
+    if(EFI_ERROR(gBS->CalculateCrc32((VOID*)data,size,&actual))||actual!=expected){
+        tlog_error("LMI bundle CRC rejected: %s",name);return -1;
+    }
     ZeroMem(from,sizeof(*from));from->enabled=true;from->type=FROM_POINTER;
     from->pointer=(void*)data;from->size=size;return 0;
 }
@@ -23,7 +27,9 @@ int linux_boot_lmi_bundle(linux_boot*lb,const char*ident){
     cfg=lb->config;
     if(!lmi_bundle_buffer){
         st=GetSectionFromAnyFv(&lmi_bundle_guid,EFI_SECTION_RAW,0,&lmi_bundle_buffer,&lmi_bundle_bytes);
-        if(EFI_ERROR(st)||!lmi_bundle_buffer)return -1;
+        if(EFI_ERROR(st)||!lmi_bundle_buffer){
+            tlog_error("LMI FV asset lookup failed: %s",efi_status_to_string(st));return -1;
+        }
     }
     b=lmi_bundle_buffer;len=lmi_bundle_bytes;
     if(lmi_bundle_source(&cfg->kernel,b,len,"android/kernel")||
