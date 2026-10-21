@@ -169,3 +169,9 @@ Untouched countdown and explicit menu order remain pending handset verification.
 The final requested order is Mobian, LineageOS, Fastboot, Recovery. This probe
 still contains only Mobian, Fastboot, Recovery: LineageOS chainloading is pending,
 not hidden or qualified by this build. Touch input is not yet operational.
+
+## Next candidate: LineageOS
+
+Revision 2 automatic return after 15 seconds is operator-confirmed and backed
+by SSH dedicated-root checks. See [LineageOS candidate](chainload/README.md) for
+the next explicit build command, implementation and pending hardware gates.

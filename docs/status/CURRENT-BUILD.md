@@ -1548,3 +1548,20 @@ Untouched countdown and explicit menu order remain pending handset verification.
 The final requested order is Mobian, LineageOS, Fastboot, Recovery. This probe
 still contains only Mobian, Fastboot, Recovery: LineageOS chainloading is pending,
 not hidden or qualified by this build. Touch input is not yet operational.
+
+## October 21: menu countdown accepted; LineageOS candidate prepared
+
+The operator confirms revision 2 auto-boots after 15 seconds. Independent SSH
+after return confirms dedicated sda35 backing, root loop0p2, running Phosh and
+charging. This validates the temporary menu's automatic path. It does not
+validate touch input or direct Android/Mobian chainloading.
+
+The new [experimental LineageOS recipe](../../build/boot-menu/chainload/README.md)
+adds the missing second entry and packages the two pinned images' exact
+components plus the installed Android DTBO in a protected FV section. The
+128 MiB firmware reservation and following RAM range are adjusted together;
+the arbitrary-ramdisk approach was rejected before any build/boot. Actual-input
+bundle creation (116559872 bytes), C bounds checks and source patch/restoration
+checks pass. The candidate firmware has NOT been compiled or target-tested;
+it is temporary-only and must not be flashed. The existing Mobian cold-reboot
+default is retained while Android handoff is qualified.

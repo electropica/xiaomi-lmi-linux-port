@@ -1,9 +1,11 @@
 {
-  "status": "temporary_menu_probe_recipe_not_built",
+  "status": "temporary_menu_countdown_validated_lineage_candidate_not_built",
   "location": "handset",
   "entries": [
     "mobian",
-    "android"
+    "android",
+    "fastboot",
+    "recovery"
   ],
   "default": "mobian",
   "timeout_seconds": 15,

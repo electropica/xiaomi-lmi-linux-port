@@ -10,7 +10,10 @@ if [[ ${1:-} != --build ]]; then
   echo 'Builds only a temporary menu probe; does not yet launch Android.'
   exit 0
 fi
-[[ $# == 1 && $EUID == 0 ]] || { echo 'Use sudo bash build.sh --build' >&2; exit 1; }
+lineage=0
+if [[ ${2:-} == --with-lineage && $# == 2 ]]; then lineage=1
+elif [[ $# != 1 ]]; then echo 'Use --build [--with-lineage]' >&2; exit 1; fi
+[[ $EUID == 0 ]] || { echo 'Use sudo bash build.sh --build' >&2; exit 1; }
 command -v mmdebstrap >/dev/null
 command -v unshare >/dev/null
 [[ ! -L $build_root ]] || { echo 'Refusing symlink build root' >&2; exit 1; }
@@ -29,9 +32,14 @@ if [[ ! -f $rootfs/.lmi-bootstrap-complete ]]; then
   touch "$rootfs/.lmi-bootstrap-complete"
 fi
 mkdir -p "$build_root/source" "$build_root/output"
-exec unshare --mount --propagation private bash -s -- "$rootfs" "$recipe" "$build_root" <<'INNER'
+if [[ $lineage == 1 ]]; then
+  for input in android.img mobian.img android-dtbo.img; do
+    [[ -f $build_root/inputs/$input ]] || { echo "Missing qualified input: $input" >&2; exit 1; }
+  done
+fi
+exec unshare --mount --propagation private bash -s -- "$rootfs" "$recipe" "$build_root" "$lineage" <<'INNER'
 set -euo pipefail
-rootfs=$1;recipe=$2;build_root=$3
+rootfs=$1;recipe=$2;build_root=$3;lineage=$4
 mkdir -p "$rootfs"/{recipe,source,output,proc,sys,dev}
 mount --bind "$recipe" "$rootfs/recipe"
 mount -o remount,bind,ro "$rootfs/recipe"
@@ -41,6 +49,11 @@ mount -t proc proc "$rootfs/proc"
 mount --rbind /dev "$rootfs/dev"
 mount --make-rslave "$rootfs/dev"
 mount -t sysfs -o ro sysfs "$rootfs/sys"
+if [[ $lineage == 1 ]]; then
+  mkdir -p "$rootfs/inputs"
+  mount --bind "$build_root/inputs" "$rootfs/inputs"
+  mount -o remount,bind,ro "$rootfs/inputs"
+fi
 # Mount namespace cleanup is automatic when the process exits, including failure.
-chroot "$rootfs" /bin/bash /recipe/build-inside.sh 2>&1 | tee "$build_root/output/build.log"
+chroot "$rootfs" /usr/bin/env LMI_MENU_LINEAGE="$lineage" /bin/bash /recipe/build-inside.sh 2>&1 | tee "$build_root/output/build.log"
 INNER
