@@ -93,3 +93,19 @@ After a successful build, first temporarily boot from Windows, verify the menu
 still times out into Mobian, then repeat and choose LineageOS using Volume and
 Power. Inspect Android boot completion and ADB before claiming success. The
 existing Fastboot path and qualified direct images remain the rescue method.
+
+## First Lineage candidate build: include ordering fixed
+
+The first operator attempt stopped after ten seconds: DxeServicesLib.h saw
+undefined EFI_FV_FILETYPE and EFI_SECTION_TYPE because the new adapter included
+it before Pi/PiFirmwareFile.h. The include order is corrected.
+
+A targeted Clang 14 ARM64 syntax check of the actual aboot.c translation unit
+passes with the generated build's original flags, include paths and -Werror.
+The corrected header was temporarily overlaid in a private mount namespace;
+the underlying build source and its restoration manifest were not edited.
+No object, linked firmware or image was built by that check. The reusable
+syntax-check.sh/mk records the procedure. Full firmware linking/packaging and
+handset validation remain pending. Rerun the same --build --with-lineage
+operator command; the recipe first restores its exact previous known edits,
+then applies the corrected adapter.

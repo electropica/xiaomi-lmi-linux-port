@@ -3,8 +3,8 @@
  * list helpers and EFI boot services. Assets live in a protected FV section.
  */
 #include "bundle-format.h"
-#include <Library/DxeServicesLib.h>
 #include <Pi/PiFirmwareFile.h>
+#include <Library/DxeServicesLib.h>
 static EFI_GUID lmi_bundle_guid={0x4f9fd886,0x1b54,0x4e6c,{0x9d,0xf8,0x2c,0x64,0x66,0x52,0x12,0x27}};
 static void*lmi_bundle_buffer=NULL;
 static UINTN lmi_bundle_bytes=0;
