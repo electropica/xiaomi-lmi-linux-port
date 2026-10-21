@@ -58,3 +58,15 @@ qualify the new image and prepare a fresh Windows temporary launcher. Select
 LineageOS using Volume/Power. Photograph the diagnostic panel if it appears;
 the next change must follow its observed error. No experimental image is ready
 for persistent installation.
+
+## Diagnostic image compiled and qualified for temporary test
+
+The operator compiled variant prepi-ffs3-diag1: 25995264 bytes, SHA256
+287645d2b55060b15006037c6fa3a91180954af85cf4286ded2daae14b9803f0.
+All thirteen source hashes match; the lmi memory map remains unchanged. The
+PrePi replay passes on the new FD. Windows transfer and plan-only launcher
+preflight passed. Use test-lineage-diagnostic-windows.py for this exact image.
+No new phone contact, flash or persistent installation was performed. The
+diagnostic error panel remains untested on the handset; Android handoff is
+still unvalidated. The next observation is the stage/error after LineageOS
+selection, not another blind boot attempt.
