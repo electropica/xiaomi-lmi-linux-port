@@ -1,4 +1,16 @@
 
+## October 21: pre-installation passive reference retrieved
+
+The existing Mobian completed 9.10 hours unplugged, with 95.3% clock-accounted
+suspension. All 38 gauge wakes returned toward sleep without observed software
+unblank. Qualified sleep-counter estimates remain about 52.2 mA; late filtered
+resume samples have a 49.3 mA median. These are gauge estimates, not calibrated
+electrical current. No new cause or saving is established. Cleanup passed.
+See the [reference and endpoint limits](../validation/lmi-dualboot-reference-2026-10-21.md).
+Dual-boot artifacts exist but have not been installed; the PC selector remains
+locked. No phone partition or installed package changed during this reference.
+
+
 ## October 21: dual-boot artifacts completed, target installation pending
 
 The operator-built full image completed its ext4 checks. A finalizer permission
