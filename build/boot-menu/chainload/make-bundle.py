@@ -7,7 +7,7 @@ s=importlib.util.spec_from_file_location('payloads',parent/'extract-payloads.py'
 DTBO_SHA='45f0989700c68afcd817a6a4569ba67225cf128e3eedd35a658bad384632eec4'
 def bundle(inputs):
  lock=json.loads((parent/'sources.lock.json').read_text());entries=[]
- for os,file in [('mobian','mobian.img'),('android','android.img')]:
+ for os,file in [('android','android.img')]:
   raw=(inputs/file).read_bytes()
   if hashlib.sha256(raw).hexdigest()!=lock['os_images'][os]:raise ValueError('Wrong '+os+' boot image')
   parts=p.extract(raw)

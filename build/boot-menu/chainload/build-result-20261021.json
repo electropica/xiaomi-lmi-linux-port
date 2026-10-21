@@ -7,5 +7,7 @@
   "python": "Python 3.11.2",
   "host_source_hash_checks": "all 11 match recorded patched-source manifest",
   "bundle_sha256": "f274b93fee79315b9f4cdf8e45d08a09a12f027a922e8dc7961ca8ed111f2892",
-  "handset_validation": "pending"
+  "handset_validation": "failed_before_menu_appeared",
+  "retired": true,
+  "recovery": "Power long-press returned to installed Mobian; SSH confirmed"
 }

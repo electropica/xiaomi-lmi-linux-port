@@ -46,6 +46,7 @@ p=Path('/output/boot-lmi-lineage-test.img' if lineage else '/output/boot-lmi.img
 assert raw[:8]==b'ANDROID!' and 0<len(raw)<=134217728
 assert struct.unpack_from('<I',raw,40)[0]==1
 result={'phase':'experimental-lineage-ram-handoff' if lineage else 'temporary-menu-smoke-not-dualboot','bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest(),'no_phone_contact':True,'compiler':subprocess.check_output(['clang','--version'],text=True).splitlines()[0],'python':subprocess.check_output(['python3','--version'],text=True).strip()}
+if lineage:result['candidate_variant']='android-only-original-memory-map-32MiB-FD'
 Path('/output/lineage-artifact-manifest.json' if lineage else '/output/artifact-manifest.json').write_text(json.dumps(result,indent=2))
 print(json.dumps(result,indent=2))
 PY

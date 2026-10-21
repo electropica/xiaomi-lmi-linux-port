@@ -55,15 +55,15 @@ def main():
  assert old.count('[LibraryClasses]\n')==1
  new=old.replace('[LibraryClasses]\n','[LibraryClasses]\n  DxeServicesLib\n')
  edits[path]=(new.encode(),{'after':sha(new.encode()),'upstream':sha(original),'new_file':False})
- # Keep the complete expanded FD protected before any DXE allocation. The old
- # 32-MiB FD reservation is too small for the embedded two-OS asset section.
- for path in ['configs/devices/lmi.conf','Platform/Qualcomm/sm8250/sm8250.fdf','Platform/Xiaomi/sm8250/lmi.fdf.inc','Platform/Xiaomi/sm8250/Library/lmi/PlatformMemoryMapLib/PlatformMemoryMapLib.c']:
+ # Fit the Android-only assets inside the upstream's existing 32-MiB FD
+ # reservation. Do not edit the working lmi memory map.
+ for path in ['configs/devices/lmi.conf','Platform/Qualcomm/sm8250/sm8250.fdf','Platform/Xiaomi/sm8250/lmi.fdf.inc']:
   old=(a.source/path).read_text();original=subprocess.check_output(['git','-C',str(a.source),'show','HEAD:'+path]);assert old==original.decode().replace('\r\n','\n')
   if path.endswith('lmi.conf'):
-   new=old+'\n# Experimental embedded-asset menu: reserve the full FD in the lmi map.\nFD_SIZE=0x08000000\n'
+   new=old+'\n# Compact Android-only candidate: retain the original lmi FD reservation.\nFD_SIZE=0x02000000\n'
   elif path.endswith('sm8250.fdf'):
    assert old.count('NumBlocks     = 0x700\n')==1 and old.count('0x00000000|0x00700000')==1
-   new=old.replace('NumBlocks     = 0x700\n','NumBlocks     = 0x8000\n').replace('0x00000000|0x00700000','0x00000000|0x08000000')
+   new=old.replace('NumBlocks     = 0x700\n','NumBlocks     = 0x2000\n').replace('0x00000000|0x00700000','0x00000000|0x02000000')
   elif path.endswith('lmi.fdf.inc'):
    new=old+'''\n// Verified OS components, loaded with GetSectionFromAnyFv, never from disk.
 FILE FREEFORM = 4f9fd886-1b54-4e6c-9df8-2c6466521227 {
@@ -71,9 +71,6 @@ FILE FREEFORM = 4f9fd886-1b54-4e6c-9df8-2c6466521227 {
     SECTION UI = "lmi verified OS assets"
 }
 '''
-  else:
-   assert old.count('0xCE000000, 0x02000000')==1 and old.count('0xD0000000,0x130000000')==1
-   new=old.replace('0xCE000000, 0x02000000','0xCE000000, 0x08000000').replace('0xD0000000,0x130000000','0xD6000000,0x12A000000')
   edits[path]=(new.encode(),{'after':sha(new.encode()),'upstream':sha(original),'new_file':False,'edk2':True})
  # Validate all inputs before mutating any source.
  for path,(raw,info) in edits.items():((a.source if info.get('edk2') else base)/path).write_bytes(raw)

@@ -1,5 +1,9 @@
 # Experimental LineageOS entry after the validated menu probe
 
+**Current status: the first large candidate failed before displaying the menu.
+It is retired. Use [COMPACT.md](COMPACT.md) for the replacement recipe and its
+validation boundary. The original design notes below are historical.**
+
 Revision 2's untouched 15-second default and return to Mobian are now confirmed
 by the operator; SSH confirms root /dev/loop0p2 and running Phosh after return.
 Volume/Power navigation works. Touch does not select/activate entries yet.
@@ -93,32 +97,3 @@ After a successful build, first temporarily boot from Windows, verify the menu
 still times out into Mobian, then repeat and choose LineageOS using Volume and
 Power. Inspect Android boot completion and ADB before claiming success. The
 existing Fastboot path and qualified direct images remain the rescue method.
-
-## First Lineage candidate build: include ordering fixed
-
-The first operator attempt stopped after ten seconds: DxeServicesLib.h saw
-undefined EFI_FV_FILETYPE and EFI_SECTION_TYPE because the new adapter included
-it before Pi/PiFirmwareFile.h. The include order is corrected.
-
-A targeted Clang 14 ARM64 syntax check of the actual aboot.c translation unit
-passes with the generated build's original flags, include paths and -Werror.
-The corrected header was temporarily overlaid in a private mount namespace;
-the underlying build source and its restoration manifest were not edited.
-No object, linked firmware or image was built by that check. The reusable
-syntax-check.sh/mk records the procedure. Full firmware linking/packaging and
-handset validation remain pending. Rerun the same --build --with-lineage
-operator command; the recipe first restores its exact previous known edits,
-then applies the corrected adapter.
-
-## Experimental Lineage menu build completed
-
-The operator's second attempt completed after the include-order correction.
-The final boot image is 47302656 bytes, SHA256
-2d4284b5fc26fb8e90c529eb714e5d9076b8b01331bc707d00758dd94335ef11.
-The compressed FV occupies 46301152 bytes of its 128 MiB reservation. All 11
-patched-source hashes match their build manifest; the verified asset bundle
-SHA256 is f274b93fee79315b9f4cdf8e45d08a09a12f027a922e8dc7961ca8ed111f2892.
-The Windows copy and host-only helper preflight also match. Neither the expanded
-firmware nor LineageOS handoff has yet been booted on this handset. The Windows
-helper is pinned to this image and contains no flash command. Use Volume/Power
-to select LineageOS, then activate Boot. A focus change cancels the countdown.

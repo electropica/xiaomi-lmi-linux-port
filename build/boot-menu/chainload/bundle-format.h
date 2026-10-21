@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <string.h>
 #define LMI_BUNDLE_HEADER 4096u
-#define LMI_BUNDLE_ROWS 9u
+#define LMI_BUNDLE_ROWS 5u
 #define LMI_BUNDLE_ROW_SIZE 56u
 static uint64_t lmi_u64(const unsigned char*p){
     uint64_t v=0;unsigned i;for(i=0;i<8;i++)v|=(uint64_t)p[i]<<(i*8);return v;

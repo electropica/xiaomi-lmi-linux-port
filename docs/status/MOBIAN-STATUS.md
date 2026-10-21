@@ -2206,3 +2206,19 @@ The Windows copy and host-only helper preflight also match. Neither the expanded
 firmware nor LineageOS handoff has yet been booted on this handset. The Windows
 helper is pinned to this image and contains no flash command. Use Volume/Power
 to select LineageOS, then activate Boot. A focus change cancels the countdown.
+
+## October 21: large Lineage candidate failed before menu; compact recipe ready
+
+The expanded-FD candidate 2d4284b5... was temporarily booted and remained black
+before any menu appeared. ADB/Fastboot/SSH were absent, and the operator had not
+selected LineageOS. A long Power press returned to the unchanged installed
+Mobian; root loop0p2, Phosh and normal battery status were confirmed over SSH.
+pstore was empty. The precise firmware failure stage is unknown; this is not
+an observed Android kernel/handoff failure. The old Windows launcher is retired
+and rejects execution before phone contact.
+
+The replacement bundles only the five Android components (61906944 bytes) and
+limits FD to 32 MiB, fitting the upstream lmi reservation without changing its
+memory map. Compact bounds tests, real-input packaging, exact source restoration
+and unchanged-map checks pass. No compact firmware has yet been built or tested.
+See [current candidate](../../build/boot-menu/chainload/COMPACT.md).

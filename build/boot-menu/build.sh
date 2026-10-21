@@ -33,7 +33,7 @@ if [[ ! -f $rootfs/.lmi-bootstrap-complete ]]; then
 fi
 mkdir -p "$build_root/source" "$build_root/output"
 if [[ $lineage == 1 ]]; then
-  for input in android.img mobian.img android-dtbo.img; do
+  for input in android.img android-dtbo.img; do
     [[ -f $build_root/inputs/$input ]] || { echo "Missing qualified input: $input" >&2; exit 1; }
   done
 fi
