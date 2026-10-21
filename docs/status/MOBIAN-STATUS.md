@@ -2100,3 +2100,22 @@ image generation or flash was started. Longer recovery variants remain unvalidat
 ## October 20: systematic peripheral audit ledger
 
 A [common checklist](../validation/lmi-standby-peripheral-checklist-2026-10-20.md) now consolidates existing standby evidence and unverified peripheral states. The connected software inventory has 849 compatible DT nodes and 697 entries across 15 selected buses (607 bound). These are software entries, not physical chip counts or measured sleep power. A grouped reversible one-hour observation is pending; no residual-drain fix or new build is claimed.
+
+## October 21: Android/Mobian return and host selector qualified
+
+After full Android setup and root ADB inspection, native Windows ADB requested
+Fastboot and temporarily booted the pinned adapted Mobian image. SSH confirms
+root loop0p2 backed by dedicated sda35 (16 GiB), running Phosh/Phoc processes,
+empty dpkg audit, charging and no RTC alarm. No partition was flashed during
+this round trip. The per-device validation marker and private PC selector
+configuration are now enabled for pinned RAM boots. The persistent boot
+partition still holds the previously installed Mobian boot; the adapted boot
+has not been installed persistently. The requested on-handset 15-second menu
+with Mobian default remains unimplemented.
+
+Mobian wall time was aligned to the host and Europe/Paris selected. The existing
+offline RTC-anchor helper captured a trusted reference and its boot restoration
+service is enabled. The anchor check differs by less than one second; this new
+reference has not yet been validated through another boot. The hardware RTC
+counter was not written. NTP is active but network synchronization is not
+confirmed.
