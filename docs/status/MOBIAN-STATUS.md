@@ -2140,3 +2140,27 @@ the Windows transfer. No UEFI handset boot has occurred yet. This is still a
 menu/countdown probe, not Android chainloading or a persistent dualboot menu.
 The Windows operator helper has passed host-only plan mode. See the dedicated
 [recipe and build result](../../build/boot-menu/README.md#first-operator-build-result).
+
+## First handset probe and revision 2 correction
+
+The operator temporarily booted the first probe. The menu is visible. Touch
+does not select/activate entries, but Volume changes focus and Power confirms;
+the operator returned to Mobian by selecting its entry and Boot. SSH confirms
+the dedicated root, running Phosh and charging after that normal boot. This
+also qualifies the old installed RPMh boot's discovery of the new root layout.
+
+The automatic path failed: source review identifies that bootmenu_add explicitly
+excludes BOOT_REBOOT from auto-selection. The probe uses BOOT_REBOOT for Mobian,
+so no default selection exists and bootmenu_load never starts the timer. This
+was an integration error in revision 1, not an observation of a failed RTC or a
+failed reboot handler. The physical button path proves the latter can run.
+
+Revision 2 permits default auto-selection for the named Mobian reboot entry
+only. Fastboot/recovery are still excluded from automatic selection. It also
+enumerates Mobian, Fastboot, Recovery explicitly, independent of confd child
+order. Exact before/after source hashes and patch-idempotence checks pass. The
+seven boot-component parser tests still pass. Revision 2 has NOT been compiled
+or handset-tested yet; rerun the same operator build command. The existing
+Windows launch helper remains pinned to revision 1 until a new artifact hash is
+reviewed and transferred. Do not use it to launch a rebuilt image with a new
+hash. Touch support and Android chainloading remain separate pending work.

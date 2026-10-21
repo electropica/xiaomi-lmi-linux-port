@@ -20,9 +20,9 @@ assert git('-C','edk2-msm','rev-parse','HEAD')==c['revision']
 for path,sha in c['submodules'].items():
  assert git('-C','edk2-msm/'+path,'rev-parse','HEAD')==sha,path
 assert not git('-C','edk2-msm','diff','--name-only','--ignore-submodules=dirty'), 'Unexpected superproject changes'
-# Reject pre-existing submodule edits except the two intentional local patches.
+# Reject pre-existing submodule edits except the intentional menu patches.
 changed=git('-C','edk2-msm/GPLDrivers/Library/SimpleInit','diff','--name-only').splitlines()
-assert set(changed)<= {'src/main/uefimain.c','src/confd/uefi.c'},changed
+assert set(changed)<= {'src/main/uefimain.c','src/confd/uefi.c','src/gui/interface/core/bootmenu.c'},changed
 PY
 python3 /recipe/apply-menu.py /source/edk2-msm > /output/patch-manifest.json
 cd /source/edk2-msm

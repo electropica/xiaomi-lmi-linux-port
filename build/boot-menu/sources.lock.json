@@ -25,6 +25,11 @@
     "src/confd/uefi.c": {
       "before": "e91131e046123cb4f439071af94ee7cdc318ed62c0990c4fe962ad9a82a18973",
       "after": "113856e9e09c8f5da553c88e53d933baaf0ddcbfb72ad693988abc00c8672129"
+    },
+    "src/gui/interface/core/bootmenu.c": {
+      "before": "40ddbc967e0f6f2390c64f7a2abf2fd728e008f0e19250295b583a7cedcf1ae8",
+      "after": "b333a20277dbf9df9fc4e7c5be450d6fe139e1e08b54ee393df3c85d891ad978"
     }
-  }
+  },
+  "probe_revision": 2
 }

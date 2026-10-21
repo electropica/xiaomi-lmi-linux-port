@@ -50,12 +50,34 @@ def patch_save(text):
 \treturn 0;
 }''')
 
+def patch_bootmenu(text):
+    if 'LMI_MENU_COUNTDOWN_ORDER_V2' in text:
+        return text
+    # Upstream deliberately excludes ALL reboot entries from auto-selection.
+    # The temporary Mobian entry is a reboot by design; allow only that name.
+    old='\t\tcase BOOT_REBOOT:\n\t\tcase BOOT_POWEROFF:'
+    assert text.count(old)==1
+    text=text.replace(old,'\t\tcase BOOT_POWEROFF:')
+    old='\t\tdefault:\n\t\t\tif(no_autoboot)break;'
+    assert text.count(old)==1
+    text=text.replace(old,'''\t\tcase BOOT_REBOOT:
+\t\tdefault:
+\t\t\t/* LMI_MENU_COUNTDOWN_ORDER_V2: auto-reboot only to installed Mobian. */
+\t\t\tif(bi->cfg.mode==BOOT_REBOOT&&strcmp(bi->cfg.ident,"mobian")!=0)break;
+\t\t\tif(no_autoboot)break;''')
+    old='\t\tfor(size_t i=0;cs[i];i++)bootmenu_add(bm,cs[i]);'
+    assert text.count(old)==1
+    text=text.replace(old,'''\t\t/* Do not depend on confd's child enumeration/insertion order. */
+\t\tchar*lmi_order[]={"mobian","fastboot","recovery",NULL};
+\t\tfor(size_t i=0;lmi_order[i];i++)bootmenu_add(bm,lmi_order[i]);''')
+    return text
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('source',type=Path);a=p.parse_args()
     base=a.source/'GPLDrivers/Library/SimpleInit'
     lock=json.loads(Path(__file__).with_name('sources.lock.json').read_text())
     manifest={}
-    for path,patcher in [('src/main/uefimain.c',patch_main),('src/confd/uefi.c',patch_save)]:
+    for path,patcher in [('src/main/uefimain.c',patch_main),('src/confd/uefi.c',patch_save),('src/gui/interface/core/bootmenu.c',patch_bootmenu)]:
         f=base/path;old=f.read_text();new=patcher(old)
         before=hashlib.sha256(old.encode()).hexdigest()
         expected=lock['patched_source_hashes'][path]
