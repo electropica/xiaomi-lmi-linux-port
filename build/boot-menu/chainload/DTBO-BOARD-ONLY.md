@@ -52,3 +52,15 @@ sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --buil
 After compiling, qualify the new image/hash and use a new Windows RAM launcher.
 Do not flash an experimental menu. If still in UEFI setup, a long Power reset
 returns to installed Mobian as previously verified; no new image is required.
+
+## Board-only DTBO correction compiled; handset test pending
+
+The operator built dtbo1: 25997312 bytes, SHA256
+969ee0c3d49083adfd17ea199575df55b211c66b5071d96fb24c8701fb82bed1.
+Fourteen source hashes match, the lmi memory map is unchanged, and PrePi replay
+passes on the rebuilt FD. Windows transfer and plan-only preflight passed.
+test-lineage-dtbo-windows.py pins this image and now requires an explicit SSH
+guard-completion marker before waiting for Fastboot; an absent USB link is no
+longer mistaken for a possibly successful reboot. No phone command or flash was
+performed in qualification. Actual DTBO application and Android handoff remain
+pending; the diagnostic stage/error panel is retained.

@@ -2311,3 +2311,15 @@ Four-unit ARM64 syntax and fourteen-file exact restoration/tamper tests pass.
 This dtbo1 correction is not yet built or hardware validated. See
 build/boot-menu/chainload/DTBO-BOARD-ONLY.md. Same operator build command;
 new variant ends in prepi-ffs3-dtbo1. No flash or kernel rebuild performed.
+
+## Board-only DTBO correction compiled; handset test pending
+
+The operator built dtbo1: 25997312 bytes, SHA256
+969ee0c3d49083adfd17ea199575df55b211c66b5071d96fb24c8701fb82bed1.
+Fourteen source hashes match, the lmi memory map is unchanged, and PrePi replay
+passes on the rebuilt FD. Windows transfer and plan-only preflight passed.
+test-lineage-dtbo-windows.py pins this image and now requires an explicit SSH
+guard-completion marker before waiting for Fastboot; an absent USB link is no
+longer mistaken for a possibly successful reboot. No phone command or flash was
+performed in qualification. Actual DTBO application and Android handoff remain
+pending; the diagnostic stage/error panel is retained.
