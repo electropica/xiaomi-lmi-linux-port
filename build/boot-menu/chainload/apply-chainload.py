@@ -57,6 +57,12 @@ def main():
  assert (base/path).read_bytes()==original
  raw=diag.patch_prepare(original.decode().replace('\r\n','\n')).encode()
  edits[path]=(raw,{'after':sha(raw),'upstream':sha(original),'new_file':False})
+ spec=importlib.util.spec_from_file_location('dtbopatch',here/'patch-dtbo.py')
+ dtbopatch=importlib.util.module_from_spec(spec);spec.loader.exec_module(dtbopatch)
+ path='src/linux-boot/dtbo.c';original=subprocess.check_output(['git','-C',str(base),'show','HEAD:'+path])
+ assert (base/path).read_bytes()==original
+ raw=dtbopatch.patch(original.decode().replace('\r\n','\n')).encode()
+ edits[path]=(raw,{'after':sha(raw),'upstream':sha(original),'new_file':False})
  for name in ['bundle-format.h','lmi-bundle-loader.h','lmi-boot-diagnostic.h']:
   path='src/linux-boot/'+name;assert not (base/path).exists()
   raw=(here/name).read_bytes();edits[path]=(raw,{'after':sha(raw),'new_file':True})

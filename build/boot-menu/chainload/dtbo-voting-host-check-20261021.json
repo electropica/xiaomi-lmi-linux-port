@@ -1,0 +1,6 @@
+{
+  "result": "ACTUAL_C_VOTER_PASS: 8 representative chip profiles, all 12 real board IDs; only lmi accepted after correction; explicit/malformed msm-id not overridden",
+  "inputs": "12 board IDs from pinned Android DTBO",
+  "chip_profiles": "8 representative profiles; not live hardware measurements",
+  "hardware_validation": false
+}

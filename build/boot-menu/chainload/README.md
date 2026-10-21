@@ -1,10 +1,10 @@
 # Experimental LineageOS entry after the validated menu probe
 
-**Current status: the FFS3-corrected candidate displays our menu on the
-handset. Selecting LineageOS returns to UEFI setup; Android handoff remains
-unvalidated. A host-qualified diagnostic-only recipe is ready for an operator
-build; see [HANDOFF-DIAGNOSTIC.md](HANDOFF-DIAGNOSTIC.md). The earlier black-screen
-candidates remain retired.**
+**Current status: the menu displays. The diagnostic launch fails at stage 08
+because the DTBO matcher treats absent SoC metadata in board-only overlays as
+SoC zero. A host-qualified correction is ready for the operator build; see
+[DTBO-BOARD-ONLY.md](DTBO-BOARD-ONLY.md). Android execution remains unvalidated.
+No experimental menu has been flashed.**
 
 Revision 2's untouched 15-second default and return to Mobian are now confirmed
 by the operator; SSH confirms root /dev/loop0p2 and running Phosh after return.

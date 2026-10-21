@@ -70,3 +70,21 @@ No new phone contact, flash or persistent installation was performed. The
 diagnostic error panel remains untested on the handset; Android handoff is
 still unvalidated. The next observation is the stage/error after LineageOS
 selection, not another blind boot attempt.
+
+## LineageOS launch localized to board-only DTBO matching
+
+The diagnostic handset image shows stage 08 apply DTBO and rejects lmi overlay
+7 with "vote too few". It then returns to UEFI setup. Kernel execution has not
+occurred. All twelve pinned Android overlays have board-id but omit msm-id;
+the old matcher treats the missing SoC field as zero and rejects it against
+the actual platform SoC. lmi board-id is (37, 0).
+
+A minimal overlay-only correction inherits platform SoC fields only when
+msm-id is absent and board-id is well formed. Board matching remains active;
+explicit/malformed msm-id is not overridden. No guessed index or ignored
+overlay error. Actual C voting against all twelve real board IDs passes eight
+representative board-37 profiles, accepting only lmi after the correction.
+Four-unit ARM64 syntax and fourteen-file exact restoration/tamper tests pass.
+This dtbo1 correction is not yet built or hardware validated. See
+build/boot-menu/chainload/DTBO-BOARD-ONLY.md. Same operator build command;
+new variant ends in prepi-ffs3-dtbo1. No flash or kernel rebuild performed.

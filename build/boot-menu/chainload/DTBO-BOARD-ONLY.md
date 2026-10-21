@@ -1,0 +1,54 @@
+# Board-only Qualcomm DTBO matching
+
+## Observed error
+
+The diagnostic handset boot (image SHA256
+287645d2b55060b15006037c6fa3a91180954af85cf4286ded2daae14b9803f0)
+shows stage `08 apply DTBO`, with `selected dtbo 7 (Qualcomm Technologies,
+Inc. xiaomi lmi) vote too few`, followed by `apply dtbo failed` and
+`prepare linux boot failed`. The operator subsequently sees UEFI setup again.
+The bundle loaded, kernel decompression and base DTB selection returned success;
+kernel execution has not occurred. The RNG warning is nonfatal in the pinned
+random-seed installer, and the icon warnings do not identify this failure.
+
+## Reproduced source defect
+
+All twelve overlays in the pinned Android DTBO image have qcom,board-id but no
+qcom,msm-id. The lmi overlay has board-id (37, 0). They are board overlays for
+a base SoC DTB; missing SoC metadata does not encode an actual SoC ID of zero.
+See dtbo-root-properties-20261021.json (metadata only, no firmware).
+
+process_dtbo zero-initializes its info, then qcom_parse_id leaves soc_id zero
+when msm-id is absent. qcom_check_dtb compares that zero to the platform's
+nonzero SoC ID and returns a negative vote, including for the correct board.
+
+patch-dtbo.py changes only automatic overlay matching: an absent msm-id
+property with the specific NOTFOUND result and a well-formed board-id can
+inherit the platform SoC ID/revision/foundry already used for base-DTB selection.
+Board fields remain untouched and must still pass the original matching logic.
+Explicit or malformed msm-id properties are not overwritten. No DTBO index,
+model string or permissive ignore_dtbo_error setting is forced. Base DTB
+matching and DTBO application logic are unchanged.
+
+## Validation and remaining limits
+
+The actual C voter and inserted inheritance block were replayed against all
+twelve real board IDs with eight representative nonzero SoC/revision/foundry
+profiles for board 37. Previously none passed; afterwards only lmi passes.
+Explicit incompatible msm-id and malformed-property errors are not overridden.
+These profiles are test fixtures, not measurements of the running firmware.
+Four C units pass Clang 14 ARM64 syntax checking with generated flags/-Werror.
+Fourteen-file patch/restoration and tamper rejection pass on a source fixture.
+
+No dtbo1 firmware has yet been built or tested on the handset. A successful
+host vote does not prove overlay application or Android kernel execution.
+Keep the stage/error panel for the next possible failure. The build variant
+ends in prepi-ffs3-dtbo1. Operator command remains:
+
+```bash
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --build --with-lineage
+```
+
+After compiling, qualify the new image/hash and use a new Windows RAM launcher.
+Do not flash an experimental menu. If still in UEFI setup, a long Power reset
+returns to installed Mobian as previously verified; no new image is required.

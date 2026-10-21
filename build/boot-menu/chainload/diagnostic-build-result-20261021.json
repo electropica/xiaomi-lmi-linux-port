@@ -8,6 +8,8 @@
   "candidate_variant": "android-only-original-memory-map-32MiB-FD-prepi-ffs3-diag1",
   "patched_source_hashes_verified": 13,
   "upstream_lmi_memory_map_unchanged": true,
-  "handset_validation": "pending",
-  "temporary_boot_only": true
+  "handset_validation": "stage_08_dtbo_matching_rejected_board_only_lmi_overlay",
+  "temporary_boot_only": true,
+  "observed_error": "selected dtbo 7 (Qualcomm Technologies, Inc. xiaomi lmi) vote too few",
+  "android_handoff_validated": false
 }

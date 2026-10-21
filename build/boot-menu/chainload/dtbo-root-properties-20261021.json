@@ -1,0 +1,233 @@
+{
+  "count": 12,
+  "rows": [
+    {
+      "index": 0,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi alioth",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          44,
+          0
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi apollo",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          42,
+          0
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi cas",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          41,
+          0
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi cmi",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          36,
+          0
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi dagu",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          51,
+          0
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi elish",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          47,
+          0
+        ]
+      }
+    },
+    {
+      "index": 6,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi enuma",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          46,
+          0
+        ]
+      }
+    },
+    {
+      "index": 7,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi lmi",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          37,
+          0
+        ]
+      }
+    },
+    {
+      "index": 8,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi munch",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          50,
+          0
+        ]
+      }
+    },
+    {
+      "index": 9,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi psyche",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          48,
+          0
+        ]
+      }
+    },
+    {
+      "index": 10,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi thyme",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          45,
+          0
+        ]
+      }
+    },
+    {
+      "index": 11,
+      "entry_id": 0,
+      "entry_rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "properties": {
+        "model": "Qualcomm Technologies, Inc. xiaomi umi",
+        "compatible": "qcom,kona-mtp,qcom,kona,qcom,mtp",
+        "qcom,board-id": [
+          43,
+          0
+        ]
+      }
+    }
+  ]
+}
