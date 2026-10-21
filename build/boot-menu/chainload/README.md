@@ -1,10 +1,10 @@
 # Experimental LineageOS entry after the validated menu probe
 
-**Current status: the menu and Android kernel/first-stage init execute on the
-handset. Android then aborts while waiting for physical system/vendor because
-the legacy DT fstab shadows its logical ramdisk fstab. A host-qualified RAM-only
-correction is ready for the operator build; see [ANDROID-FIRST-MOUNT.md](ANDROID-FIRST-MOUNT.md).
-Full Android userspace and persistent menu installation remain unvalidated.**
+**Current status: Android kernel/init execution is confirmed. fstab1 reaches
+recovery with init_user0_failed; the exact data-initialization error is unknown.
+A no-flash direct stock-Android control is prepared; see
+[ANDROID-DATA-CONTROL.md](ANDROID-DATA-CONTROL.md). Full Android startup and
+persistent menu installation remain unvalidated.**
 
 Revision 2's untouched 15-second default and return to Mobian are now confirmed
 by the operator; SSH confirms root /dev/loop0p2 and running Phosh after return.

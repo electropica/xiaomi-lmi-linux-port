@@ -1729,3 +1729,18 @@ requires the SSH guard-completion marker before waiting for Fastboot.
 No phone command or flash was performed during qualification. The removal of
 the legacy DT table and progress past first-stage logical mounting remain
 pending handset observation; Android userspace is not yet validated.
+
+## Recovery user-init failure: direct stock-Android control prepared
+
+fstab1 reaches recovery with init_user0_failed. The original Android failure
+trace has been replaced by recovery activity; the exact data-initialization
+failure is unknown. Mobian is restored. Read-only checks confirm separate
+partitions; raw userdata can be encrypted, so its signature does not establish
+corruption. Cache logs were captured with a temporary ro,noload mount, removed
+afterwards. No wipe, flash or partition change was performed.
+
+A Windows helper for the exact stock Lineage RAM boot passes plan-only image
+verification. This will distinguish a menu-specific failure from normal Android
+startup failure. See build/boot-menu/chainload/ANDROID-DATA-CONTROL.md. No new
+build required. Execution and full Android startup remain pending. Security
+context/key-management differences are hypotheses, not established causes.
