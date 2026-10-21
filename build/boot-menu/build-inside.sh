@@ -37,7 +37,16 @@ cd /source/edk2-msm
 # No --boot, --installer-zip, --clean or automatic device operations.
 bash build.sh --device lmi --toolchain CLANG38 --release RELEASE --outputdir /output
 if [[ ${LMI_MENU_LINEAGE:-0} == 1 ]]; then
-  cp /output/boot-lmi.img /output/boot-lmi-lineage-test.img
+  python3 - <<'PY'
+from pathlib import Path
+import importlib.util,hashlib,json
+p=Path('/recipe/chainload/match-android-os-version.py')
+s=importlib.util.spec_from_file_location('os_context',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+raw=Path('/output/boot-lmi.img').read_bytes()
+data,record=m.adjust(raw,Path('/inputs/android.img').read_bytes(),hashlib.sha256(raw).hexdigest())
+Path('/output/boot-lmi-lineage-test.img').write_bytes(data)
+Path('/output/boot-os-version-manifest.json').write_text(json.dumps(record,indent=2)+'\n')
+PY
 fi
 python3 - <<'PY'
 from pathlib import Path
@@ -47,7 +56,12 @@ p=Path('/output/boot-lmi-lineage-test.img' if lineage else '/output/boot-lmi.img
 assert raw[:8]==b'ANDROID!' and 0<len(raw)<=134217728
 assert struct.unpack_from('<I',raw,40)[0]==1
 result={'phase':'experimental-lineage-ram-handoff' if lineage else 'temporary-menu-smoke-not-dualboot','bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest(),'no_phone_contact':True,'compiler':subprocess.check_output(['clang','--version'],text=True).splitlines()[0],'python':subprocess.check_output(['python3','--version'],text=True).strip()}
-if lineage:result['candidate_variant']='android-only-original-memory-map-32MiB-FD-prepi-ffs3-fstab1'
+if lineage:
+ result['candidate_variant']='android-only-original-memory-map-32MiB-FD-prepi-ffs3-fstab1-osversion1'
+ context=json.loads(Path('/output/boot-os-version-manifest.json').read_text())
+ assert context['output_sha256']==result['sha256'] and context['new']['packed']==struct.unpack_from('<I',raw,44)[0]
+ result['boot_header_os_version']=context['new']
+ result['boot_header_matches_pinned_android']=True
 Path('/output/lineage-artifact-manifest.json' if lineage else '/output/artifact-manifest.json').write_text(json.dumps(result,indent=2))
 print(json.dumps(result,indent=2))
 PY

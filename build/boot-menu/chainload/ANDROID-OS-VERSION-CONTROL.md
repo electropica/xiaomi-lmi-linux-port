@@ -1,3 +1,27 @@
+
+## 2026-10-21: Android boots from the temporary menu
+
+The operator confirmed a successful LineageOS start after selecting it in the
+temporary menu. Native Windows ADB independently reported sys.boot_completed=1,
+file-based encryption, and metadata encryption enabled. Tested image: 25993216
+bytes, SHA256 71e226f1a8adaf5d0574d1311d686143694404f49ab62df5d343c8a36c3c5196.
+
+Only header offsets 44 and 47 differ from the previous fstab1 image: the OS
+version field now matches pinned Android 16 / September 2026. A successful stock
+Android boot occurred between the failed and successful menu trials, so the
+exact internal vold/keymaster cause remains unproven. No keys or encryption
+policy were changed; no flash, wipe or partition change occurred in this trial.
+
+The recipe now applies this header alignment automatically to Lineage menu
+outputs and records the OS-version context in its artifact manifest. Host checks
+reproduce the tested image from the previous output; shell/Python syntax pass.
+No new firmware compilation was run. The existing WSL cached output still has
+the old header; the tested derived image is distinct.
+
+The menu remains temporary and MUST NOT be flashed. Mobian currently restarts
+the installed boot image; it needs direct chainloading before a persistent menu
+can safely replace that image. Touch input remains unqualified; buttons work.
+
 # Successful stock Android: OS-header control
 
 The operator confirms original Lineage boots. Native Windows ADB independently

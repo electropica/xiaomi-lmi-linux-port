@@ -28,6 +28,14 @@
     44,
     47
   ],
-  "hardware_validation": false,
-  "no_flash": true
+  "hardware_validation": true,
+  "no_flash": true,
+  "hardware_result": {
+    "operator_confirmation": "Android boots from temporary menu",
+    "adb_boot_completed": "1",
+    "crypto_type": "file",
+    "metadata_encryption_enabled": true,
+    "persistent_menu_validated": false,
+    "causal_limit": "Successful stock Android boot intervened; exact secure-service failure not captured"
+  }
 }
