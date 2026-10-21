@@ -53,6 +53,12 @@ Outputs in the repository's ignored output directory:
 - `mobian-lmi-dualboot-20261021-boot/mobian-dualboot-boot.img`.
 - Boot hashes and a **design-only** layout plan; neither is permission to flash.
 
+If the full image completed but artifact finalization failed, use
+`bash /home/linuxagent/xiaomi-lmi-linux-port/build/dualboot/finish.sh` instead
+of repeating the complete build. This checks the existing image identities and
+uses sudo only for writing the new boot-artifact folder under root-owned output/.
+It never changes ownership or permissions of the existing output tree.
+
 The full image is initially about 4.6 GB; its root expands inside the dedicated
 16 GiB container on first boot using the existing initramfs logic. The two
 filesystem UUIDs are checked on the generated image before publishing the boot.

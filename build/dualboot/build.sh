@@ -28,8 +28,4 @@ sudo --preserve-env=M1_CURRENT_LMI_PROFILE_INPUTS,M1_CAMERA_ANDROID_LIBCXX,M1_AN
     /home/linuxagent/Mobian-M0-DISPLAY-pmOS_root.ext4 "$name" 2>&1 | tee "$log"
 result=${PIPESTATUS[0]}; set -e
 printf 'BUILD_EXIT=%s\n' "$result"; ((result==0)) || exit "$result"
-python3 "$here/check-image.py" "$repo/output/$name.img"
-python3 "$here/prepare.py" --boot "$boot" --layout "$layout" --output "$repo/output/$name-boot"
-printf 'DUALBOOT_ARTIFACTS_BUILT_NOT_INSTALLED\nROOTFS_SPARSE=%s\nBOOT=%s\n' \
-    "$repo/output/$name.img.android-sparse.img" "$repo/output/$name-boot/mobian-dualboot-boot.img"
-printf 'Do NOT flash this rootfs to userdata. Dedicated mobian partition installation is a separate step.\n'
+bash "$here/finish.sh"

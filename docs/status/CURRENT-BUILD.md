@@ -1,5 +1,15 @@
 # Current validated build and userspace state
 
+## October 21: dual-boot artifacts completed, target installation pending
+
+The operator-built full image completed its ext4 checks. A finalizer permission
+error was corrected without rebuilding the image or changing global permissions.
+The boot artifact and manifests now exist; raw/sparse hashes match the build
+report. Kernel and DTB remain unchanged. No handset partition, boot or installed
+system was modified; the PC selector is still locked pending actual validation.
+See the [build result](../validation/lmi-dualboot-build-2026-10-21.md).
+
+
 ## October 21: dual-boot build candidate prepared, not installed
 
 The operator requested a fresh complete image rather than a live-system backup.
