@@ -1,0 +1,9 @@
+{
+  "phase": "temporary-menu-smoke-not-dualboot",
+  "bytes": 7063552,
+  "sha256": "10f69a7693038b01244a8095c68240554e5717684218c87574ba8c36f5520bcc",
+  "no_phone_contact": true,
+  "compiler": "Debian clang version 14.0.6",
+  "python": "Python 3.11.2",
+  "probe_revision": 2
+}

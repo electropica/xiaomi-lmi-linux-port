@@ -2,7 +2,7 @@
 """Operator-run Windows temporary boot of the pinned first menu probe. No flash."""
 import argparse,hashlib,json,struct,subprocess,time,datetime
 from pathlib import Path
-SHA='f39e2c65a434a90ae3d8a11cfa2b40e6113f6eee27eb6e73bd5b54cdcbd713a1'
+SHA='10f69a7693038b01244a8095c68240554e5717684218c87574ba8c36f5520bcc'
 
 def run(args,timeout=15,check=True):
  p=subprocess.run([str(x) for x in args],capture_output=True,text=True,timeout=timeout)
@@ -11,10 +11,10 @@ def run(args,timeout=15,check=True):
 
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('--execute',action='store_true');a=ap.parse_args()
- downloads=Path.home()/'Downloads';image=downloads/'lmi-menu-smoke-20261021.img'
+ downloads=Path.home()/'Downloads';image=downloads/'lmi-menu-smoke-v2-20261021.img'
  fb=downloads/'platform-tools/fastboot.exe'
  raw=image.read_bytes()
- assert len(raw)==7059456 and hashlib.sha256(raw).hexdigest()==SHA,'Probe image mismatch'
+ assert len(raw)==7063552 and hashlib.sha256(raw).hexdigest()==SHA,'Probe image mismatch'
  assert raw[:8]==b'ANDROID!' and struct.unpack_from('<I',raw,40)[0]==1
  assert fb.is_file()
  print('PINNED_MENU_PROBE_VERIFIED. Temporary boot only; Android choice not implemented.',flush=True)
@@ -47,7 +47,7 @@ subprocess.run(['systemctl','--reboot-argument=bootloader','reboot'],check=True)
  size=run(base+['getvar','partition-size:mobian'])
  assert int((size.stdout+size.stderr).split('partition-size:mobian:')[1].split()[0],16)==17179869184
  p=run(base+['boot',image],timeout=60)
- record=Path.home()/'Documents/ChatGPT/Mobian/work/menu-smoke-boot-20261021-private.json'
+ record=Path.home()/'Documents/ChatGPT/Mobian/work/menu-smoke-v2-boot-20261021-private.json'
  record.write_text(json.dumps({'host_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'sha256':SHA,'phase':'temporary_probe_requested_not_hardware_validated','no_flash':True,'stdout':p.stdout,'stderr':p.stderr},indent=2))
  print(p.stdout+p.stderr)
  print('Observe the screen. Do not touch it during the 15-second countdown. No flash performed.')

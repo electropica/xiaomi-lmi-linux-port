@@ -157,3 +157,15 @@ or handset-tested yet; rerun the same operator build command. The existing
 Windows launch helper remains pinned to revision 1 until a new artifact hash is
 reviewed and transferred. Do not use it to launch a rebuilt image with a new
 hash. Touch support and Android chainloading remain separate pending work.
+
+## Revision 2 compiled, handset verification pending
+
+The operator completed the corrected build. The image is 7063552 bytes, SHA256
+10f69a7693038b01244a8095c68240554e5717684218c87574ba8c36f5520bcc.
+All three patched source hashes match the lock, including bootmenu.c. Windows
+transfer was verified as lmi-menu-smoke-v2-20261021.img. The Windows test helper
+now pins this revision and keeps its result separate from revision 1.
+Untouched countdown and explicit menu order remain pending handset verification.
+The final requested order is Mobian, LineageOS, Fastboot, Recovery. This probe
+still contains only Mobian, Fastboot, Recovery: LineageOS chainloading is pending,
+not hidden or qualified by this build. Touch input is not yet operational.
