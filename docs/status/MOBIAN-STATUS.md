@@ -1,3 +1,19 @@
+## October 21: same-kernel graphical/headless comparison complete
+
+Three qualified phases spent about 99.5% suspended. Software-counter estimates
+were 49.87 / 51.49 / 52.04 mA with graphics running, stopped and restored;
+no reduction was demonstrated. These are gauge estimates, not calibrated
+physical current. Restoration passed. See the [complete result](../validation/lmi-headless-aba-result-2026-10-21.md).
+
+Connected gauge readback matches normal, not rapid-SOC, parameters and shows
+released memory requests. No patch or data write follows. The new full-Android
+snapshot helper is host-syntax-checked only, not target-validated. See the
+[runtime follow-up](../validation/lmi-fg-runtime-followup-2026-10-21.md).
+
+The prior October 20 night observer was not armed; recovered kernel logs show
+29 gauge wakes returning to suspend, but no overnight battery baseline exists.
+See the [return boundary](../validation/lmi-headless-and-night-return-2026-10-21.md).
+
 ## October 20: eight natural-wake read-control probes completed
 
 Four extra counter-read bursts and four direct-current controls produced no

@@ -7,6 +7,12 @@ experiments separately from the current Debian/Mobian userspace line.
 
 ## Current validated state
 
+Latest standby diagnosis (October 21): a complete same-kernel graphical /
+headless / graphical comparison showed no reduction in the gauge estimate.
+Residual standby demand remains unresolved; no new kernel fix is established.
+See the [result and limits](docs/validation/lmi-headless-aba-result-2026-10-21.md)
+and [current status](docs/status/MOBIAN-STATUS.md).
+
 The external `archi-validation-02` Debian 13/Mobian userdata booted with the
 D-repro D-v43 boot. Phosh, touch/unlock, DSI-1, and GLES2 → Zink → Turnip →
 KGSL/Adreno 650 were observed working. Its `daily-base` derivative was also
