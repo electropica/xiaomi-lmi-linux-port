@@ -91,3 +91,15 @@ The EFI adapter previously passed targeted Clang 14 ARM64 syntax checking with
 the generated flags and -Werror. The larger predecessor compiled and failed
 before the menu. The first compact firmware also failed before the menu; the
 FFS3-corrected version remains pending compilation and handset validation.
+
+## FFS3-corrected candidate compiled; temporary handset test pending
+
+The operator build completed. Image: 25993216 bytes, SHA256
+eea24170b1d63bb4028b94c66437db9a1add3a4b67a5616e88ca15b1547b2f6e.
+All eleven source hashes match the manifest, including corrected PrePi; the lmi
+memory map is unchanged. Old/patched C replay against the newly built FD again
+reproduces the old rejection and corrected traversal/content boundary. Windows
+image transfer and plan-only launcher preflight passed. The new launcher is
+test-lineage-ffs3-windows.py; both earlier experimental launchers remain retired.
+Handset menu display, Android handoff and persistent installation are not yet
+validated. No phone command or flash was performed during these checks.
