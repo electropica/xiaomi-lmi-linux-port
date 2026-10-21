@@ -32,3 +32,15 @@ boot per selection, device-tree/command-line handoff, timeout semantics and
 an independent rescue path. A temporary Fastboot test precedes any persistent
 installation. No ABL/XBL write, recovery replacement, firmware download/boot,
 kexec kernel build or persistent menu installation has been performed.
+
+## Initial Android handoff
+
+After the handset systemctl help was checked, the Mobian-to-Fastboot request
+used `systemctl --reboot-argument=bootloader reboot` successfully. The older
+positional form is rejected by this installed systemd; the PC selector has
+been corrected to match. A guarded temporary Fastboot boot then sent the pinned
+official Lineage boot image without flashing any partition. The operator
+reports the Android setup wizard is in progress. Default boot remains unchanged;
+Android startup/access qualification is not complete and the selector stays
+locked. Five additional mocked transport tests pass, including no-flash
+temporary mode, default-change lock, bad-size rejection and retry guard.

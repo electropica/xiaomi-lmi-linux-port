@@ -5,7 +5,7 @@ The operator applied the GPT change, formatted Android data, flashed only the
 dedicated mobian partition and temporarily booted the adapted Mobian image.
 SSH confirms the 16 GiB dedicated backing, expanded root, current homedrag7 /
 Phoc / GSD packages and clean package audit; the operator confirms a normal UI.
-Android's first boot remains pending. The newly requested handset menu is not
+A guarded temporary Android boot now reaches initial setup; completion and access remain pending. The newly requested handset menu is not
 installed: it must offer both OSes with Mobian default after 15 seconds. No
 new autonomous boot manager or persistent default change is validated.
 See the [first-boot result](../validation/lmi-dualboot-firstboot-2026-10-21.md).

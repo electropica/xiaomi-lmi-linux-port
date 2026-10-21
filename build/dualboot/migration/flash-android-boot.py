@@ -4,8 +4,8 @@ from pathlib import Path
 s=importlib.util.spec_from_file_location('flash_helpers',Path(__file__).with_name('flash-mobian.py'))
 m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--execute',action='store_true');ap.add_argument('--allow-android-default',action='store_true');a=ap.parse_args()
-    if a.execute and not a.allow_android_default:raise RuntimeError('Mobian is now the requested default; Android-default installation is disabled')
+    ap=argparse.ArgumentParser();ap.add_argument('--execute',action='store_true');ap.add_argument('--temporary',action='store_true');ap.add_argument('--allow-android-default',action='store_true');a=ap.parse_args()
+    if a.execute and not a.temporary and not a.allow_android_default:raise RuntimeError('Mobian is now the requested default; Android-default installation is disabled')
     downloads=Path.home()/'Downloads';fb=downloads/'platform-tools/fastboot.exe';boot=downloads/'boot.img'
     with boot.open('rb') as f:digest=hashlib.file_digest(f,'sha256').hexdigest()
     if digest!='9d7dd4823860f7ad73c82542669620b2cee1ca466789958175be63bb77e85411':raise RuntimeError('Wrong Lineage boot image')
@@ -18,6 +18,14 @@ def main():
         if int(m.value(m.run(base+['getvar','partition-size:'+name]),'partition-size:'+name),16)!=size:raise RuntimeError('Unexpected size: '+name)
     print('ANDROID_BOOT_GUARDS_PASSED: pinned image, lmi, all three partition sizes',flush=True)
     if not a.execute:print('READ_ONLY: no flash or reboot requested');return
+    if a.temporary:
+        record=Path.home()/'Documents/ChatGPT/Mobian/work/dualboot-android-temporary-result-private.json'
+        if record.exists():raise RuntimeError('Prior temporary test exists; review before retry')
+        with record.open('x',encoding='utf-8') as f:json.dump({'stage':'temporary-android-boot-starting','sha256':digest},f)
+        result=m.run(base+['boot',boot],timeout=180)
+        record.write_text(json.dumps({'stage':'temporary-android-boot-requested','sha256':digest,'boot_output':result},indent=2))
+        print(result,flush=True);print('TEMPORARY_ANDROID_BOOT_REQUESTED. No partition flashed; default boot unchanged.',flush=True)
+        return
     record=Path.home()/'Documents/ChatGPT/Mobian/work/dualboot-android-boot-result-private.json'
     if record.exists():raise RuntimeError('Prior operation record exists; review before retry')
     outcome={'stage':'boot-flash-starting','partition':'boot','sha256':digest}

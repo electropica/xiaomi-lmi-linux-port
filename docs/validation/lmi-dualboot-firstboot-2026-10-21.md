@@ -31,9 +31,16 @@ battery suspension timeout is 900 seconds. The operator reports successful boot
 and normal handset behavior. Audio, camera and long standby are not newly
 revalidated by this first-boot check.
 
-Android's first boot in the resized-data layout remains pending. An attempted
-Mobian-to-Fastboot request was blocked by its preliminary shell comparison and
-returned exit 1 before reboot; no write occurred. Mobian remains running.
+Initial Mobian-to-Fastboot attempts were rejected by a preliminary shell
+comparison and then by the obsolete positional systemctl syntax; no reboot or
+write occurred in those attempts. After checking the handset's systemctl help,
+`systemctl --reboot-argument=bootloader reboot` reached Fastboot successfully.
+The pinned official Android boot image then passed all size/hash/device guards
+and was temporarily booted with Fastboot, without flashing any partition.
+The operator reports the Android initial setup is in progress. Android access,
+startup completion and round-trip selection remain pending; the default boot
+has not been changed to Android. Five mocked tests additionally verify the
+temporary no-flash path and its guards.
 
 The operator now requests an autonomous handset Android/Mobian menu, 15-second
 timeout, Mobian default. It supersedes the original Android-default proposal.

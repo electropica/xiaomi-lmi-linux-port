@@ -34,7 +34,7 @@ def main():
             # Root must be on the dedicated partition before autonomous switching.
             probe=run(ssh+['cat /etc/lmi/dualboot-installation-validated'],check=False)
             if probe.returncode or probe.stdout.strip()!='lmi-dualboot-v1':raise RuntimeError('No validated Mobian endpoint; no reboot attempted')
-            p=run(ssh+['systemctl reboot bootloader'],check=False)
+            p=run(ssh+['systemctl --reboot-argument=bootloader reboot'],check=False)
             if p.returncode not in (0,255):raise RuntimeError('Reboot request failed')
         deadline=time.monotonic()+90
         while time.monotonic()<deadline:
