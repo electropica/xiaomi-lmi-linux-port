@@ -374,3 +374,85 @@ window, collected locally on the phone because the SSH route needs the cable
 connected and an unplugged suspend cannot be observed over it. That needs
 Julien's agreement and a local collector run, and it is prepared, not
 proposed as a generic discharge test.
+
+
+## Entry 7 — 2026-10-22 — collector clock defect corrected offline; the 15:21-15:47 window reclassified
+
+**Review.** An independent review of this branch
+(`work/MINIMAX-BRIEF-REVIEW-20261022.md`, outside Git) found a blocking
+defect in the matched standby collector before any handset run could rest on
+it. It is recorded here with the correction, because the defect changes what
+the previous collector output means.
+
+**The defect.** `collect-matched-standby-window.py` read `/proc/uptime` and
+returned its two fields as `boottime` and `monotonic`. The second field of
+`/proc/uptime` is the aggregate CPU idle time summed over every CPU, not
+`CLOCK_MONOTONIC`. `suspended_accumulated` was therefore meaningless, the
+suspend detection could not fire on real suspends, and every duration in the
+output was invalid. On the host the pair read `uptime=39631.42`,
+`monotonic=631946.02`, which is the wrong order and gives
+`suspended_accumulated = -592314.6`.
+
+**The correction.** The collector now uses
+`time.clock_gettime(time.CLOCK_BOOTTIME)` and
+`time.clock_gettime(time.CLOCK_MONOTONIC)` and refuses to collect, with exit
+code 2, when either is unavailable. A suspend is detected as the growth of
+the difference between two readings, not as an absolute difference, because
+the monotonic clock is slewed by the timekeeping layer and the boot clock is
+not. The wall-clock deadline moved to `CLOCK_BOOTTIME`, which keeps counting
+across a suspend; the previous `time.monotonic()` deadline did not bound the
+real duration of the window. No RTC wake alarm was added, because a periodic
+wake would be a new wake source on a device whose wake sources are what is
+under study. Suspend events are kept as a bounded sequence instead of only
+the first. `--poll` and `--max-seconds` reject non-positive and non-finite
+values. The counter statement that it "does not move while the processor is
+down" was removed: it was an assertion about the gauge, not a measurement.
+
+**Validation.** `userspace/power/diagnostics/test-collect-matched-standby-window.py`
+is new and offline: 18 tests, no phone contacted. They cover the awake
+passage, a synthetic suspend gap of a known duration, the resume after it,
+several suspends kept as a sequence, the USB transitions, the bounded event
+list, the wall-clock deadline, the refusal of a missing clock, the refusal of
+invalid sampling arguments, the preservation of the counter jump across the
+unplug, the reporting of the suspended fraction, the absence of any claim of
+a calibrated current, and the clock slew. The same suite run against the
+previous implementation from `HEAD` fails immediately. `test-ufs-policy-reader.py`
+still passes with 10 tests.
+
+**The window reclassified.** The kernel log of the 15:21-15:47 unplugged
+window was analysed separately, because the collector's own clock was invalid.
+The device suspended twice, for 379.217 s and 57.005 s, total **436.222 s**,
+resumed by IRQ 438 `msoc-delta` and IRQ 445 `esr-delta`. The same figure
+comes out of `CLOCK_BOOTTIME - CLOCK_MONOTONIC` measured on the awake,
+reconnected device, to within a millisecond. The unplugged interval is
+1554.1 s, so **the phone was awake for about 72 % of its own unplugged
+window**. The `upower` charge history agrees from the userspace side.
+
+The screen wake observed by the operator at about 17:45 local is in the log:
+the display was blanked at 15:22:04 UTC after the unplug and programmed
+again at 15:44:37.345 UTC, 0.16 s after the second resume, with no operator
+action.
+
+**Correction to the framing.** The previous entry said the single open
+question was "produce the Mobian figure by the Android method". The window
+shows the question is different: the Android reference is 98.9 % asleep over
+its 30m44s interval, and the Mobian window is 28 % asleep over its interval.
+A like-for-like number needs the duty cycle equalised, or the comparison has
+to be stated as a duty-cycle difference rather than a current difference.
+
+**Limitations.** The suspend intervals come from the kernel log, not from the
+corrected collector, so they do not prove the corrected collector works. One
+window, one build, one state of charge. The 168.3 mAh figure is a raw
+counter difference between the reading before the unplug and a reading
+taken while the device was charging after the reconnection; it spans the
+unplug and the subsequent recharge, so it is not an attributed window
+consumption and cannot yet be split into consumption and discontinuity.
+The gauge scale against the design capacity is not established. No current is
+measured anywhere in this entry.
+
+**Next decision.** One second matched window with the corrected collector, to
+confirm the suspend intervals and the awake fraction with a correct
+instrument and to read the counter on both sides of the unplug. It needs the
+operator's unplug and replug, and it produces the Mobian window figure and
+the unplug discontinuity, not a calibrated current and not an explanation of
+the standby difference.
