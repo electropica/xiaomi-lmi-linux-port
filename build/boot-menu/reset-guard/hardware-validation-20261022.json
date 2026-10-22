@@ -1,0 +1,45 @@
+{
+  "phase": "experimental-lineage-ram-handoff",
+  "bytes": 25997312,
+  "sha256": "40cbcc408b2b07f0b31ab7ef123776e7becacaf9d419bc78707ddd783242d70c",
+  "no_phone_contact": true,
+  "compiler": "Debian clang version 14.0.6",
+  "python": "Python 3.11.2",
+  "candidate_variant": "android-working-32MiB-resetguard1",
+  "boot_header_os_version": {
+    "packed": 536871337,
+    "version": [
+      16,
+      0,
+      0
+    ],
+    "patch_year": 2026,
+    "patch_month": 9
+  },
+  "boot_header_matches_pinned_android": true,
+  "baseline_commit": "78e8328dfb09bbbce109bd0a4accf8561d44af94",
+  "reset_source": {
+    "schema": 1,
+    "source": "Common/edk2/MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystem.c",
+    "before": "5a7532c21272373c751bcdc1c8b0ee81eb9e31bb9fd5ff463bba22ac201b9786",
+    "after": "7df5dffc49dc0495c84b780807855b4288a1e136f0360bc3caf61a319b6611e5",
+    "baseline_commit": "78e8328dfb09bbbce109bd0a4accf8561d44af94",
+    "variant": "android-working-32MiB-resetguard1",
+    "restored": true,
+    "hardware_validated": false,
+    "builder_exit": 0
+  },
+  "hardware_validated": false,
+  "source_files_verified": 15,
+  "actual_bootshim_fd_payload_verified": true,
+  "fd_bytes": 33554432,
+  "fd_sha256": "bb932929eb1db35851fafb8bd662678607f9c9ec84d6945211dd51116452af22",
+  "temporary_boot_only": true,
+  "operator_validation": {
+    "fastboot_entry": "works",
+    "recovery_entry": "works",
+    "return_to_installed_mobian": "booted",
+    "fresh_lineage_entry": "not_reported",
+    "permanent_installation": false
+  }
+}

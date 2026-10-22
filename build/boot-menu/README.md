@@ -1,3 +1,20 @@
+## 2026-10-22: resetguard1 Fastboot and Recovery handset validation
+
+The operator reports Fastboot works from the temporary menu, then Recovery
+works, and finally confirms Mobian has started again. Tested resetguard1 image:
+`40cbcc408b2b07f0b31ab7ef123776e7becacaf9d419bc78707ddd783242d70c`
+(25,997,312 bytes, historical 32-MiB baseline plus reset-service guard).
+
+This validates both rescue destinations for this candidate and the return to
+installed Mobian. It supports preserving the earlier platform reset service;
+it does not independently capture live service ownership. A fresh LineageOS
+launch on resetguard1 has not been reported. The newer 64-MiB direct-handoff
+failures remain separate. Text rendering is unchanged from the historical recipe.
+
+The image remains temporary-only: its Mobian entry reboots the installed boot
+partition. Flashing it over that partition would not provide direct Mobian
+handoff and could cause a menu loop. No persistent-install qualification is made.
+
 ## 2026-10-22: older working menu checked; reset-service candidate is host-only
 
 The operator confirms that the older Android-working menu starts Mobian and
