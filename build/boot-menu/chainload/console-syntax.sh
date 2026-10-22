@@ -12,6 +12,7 @@ src='/home/linuxagent/lmi-boot-menu-build/source/edk2-msm/GPLDrivers/Library/Sim
 s=subprocess.check_output(['git','-C',src,'show','HEAD:src/loggerd/client.c'],text=True)
 s=s.replace('static char print_buff[16384];','#include "/recipe/chainload/lmi-console-fit.h"\nstatic char print_buff[16384];')
 s=s.replace('\t\tAsciiPrint("%a",print_buff);\n\t\tAsciiPrint("\\n");','\t\tlmi_fit_console_line(print_buff);')
+s=s.replace('\tif(console_output){','\tif(console_output&&log->level>=LEVEL_NOTICE){')
 assert 'lmi_fit_console_line(print_buff)' in s
 Path(sys.argv[1]).write_text(s)
 PY

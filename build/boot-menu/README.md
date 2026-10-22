@@ -1,4 +1,35 @@
 
+## 2026-10-22: prioritize quiet native loading console
+
+At the operator's explicit request, prepare a menu build without the custom
+enlarged renderer. The native console font and width-aware wrapping are already
+restored. This next variant also draws only NOTICE and higher log levels on
+screen: progress-stage notices and warnings/errors remain, while verbose DEBUG
+and INFO dumps no longer cause extensive screen updates or scrolling. Filtering
+is restricted to the screen branch of logger_write. Existing serial/file output
+and the in-memory diagnostic buffer policy are not changed; no new disk logging
+is enabled. The custom bitmap scaler is not included by the logger.
+
+Actual ARM64 logger syntax passes. The 21-file apply/restore/tamper fixture and
+the pinned bundle parser pass. Handset smoothness is not yet validated and must
+not be asserted from these host checks. No build or phone operation by the agent.
+
+Variant: consolequiet1-marker2-extent1. The kernel components, full runtime Image
+allocation correction and provenance guard are unchanged. Direct Mobian handoff
+still lacks runtime provenance in prior trials; quiet display does not resolve
+that finding. Persistent installation remains unqualified.
+
+Operator command:
+
+```bash
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --build --with-dual
+```
+
+Expected marker: DUAL_DIRECT_RAM_HANDOFF_BUILD_COMPLETE_NOT_FOR_FLASHING.
+Qualify the new image and use a new hash-pinned Windows RAM launcher before the
+handset trial. Older launchers pin older firmware and are not this build's test.
+
+
 ## 2026-10-22: extent1 handset result; restore native console font
 
 The operator launched candidate
