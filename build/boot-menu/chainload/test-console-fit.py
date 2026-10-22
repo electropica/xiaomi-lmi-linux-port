@@ -23,10 +23,6 @@ static int query(Console*c,UINTN m,UINTN*w,UINTN*h){(void)c;if(m>1)return 1;*w=m
 static int set(Console*c,UINTN m){c->Mode->Mode=(INT32)m;sets++;return 0;}
 static int cursor(Console*c,BOOLEAN b){(void)c;(void)b;return 0;}
 static int output(Console*c,CHAR16*s){UINTN n=0,w,h;query(c,c->Mode->Mode,&w,&h);while(n<258&&s[n])n++;if(n>=258||n>w||n<3||s[0]!=' '||s[n-2]!='\r'||s[n-1]!='\n'){failed++;return 1;}chars+=(unsigned)n-3;lines++;return 0;}
-#define LMI_CONSOLE_ZOOM_H
-static UINTN lmi_zoom_columns;
-static BOOLEAN lmi_zoom_init(void){return FALSE;}
-static BOOLEAN lmi_zoom_line(CHAR16*line){(void)line;return FALSE;}
 '''
  # The included formatter remains byte-identical to the firmware source.
  c+='\n#include "lmi-console-fit.h"\n'+r'''

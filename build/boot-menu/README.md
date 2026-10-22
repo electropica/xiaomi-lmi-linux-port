@@ -1,4 +1,39 @@
 
+## 2026-10-22: extent1 handset result; restore native console font
+
+The operator launched candidate
+0e4d6cb08459e6c17d45126f48279874903ec4fd48f830b3ef3ac13aeeba34f2,
+then explicitly repeated the launch after uncertainty about the Fastboot stage.
+The retained Windows result reports a successful RAM boot of this exact hash.
+Mobian returns to its dedicated root and Phosh runs. Both explicit provenance
+markers remain absent in the running command line, live chosen node AND raw FDT.
+The complete runtime allocation correction therefore did not establish a direct
+Mobian boot. Do not equate this userspace return with direct-handoff validation.
+
+An independent host unpack of the final Android boot image confirms the gzip
+payload contains the freshly compiled BootShim followed byte-for-byte by the
+actual 64-MiB FD at offset144. FD SHA256:
+1dd7c69ab1e24d7173dd3dbfa7e2bca23f2809e8a8f0fa7b9bdd1a617d93f8d8.
+This excludes an older firmware being packaged in the tested image. It does
+not locate a possible reset during or after the final jump. Runtime config also
+has appended DTB and OF overlays disabled; raw FDT provenance remains unresolved.
+
+The operator reports stutter persists with the enlarged font and suspects it
+slows loading. Removing the redundant clear did not visibly resolve this.
+As requested, the next recipe restores the native console font and output path,
+retaining width-aware wrapping and margins. The custom bitmap scaler is no longer
+included or called by the logger. Original log text is preserved. The source
+header is retained as experimental reference only. Native formatter C tests and
+actual ARM64 logger syntax pass. This reversion is prepared, not installed.
+
+Next variant: consolefit2-marker2-extent1. The full Image allocation correction
+remains present because its independent protocol defect is established, even
+though it has not resolved the observed runtime provenance failure. Do not
+request another build solely to repeat this same unsuccessful direct-boot test.
+Combine the font reversion with the next justified handoff diagnostic/change.
+The requested persistent menu remains pending; no flash or phone policy change.
+
+
 ## 2026-10-22: reserve the full ARM64 Image extent before handoff
 
 The operator confirms the zoom2 font SIZE is correct, but rendering stutters.
