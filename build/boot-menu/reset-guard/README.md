@@ -72,6 +72,33 @@ manifest, and validate target compilation. Do not silently combine it with
 the unresolved 64-MiB handoff changes. A temporary handset trial should check
 both OS entries and both reboot destinations before any persistent installation.
 
+## Isolated operator build
+
+`build-baseline.py` exports the locked Android-working recipe from commit
+`78e8328dfb09bbbce109bd0a4accf8561d44af94` into a separate directory. It does
+not change the current recipe or Git checkout. In this snapshot the only
+replacement in the historical builder is a call to `run-guarded-build.py`,
+which temporarily applies the reset guard during compilation and restores the
+source on ordinary success/failure. An unexpected edit prevents restoration
+rather than overwriting unknown changes. Forced termination may require manual
+inspection before another build; the recorded manifest identifies the edit.
+
+Preparation without `--build` has passed; both shell files pass `bash -n`.
+The operator can run the menu-only build with:
+
+```sh
+sudo python3 -B /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/reset-guard/build-baseline.py --build
+```
+
+The uniquely named output is
+`/home/linuxagent/lmi-boot-menu-build/output/boot-lmi-lineage-resetguard1.img`.
+Its separate artifact manifest records the historical baseline and exact reset
+source hashes, in addition to the historical image/source manifests. No build
+has been performed by the agent. This is a temporary test candidate, not a
+persistent dual-boot solution: its Mobian entry restarts the installed OS.
+Do not flash it to boot. Rendering stays exactly as in the historical recipe
+to keep this a reset-only comparison.
+
 The text sizing complaint is separate. The previously accepted native-font
 rendering avoids the custom zoom stutter; this reset candidate does not
 modify the renderer, font or console mode.
