@@ -7,8 +7,9 @@ works, and finally confirms Mobian has started again. Tested resetguard1 image:
 
 This validates both rescue destinations for this candidate and the return to
 installed Mobian. It supports preserving the earlier platform reset service;
-it does not independently capture live service ownership. A fresh LineageOS
-launch on resetguard1 has not been reported. The newer 64-MiB direct-handoff
+it does not independently capture live service ownership. The operator subsequently confirms a fresh LineageOS launch on resetguard1.
+All four menu outcomes have now been reported working (Mobian via installed
+boot restart, LineageOS handoff, Fastboot and Recovery). The newer 64-MiB direct-handoff
 failures remain separate. Text rendering is unchanged from the historical recipe.
 
 The image remains temporary-only: its Mobian entry reboots the installed boot

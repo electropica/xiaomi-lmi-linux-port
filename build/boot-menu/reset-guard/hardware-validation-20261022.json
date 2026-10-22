@@ -39,7 +39,7 @@
     "fastboot_entry": "works",
     "recovery_entry": "works",
     "return_to_installed_mobian": "booted",
-    "fresh_lineage_entry": "not_reported",
+    "fresh_lineage_entry": "booted",
     "permanent_installation": false
   }
 }
