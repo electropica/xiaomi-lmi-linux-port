@@ -228,3 +228,66 @@ Mobian, with USB connected, so that `rpm/spm_target_link_state`,
 `qcom/power_mode`, `max_bus_bw` and the runtime bookkeeping can be compared.
 The Mobian side of that comparison is still missing, and the reader now
 carries the enumerated names so the result is auditable from one capture.
+
+
+## 7. Mobian privileged capture, 2026-10-22 16:53 (root over the existing SSH route, USB connected, awake)
+
+The operator made Mobian available with the cable connected. The committed
+reader ran once over the existing SSH route, root, and every directory listing
+succeeded (`failed_listings: none`). The device had been up about 110 s, the
+kernel was `4.19.325-cip128-st12-perf-ga5b3099017ae-dirty`, i.e. the
+**current** Mobian kernel, and `usb_online=1`.
+
+**Full comparison over the identical fixed paths:**
+
+| Attribute | LineageOS 23.2 (`71b13e62f057`) | Mobian current (`a5b3099017ae`) | Same? |
+|---|---|---|---|
+| `clkgate_enable` | 1 | 1 | yes |
+| `clkgate_delay_ms` | 50 | 50 | yes |
+| `rpm_lvl` | 3 | 3 | yes |
+| `spm_lvl` | 3 | 3 | yes |
+| `auto_hibern8` | 1000 | 1000 | yes |
+| `rpm_target_link_state` | HIBERN8 | HIBERN8 | yes |
+| `rpm_target_dev_state` | SLEEP | SLEEP | yes |
+| `spm_target_link_state` | HIBERN8 | HIBERN8 | yes |
+| `spm_target_dev_state` | SLEEP | SLEEP | yes |
+| `attributes/psa_state` | 0x00000000 | 0x00000000 | yes |
+| `attributes/current_power_mode` | 0x00000011 | 0x00000011 | yes |
+| `attributes/bkops_status` | 0x00000000 | 0x00000000 | yes |
+| `attributes/active_icc_level` | 0x0000000F | 0x0000000F | yes |
+| `qcom/power_mode` | `[Rx,Tx]: Gear[4,4], Lane[2,2], PWR[FAST MODE,FAST MODE], Rate-A` | identical | yes |
+| `qcom/bus_speed_mode` | 0 | 0 | yes |
+| `max_bus_bw` | 0 | 0 | yes |
+| `qcom/err_count` | all counters 0 | all counters 0 | yes |
+| `qcom/err_state` | 0 | 0 | yes |
+| `clkscale_enable` | not enumerated | not enumerated | yes |
+| `clk_scaling_enable` | not enumerated | not enumerated | yes |
+| `auto_bkops` | not enumerated | not enumerated | yes |
+| `qcom/clk_status` | 0 | **1** | **no** |
+
+**R2 is closed for the policy.** Every policy attribute observed on both
+platforms has the same value, on the current Mobian kernel and on the Android
+reference kernel, including the target link and device states, the PSA state
+and the power mode.
+
+**The single difference, `qcom/clk_status` 0 against 1, is not a policy
+attribute.** It is a live status of the UFS core clock at the instant of the
+read, taken awake and plugged on each platform, not a configured value and not
+a sleep observation. It is reported as an observation, not as a difference in
+the suspend policy.
+
+**The R3 instance is now concrete.** The Mobian regulator summary read in the
+same session shows `vdd_boost_vreg` with `use=1`, `open=1` and a single
+`deviceless` consumer, that is a rail held enabled by its own
+`regulator-always-on` declaration with no device consumer at all. It is
+exactly the class that the transition comparisons cannot see, because such a
+rail never emits an enable or disable event. The same summary shows
+`display_panel_vci` and `pm8150_l14` each with `use=1`, `open=2` and the
+consumer `soc:qcom,dsi-display-primary`, and `gpu_cx_gdsc` with `use=0`,
+`open=4` and the consumers `3d00000.qcom,kgsl-3d0`, `3d6a000.qcom,gmu`,
+`3da0000.kgsl-smmu` and `deviceless`.
+
+**Limits.** Both reads are plugged and awake. They compare **policy and
+consumer bookkeeping**, not the physical state during a suspend, and they
+measure no current. The Mobian side was captured about 110 s after boot, so
+its consumer lists reflect an early-boot state.

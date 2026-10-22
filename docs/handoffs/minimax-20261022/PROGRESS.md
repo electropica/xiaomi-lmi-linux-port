@@ -264,3 +264,59 @@ extended paths with USB connected, so the target, PSA and power-mode attributes
 can be compared. Until then the UFS value comparison stays open for the newer
 attributes and closed for the five shared ones. R1 (display panel rail
 timing) is unaffected by this read and still needs its own awake observation.
+
+
+## Entry 5 — 2026-10-22 — Mobian privileged capture: R2 closed for the policy
+
+**Hypothesis.** The Mobian and LineageOS UFS suspend policies differ in a way
+that could keep a rail powered across a suspend window. A privileged capture on
+the current Mobian kernel over the identical fixed paths should either expose
+the difference or close the value question.
+
+**Artifact identity.** One capture over the existing SSH route, root, USB
+connected, device awake, about 110 s after boot, kernel
+`4.19.325-cip128-st12-perf-ga5b3099017ae-dirty`, i.e. the **current** Mobian
+kernel. The raw capture stays in the private workspace outside Git, with its
+SHA256 in the private evidence manifest.
+
+**Evidence.** Every directory listing succeeded. **Every UFS policy attribute
+observed on both platforms has the same value**: `clkgate_enable=1`,
+`clkgate_delay_ms=50`, `rpm_lvl=3`, `spm_lvl=3`, `auto_hibern8=1000`,
+`rpm/spm_target_link_state=HIBERN8`, `rpm/spm_target_dev_state=SLEEP`,
+`spm_target_link_state=HIBERN8`, `spm_target_dev_state=SLEEP`,
+`attributes/psa_state=0x00000000`, `attributes/current_power_mode=0x00000011`,
+`attributes/bkops_status=0x00000000`, `attributes/active_icc_level=0x0000000F`,
+`qcom/power_mode` identical, `qcom/bus_speed_mode=0`, `max_bus_bw=0`,
+`qcom/err_count` all zero, `qcom/err_state=0`. Neither clock-scaling spelling
+nor `auto_bkops` is enumerated on either platform. The only differing reading
+is `qcom/clk_status`, 0 on the reference and 1 on Mobian, which is a **live
+clock status**, not a configured value.
+
+The same session's regulator summary shows `vdd_boost_vreg` with `use=1`,
+`open=1` and a single `deviceless` consumer, a rail enabled by its own
+`regulator-always-on` declaration that emits no transition; and
+`display_panel_vci` / `pm8150_l14` each with `use=1`, `open=2` and the consumer
+`soc:qcom,dsi-display-primary`; `gpu_cx_gdsc` with `use=0`, `open=4`.
+
+**Changes.** The UFS comparison note and the peripheral checklist record the
+complete comparison; the always-on instance is documented.
+
+**Validation.** The reader ran unchanged over the SSH route and produced
+verdicts consistent with the privileged ADB capture, and every listing
+succeeded on both platforms, so the absence claims remain auditable.
+
+**Limitations.**
+* Both reads are plugged and awake. They compare policy and consumer
+  bookkeeping, not the physical state during a suspend, and they measure no
+  current. The Mobian capture was about 110 s after boot, so its consumer
+  lists are an early-boot state.
+* The earlier correction stands: an identical `ufs-qcom.c` excludes nothing
+  elsewhere in the UFS stack, and a regulator disable event is a request, not
+  proof of an electrical cut.
+
+**Next decision.** R2 is closed for the policy and is no longer a candidate.
+R1 needs its own observation of the panel rails with the screen off and the
+system still awake, and the consumer that holds them is now identified as
+`soc:qcom,dsi-display-primary`. R3 has a concrete instance
+(`vdd_boost_vreg`, always-on, single `deviceless` consumer) whose state
+during the suspend is still unknown.

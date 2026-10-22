@@ -225,3 +225,28 @@ Mobian side of the newer attributes (`rpm/spm_target_link_state`,
 `qcom/power_mode`, `max_bus_bw`) is still missing, the `ufs_core.c` show/store
 implementations were not compared, and the actual link and PHY state during a
 qualified sleep interval is still unproven.
+
+
+## 2026-10-22 addendum — UFS row closed for the policy
+
+With the Mobian privileged capture (current kernel `a5b3099017ae`, root over
+the existing SSH route, USB connected) the UFS comparison is now **complete on
+the policy**: every UFS policy attribute observed on both platforms has the
+**same value**, including `clkgate_enable=1`, `clkgate_delay_ms=50`,
+`rpm_lvl=3`, `spm_lvl=3`, `auto_hibern8=1000`,
+`rpm/spm_target_link_state=HIBERN8`, `rpm/spm_target_dev_state=SLEEP`,
+`attributes/psa_state=0x00000000`, `attributes/current_power_mode=0x00000011`
+and `qcom/power_mode`. The only differing reading is `qcom/clk_status`
+(0 against 1), which is a live clock status, not a policy.
+
+The **UFS policy** is therefore not a candidate for the standby difference.
+The row's original gap, "actual selected low-power link/clock state is not
+proven by source alone", remains open in its **state** form: a plugged awake
+policy read is not a sleep observation, and the actual link and PHY state
+during a qualified sleep interval is still unproven.
+
+The same session produced the first concrete instance of the always-on
+class: `vdd_boost_vreg` reads `use=1`, `open=1`, single `deviceless`
+consumer, that is enabled by its own `regulator-always-on` declaration and
+emits no transition at all. It is the rail class the transition comparisons
+structurally cannot see.
