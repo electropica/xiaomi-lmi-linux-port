@@ -1,4 +1,64 @@
 
+## 2026-10-22: reserve the full ARM64 Image extent before handoff
+
+The operator confirms the zoom2 font SIZE is correct, but rendering stutters.
+Mobian returns from RAM candidate
+86adc4fef82f48fbad6f5049893a482914d2b8bbfb53a5f19017635b14b64e5f;
+root is the dedicated partition and Phosh runs. Both explicit runtime provenance
+markers are still absent. Cached main configuration really uses BOOT_LINUX, so
+an unmatched reboot-mode replacement is excluded at the source level. Runtime
+messages report a PMIC hard-reset/cold-boot reason; this is not sufficient to
+attribute a new reset because the reason can be latched. Direct boot remains
+unqualified and this candidate must not be installed permanently.
+
+Source and pinned Image-header inspection found a concrete allocation defect:
+
+| Kernel | File bytes | Declared image_size | Old usable allocation | Shortfall |
+| --- | ---: | ---: | ---: | ---: |
+| Mobian | 45,359,128 | 56,758,272 | 46,137,344 | 10,620,928 |
+| Android | 53,456,920 | 64,811,008 | 54,525,952 | 10,285,056 |
+
+The existing loader rounds the file size and accounts for text_offset, but does
+not reserve the complete Image runtime size. The ARM64 boot protocol requires
+at least image_size bytes free from the Image start:
+https://docs.kernel.org/arch/arm64/booting.html
+This may corrupt neighboring boot allocations or cause a reset; a causal link
+to this handset's marker loss is a hypothesis, not a measured result.
+
+The next recipe checks the actual ARM64 header after decompression, before DT
+selection/finalization. It reserves an aligned allocation covering the larger
+of file size and image_size, copies the payload, zeroes the runtime tail and
+then frees the old buffer. It preserves text_offset and rejects unexpected
+magic/architecture/offset, non-owned memory and excessive extent. Already
+sufficient allocations are retained. Allocation failure leaves the old buffer
+intact and aborts preparation. No fixed physical address or partition changes.
+
+Actual helper C tests using both pinned Image headers verify payload retention,
+zeroed runtime tail, sufficient capacity, allocation failure without freeing
+the original, repeated-call reuse, bad magic and oversize rejection. Four actual
+ARM64 units pass syntax. Twenty-one source edits apply/restore exactly and reject
+tampering; the nine-component bundle parser passes. These are host checks only.
+
+For screen rendering, the accepted 2x size is retained. The redundant visible
+black-row fill before each opaque bitmap blit is removed to avoid an exposed
+blank frame and an extra panel update. ARM64 logger syntax passes; whether this
+eliminates the reported stutter needs handset validation. If it does not, restore
+the previous font size as requested by the operator.
+
+Next variant: consolezoom3-marker2-extent1. No firmware, kernel or rootfs build
+was started by the agent. No phone policy, boot partition or recovery was changed.
+The operator runs only the menu build:
+
+```bash
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --build --with-dual
+```
+
+Expected marker: DUAL_DIRECT_RAM_HANDOFF_BUILD_COMPLETE_NOT_FOR_FLASHING.
+Qualify the new artifact, 21-source manifest and PrePi replay, then prepare a new
+hash-pinned Windows RAM launcher. Check Mobian provenance before preparing the
+requested persistent menu. Do not reuse the old launcher's image qualification.
+
+
 ## 2026-10-22: larger loading text prepared; direct Mobian provenance still absent
 
 The operator tested consolefit1/marker2 candidate

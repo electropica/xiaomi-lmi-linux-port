@@ -14,6 +14,10 @@ def patch_entry(text):
 def patch_prepare(text):
     assert text.count('int linux_boot_prepare(linux_boot*lb){')==1
     text=text.replace('int linux_boot_prepare(linux_boot*lb){','extern void lmi_boot_stage(const char*stage);\n\nint linux_boot_prepare(linux_boot*lb){')
+    text=text.replace('extern void lmi_boot_stage(const char*stage);','extern void lmi_boot_stage(const char*stage);\nextern int linux_boot_lmi_kernel_extent(linux_boot*lb);')
+    needle='\tif(linux_boot_select_fdt(lb)!=0)'
+    assert text.count(needle)==1
+    text=text.replace(needle,'\tif(linux_boot_lmi_kernel_extent(lb)!=0)\n\t\treturn trlog_error(-1,"reserve complete ARM64 Image extent failed");\n'+needle)
     stages=[('linux_load_from_config(lb)','04 load components'),('linux_boot_install_random_seed()','05 random seed'),('linux_boot_uncompress_kernel(lb)','06 decompress kernel'),('linux_boot_select_fdt(lb)','07 select DTB'),('linux_boot_apply_dtbo(lb)','08 apply DTBO'),('linux_boot_generate_fdt(lb)','09 generate FDT'),('linux_boot_move(lb)','10 move components'),('linux_boot_install_initrd(lb)','11 install initrd'),('linux_boot_update_fdt(lb)','12 update FDT'),('check_boot(lb)','13 final checks')]
     for call,label in stages:
         needle='\tif('+call+'!=0)';assert text.count(needle)==1

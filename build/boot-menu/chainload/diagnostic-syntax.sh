@@ -23,6 +23,7 @@ tmp.joinpath('prepare.c').write_text(m.patch_prepare(raw))
 text=(src/'src/linux-boot/aboot.c').read_text()
 if '#include "lmi-boot-diagnostic.h"' not in text:text=text.replace('#include "lmi-bundle-loader.h"','#include "lmi-boot-diagnostic.h"\n#include "lmi-bundle-loader.h"')
 if '#include "lmi-android-fstab.h"' not in text:text+='\n#include "lmi-android-fstab.h"\n'
+if '#include "lmi-kernel-extent.h"' not in text:text+='\n#include "lmi-kernel-extent.h"\n'
 tmp.joinpath('aboot.c').write_text(text)
 s=importlib.util.spec_from_file_location('dtbo',recipe/'chainload/patch-dtbo.py');d=importlib.util.module_from_spec(s);s.loader.exec_module(d)
 raw=subprocess.check_output(['git','-C',str(src),'show','HEAD:src/linux-boot/dtbo.c'],text=True)

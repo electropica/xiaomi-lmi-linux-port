@@ -36,7 +36,7 @@ static BOOLEAN lmi_zoom_init(void){
 }
 static BOOLEAN lmi_zoom_line(CHAR16 *line){
     EFI_IMAGE_OUTPUT small,*image=&small;
-    EFI_GRAPHICS_OUTPUT_BLT_PIXEL *pixels,*large,black={0};EFI_STATUS status;
+    EFI_GRAPHICS_OUTPUT_BLT_PIXEL *pixels,*large;EFI_STATUS status;
     UINTN w,h=19,bytes,screen_width;
     if(!lmi_zoom_ready)return FALSE;
     w=lmi_zoom_columns*8;bytes=w*h*sizeof(*pixels);
@@ -57,8 +57,9 @@ static BOOLEAN lmi_zoom_line(CHAR16 *line){
         if(EFI_ERROR(status)){FreePool(large);return FALSE;}
         lmi_zoom_y=lmi_zoom_bottom-38;
     }
-    status=lmi_zoom_gop->Blt(lmi_zoom_gop,&black,EfiBltVideoFill,0,0,0,lmi_zoom_y,screen_width,38,0);
-    if(!EFI_ERROR(status))status=lmi_zoom_gop->Blt(lmi_zoom_gop,large,EfiBltBufferToVideo,0,0,16,lmi_zoom_y,w*2,h*2,w*2*sizeof(*large));
+    /* The full opaque row already contains its black background. Clearing
+     * the visible row first exposes a blank frame and adds a panel update. */
+    status=lmi_zoom_gop->Blt(lmi_zoom_gop,large,EfiBltBufferToVideo,0,0,16,lmi_zoom_y,w*2,h*2,w*2*sizeof(*large));
     FreePool(large);
     if(EFI_ERROR(status))return FALSE;
     lmi_zoom_y+=38;return TRUE;
