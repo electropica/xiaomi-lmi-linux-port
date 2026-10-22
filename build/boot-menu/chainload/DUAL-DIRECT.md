@@ -1,4 +1,19 @@
 
+## Console-fit / marker2 image compiled, handset trial pending
+
+The operator built the updated candidate: 47237120 bytes, SHA256
+548b06b3aabc4948dfafb1e9fefb7e9bef5e6e7b8a621d61b3aeb8fa69e6cdaa.
+All nineteen source hashes match the reviewed recipe. The actual uncompressed
+firmware volume contains lmi_menu=direct-v2 and lmi,menu-os. The 64-MiB FD passes
+the actual PrePi C replay. Windows transfer and plan-only launcher checks pass.
+The new helper starts from Mobian and verifies its dedicated root, persistent
+boot hash and absence of the owned trace instance before any reboot request.
+It uses only native Windows Fastboot for the RAM boot. No launch/flash has been
+performed during qualification. Screen formatting and direct provenance remain
+pending hardware checks; the older Mobian userspace return alone is insufficient
+to certify persistent menu installation. After launch, verify both marker fields.
+
+
 ## 2026-10-22: Mobian returns; screen-fitting text and provenance marker prepared
 
 The operator reports Mobian started after choosing it in dual candidate
