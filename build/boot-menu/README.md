@@ -1,4 +1,55 @@
 
+## 2026-10-22: quiet display accepted; identify actual OS at final handoff
+
+The operator reports the quiet native-font display looks good and Mobian loads.
+Candidate SHA256:
+5726e8917ddb52fee69fee4c6fd3e493758364a3163fd646fdc8cff9bd787ab3.
+Its 21 source hashes and native screen filter match the recipe; actual FD PrePi
+replay passes. The final image payload matches the freshly built 144-byte
+BootShim plus actual 64-MiB FD byte-for-byte. FD SHA256:
+629c256312860f93396e6ad6c953196b114d7d9b3f0171b52cab67a21a2bd455.
+Native rendering is the retained baseline. Do not re-enable the custom zoom.
+
+Read-only Mobian verification still lacks both explicit provenance markers;
+the dedicated root and Phosh work, but direct handoff is not established.
+The operator further reports selecting LineageOS returns to Mobian, with text
+that looks similar. They explicitly confirm the checkmark moved to LineageOS.
+Treat this as a failed LineageOS-entry trial, not a validated Android launch.
+Do not confuse it with the earlier successful Android-only 32-MiB candidate.
+
+A host C replay of the actual bootmenu_boot and after_exit functions confirms
+that a checked android selection dispatches android even when the prior default
+is mobian. The copied target survives subsequent GUI selection changes. The
+BOOT_LINUX dispatch table also points to run_boot_linux. This does not prove the
+live device follows that path; no source-level selection mapping bug is found.
+
+The next diagnostic adds a fixed native-font panel immediately before execute,
+after all RAM component and final DT provenance checks. It names LINEAGEOS or
+MOBIAN using the target received by run_boot_linux, remains for exactly three
+seconds, and then launches normally. It also logs the selected OS at entry and
+identifies the OS on the existing failure panel, replacing the misleading
+hardcoded LineageOS label. No new disk writes or settings. The three-second
+pause is deliberate diagnostic visibility, not a production boot optimization.
+
+Four actual ARM64 units pass syntax; the syntax harness now overlays the latest
+diagnostic and variant headers as well as the bundle header. The 21-source
+apply/restore/tamper fixture and bundle parser pass. The new fixed panel has not
+been handset tested. There is no new kernel, DT policy or cache-cleanup change.
+
+Next variant: consolequiet1-marker2-extent1-target1.
+The operator builds only the menu:
+
+```bash
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --build --with-dual
+```
+
+Qualify the new actual image before a new Windows RAM launcher. Select LineageOS
+and observe the final panel's OS name and whether the POCO logo returns before
+Mobian. This distinguishes the requested target from the final fallback without
+repeating an indistinguishable trial. No agent build/flash/phone policy change.
+Persistent installation is still pending direct OS handoff qualification.
+
+
 ## 2026-10-22: prioritize quiet native loading console
 
 At the operator's explicit request, prepare a menu build without the custom

@@ -2,6 +2,7 @@
  * Included once by aboot.c. RAM-only diagnostic; no variables or disk writes.
  */
 static const char *lmi_last_boot_stage="not entered";
+static const char *lmi_selected_boot_os="UNKNOWN";
 static void lmi_console_line(const char *text){
     CHAR16 out[161];UINTN i=0;
     if(!gST||!gST->ConOut)return;
@@ -16,13 +17,33 @@ void lmi_boot_stage(const char *stage){
     lmi_last_boot_stage=stage;
     tlog_notice("LMI boot stage: %s",stage);
 }
+void lmi_boot_target(const char *target){
+    if(target&&!strcmp(target,"android"))lmi_selected_boot_os="LINEAGEOS";
+    else if(target&&!strcmp(target,"mobian"))lmi_selected_boot_os="MOBIAN";
+    else lmi_selected_boot_os="UNKNOWN";
+    tlog_notice("LMI selected OS: %s",lmi_selected_boot_os);
+}
+void lmi_boot_ready(void){
+    if(!gST||!gST->ConOut)return;
+    gST->ConOut->ClearScreen(gST->ConOut);
+    gST->ConOut->EnableCursor(gST->ConOut,FALSE);
+    lmi_console_line("LMI DIRECT HANDOFF - REQUESTED OS:");
+    lmi_console_line(lmi_selected_boot_os);
+    lmi_console_line("");
+    lmi_console_line("RAM components and DT provenance checks passed.");
+    lmi_console_line("Starting this kernel in 3 seconds.");
+    lmi_console_line("If the POCO logo returns, note the restart.");
+    /* Diagnostic visibility only; never wait indefinitely for a key. */
+    gBS->Stall(3000000);
+}
 void lmi_boot_failed(void){
     list *p;unsigned count=0;EFI_INPUT_KEY key;
     if(!gST||!gST->ConOut)return;
     /* Called only on a returned error, before ExitBootServices. */
     gST->ConOut->ClearScreen(gST->ConOut);
     gST->ConOut->EnableCursor(gST->ConOut,FALSE);
-    lmi_console_line("LMI: LineageOS launch failed before handoff");
+    lmi_console_line("LMI: OS launch failed before handoff");
+    lmi_console_line(lmi_selected_boot_os);
     lmi_console_line("Last attempted stage:");
     lmi_console_line(lmi_last_boot_stage);
     lmi_console_line("Recent warnings/errors (newest first):");

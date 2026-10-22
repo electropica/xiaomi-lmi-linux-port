@@ -44,6 +44,8 @@ mount --bind "$tmp/prepare.c" "$base/src/linux-boot/linux.c"
 mount --bind "$tmp/aboot.c" "$base/src/linux-boot/aboot.c"
 mount --bind "$tmp/dtbo.c" "$base/src/linux-boot/dtbo.c"
 mount --bind "$recipe/chainload/lmi-bundle-loader.h" "$base/src/linux-boot/lmi-bundle-loader.h"
+mount --bind "$recipe/chainload/lmi-boot-diagnostic.h" "$base/src/linux-boot/lmi-boot-diagnostic.h"
+mount --bind "$recipe/chainload/lmi-android-fstab.h" "$base/src/linux-boot/lmi-android-fstab.h"
 # The new header is found through the recipe include path; no file is created
 # in the real source tree.
 for file in aboot.c linux.c dtbo.c; do

@@ -8,6 +8,9 @@ def patch_entry(text):
     assert text.count('\tdone:\n')==1
     text=text.replace('\tlmi_boot_stage("15 execute / ARM handoff validation");','\tlmi_boot_stage("14 Android logical ramdisk fstab");\n\tif(linux_boot_lmi_android_fstab(lb)!=0)\n\t\tEDONE(tlog_error("prepare Android logical ramdisk fstab failed"));\n\tlmi_boot_stage("15 execute / ARM handoff validation");')
     text=text.replace('extern int linux_boot_lmi_android_fstab(linux_boot*lb);','extern int linux_boot_lmi_android_fstab(linux_boot*lb);\nextern int linux_boot_lmi_variant(linux_boot*lb);')
+    text=text.replace('extern void lmi_boot_failed(void);','extern void lmi_boot_failed(void);\nextern void lmi_boot_target(const char*target);\nextern void lmi_boot_ready(void);')
+    text=text.replace('\tlmi_boot_stage("01 configuration");','\tlmi_boot_target(boot->ident);\n\tlmi_boot_stage("01 configuration");')
+    text=text.replace('\tif(linux_boot_execute(lb)!=0)','\tlmi_boot_ready();\n\tif(linux_boot_execute(lb)!=0)')
     text=text.replace('\tlmi_boot_stage("15 execute / ARM handoff validation");','\tif(linux_boot_lmi_variant(lb)!=0)\n\t\tEDONE(tlog_error("variant boot arguments remain ambiguous"));\n\tlmi_boot_stage("15 execute / ARM handoff validation");')
     return text.replace('\tdone:\n','\tdone:\n\tlmi_boot_failed();\n')
 
