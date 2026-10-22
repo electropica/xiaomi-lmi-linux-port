@@ -1,4 +1,42 @@
 
+## 2026-10-22: larger loading text prepared; direct Mobian provenance still absent
+
+The operator tested consolefit1/marker2 candidate
+548b06b3aabc4948dfafb1e9fefb7e9bef5e6e7b8a621d61b3aeb8fa69e6cdaa.
+Loading text now uses the screen width, but its font remains too small.
+Mobian returned to the dedicated partition and Phosh works. Read-only runtime
+inspection nevertheless found neither lmi_menu=direct-v2 in the command line
+nor /chosen/lmi,menu-os, nor the SimpleInit metadata. No pstore file was found.
+Direct handoff is therefore NOT qualified; a fallback or DT replacement remains
+unresolved. No persistent menu installation is approved by this result.
+
+The next recipe renders the native HII 8x19 bitmap font at 2x (16x38), using
+GOP blits at the existing panel resolution. It wraps fewer columns and scrolls
+within margins. Original serial/file log text is preserved; unsupported graphics
+services fall back to the existing console formatter. Host tests exercise the
+actual pixel doubling function with buffer canaries and the formatter's long
+lines/newlines/tabs. The actual ARM64 logger and four boot units pass syntax.
+These are host checks, not handset validation of the larger text.
+
+Before handoff the final RAM DT must now contain the exact provenance command
+line token; otherwise preparation fails explicitly before kernel execution.
+The twenty-source apply/restore/tamper fixture and bundle parser pass.
+Variant suffix: consolezoom2-marker2. No firmware, kernel or rootfs build was
+started by the agent, and no phone settings or boot partitions were changed.
+
+Operator build command:
+
+```bash
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --build --with-dual
+```
+
+Expected result: DUAL_DIRECT_RAM_HANDOFF_BUILD_COMPLETE_NOT_FOR_FLASHING.
+Qualify the new actual hash, source manifest and PrePi replay before preparing
+a new Windows RAM launcher. Existing launchers pin older images; do not reuse
+their qualification for this candidate. Android in the dual 64 MiB variant also
+remains unqualified. Do not flash this experimental menu.
+
+
 ## Console-fit / marker2 image compiled, handset trial pending
 
 The operator built the updated candidate: 47237120 bytes, SHA256

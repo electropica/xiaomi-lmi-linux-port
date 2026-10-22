@@ -66,7 +66,7 @@ if lineage:
  result['boot_header_matches_pinned_android']=True
 if dual:
  result['phase']='experimental-dual-direct-ram-handoff'
- result['candidate_variant']='dual-direct-64MiB-FD-prepi-ffs3-fstab1-osversion1-consolefit1-marker2'
+ result['candidate_variant']='dual-direct-64MiB-FD-prepi-ffs3-fstab1-osversion1-consolezoom2-marker2'
  result['hardware_validated']=False
 Path('/output/dual-artifact-manifest.json' if dual else '/output/lineage-artifact-manifest.json' if lineage else '/output/artifact-manifest.json').write_text(json.dumps(result,indent=2))
 print(json.dumps(result,indent=2))

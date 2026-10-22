@@ -2,6 +2,7 @@
  * Screen-only formatting: serial/file logs retain their original text.
  */
 #include <Library/UefiBootServicesTableLib.h>
+#include "lmi-console-zoom.h"
 static UINTN lmi_text_columns=80;
 static BOOLEAN lmi_text_ready=FALSE;
 static void lmi_fit_console_line(const char *text){
@@ -19,6 +20,7 @@ static void lmi_fit_console_line(const char *text){
         if(!EFI_ERROR(gST->ConOut->QueryMode(gST->ConOut,(UINTN)gST->ConOut->Mode->Mode,&columns,&rows))&&columns>=4)
             lmi_text_columns=columns;
         gST->ConOut->EnableCursor(gST->ConOut,FALSE);
+        if(lmi_zoom_init())lmi_text_columns=lmi_zoom_columns;
         lmi_text_ready=TRUE;
     }
     limit=lmi_text_columns>256?254:lmi_text_columns-2;
@@ -27,7 +29,7 @@ static void lmi_fit_console_line(const char *text){
         unsigned char c=(unsigned char)*text;
         if(!c||c=='\n'||used>=limit){
             line[used++]=L'\r';line[used++]=L'\n';line[used]=0;
-            gST->ConOut->OutputString(gST->ConOut,line);
+            if(!lmi_zoom_line(line))gST->ConOut->OutputString(gST->ConOut,line);
             used=1;
             if(!c)break;
             if(c=='\n'){text++;continue;}

@@ -3,7 +3,7 @@
  */
 #include "variant-args.h"
 int linux_boot_lmi_variant(linux_boot *lb){
-    int chosen,len;const char *original;char args[4096];
+    int chosen,len;const char *original,*mark,*end;char args[4096];
     if(!lb||!lb->config||!lb->dtb.address)return -1;
     if(strcmp(lb->config->tag,"android")&&strcmp(lb->config->tag,"mobian"))return -1;
     chosen=fdt_path_offset(lb->dtb.address,"/chosen");if(chosen<0)return -1;
@@ -11,6 +11,12 @@ int linux_boot_lmi_variant(linux_boot *lb){
     original=fdt_getprop(lb->dtb.address,chosen,"bootargs",&len);
     if(!original||len<=0||(size_t)len>sizeof(args)||original[len-1]!=0)return -1;
     memcpy(args,original,(size_t)len);
+    mark=strstr(args,"lmi_menu=direct-v2");
+    if(!mark||(mark!=args&&mark[-1]!=' ')){
+        tlog_error("LMI provenance marker absent from final DT bootargs");return -1;
+    }
+    end=mark+sizeof("lmi_menu=direct-v2")-1;
+    if(*end&&*end!=' ')return -1;
     if(lmi_variant_args(args,(size_t)len))return -1;
     if(!strcmp(args,original))return 0;
     return fdt_setprop_string(lb->dtb.address,chosen,"bootargs",args);
