@@ -1,4 +1,25 @@
 
+## 2026-10-22: dual build qualified; Android gauge comparison corrected
+
+Operator compiled the direct dual candidate: 47237120 bytes, SHA256
+35a8bf8d508d1b7b98f435d871ee50665a6321eaef496feea132bf0815f129c8.
+All seventeen patched-source hashes match. Actual 64-MiB FD PrePi replay passes,
+and Windows transfer plus plan-only launcher verification pass. The launcher
+refuses an active power-trace instance. No new menu image has been booted or
+flashed; direct Mobian, corrected board identification and persistent installation
+still need hardware validation. See build/boot-menu/chainload/DUAL-DIRECT.md.
+
+The Android thirty-minute trace was saved and cleaned up. Four qualified retained
+sleep-bank windows match twelve Mobian APSS RPMh requests exactly. Early ring
+overwrites limit the whole-session trace. Both Android histories show an instant
+charge-counter discontinuity at unplug: 86 mAh overnight, 178 mAh in the short
+trial. Excluding that jump changes the overnight apparent quotient from the
+initial ~26 mA to ~13.84 mA net /15.72 mA summed decreases; the short stable segment
+is ~13.99 mA. These are gauge-derived, not calibrated physical current. The actual
+overnight precharge percentage was 95%; 96% was read after charging resumed.
+See docs/validation/LINEAGE-POWER-TRACE-20261022.md for methods and limitations.
+
+
 ## 2026-10-22: direct dual menu candidate prepared (host validation only)
 
 Android survived overnight without restarting: 100 to 96 percent over 8h31m

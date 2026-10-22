@@ -1,0 +1,27 @@
+{
+  "phase": "experimental-dual-direct-ram-handoff",
+  "bytes": 47237120,
+  "sha256": "35a8bf8d508d1b7b98f435d871ee50665a6321eaef496feea132bf0815f129c8",
+  "no_phone_contact": true,
+  "compiler": "Debian clang version 14.0.6",
+  "python": "Python 3.11.2",
+  "candidate_variant": "dual-direct-64MiB-FD-prepi-ffs3-fstab1-osversion1",
+  "boot_header_os_version": {
+    "packed": 536871337,
+    "version": [
+      16,
+      0,
+      0
+    ],
+    "patch_year": 2026,
+    "patch_month": 9
+  },
+  "boot_header_matches_pinned_android": true,
+  "hardware_validated": false,
+  "patched_source_hashes_verified": 17,
+  "fd_bytes": 67108864,
+  "fd_sha256": "f70f74df0b75e306d925977a919b3b02ef7a454058aed41bf14e0abb5e607347",
+  "prepi_actual_fd_replay_passed": true,
+  "no_phone_contact_during_qualification": true,
+  "temporary_boot_only": true
+}
