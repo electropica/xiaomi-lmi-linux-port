@@ -97,22 +97,118 @@ and no discharge test is justified by the present evidence.
 
 ---
 
-## Entry 2 — 2026-10-22 — pending: ranked unresolved client differences
+## Entry 2 — 2026-10-22 — ranking of unresolved client/configuration differences
 
-**Hypothesis.** Up to three concrete client or configuration differences
-remain that could discriminate the standby residual, taken from the existing
-peripheral checklist rather than from a new broad audit.
+**Hypothesis.** At most three concrete client or configuration differences
+remain that could discriminate the standby residual. They are taken from the
+existing peripheral checklist and from retained evidence, not from a new broad
+audit.
 
-**Artifact identity.** `docs/validation/lmi-standby-peripheral-checklist-2026-10-20.md`
-and the driver-coverage and inventory notes of the same date.
+**Artifact identity.**
+* Checklist `docs/validation/lmi-standby-peripheral-checklist-2026-10-20.md`
+  and the driver-coverage note of the same date.
+* LineageOS reference raw trace, four complete suspend windows.
+* Mobian 2026-10-12 wide observer raw trace: the only Mobian trace with
+  `complete_trace_possible: true`, no overrun, no unmatched call and a
+  190.634 s userspace-qualified sleep.
+* Mobian 2026-10-12 forced observer trace: qualified durations, cpu3 overrun
+  7307, narrow regulator capture.
+* `drivers/scsi/ufs/ufs-qcom.c` identical on both kernels, sha256
+  `5914361ac55598d1e2ffb6105bbe161d93536aba7144310cc67cb94d400ac739`.
 
-**Evidence.** Pending the ranking pass.
+**Evidence and ranking.**
 
-**Changes.** Pending.
+**R1 — display panel VCI release timing (ranked first, concrete difference).**
+On the LineageOS reference `display_panel_vci` and `pm8150_l14` are released
+at screen-off, 255.08 s / 596.07 s / 1196.06 s / 1796.07 s before the
+corresponding suspend entry. On the Mobian wide trial they are released
+0.301 s before the suspend entry, inside the suspend path, with no enable event
+in the 110.6 s of preceding coverage, and they are not re-enabled in the
+observed post-resume window. Mechanism: the panel rails stay **requested**
+through the whole screen-off to suspend idle gap on Mobian, and are released
+early on the reference. The gap is governed by the inactivity delay, and the
+shipped Mobian profile sets `sleep-inactive-battery-timeout=900`
+(`build/profiles/lmi-current/94_lmi-current-power.gschema.override`). This is
+invisible to a deep-suspend current measurement because the rail is off
+during the sleep on both platforms; it would appear in daily consumption.
+Counter-evidence: a regulator request is not a current measurement, the
+Mobian build is uncertified, and the length of the Mobian idle gap is not
+measured. Discriminator: one awake, read-only observation of
+`display_panel_vci` and `pm8150_l14` during the idle gap, on both platforms,
+with the screen-off to suspend interval recorded.
 
-**Validation.** Pending.
+**R2 — UFS suspend policy values (measurement gap, not yet a difference).**
+The UFS platform driver is byte-identical, so any difference is in values.
+Neither clock-scaling spelling exists in the inspected Android directory, which
+closes that gap locally. The only OS-level write difference identified is
+`clkgate_enable`: the reference writes it (1 at `sys.boot_completed` and on
+charger, 0 during `on init`), Mobian never writes it and keeps the driver
+default. `rpm_lvl`, `spm_lvl` and `auto_hibern8` are written by nobody on
+either side, and the suspend-path reference-clock decision depends on them
+(`ufs-qcom.c:893-901`). Counter-evidence: the retained Mobian snapshot says
+`clkgate_enable=1`, `rpm/spm_lvl=3`, `auto_hibern8=1000`, but it is plugged,
+older and uncertified. Discriminator: the privileged read-only snapshot
+already prepared (`userspace/power/diagnostics/ufs-policy-read.py`).
 
-**Limitations.** A missing `pm_genpd` node, a successful PM callback, a zero
-logical vote or an absent trace event are not electrical exclusions.
+**R3 — always-on and shared rails (structurally invisible to the method).**
+An `always-on` regulator emits no enable or disable event at all, so the
+transition comparisons used so far cannot see that class. `vdd_boost_vreg`
+(`regulator-always-on`, PM8150B GPIO 5, shared with `pm8150b_haptics` and
+`aw8697_haptic@5A`) is the concrete instance, and the haptics sharing is why
+releasing it is not a trivial change. The retained Mobian `regulator_summary`
+snapshot shows the consumer lists that make this class analysable. Discriminator:
+the same privileged read-only snapshot, reading the regulator summary instead
+of the UFS policy.
 
-**Next decision.** Pending.
+**Changes.** `docs/validation/lmi-panel-vci-release-timing-2026-10-22.md`
+added; the peripheral checklist display row annotated with the new transition
+evidence; the ranking recorded here.
+
+**Validation.** The panel timings were extracted from the retained raw traces
+with a dedicated offline extractor; the four LineageOS windows agree on the
+pattern, and the Mobian value comes from the only Mobian trace that is
+complete. No device contact.
+
+**Limitations.** A regulator transition is a request, never a calibrated
+current. Missing `pm_genpd` nodes, successful PM callbacks, zero logical votes
+and absent trace events are not electrical exclusions. The Mobian evidence is
+from an uncertified older build. R2 and R3 are measurement gaps, not
+differences.
+
+**Next decision.** One bounded, awake, read-only measurement resolves R1 and,
+with the same capture, R2 and R3: read the display panel rail state during the
+screen-off to suspend idle gap, and read the UFS policy values and the
+regulator consumer lists, on Mobian and on the LineageOS reference, over
+identical fixed paths. This needs the privileged ADB route on LineageOS and
+the existing SSH route on Mobian with USB connected. Until that happens, all
+three rows stay as they are: R1 is a measured timing difference of unmeasured
+magnitude, R2 and R3 are unobserved.
+
+## Entry 3 — 2026-10-22 — pending operator actions
+
+**Hypothesis.** The remaining uncertainty is measurement access, not analysis.
+
+**Artifact identity.** `userspace/power/diagnostics/ufs-policy-read.py`,
+`userspace/power/diagnostics/ufs-policy-read.sh`,
+`userspace/power/diagnostics/test-ufs-policy-reader.py`.
+
+**Evidence.** The ADB device is authorised and unique, but `adbd` runs as
+`uid=2000(shell)` in SELinux context `u:r:shell:s0`, which is denied the UFS
+attribute reads and the regulator summary. The build is `userdebug`
+(`ro.debuggable=1`), so the privileged route is `adb root`, which restarts
+`adbd` as root and is reversible with `adb unroot`; it is an access change,
+not a persistent setting change, and it is not performed here.
+
+**Changes.** None beyond the reader and its tests.
+
+**Validation.** The reader resolves the Windows `adb.exe` from the mounted C:
+volume, prints a PowerShell-readable snippet path, and its plan mode contacts
+nothing.
+
+**Limitations.** `adb root` is an operator decision; the reader never performs
+it. The Mobian route needs the cable connected and the phone awake.
+
+**Next decision.** Await the operator: (a) authorise `adb root` for one
+read-only snapshot on the LineageOS reference, and (b) make Mobian available
+with USB connected for one read-only snapshot over the same fixed paths, with
+an awake read of the display panel rail during the idle gap.

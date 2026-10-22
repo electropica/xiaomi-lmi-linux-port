@@ -186,3 +186,22 @@ failure. It does not justify toggling the bit or claiming the GPU electrically
 excluded. No new unplugged comparison was requested for this negative check.
 
 The [completed same-kernel graphical/headless A/B/A](lmi-headless-aba-result-2026-10-21.md) reports no demonstrated reduction after stopping Phosh/Phoc; all phases and restoration passed.
+
+## 2026-10-22 addendum — display row transition evidence
+
+`docs/validation/lmi-panel-vci-release-timing-2026-10-22.md` adds **T** level
+evidence to the display row, from the retained raw traces only. On the
+LineageOS reference `display_panel_vci` and `pm8150_l14` are released at
+screen-off, 255 s to 1796 s before the corresponding suspend entry; on the
+2026-10-12 Mobian wide trial they are released 0.301 s before the suspend
+entry, inside the suspend path, and are not re-enabled in the observed
+post-resume window. The rails are off during the powered-down interval on both
+platforms, so this is a difference in the **screen-off to suspend idle gap**,
+not in the suspend state. It is invisible to a deep-suspend current
+measurement.
+
+The row stays **Open**: the current drawn by a requested display panel rail
+is not measured, the Mobian observation comes from an uncertified older build,
+and the length of the Mobian idle gap is not measured. The cheapest
+discriminator is one awake, read-only observation of the panel rail state
+during the idle gap on both platforms.
