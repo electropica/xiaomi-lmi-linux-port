@@ -54,6 +54,30 @@ def clocks():
     return float(parts[0]), float(parts[1])
 
 
+def usb_state():
+    """Best effort USB state.
+
+    On this platform the USB gadget appears as a network link, not as a
+    `power_supply/usb` node, so both are probed. The unplug is detected on
+    either: the power-supply `online` flag falling to 0, or the USB network
+    interface losing its carrier.
+    """
+    online = []
+    for d in sorted(os.listdir("/sys/class/power_supply")):
+        p = os.path.join("/sys/class/power_supply", d, "online")
+        if os.path.exists(p):
+            online.append("%s=%s" % (d, read(p)))
+    links = []
+    try:
+        for name in sorted(os.listdir("/sys/class/net")):
+            carrier = read(os.path.join("/sys/class/net", name, "carrier"))
+            if carrier == "1":
+                links.append(name)
+    except OSError:
+        pass
+    return {"usb_power_supply": online, "usb_links_up": links}
+
+
 def sample(label):
     boottime, monotonic = clocks()
     out = {
@@ -64,9 +88,13 @@ def sample(label):
         "suspended_accumulated": boottime - monotonic,
     }
     for name in ("capacity", "charge_counter", "charge_full",
-                 "charge_full_design", "charge_now", "status", "temp",
-                 "voltage_now", "current_now", "usb_online"):
+                 "charge_full_design", "status", "temp", "voltage_now",
+                 "current_now"):
         out[name] = read(os.path.join(GAUGE, name))
+    usb = usb_state()
+    out["usb_power_supply"] = usb["usb_power_supply"]
+    out["usb_links_up"] = usb["usb_links_up"]
+    out["usb_attached"] = bool(usb["usb_power_supply"]) or bool(usb["usb_links_up"])
     out["ufshc_runtime_status"] = read(os.path.join(UFS, "power", "runtime_status"))
     for attr in ("clkgate_enable", "clkgate_delay_ms", "rpm_lvl", "spm_lvl",
                  "auto_hibern8", "rpm_target_link_state",
@@ -108,26 +136,36 @@ def main():
     deadline = time.monotonic() + args.max_seconds
     seen_suspend = False
     at_unplug = None
+    at_suspend = None
+    after_wake = None
     previous = started
+    final = None
     while time.monotonic() < deadline:
         time.sleep(args.poll)
         now = sample("poll")
         # the counter jumps exactly at the unplug; keep that sample so the
         # Android reference method can exclude the discontinuity
         if (at_unplug is None
-                and previous.get("usb_online") == "1"
-                and now.get("usb_online") == "0"):
+                and previous.get("usb_attached")
+                and not now.get("usb_attached")):
             at_unplug = now
             print("unplug observed", flush=True)
         delta = now["suspended_accumulated"] - started["suspended_accumulated"]
-        if delta >= max(args.poll, 1.0):
+        if not seen_suspend and delta >= max(args.poll, 1.0):
             # the monotonic clock lost time: a suspend happened
             seen_suspend = True
-            started = now
+            at_suspend = previous
+            after_wake = now
             print("suspend detected, delta=%.3f" % delta, flush=True)
+        if (seen_suspend and at_unplug is not None
+                and now.get("usb_attached")):
+            final = now
+            print("replug observed", flush=True)
             break
         previous = now
     after = sample("after")
+    if final is None:
+        final = after
 
     result = {
         "collector": "collect-matched-standby-window",
@@ -136,10 +174,36 @@ def main():
         "ended_utc": after["wall_utc"],
         "suspend_detected": seen_suspend,
         "at_unplug": at_unplug,
+        "at_suspend": at_suspend,
+        "after_wake": after_wake,
+        "final": final,
         "suspended_seconds_estimate": round(
             after["suspended_accumulated"] - started["suspended_accumulated"], 3),
+        "sleep_only_seconds_estimate": (
+            round(after_wake["suspended_accumulated"]
+                  - at_suspend["suspended_accumulated"], 3)
+            if (at_suspend and after_wake) else None),
         "before": started,
         "after": after,
+        "usb_state": "usb_attached is true when any USB power-supply node "
+                     "reports online=1 or any network interface has "
+                     "carrier=1; on this platform the USB gadget is a network "
+                     "link, so the unplug shows as the loss of that carrier",
+        "estimators": {
+            "sleep_only": "delta(counter, at_suspend -> after_wake) over "
+                          "sleep_only_seconds_estimate. This is the "
+                          "comparable one: the counter does not move while "
+                          "the processor is down, so it measures the "
+                          "consumption of the suspended interval only.",
+            "android_style_net": "delta(counter, at_unplug -> final) over the "
+                                  "whole unplugged interval. Comparable with "
+                                  "the Android reference only if that "
+                                  "interval is also almost entirely asleep, "
+                                  "which was 98.9 % on the reference trace "
+                                  "and is not the case here, because the "
+                                  "Mobian inactivity delay keeps the system "
+                                  "awake for up to 900 s after the unplug.",
+        },
         "method": "The Android reference needs three points: the counter at "
                   "the unplug, the counter after the sleep and the suspended "
                   "interval, so that the counter discontinuity at the unplug "
