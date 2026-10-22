@@ -1,3 +1,22 @@
+## 2026-10-22: older working menu checked; reset-service candidate is host-only
+
+The operator confirms that the older Android-working menu starts Mobian and
+LineageOS. Both Fastboot and Recovery selections instead return to Mobian;
+text no longer fills the screen. Exact tested image identity remains unverified.
+This does not supersede the failed LineageOS handoff of the newer 64-MiB images.
+
+An isolated candidate in `build/boot-menu/reset-guard/` preserves an already
+installed platform reset service before generic RELEASE initialization can
+replace it. The actual original initializer overwrites a mocked platform
+service; the actual patched initializer preserves it, retains fallback when
+absent, and propagates lookup errors. Tampered source is rejected. These host
+tests pass; the firmware dispatcher and handset have not been tested with it.
+
+No firmware build, phone change or flash was performed. The active build recipe
+is unchanged. Integrate against the identified Android-working baseline and
+qualify its source manifest before a manual temporary build/test. See the
+candidate README for source evidence and remaining runtime uncertainty.
+
 
 ## 2026-10-22: quiet display accepted; identify actual OS at final handoff
 
