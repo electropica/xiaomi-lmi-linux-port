@@ -803,3 +803,61 @@ rails and the peripheral states in suspend. The esr-delta acceptance
 stays a separate decision and this window does not make it urgent: the
 wake did not occur here, and the screen-on it caused in the first window
 is a duty-cycle cost, not a sleep-current cost.
+
+## Entry 13 - 2026-10-22 - what stays on while the processor is down, against LineageOS
+
+**What was compared, offline.** The suspend path of each platform, from
+the trace analysis already recorded in the regulator inventory, and the
+always requested Mobian rails with their consumers, from the
+point-in-time regulator summary. Two things are missing and are not
+replaced by an assumption: there is **no point-in-time regulator summary
+for LineageOS** in the kept packet, and **no rail current is measured
+anywhere**, every current column of the Mobian summary reading 0 mA.
+
+**The suspend path.** The one Mobian trial whose trace is complete
+disables display_panel_vci, pm8150_l14, pm8150_l17, pm8150_l9,
+pm8150_s3_level, pm8150_s3_mmcx_sup_level, pm8150a_s3_level,
+pm8150a_s3_mmcx_sup_level, pm8150a_s4_level, refgen and ufs_phy_gdsc.
+LineageOS disables gpu_cx_gdsc, pm8150_l17, pm8150_l9, pm8150_s3_level,
+pm8150_s3_mmcx_sup_level, pm8150a_s3_level, pm8150a_s3_mmcx_sup_level,
+pm8150a_s4_level and ufs_phy_gdsc. Only in Mobian: display_panel_vci,
+pm8150_l14, refgen. Only in LineageOS: **gpu_cx_gdsc**, the GPU core
+rail. On two of the three the software difference points the other way:
+Mobian disables the panel rails and the reference clock generator, and
+LineageOS does not. The inventory's caveat applies: a transition
+observed around the suspend is a software transition, not proof of an
+electrical state while the processor is down.
+
+**The always-on rails, and why the obvious candidate falls.** The Mobian
+rails whose only consumer is `deviceless`, that is requested from the
+device tree or the bootloader and never released, are vdd_boost_vreg,
+pm8150_s5 and s6 (WLAN), pm8150_l2 (USB-PD), pm8150_l5, pm8150_l5_ao and
+pm8150_l12_ao (the CPU limits-dcvs rails), pm8150_l9, pm8150_l12,
+pm8150_l14 and display_panel_vci (panel), pm8150_l17, pm8150a_l1 (touch),
+pm8150a_s8, pm8150a_bob (cameras), pm8009_s2, pcie_0_gdsc,
+usb30_prim_gdsc, hsphy@88e3000 (USB HS PHY) and regulator-dummy.
+`vdd_boost_vreg` is the one followed since 12 October: use=1, open=1, one
+`deviceless` consumer. A `deviceless` consumer means the request comes
+from the device tree or the bootloader, and **the device tree is the same
+on the two platforms**, so an always-on rail from the shared tree is
+very likely always-on on LineageOS too and cannot by itself explain a
+difference. That removes the most obvious candidate as an explanation.
+
+**What survives.** The GPU core rail: LineageOS disables gpu_cx_gdsc in
+its suspend path and Mobian does not. A software difference in the
+suspend path, and a candidate only: nothing says what current that rail
+costs, and the framework reports no currents.
+
+**The one discriminating verification proposed.** Read the regulator
+summary in the unplugged state on both platforms and compare the rail
+sets. Read-only, changes nothing, disables nothing, and it is the only
+step that separates a rail both platforms hold from a rail only Mobian
+holds. Proposed, not scheduled: no new unplug is arranged and nothing is
+disabled.
+
+**Limits.** The Mobian summary is a point-in-time snapshot taken 110 s
+after a boot with the cable connected, so it describes requested rails
+and not current-carrying ones. The suspend-path lists come from two
+different dates and two different builds, and the 12 October Mobian
+observer artefacts record no kernel release string. No electrical
+measurement exists, so nothing here designates a responsible party.
