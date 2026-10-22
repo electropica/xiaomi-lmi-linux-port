@@ -616,3 +616,58 @@ the second standby window with the corrected collector, and the
 esr-delta acceptance, which needs a build, an installation and a device
 observation. The patch is not to be deployed before the second window,
 because that window measures the system as it is now.
+## Entry 10 - 2026-10-22 - collector revision 4: the discharge endpoint is qualified, the snapshot is one-shot
+
+**The review.** The independent revision 3 review of 2026-10-22 confirmed
+the revision 3 fixes and found two defects in them, plus one small source
+defect, and said not to deploy until the endpoint handling is qualified.
+
+**Defect 1, the endpoint.** Revision 3 computed the power state as "the
+online flag does not read 1", so a missing node, a denied read or an error
+read as an absent source, and a sample taken while the battery was
+charging could be kept as a discharge endpoint. The review's
+counterexample is exact: `usb_online` reading `ERR:13` with the gauge
+reporting `Charging` produced a detached sample. The other power sources
+were recorded but never checked.
+
+Revision 4 qualifies the endpoint explicitly, and it needs three
+independent things: the USB online flag **validated offline**, that is
+reading exactly "0"; every other source that exposes an online flag
+**known and not online**, on this device `dc` and `pc_port`; and the gauge
+**Discharging**, because a Charging or Full reading means the counter can
+move back up towards `charge_full`. Any unknown or failed reading
+disqualifies the sample, the evidence is kept with its reason, and the
+reasons are counted. The power state is tri-state now, and the boolean
+stays the proxy it was.
+
+**Defect 2, the snapshot.** With `--ufs-hardware-snapshot`, revision 3
+read the two UFS attributes at the start **and again after every event**,
+which reintroduced the runtime-resuming hardware queries the option
+exists to isolate. It is now read at most once per run and reused. The
+default mode never made those queries, so this is not proof that a
+default run was perturbed.
+
+**The small defect.** The collector read `max_bus_w`; the driver creates
+`max_bus_bw` from a stored vote, so the old name always failed. Checked
+on the device: `max_bus_bw` reads 0 and `max_bus_w` does not exist.
+
+**The tests.** The suite holds **38 tests**, and the endpoint tests are
+driven from **simulated raw readings**: the read helper and the list of
+supplies are replaced, so the real classification runs on raw strings,
+including the error strings. Against revision 4: **0 failures**. Against
+revision 3: **12 failures**, and against revision 2: **12**. The snapshot
+test fails on revision 3 with "the snapshot was read 2 times", which is
+the defect itself. `test-ufs-policy-reader.py` still passes with 10
+tests. No phone is contacted.
+
+**Limitations.** Revision 4 has not run on a handset. The qualification is
+deliberately conservative: a reading that cannot be qualified is kept as
+evidence with its reason and is not offered as an endpoint, because a lost
+endpoint is a missing measurement and a wrongly qualified one is a wrong
+measurement. The USB offline signal is not independent proof of a physical
+unplug. The window remains a gauge reading.
+
+**Next decision.** Deploy revision 4 and run the second window, with a
+fixed operator-visible maximum duration, keeping the pre-replug
+disconnected samples as the endpoints. Nothing was built, installed or
+deployed.

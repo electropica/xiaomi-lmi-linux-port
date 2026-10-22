@@ -13,37 +13,39 @@ environment variable. That is how the regression tests are demonstrated:
 the same suite is run against the previous revision, taken from the
 repository history, and the new tests must fail there and pass here.
 
-Two revisions are covered.
+Four revisions are covered.
 
 Revision 2 was born from a blocking defect: the collector read
 /proc/uptime and treated its second field as CLOCK_MONOTONIC. That field
 is the aggregate CPU idle time. Every suspended-time value and every
 suspend detection built on it was invalid, and the defect was invisible
-in the output: the file looked complete and the numbers looked plausible.
+in the output.
 
-Revision 3 comes from the API review of 2026-10-22, whose results are in
-work/MINIMAX-API-REVIEW-RESULTS-20261022.md. The review confirmed five
-defects in revision 2, each covered by a test below that fails against
-revision 2:
+Revision 3 came from the API review of 2026-10-22. It fixed five defects:
+a sample pair could not carry a suspend gap and a USB transition at the
+same time, the event log could hide the terminal transition and shorten
+the measured sleep, the deadline was printed as a 1970-era date, the
+result was written only when an event happened and not atomically, and
+the two UFS attributes that runtime-resume the device and send a hardware
+query were read on every poll.
 
-  * one pair of samples could not carry both a suspend gap and a USB
-    transition, so a detach happening inside a suspend interval was
-    lost, with the counter readings on both sides of it;
-  * the event log was bounded by dropping events, so a saturated log
-    could hide the terminal replug, and the suspended total was the sum
-    of the surviving events, so a full log also shortened the measured
-    sleep;
-  * the deadline was printed as a wall-clock date but was computed from
-    the boot clock, which produced a 1970-era timestamp;
-  * the result was written only when an event happened and the write was
-    not atomic, so an interrupted run could leave nothing behind or a
-    truncated file;
-  * the UFS attributes current_power_mode and psa_state were read on
-    every poll, and each of those reads runtime-resumes the UFS device
-    and sends a hardware query.
+Revision 4 comes from the independent revision 3 review of 2026-10-22. It
+fixed two defects and one small one:
 
-The review also rejected several claims that the collector used to make.
-The test that checks the claims is part of the suite.
+  * a discharge endpoint was qualified by the absence of a USB power
+    source, so a missing node, a denied read or an error read as an
+    offline source, and a sample taken while the battery was charging
+    could be kept as a discharge endpoint. The qualification is now
+    explicit, and any unknown reading disqualifies the sample;
+  * the optional UFS hardware snapshot was read again after every event,
+    which reintroduced the runtime-resuming hardware queries it exists
+    to isolate;
+  * the UFS attribute was read as max_bus_w, while the driver creates
+    max_bus_bw.
+
+The endpoint tests drive the real classification from simulated raw
+readings, not from a preconstructed boolean, because that is the defect
+itself.
 """
 
 import ast
@@ -63,6 +65,11 @@ spec = importlib.util.spec_from_file_location("collect_matched_standby_window",
                                               COLLECTOR)
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
+
+BATTERY = "/sys/class/power_supply/battery"
+USB = "/sys/class/power_supply/usb/online"
+DC = "/sys/class/power_supply/dc/online"
+PC_PORT = "/sys/class/power_supply/pc_port/online"
 
 
 class FakeClock(object):
@@ -85,13 +92,15 @@ class FakeClock(object):
 
 def make_sample(boottime, monotonic, counter="2676998", usb=True,
                 label="poll", wall="2026-10-22T15:19:48Z", power=None,
-                status=None):
+                status=None, online_raw=None):
     """A synthetic sample, shaped like the ones the collector builds."""
     if power is None:
         power = usb
     if status is None:
         status = "Full" if power else "Discharging"
-    return {
+    if online_raw is None:
+        online_raw = {"usb": "1" if power else "0", "dc": "0", "pc_port": "0"}
+    sample = {
         "label": label,
         "wall_utc": wall,
         "boottime": boottime,
@@ -101,15 +110,25 @@ def make_sample(boottime, monotonic, counter="2676998", usb=True,
         "status": status,
         "current_now": "0",
         "usb_attached": usb,
-        "usb_power_attached": power,
+        "usb_power_attached": True if power else False,
         "usb_transport_attached": usb,
         "usb_links_up": ["usb0"] if usb else [],
+        "usb_online_raw": online_raw.get("usb"),
+        "online_raw": dict(online_raw),
         "usb_online": "1" if power else "0",
-        "usb_power_supply": ["usb=%d" % (1 if power else 0)],
+        "usb_power_supply": ["%s=%s" % (k, v) for k, v in online_raw.items()],
         "charging": power,
         "charging_state": "full" if power else "discharging",
-        "detached": not power,
     }
+    # The endpoint flag is computed by the collector itself, so the sample
+    # is never given a preconstructed answer.
+    if hasattr(collector, "discharge_endpoint"):
+        endpoint, reason = collector.discharge_endpoint(sample)
+    else:
+        endpoint, reason = (not power and status == "Discharging"), "legacy"
+    sample["discharge_endpoint"] = endpoint
+    sample["discharge_endpoint_reason"] = reason
+    return sample
 
 
 def deadline_for(boottime=1000.0, wall_epoch=1792688000.0, max_seconds=1000.0):
@@ -126,6 +145,54 @@ def deadline_for(boottime=1000.0, wall_epoch=1792688000.0, max_seconds=1000.0):
 
 def args_stub():
     return type("Args", (), {"poll": 5.0, "threshold": 1.0})()
+
+
+def raw_reads(mapping, supplies=("usb", "dc", "pc_port")):
+    """Drive the collector from simulated raw readings.
+
+    The mapping gives the raw text of each path, exactly as the kernel
+    would return it, including the error strings the read helper
+    produces. The power supplies that expose an online flag are listed
+    separately, so the test does not depend on what the host machine
+    happens to have.
+
+    Returns (restore, paths).
+    """
+    paths = ["/sys/class/power_supply/%s/online" % name for name in supplies]
+    raw = dict(mapping)
+    for path in paths:
+        raw.setdefault(path, "0")
+    saved_read = collector.read
+    saved_paths = getattr(collector, "supply_online_paths", None)
+    collector.read = lambda path: raw.get(path, "ERR:2")
+    if saved_paths is not None:
+        collector.supply_online_paths = lambda: list(paths)
+
+    def restore():
+        collector.read = saved_read
+        if saved_paths is not None:
+            collector.supply_online_paths = saved_paths
+
+    return restore, paths
+
+
+def base_raw(**overrides):
+    """The raw readings of a discharging phone on battery."""
+    raw = {
+        BATTERY + "/capacity": "65",
+        BATTERY + "/charge_counter": "2500000",
+        BATTERY + "/charge_full": "2677000",
+        BATTERY + "/charge_full_design": "4700000",
+        BATTERY + "/status": "Discharging",
+        BATTERY + "/temp": "230",
+        BATTERY + "/voltage_now": "4300000",
+        BATTERY + "/current_now": "1200",
+        USB: "0",
+        DC: "0",
+        PC_PORT: "0",
+    }
+    raw.update(overrides)
+    return raw
 
 
 def code_strings_without_docstrings(source):
@@ -503,7 +570,7 @@ def test_a_reading_taken_while_charging_is_not_a_discharge_endpoint():
         counter
     endpoints = counter["discharge_endpoints"]
     assert endpoints, counter
-    assert all(point["detached"] for point in endpoints), endpoints
+    assert all(point["discharge_endpoint"] for point in endpoints), endpoints
     assert not any(point["charge_counter"] == "2676990"
                    for point in endpoints), endpoints
 
@@ -550,7 +617,7 @@ def test_the_result_is_persisted_before_the_first_event():
             assert appeared is not None, "no result file before the first event"
             with open(out) as fh:
                 first = json.load(fh)
-            assert first.get("version") == 3, first.get("version")
+            assert first.get("version", 0) >= 3, first.get("version")
             assert first.get("before"), first
         finally:
             proc.terminate()
@@ -561,7 +628,7 @@ def test_the_result_is_persisted_before_the_first_event():
                 proc.wait(timeout=15)
         with open(out) as fh:
             final = json.load(fh)
-        assert final.get("version") == 3, final.get("version")
+        assert final.get("version", 0) >= 3, final.get("version")
 
 
 def test_a_write_interrupted_by_an_error_leaves_the_previous_file_intact():
@@ -572,7 +639,7 @@ def test_a_write_interrupted_by_an_error_leaves_the_previous_file_intact():
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         out = os.path.join(tmpdir, "window.json")
-        collector.write_result(out, {"version": 3, "marker": "first"})
+        collector.write_result(out, {"version": 4, "marker": "first"})
         with open(out) as fh:
             good = fh.read()
         real_dump = json.dump
@@ -582,7 +649,7 @@ def test_a_write_interrupted_by_an_error_leaves_the_previous_file_intact():
 
         json.dump = broken
         try:
-            collector.write_result(out, {"version": 3, "marker": "second"})
+            collector.write_result(out, {"version": 4, "marker": "second"})
         except RuntimeError:
             pass
         finally:
@@ -629,30 +696,43 @@ def test_transport_power_and_charge_are_reported_separately():
 
     A data link can be up while no power source is attached, and a power
     source can be attached while the data link is down. The three states
-    are reported apart, and only a sample taken with no power source
-    attached may serve as a discharge endpoint.
+    are reported apart.
     """
-    real_usb_state = collector.usb_state
+    restore, _ = raw_reads(base_raw(**{USB: "0"}))
+    saved_links = getattr(collector, "usb_links", None)
+    if saved_links is not None:
+        collector.usb_links = lambda: ["usb0"]
     try:
-        collector.usb_state = lambda: {
-            "usb_power_supply": ["usb=1"], "usb_online": "1",
-            "usb_links_up": []}
         sample = collector.sample("poll")
-        assert sample["usb_power_attached"] is True, sample
-        assert sample["usb_transport_attached"] is False, sample
-        assert sample["usb_attached"] is True, sample
-        assert sample["detached"] is False, sample
-
-        collector.usb_state = lambda: {
-            "usb_power_supply": ["usb=0"], "usb_online": "0",
-            "usb_links_up": ["usb0"]}
-        sample = collector.sample("poll")
-        assert sample["usb_power_attached"] is False, sample
-        assert sample["usb_transport_attached"] is True, sample
-        assert sample["usb_attached"] is True, sample
-        assert sample["detached"] is True, sample
     finally:
-        collector.usb_state = real_usb_state
+        restore()
+        if saved_links is not None:
+            collector.usb_links = saved_links
+    for key in ("usb_power_attached", "usb_transport_attached",
+                "usb_attached", "charging", "charging_state",
+                "discharge_endpoint", "discharge_endpoint_reason"):
+        assert key in sample, sorted(sample)
+    assert sample["usb_power_attached"] is False, sample
+    assert sample["usb_transport_attached"] is True, sample
+    assert sample["usb_attached"] is True, sample
+    assert sample["charging"] is False, sample
+
+    # The other way round: a power source attached, no data link.
+    restore, _ = raw_reads(base_raw(**{USB: "1", BATTERY + "/status": "Full"}))
+    saved_links = getattr(collector, "usb_links", None)
+    if saved_links is not None:
+        collector.usb_links = lambda: []
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+        if saved_links is not None:
+            collector.usb_links = saved_links
+    assert sample["usb_power_attached"] is True, sample
+    assert sample["usb_transport_attached"] is False, sample
+    assert sample["usb_attached"] is True, sample
+    assert sample["charging"] is True, sample
+    assert sample["discharge_endpoint"] is False, sample
 
 
 def test_the_output_does_not_repeat_the_rejected_claims():
@@ -680,6 +760,188 @@ def test_the_output_does_not_repeat_the_rejected_claims():
     source = COLLECTOR.read_text(encoding="utf-8").lower()
     for phrase in forbidden:
         assert phrase not in source, phrase
+
+
+# ---------------------------------------------------------------- revision 4
+
+
+def test_a_failed_usb_read_is_not_a_discharge_endpoint():
+    """A read that failed is unknown, not offline.
+
+    This is the counterexample of the revision 3 review: with the online
+    flag reading "ERR:13" and the gauge reporting Charging, the earlier
+    revision produced a detached sample and kept that charging counter as
+    a discharge endpoint.
+    """
+    restore, _ = raw_reads(base_raw(**{USB: "ERR:13",
+                                       BATTERY + "/status": "Charging"}))
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+    assert sample["usb_online_raw"] == "ERR:13", sample
+    assert sample["usb_power_attached"] is None, sample
+    assert sample["discharge_endpoint"] is False, sample
+    assert "unknown" in sample["discharge_endpoint_reason"], sample
+
+
+def test_a_charging_reading_is_not_a_discharge_endpoint():
+    """Charging means the counter can move back up, so it cannot end one."""
+    restore, _ = raw_reads(base_raw(**{BATTERY + "/status": "Charging"}))
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+    assert sample["discharge_endpoint"] is False, sample
+    assert "battery_status" in sample["discharge_endpoint_reason"], sample
+
+
+def test_a_full_reading_is_not_a_discharge_endpoint():
+    """Full is not discharging either."""
+    restore, _ = raw_reads(base_raw(**{BATTERY + "/status": "Full"}))
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+    assert sample["discharge_endpoint"] is False, sample
+    assert "battery_status" in sample["discharge_endpoint_reason"], sample
+
+
+def test_another_online_power_source_disqualifies_the_endpoint():
+    """The phone must not be charged from anywhere else."""
+    restore, _ = raw_reads(base_raw(**{DC: "1"}))
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+    assert sample["discharge_endpoint"] is False, sample
+    assert "dc" in sample["discharge_endpoint_reason"], sample
+
+
+def test_an_unknown_other_power_source_disqualifies_the_endpoint():
+    """An unknown reading is not a known offline source either."""
+    restore, _ = raw_reads(base_raw(**{DC: "ERR:13"}))
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+    assert sample["discharge_endpoint"] is False, sample
+    assert "dc" in sample["discharge_endpoint_reason"], sample
+
+
+def test_a_missing_usb_node_disqualifies_the_endpoint():
+    """Without the USB node there is nothing to validate."""
+    restore, _ = raw_reads(base_raw(), supplies=("dc", "pc_port"))
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+    assert sample["usb_online_raw"] is None, sample
+    assert sample["discharge_endpoint"] is False, sample
+    assert "missing" in sample["discharge_endpoint_reason"], sample
+
+
+def test_a_validated_offline_discharging_reading_is_a_discharge_endpoint():
+    """The ordinary case: unplugged, nothing else online, discharging."""
+    restore, _ = raw_reads(base_raw())
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+    assert sample["usb_online_raw"] == "0", sample
+    assert sample["usb_power_attached"] is False, sample
+    assert sample["discharge_endpoint"] is True, sample
+    assert sample["discharge_endpoint_reason"].startswith("usb_validated"), \
+        sample
+
+
+def test_only_qualified_readings_are_kept_as_endpoints():
+    """A rejected reading is kept as evidence with its reason, not as an
+    endpoint."""
+    window = collector.Window()
+    started = make_sample(1000.0, 900.0, counter="2676998", usb=True)
+    window.observe(started)
+    window.observe(make_sample(1005.0, 905.0, counter="2676900", usb=False))
+    window.observe(make_sample(1010.0, 910.0, counter="2676800", usb=False))
+    window.observe(make_sample(1015.0, 915.0, counter="2676990", usb=True))
+    result = collector.build_result(
+        window, started, started, deadline_for(), args_stub())
+    counter = result["counter"]
+    endpoints = counter["discharge_endpoints"]
+    assert endpoints, counter
+    assert all(point["discharge_endpoint"] for point in endpoints), endpoints
+    assert not any(point["charge_counter"] == "2676990"
+                   for point in endpoints), endpoints
+    assert counter["samples_total"] == 4, counter
+    assert counter["rejected_endpoint_reasons"], counter
+
+
+def test_the_ufs_hardware_snapshot_is_read_at_most_once_per_run():
+    """The optional snapshot must not be read again after every event.
+
+    Each of those two attributes runtime-resumes the UFS device and sends
+    a hardware query, so the option has to stay one-shot. Revision 3 read
+    it once at the start and again after every event.
+    """
+    calls = []
+    saved_snapshot = collector.ufs_hardware_snapshot
+    saved_sample = collector.sample
+    saved_clocks = collector.clocks
+    saved_argv = sys.argv
+    scripted = [
+        make_sample(1000.0, 900.0, usb=True),
+        make_sample(1605.0, 905.0, usb=False),
+        make_sample(1610.0, 910.0, usb=False),
+    ]
+    state = {"index": 0}
+    tick = {"t": 0.0}
+
+    def fake_sample(label):
+        index = min(state["index"], len(scripted) - 1)
+        state["index"] += 1
+        return scripted[index]
+
+    def fake_clocks():
+        tick["t"] += 0.01
+        return (tick["t"], tick["t"] - 400.0)
+
+    def counting_snapshot():
+        calls.append(1)
+        return {"note": "hardware query"}
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out = os.path.join(tmpdir, "window.json")
+        collector.ufs_hardware_snapshot = counting_snapshot
+        collector.sample = fake_sample
+        collector.clocks = fake_clocks
+        sys.argv = ["collect-matched-standby-window.py", "--execute",
+                    "--out", out, "--poll", "0.01", "--max-seconds", "0.05",
+                    "--ufs-hardware-snapshot"]
+        try:
+            code = collector.main()
+        finally:
+            sys.argv = saved_argv
+            collector.ufs_hardware_snapshot = saved_snapshot
+            collector.sample = saved_sample
+            collector.clocks = saved_clocks
+    assert code == 0, code
+    assert len(calls) == 1, "the snapshot was read %d times" % len(calls)
+
+
+def test_the_ufs_max_bus_attribute_uses_the_name_the_driver_creates():
+    """The attribute is max_bus_bw; reading max_bus_w found nothing.
+
+    The driver creates the attribute max_bus_bw from a stored vote
+    (ufs-qcom-mobian-a5b3099017ae.c), so the earlier name always
+    returned an error.
+    """
+    restore, _ = raw_reads(base_raw())
+    try:
+        sample = collector.sample("poll")
+    finally:
+        restore()
+    assert "ufs_max_bus_bw" in sample, sorted(sample)
+    assert "ufs_max_bus_w" not in sample, sorted(sample)
 
 
 def main():

@@ -17,56 +17,46 @@ reconnected, and writes one small JSON file.
 What it reads. The gauge counters, the USB attach state and the UFS
 configuration attributes. All read-only.
 
-Revision 3, after the API review of 2026-10-22. The review results are kept
-outside the repository, in work/MINIMAX-API-REVIEW-RESULTS-20261022.md.
-The review confirmed five defects in revision 2, all fixed here:
+Revision 4, after the independent revision 3 review of 2026-10-22. That
+review confirmed the fixes of revision 3 and found two defects in it, both
+fixed here:
 
-  * One pair of samples could not carry a suspend gap and a USB transition
-    at the same time: the presence of a suspend skipped the transition
-    handling, so a detach that happened inside a suspend interval was
-    lost, with the counter readings on both sides of it, and the collector
-    could not stop on the reconnection either. The two are now detected
-    independently and both are kept.
-  * The event log was bounded by dropping events, so a saturated log could
-    hide the terminal transition, and the suspended total was the sum of
-    the surviving events, so a full log also shortened the measured sleep.
-    The retained log now keeps the most recent events, the USB
-    transitions have their own bounded list, and the totals live in
-    counters that do not depend on the log.
-  * The deadline was printed as a wall-clock date but was computed from
-    the boot clock, which produced a date in 1970. The deadline now
-    carries an explicit boot-clock value and a wall-clock value obtained
-    by pairing the two clocks at start.
-  * The result was written only when an event happened and the write was
-    not atomic, so an interrupted run could leave nothing behind or a
-    truncated file. The result is now written before the first event, every
-    write is atomic, and a termination signal writes the final result.
-  * The UFS attributes current_power_mode and psa_state were read on every
-    poll. In drivers/scsi/ufs/ufs-sysfs.c the UFS_ATTRIBUTE macro (lines
-    711-726) calls pm_runtime_get_sync(), ufshcd_query_attr() and
-    pm_runtime_put_sync(), and current_power_mode (line 729) and psa_state
-    (line 742) instantiate that macro: each read runtime-resumes the UFS
-    device and sends a hardware query. That is not a passive observation of
-    a sleeping device, so those two attributes are no longer read while
-    the window is measured. A one-shot snapshot is available behind an
-    explicit flag, and it says what it is.
+  * The discharge endpoint was qualified by the absence of a USB power
+    source, computed as "the online flag does not read 1". A missing node,
+    a denied read or an error therefore read as an offline source, and a
+    sample taken while the battery was charging could be kept as a
+    discharge endpoint. The endpoint is now qualified explicitly: the USB
+    online flag must be validated offline, every other power source must
+    be known and not online, and the gauge must report Discharging. Any
+    unknown or failed reading disqualifies the sample, and the reason is
+    kept with the evidence. An offline USB node is not independent proof
+    of a physically unplugged phone, and the result says so.
+  * The optional UFS hardware snapshot was read again after every event,
+    which reintroduced the runtime-resuming hardware queries the option
+    is meant to isolate. It is now read once and reused.
 
-The review also rejected claims that the previous revision made. They are
-corrected here:
+A third, smaller defect: the UFS attribute was read under the name
+max_bus_w, while the attribute the driver creates is max_bus_bw. The
+correct name is used now.
 
-  * Both clocks are derived from adjusted monotonic time, so neither one is
-    exempt from the timekeeping adjustments, and two sequential reads
-    carry a sampling skew. The collector only ever uses the change of the
-    difference between two readings, never the difference itself.
-  * A normal timer is not a wake source that would keep the system from
-    suspending. The polling still costs energy and perturbs the device
-    under study, which is what the limits say.
-  * The USB boolean is a proxy. Transport, power and charge are reported
-    apart, and only a reading taken with no power source attached can
-    serve as a discharge endpoint.
-  * The difference across the unplug mixes consumption and any
-    discontinuity. It is not a pure discontinuity and not a consumption
-    figure, and the field no longer carries the name of a jump.
+Revision 3 had already fixed, and this revision keeps:
+
+  * one pair of samples can carry a suspend gap and a USB transition at
+    the same time;
+  * the retained log stays bounded while the totals live in counters and
+    the USB transitions have their own bounded list;
+  * the deadline carries an explicit boot-clock value and a wall-clock
+    value;
+  * the result is written before the first event, every write is atomic,
+    and a termination signal writes the final result;
+  * the two UFS attributes that runtime-resume the device and send a
+    hardware query are not read while the window is measured.
+
+The claims the API review of 2026-10-22 rejected are corrected as well:
+both clocks derive from adjusted monotonic time, a normal timer is not a
+suspend wake source, the USB boolean is a proxy, the difference across
+the unplug is not a pure discontinuity and not a consumption figure, and
+the result does not claim to keep every sample.
 
 It only reads. It writes its own output file and nothing else. It changes no
 policy, no service, no register and no setting, and it has no restoration
@@ -91,12 +81,16 @@ import sys
 import time
 
 GAUGE = "/sys/class/power_supply/battery"
+POWER_SUPPLY = "/sys/class/power_supply"
 UFS = "/sys/bus/platform/devices/1d84000.ufshc"
 REG_SUMMARY = "/sys/kernel/debug/regulator/regulator_summary"
 
 MAX_EVENTS = 512
 MAX_USB_EVENTS = 64
-MAX_DETACHED_SAMPLES = 256
+MAX_ENDPOINT_SAMPLES = 256
+
+ONLINE_PRESENT = "1"
+ONLINE_ABSENT = "0"
 
 # UFS attributes read while the window is measured. They are configuration
 # or bookkeeping values: the init script writes them as platform knobs, and
@@ -205,8 +199,10 @@ def usb_transition(previous, current):
         "charging_end": current.get("charging"),
         "counter_before": previous.get("charge_counter"),
         "counter_after": current.get("charge_counter"),
-        "counter_before_is_discharge_endpoint": previous.get("detached"),
-        "counter_after_is_discharge_endpoint": current.get("detached"),
+        "counter_before_is_discharge_endpoint": previous.get(
+            "discharge_endpoint"),
+        "counter_after_is_discharge_endpoint": current.get(
+            "discharge_endpoint"),
     }
 
 
@@ -222,11 +218,11 @@ class Window(object):
 
     def __init__(self, threshold=1.0, max_events=MAX_EVENTS,
                  max_usb_events=MAX_USB_EVENTS,
-                 max_detached_samples=MAX_DETACHED_SAMPLES):
+                 max_endpoint_samples=MAX_ENDPOINT_SAMPLES):
         self.threshold = threshold
         self.max_events = max_events
         self.max_usb_events = max_usb_events
-        self.max_detached_samples = max_detached_samples
+        self.max_endpoint_samples = max_endpoint_samples
         self.events = []
         self.events_total = 0
         self.events_dropped = 0
@@ -235,9 +231,10 @@ class Window(object):
         self.suspend_events_retained = []
         self.suspend_event_count = 0
         self.suspended_seconds_total = 0.0
-        self.detached_samples = []
-        self.detached_samples_total = 0
-        self.charging_samples_total = 0
+        self.endpoint_samples = []
+        self.endpoint_samples_total = 0
+        self.rejected_endpoint_reasons = {}
+        self.samples_total = 0
         self.first = None
         self.last = None
 
@@ -257,6 +254,7 @@ class Window(object):
             self.first = sample
             self.last = sample
             self._retain_sample(sample)
+            self.samples_total += 1
             return []
         previous = self.last
         self.last = sample
@@ -268,6 +266,7 @@ class Window(object):
         if transition is not None:
             new_events.append(transition)
         self._retain_sample(sample)
+        self.samples_total += 1
         for event in new_events:
             self._record(event)
         return new_events
@@ -295,24 +294,29 @@ class Window(object):
     def _retain_sample(self, sample):
         """Keep the readings that may serve as discharge endpoints.
 
-        A reading taken while a power source is attached is not one: on
-        this platform the counter moves back up towards charge_full while
-        charging, so such a reading cannot end a discharge interval.
+        Only a sample that qualifies as a discharge endpoint is kept. A
+        reading taken while a power source is attached, while the gauge
+        reports Charging or Full, or while any of the readings needed to
+        qualify it is unknown, is counted with the reason it was rejected
+        and is not offered as an endpoint.
         """
-        if sample.get("detached"):
-            self.detached_samples_total += 1
-            self.detached_samples.append({
+        if sample.get("discharge_endpoint"):
+            self.endpoint_samples_total += 1
+            self.endpoint_samples.append({
                 "wall_utc": sample.get("wall_utc"),
                 "boottime": sample.get("boottime"),
                 "charge_counter": sample.get("charge_counter"),
                 "status": sample.get("status"),
                 "current_now": sample.get("current_now"),
-                "detached": True,
+                "usb_online_raw": sample.get("usb_online_raw"),
+                "discharge_endpoint": True,
             })
-            if len(self.detached_samples) > self.max_detached_samples:
-                self.detached_samples.pop(0)
+            if len(self.endpoint_samples) > self.max_endpoint_samples:
+                self.endpoint_samples.pop(0)
         else:
-            self.charging_samples_total += 1
+            reason = sample.get("discharge_endpoint_reason") or "unknown"
+            self.rejected_endpoint_reasons[reason] = \
+                self.rejected_endpoint_reasons.get(reason, 0) + 1
 
     def suspend_events(self):
         return list(self.suspend_events_retained)
@@ -344,22 +348,41 @@ def read(path):
         return "ERR:%d" % (exc.errno or 0)
 
 
-def usb_state():
-    """Best effort USB state.
+def supply_online_paths():
+    """The online flag of every power supply that exposes one."""
+    paths = []
+    try:
+        names = sorted(os.listdir(POWER_SUPPLY))
+    except OSError:
+        return paths
+    for name in names:
+        path = os.path.join(POWER_SUPPLY, name, "online")
+        if os.path.exists(path):
+            paths.append(path)
+    return paths
 
-    On this platform the USB gadget appears as a network link, not only as
-    a `power_supply/usb` node, so both are probed. The loopback interface
-    always reports carrier=1 and must not be counted.
+
+def parse_online(raw):
+    """Tri-state reading of a power supply online flag.
+
+    "1" means the source is present and "0" means it is not. Anything
+    else is unknown: the node was missing, the read was denied, the read
+    failed, or the value is not a number. An unknown reading is never
+    read as an absent source.
     """
-    online = []
-    usb_online = None
-    for d in sorted(os.listdir("/sys/class/power_supply")):
-        p = os.path.join("/sys/class/power_supply", d, "online")
-        if os.path.exists(p):
-            value = read(p)
-            online.append("%s=%s" % (d, value))
-            if d == "usb":
-                usb_online = value
+    if raw == ONLINE_PRESENT:
+        return True
+    if raw == ONLINE_ABSENT:
+        return False
+    return None
+
+
+def usb_links():
+    """The USB network links that report a carrier.
+
+    The loopback interface always reports carrier=1 and must not be
+    counted.
+    """
     links = []
     try:
         for name in sorted(os.listdir("/sys/class/net")):
@@ -370,8 +393,23 @@ def usb_state():
                 links.append(name)
     except OSError:
         pass
-    return {"usb_power_supply": online, "usb_online": usb_online,
-            "usb_links_up": links}
+    return links
+
+
+def usb_state():
+    """Best effort USB state.
+
+    On this platform the USB gadget appears as a network link, not only as
+    a `power_supply/usb` node, so both are probed. The raw online
+    values are kept as they were read, including the reads that failed,
+    because the qualification of a discharge endpoint depends on them.
+    """
+    online_raw = {}
+    for path in supply_online_paths():
+        online_raw[os.path.basename(os.path.dirname(path))] = read(path)
+    return {"online_raw": online_raw,
+            "usb_online_raw": online_raw.get("usb"),
+            "usb_links_up": usb_links()}
 
 
 def charging_state(status):
@@ -392,6 +430,47 @@ def charging_state(status):
     return "unknown"
 
 
+def discharge_endpoint(sample):
+    """Whether this sample may end a discharge interval, and why not.
+
+    A discharge endpoint needs three independent things, because this
+    measurement is made over a USB cable:
+
+      * the USB power path must be validated offline, that is its raw
+        online flag must read exactly "0". A missing node, a denied read
+        or an error is unknown, and an unknown is not an absent source;
+      * every other power source must be known, and none of them may be
+        online, so the phone is not charged from anywhere else;
+      * the gauge must report Discharging, because a Charging or Full
+        reading means the counter can move back up towards charge_full and
+        such a reading cannot end a discharge interval.
+
+    Any unknown or failed reading disqualifies the sample. The evidence
+    is kept either way, with the reason.
+    """
+    raw = sample.get("online_raw") or {}
+    usb_raw = raw.get("usb")
+    if usb_raw is None:
+        return False, "usb_online_missing"
+    usb_state_value = parse_online(usb_raw)
+    if usb_state_value is None:
+        return False, "usb_online_unknown"
+    if usb_state_value is True:
+        return False, "usb_online_present"
+    for name, value in sorted(raw.items()):
+        if name == "usb":
+            continue
+        other = parse_online(value)
+        if other is None:
+            return False, "other_source_unknown:%s" % name
+        if other is True:
+            return False, "other_source_online:%s" % name
+    status = (sample.get("status") or "").strip()
+    if status != "Discharging":
+        return False, "battery_status:%s" % (status or "unknown")
+    return True, "usb_validated_offline_and_discharging"
+
+
 def sample(label):
     boottime, monotonic = clocks()
     out = {
@@ -406,27 +485,28 @@ def sample(label):
                  "current_now"):
         out[name] = read(os.path.join(GAUGE, name))
     usb = usb_state()
-    out["usb_power_supply"] = usb["usb_power_supply"]
-    out["usb_online"] = usb["usb_online"]
+    out["online_raw"] = usb["online_raw"]
+    out["usb_online_raw"] = usb["usb_online_raw"]
     out["usb_links_up"] = usb["usb_links_up"]
     # Transport, power and charge are three different things and are
     # reported apart. The boolean is a proxy built from the first two; it
     # is not independent proof of a physical attachment or of charging.
     out["usb_transport_attached"] = bool(usb["usb_links_up"])
-    out["usb_power_attached"] = (usb["usb_online"] == "1")
-    out["usb_attached"] = (out["usb_power_attached"] or
+    out["usb_power_attached"] = parse_online(usb["usb_online_raw"])
+    out["usb_attached"] = (out["usb_power_attached"] is True or
                             out["usb_transport_attached"])
     out["charging_state"] = charging_state(out.get("status"))
     out["charging"] = (out["charging_state"] == "charging" or
                         (out["charging_state"] == "full" and
-                         out["usb_power_attached"]))
-    # A detached sample is one taken while no power source is attached.
-    out["detached"] = not out["usb_power_attached"]
+                         out["usb_power_attached"] is True))
+    endpoint, reason = discharge_endpoint(out)
+    out["discharge_endpoint"] = endpoint
+    out["discharge_endpoint_reason"] = reason
     out["ufshc_runtime_status"] = read(os.path.join(UFS, "power", "runtime_status"))
     for attr in UFS_POLICY_ATTRS:
         out["ufs_" + attr] = read(os.path.join(UFS, attr))
     out["ufs_power_mode"] = read(os.path.join(UFS, "qcom", "power_mode"))
-    out["ufs_max_bus_w"] = read(os.path.join(UFS, "max_bus_w"))
+    out["ufs_max_bus_bw"] = read(os.path.join(UFS, "max_bus_bw"))
     out["regulator_summary_present"] = os.path.exists(REG_SUMMARY)
     return out
 
@@ -436,7 +516,8 @@ def ufs_hardware_snapshot():
 
     This is not a passive observation: each read runtime-resumes the UFS
     device and sends a UPIU attribute query. It is kept out of the
-    sampling loop and is only taken when it is asked for explicitly.
+    sampling loop, it is taken at most once per run, and it says what it
+    is.
     """
     out = {}
     for attr in UFS_HARDWARE_ATTRS:
@@ -512,7 +593,7 @@ def build_result(window, started, ended, deadline, args):
 
     result = {
         "collector": "collect-matched-standby-window",
-        "version": 3,
+        "version": 4,
         "started_utc": started["wall_utc"],
         "ended_utc": ended["wall_utc"],
         "wall_seconds_observed": round(elapsed, 3) if elapsed else None,
@@ -566,10 +647,11 @@ def build_result(window, started, ended, deadline, args):
             if unplug and _int_or_none(unplug["counter_after"]) is not None
             and _int_or_none(unplug["counter_before"]) is not None else None,
             "replug_reading_is_valid_as_discharge_endpoint": False,
-            "discharge_endpoints": window.detached_samples,
-            "discharge_endpoints_retained": len(window.detached_samples),
-            "discharge_endpoints_total": window.detached_samples_total,
-            "charging_samples": window.charging_samples_total,
+            "discharge_endpoints": window.endpoint_samples,
+            "discharge_endpoints_retained": len(window.endpoint_samples),
+            "discharge_endpoints_total": window.endpoint_samples_total,
+            "samples_total": window.samples_total,
+            "rejected_endpoint_reasons": dict(window.rejected_endpoint_reasons),
             "note": "The counter is a gauge value, not an instantaneous "
                     "measurement of a suspended interval. The difference "
                     "across the unplug is not a pure discontinuity and not a "
@@ -578,11 +660,15 @@ def build_result(window, started, ended, deadline, args):
                     "and with the recharge that followed the reconnection. "
                     "The Android reference excludes an equivalent jump "
                     "before computing its quotient, and the same treatment "
-                    "is required here. Only the readings taken while no "
-                    "power source was attached can end a discharge "
-                    "interval; the reading taken at the reconnection is a "
-                    "charging-side reading and is not one. The detached "
-                    "readings are listed in discharge_endpoints.",
+                    "is required here. Only a reading that qualifies as a "
+                    "discharge endpoint may end a discharge interval: the "
+                    "USB power path must be validated offline, every other "
+                    "power source must be known and not online, and the "
+                    "gauge must report Discharging. A reading taken while "
+                    "charging, or while any of those readings is unknown, "
+                    "is kept as evidence with its reason and is not an "
+                    "endpoint. The retained endpoints are listed in "
+                    "discharge_endpoints.",
         },
         "usb": {
             "note": "The boolean usb_attached is a proxy built from the USB "
@@ -590,7 +676,9 @@ def build_result(window, started, ended, deadline, args):
                     "network links. It is not independent proof of a "
                     "physical attachment or of charging. The transport "
                     "state, the power state and the charge state are "
-                    "reported separately in every sample.",
+                    "reported separately in every sample, and the raw "
+                    "online readings are kept as they were read, including "
+                    "the ones that failed.",
         },
         "ufs": {
             "attributes_read_during_the_window": list(UFS_POLICY_ATTRS),
@@ -599,10 +687,11 @@ def build_result(window, started, ended, deadline, args):
                     "configuration and bookkeeping, plus the runtime PM "
                     "status of the device. None of them is an electrical "
                     "measurement. The two attributes under .../attributes/ "
-                    "are not read during the window: each read would "
-                    "runtime-resume the UFS device and send a hardware "
-                    "query, so it would not reveal the state of a sleeping "
-                    "device, it would change it.",
+                    "are not read while the window is measured: each read "
+                    "would runtime-resume the UFS device and send a "
+                    "hardware query, so it would not reveal the state of a "
+                    "sleeping device, it would change it. The optional "
+                    "snapshot is taken at most once per run.",
         },
         "estimators": {
             "sleep_window_net": "For each suspend event, the counter delta "
@@ -614,13 +703,13 @@ def build_result(window, started, ended, deadline, args):
                                  "discontinuity. It is an event-by-event "
                                  "estimate, not a calibrated sleep current.",
             "window_net": "The counter delta between two readings that were "
-                          "both taken while no power source was attached, "
-                          "over the interval between them. Only such "
-                          "detached readings may serve as endpoints: a "
-                          "reading taken while charging is not a discharge "
-                          "bound, because the counter moves back up towards "
+                          "both qualified as discharge endpoints, over the "
+                          "interval between them. A reading taken while "
+                          "charging, or while any of the readings needed to "
+                          "qualify it is unknown, cannot end a discharge "
+                          "interval: the counter moves back up towards "
                           "charge_full while charging. The retained "
-                          "detached readings are listed in "
+                          "endpoints are listed in "
                           "counter.discharge_endpoints.",
             "not_computed_here": "No current in mA is computed by the "
                                  "collector. The scale of this gauge counter "
@@ -632,13 +721,12 @@ def build_result(window, started, ended, deadline, args):
                   "the unplug, the counter after the sleep and the suspended "
                   "interval, so that the counter discontinuity at the unplug "
                   "can be excluded exactly as the reference does. This "
-                  "collector keeps a bounded sequence of the readings taken "
-                  "while no power source was attached, every suspend event "
-                  "and every attachment transition, and preserves the "
-                  "readings so the same exclusion can be applied offline. "
-                  "The retained sequence is bounded and its length is "
-                  "reported, so a truncated log is visible rather than "
-                  "silent.",
+                  "collector keeps a bounded sequence of the readings that "
+                  "qualify as discharge endpoints, every suspend event and "
+                  "every attachment transition, and preserves the readings "
+                  "so the same exclusion can be applied offline. The "
+                  "retained sequence is bounded and its length is reported, "
+                  "so a truncated log is visible rather than silent.",
         "limits": "Gauge counters, not a calibrated current. The counter "
                   "path, the capacity scale and the unplug discontinuity "
                   "handling must be applied exactly as in the Android "
@@ -653,7 +741,8 @@ def build_result(window, started, ended, deadline, args):
                   "RTC wake alarm is added, so a window that needs a wake "
                   "source to end may overrun its deadline. Regulator and "
                   "UFS values are configuration and bookkeeping, not "
-                  "electrical state.",
+                  "electrical state. An offline USB node is not independent "
+                  "proof of a physically unplugged phone.",
     }
     return result
 
@@ -744,6 +833,9 @@ def main():
     window.observe(started)
     result = build_result(window, started, started, deadline, args)
     if args.ufs_hardware_snapshot:
+        # Read at most once per run. Reading it again after every event
+        # would reintroduce the runtime-resuming hardware queries this
+        # option exists to isolate.
         result["ufs_hardware_snapshot"] = ufs_hardware_snapshot()
     state = {"out": args.out, "result": result}
     install_signal_handlers(state)
@@ -762,7 +854,8 @@ def main():
                       flush=True)
             result = build_result(window, started, now, deadline, args)
             if args.ufs_hardware_snapshot:
-                result["ufs_hardware_snapshot"] = ufs_hardware_snapshot()
+                result["ufs_hardware_snapshot"] = \
+                    state["result"].get("ufs_hardware_snapshot")
             state["result"] = result
             # Write after every event so a window that is interrupted still
             # leaves the readings it had collected on the device.
@@ -773,6 +866,9 @@ def main():
                 break
     ended = sample("after")
     result = build_result(window, started, ended, deadline, args)
+    if args.ufs_hardware_snapshot:
+        result["ufs_hardware_snapshot"] = \
+            state["result"].get("ufs_hardware_snapshot")
     state["result"] = result
     write_result(args.out, result)
     print("written:", args.out, flush=True)
