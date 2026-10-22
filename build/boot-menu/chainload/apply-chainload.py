@@ -4,7 +4,7 @@ from pathlib import Path
 import argparse,hashlib,json,subprocess,importlib.util
 sha=lambda b:hashlib.sha256(b).hexdigest()
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('source',type=Path);ap.add_argument('--manifest',type=Path,required=True);ap.add_argument('--restore-only',action='store_true');a=ap.parse_args()
+ ap=argparse.ArgumentParser();ap.add_argument('source',type=Path);ap.add_argument('--manifest',type=Path,required=True);ap.add_argument('--restore-only',action='store_true');ap.add_argument('--dual',action='store_true');a=ap.parse_args()
  base=a.source/'GPLDrivers/Library/SimpleInit';here=Path(__file__).resolve().parent
  def repo_for(info):
   if info.get('edk2_core'):return a.source/'Common/edk2'
@@ -37,6 +37,8 @@ def main():
 \tconfd_set_boolean("boot.configs.android.show", true);
 \tconfd_set_boolean("boot.configs.android.enabled", true);
 \tlogger_init();''',1)
+   if a.dual:
+    new=new.replace('"boot.configs.mobian.mode", BOOT_REBOOT','"boot.configs.mobian.mode", BOOT_LINUX').replace('Mobian (restart installed OS)','Mobian (experimental direct boot)')
   elif path.endswith('bootmenu.c'):
    assert old.count('{"mobian","fastboot","recovery",NULL}')==1
    new=old.replace('{"mobian","fastboot","recovery",NULL}','{"mobian","android","fastboot","recovery",NULL}')
@@ -87,6 +89,19 @@ FILE FREEFORM = 4f9fd886-1b54-4e6c-9df8-2c6466521227 {
     SECTION UI = "lmi verified OS assets"
 }
 '''
+  edits[path]=(new.encode(),{'after':sha(new.encode()),'upstream':sha(original),'new_file':False,'edk2':True})
+ if a.dual:
+  # Reserve the additional 32 MiB from the immediately adjacent ordinary RAM.
+  # All other regions remain identical; never overlap FD with allocator RAM.
+  for path in ['configs/devices/lmi.conf','Platform/Qualcomm/sm8250/sm8250.fdf']:
+   raw,info=edits[path];new=raw.decode()
+   if path.endswith('lmi.conf'):new=new.replace('FD_SIZE=0x02000000','FD_SIZE=0x04000000')
+   else:new=new.replace('NumBlocks     = 0x2000','NumBlocks     = 0x4000').replace('0x00000000|0x02000000','0x00000000|0x04000000')
+   info['after']=sha(new.encode());edits[path]=(new.encode(),info)
+  path='Platform/Xiaomi/sm8250/Library/lmi/PlatformMemoryMapLib/PlatformMemoryMapLib.c'
+  original=subprocess.check_output(['git','-C',str(a.source),'show','HEAD:'+path]);assert (a.source/path).read_bytes()==original
+  old=original.decode();assert old.count('0xCE000000, 0x02000000')==1 and old.count('0xD0000000,0x130000000')==1
+  new=old.replace('0xCE000000, 0x02000000','0xCE000000, 0x04000000').replace('0xD0000000,0x130000000','0xD2000000,0x12E000000')
   edits[path]=(new.encode(),{'after':sha(new.encode()),'upstream':sha(original),'new_file':False,'edk2':True})
  # The compressed FV now exceeds 16 MiB: pinned PrePi lacks FILE_HEADER2.
  spec=importlib.util.spec_from_file_location('prepi',here/'patch-prepi.py')

@@ -18,10 +18,11 @@ static uint32_t lmi_u32(const unsigned char*p){
 static int lmi_bundle_find(const void*buffer,size_t length,const char*name,
                           const void**data,size_t*size,uint32_t*crc){
     const unsigned char*b=buffer;uint64_t previous=LMI_BUNDLE_HEADER;
-    unsigned i,j;int found=0;
+    unsigned i,j,rows;int found=0;
     if(!buffer||!data||!size||!crc||length<LMI_BUNDLE_HEADER||length>128u*1024u*1024u)return -1;
-    if(memcmp(b,"LMIBNDL1",8)||lmi_u32(b+8)!=1||lmi_u32(b+12)!=LMI_BUNDLE_ROWS||lmi_u64(b+16)!=length)return -1;
-    for(i=0;i<LMI_BUNDLE_ROWS;i++){
+    rows=lmi_u32(b+12);
+    if(memcmp(b,"LMIBNDL1",8)||lmi_u32(b+8)!=1||(rows!=5&&rows!=9)||lmi_u64(b+16)!=length)return -1;
+    for(i=0;i<rows;i++){
         const unsigned char*r=b+32+i*LMI_BUNDLE_ROW_SIZE;
         uint64_t off=lmi_u64(r+32),len=lmi_u64(r+40);
         if(!memchr(r,0,32)||!r[0]||off<previous||off%4096||!len||off>length||len>length-off)return -1;

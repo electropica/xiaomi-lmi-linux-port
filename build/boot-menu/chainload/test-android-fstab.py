@@ -63,7 +63,8 @@ int test_fix(void*p,const char*tag){linux_config cfg={0};linux_boot lb={.config=
             assert lib.fdt_open_into(base,buf,len(buf))==0
             overlay=ctypes.create_string_buffer(matches[0][1]);assert lib.fdt_overlay_apply(buf,overlay)==0
             before=properties(buf.raw);original=buf.raw
-            assert test.test_fix(buf,b'mobian')==-1 and buf.raw==original
+            assert test.test_fix(buf,b'mobian')==0 and buf.raw==original
+            assert test.test_fix(buf,b'unknown')==-1 and buf.raw==original
             vendor=lib.fdt_path_offset(buf,b'/firmware/android/fstab/vendor');assert vendor>=0
             wrong=b'/unexpected/vendor\0';assert lib.fdt_setprop(buf,vendor,b'dev',wrong,len(wrong))==0
             malformed=buf.raw;assert test.test_fix(buf,b'android')==-1 and buf.raw==malformed
@@ -73,7 +74,7 @@ int test_fix(void*p,const char*tag){linux_config cfg={0};linux_boot lb={.config=
             expected={k:v for k,v in before.items() if not k.startswith('/firmware/android/fstab/')}
             assert after==expected,'An unrelated DT property changed'
             assert test.test_fix(buf,b'android')==0
-            results.append({'base_offset':pos,'board_matched_overlay':matches[0][0],'other_properties_unchanged':True,'unexpected_path_and_other_os_rejected':True})
+            results.append({'base_offset':pos,'board_matched_overlay':matches[0][0],'other_properties_unchanged':True,'mobian_noop_byte_identical':True,'unexpected_path_and_unknown_os_rejected':True})
             pos+=size
             while pos<len(data) and data[pos]==0:pos+=1
     assert len(results)==3

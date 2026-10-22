@@ -23,7 +23,11 @@ int linux_boot_lmi_bundle(linux_boot*lb,const char*ident){
     EFI_STATUS st;void*b=NULL;size_t len=0;
     linux_load_from initrd,dtbo,cmd;linux_config*cfg;
     linux_load_from*initrd_owned=NULL,*dtbo_owned=NULL;
-    if(!lb||!lb->config||strcmp(ident,"android"))return -1;
+    char component[32];const char*os;bool android;
+    if(!lb||!lb->config||!ident)return -1;
+    android=strcmp(ident,"android")==0;
+    if(!android&&strcmp(ident,"mobian"))return -1;
+    os=android?"android":"mobian";
     cfg=lb->config;
     if(!lmi_bundle_buffer){
         st=GetSectionFromAnyFv(&lmi_bundle_guid,EFI_SECTION_RAW,0,&lmi_bundle_buffer,&lmi_bundle_bytes);
@@ -32,20 +36,27 @@ int linux_boot_lmi_bundle(linux_boot*lb,const char*ident){
         }
     }
     b=lmi_bundle_buffer;len=lmi_bundle_bytes;
-    if(lmi_bundle_source(&cfg->kernel,b,len,"android/kernel")||
-       lmi_bundle_source(&cfg->dtb,b,len,"android/dtb")||
-       lmi_bundle_source(&initrd,b,len,"android/initrd")||
-       lmi_bundle_source(&dtbo,b,len,"android/dtbo")||
-       lmi_bundle_source(&cmd,b,len,"android/cmdline"))return -1;
+    snprintf(component,sizeof(component),"%s/kernel",os);
+    if(lmi_bundle_source(&cfg->kernel,b,len,component))return -1;
+    snprintf(component,sizeof(component),"%s/dtb",os);
+    if(lmi_bundle_source(&cfg->dtb,b,len,component))return -1;
+    snprintf(component,sizeof(component),"%s/initrd",os);
+    if(lmi_bundle_source(&initrd,b,len,component))return -1;
+    snprintf(component,sizeof(component),"%s/cmdline",os);
+    if(lmi_bundle_source(&cmd,b,len,component))return -1;
+    ZeroMem(&dtbo,sizeof(dtbo));
+    if(android&&lmi_bundle_source(&dtbo,b,len,"android/dtbo"))return -1;
     if(cfg->kernel.size>64u*1024u*1024u||cfg->dtb.size>2u*1024u*1024u||
        initrd.size>32u*1024u*1024u||dtbo.size>24u*1024u*1024u||
        cmd.size>sizeof(cfg->cmdline)||cmd.size<2||
        ((char*)cmd.pointer)[cmd.size-1]!=0||memchr(cmd.pointer,0,cmd.size-1))return -1;
-    initrd_owned=malloc(sizeof(*initrd_owned));dtbo_owned=malloc(sizeof(*dtbo_owned));
-    if(!initrd_owned||!dtbo_owned){free(initrd_owned);free(dtbo_owned);return -1;}
-    CopyMem(initrd_owned,&initrd,sizeof(initrd));CopyMem(dtbo_owned,&dtbo,sizeof(dtbo));
-    list_obj_add_new(&cfg->initrd,initrd_owned);list_obj_add_new(&cfg->dtbo,dtbo_owned);
-    if(!cfg->initrd||!cfg->dtbo)return -1;
+    initrd_owned=malloc(sizeof(*initrd_owned));
+    if(android)dtbo_owned=malloc(sizeof(*dtbo_owned));
+    if(!initrd_owned||(android&&!dtbo_owned)){free(initrd_owned);free(dtbo_owned);return -1;}
+    CopyMem(initrd_owned,&initrd,sizeof(initrd));
+    list_obj_add_new(&cfg->initrd,initrd_owned);
+    if(android){CopyMem(dtbo_owned,&dtbo,sizeof(dtbo));list_obj_add_new(&cfg->dtbo,dtbo_owned);}
+    if(!cfg->initrd||(android&&!cfg->dtbo))return -1;
     CopyMem(cfg->cmdline,cmd.pointer,cmd.size);
     cfg->use_uefi=false;cfg->arch=ARCH_ARM64;cfg->skip_dtb_after_kernel=true;
     cfg->use_kfdt_ramdisk_abootimg=false;cfg->use_kfdt_ramdisk_kernel=false;
@@ -54,6 +65,6 @@ int linux_boot_lmi_bundle(linux_boot*lb,const char*ident){
      * pinned image command line is additionally supplied through cfg->cmdline.
      * Qualcomm DTB/DTBO matching uses the upstream hardware-info protocols. */
     cfg->skip_kfdt_cmdline=false;cfg->skip_kfdt_memory=false;
-    tlog_notice("LMI bundle verified; attempting experimental LineageOS handoff");
+    tlog_notice("LMI bundle verified; attempting experimental %s handoff",os);
     return 0;
 }

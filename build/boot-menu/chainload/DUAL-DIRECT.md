@@ -1,0 +1,61 @@
+# Experimental direct Mobian and Android menu
+
+Android-only menu boot is hardware-qualified with the aligned Android OS header.
+This new dual candidate is HOST-VALIDATED ONLY. It has not been compiled or
+booted. Do not flash it or reuse an older candidate's Windows launcher.
+
+## Change
+
+`--with-dual` embeds both pinned boot component sets. Mobian now uses BOOT_LINUX,
+not BOOT_REBOOT. The menu order remains Mobian, LineageOS, Fastboot, Recovery,
+with Mobian selected after fifteen seconds. No disk configuration is imported.
+
+The RAM bundle has nine components (116559872 bytes before FV compression).
+Each OS uses its own unchanged kernel, initrd, DTB and command line. Android alone
+receives the installed, board-matched DTBO and guarded removal of its obsolete
+physical-partition DT fstab. Mobian's DT is not changed by that correction and
+receives no Android overlay. Its pinned command line retains the installed
+dedicated-partition boot/root UUIDs. No rootfs or kernel rebuild is needed.
+
+The firmware reservation grows from 32 to 64 MiB at the same base 0xCE000000.
+The immediately adjacent ordinary RAM region now starts at 0xD2000000 instead
+of 0xD0000000 and shrinks by exactly 32 MiB, preserving its original end address.
+No other map regions change. FDF and BootShim FD sizes match. This map change is
+new and requires hardware qualification; host consistency does not prove boot.
+The previously corrected PrePi large-file support is retained.
+
+The outer boot header retains the pinned Android OS-version context required
+by the successful Android trial. Every generated candidate records its hashes;
+neither output nor manifest asserts hardware validation.
+
+## Host validation, 2026-10-22
+
+- Actual pinned inputs produce all nine components within the bundle budget.
+- Actual C parser accepts all nine rows; invalid row count, duplicate names,
+  malformed offsets, truncated input and oversized last-row length are rejected.
+- Sixteen source edits apply and restore exactly. An altered reviewed file
+  prevents all restoration, without partial writes.
+- Firmware/RAM boundaries are contiguous and conserve the original region end.
+- Four affected ARM64 C units pass syntax checking with generated build flags.
+- C/libfdt tests on all three real Android DTBs with the lmi-matched overlay
+  confirm the Android-only change, Mobian no-op and unknown-OS/path rejection.
+- Shell and embedded Python syntax pass. No firmware compilation or phone
+  boot was performed by the agent for this candidate.
+
+## Operator build
+
+```bash
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --build --with-dual
+```
+
+Reuses the existing isolated compiler rootfs and pinned private inputs. Output:
+`/home/linuxagent/lmi-boot-menu-build/output/boot-lmi-dual-test.img`,
+`dual-artifact-manifest.json`, and `boot-os-version-manifest.json`.
+Expected marker: `DUAL_DIRECT_RAM_HANDOFF_BUILD_COMPLETE_NOT_FOR_FLASHING`.
+No ADB, Fastboot, formatting, partition operation or automatic installation.
+
+After compilation, verify the actual FD layout, artifact hashes and manifest,
+then prepare a hash-pinned Windows RAM launcher. Qualify Mobian first, including
+its dedicated root filesystem, interface and return path, then Android. Keep
+the installed Mobian boot as the fallback throughout these temporary trials.
+Persistent installation requires a separate reviewed step after both pass.

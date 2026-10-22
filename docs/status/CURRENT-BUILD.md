@@ -1,4 +1,24 @@
 
+## 2026-10-22: direct dual menu candidate prepared (host validation only)
+
+Android survived overnight without restarting: 100 to 96 percent over 8h31m
+on battery, Android accounting 223 mAh (~26 mA), Wi-Fi/Bluetooth enabled.
+Charging had resumed before return capture; charge-counter deltas differ.
+This is not a controlled radio-isolated Mobian comparison. Raw logs remain private.
+Android wall clock was still October 7; corrected to verified October 22 UTC
+and Europe/Paris with AlarmManager, without reboot. No battery statistics reset.
+Use host elapsed time, uptime and relative battery accounting, not raw Android
+calendar timestamps across the clock correction.
+
+A new --with-dual recipe launches Mobian directly instead of rebooting the
+installed boot image. Both pinned component sets are embedded; the new 64-MiB
+firmware reservation is balanced by shrinking adjacent ordinary RAM. Host source
+restoration/tamper checks, nine-component bounds and ARM64 syntax pass. Real
+DTB C tests preserve Mobian unchanged and retain the guarded Android correction.
+No new firmware build or hardware trial yet; persistent installation remains
+unvalidated. See build/boot-menu/chainload/DUAL-DIRECT.md for the operator command.
+
+
 ## 2026-10-21: Android boots from the temporary menu
 
 The operator confirmed a successful LineageOS start after selecting it in the

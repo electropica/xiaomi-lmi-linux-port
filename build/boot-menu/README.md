@@ -27,11 +27,10 @@ can safely replace that image. Touch input remains unqualified; buttons work.
 Dedicated recipe for the requested on-phone Android/Mobian menu: Mobian by
 default after 15 seconds, without a PC once qualified and installed.
 
-**Current status: the menu and Android kernel/first-stage init execute on the
-handset. Android then aborts while waiting for physical system/vendor because
-the legacy DT fstab shadows its logical ramdisk fstab. A host-qualified RAM-only
-correction is ready for the operator build; see [ANDROID-FIRST-MOUNT.md](chainload/ANDROID-FIRST-MOUNT.md).
-Full Android userspace and persistent menu installation remain unvalidated.**
+**Current status: Android boot from the temporary menu is hardware-qualified.
+A direct Mobian + Android candidate passes host checks but needs an operator
+build and temporary hardware trials. Persistent installation remains unvalidated.
+See [DUAL-DIRECT.md](chainload/DUAL-DIRECT.md).**
 
 ## First build: display, input and countdown
 

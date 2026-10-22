@@ -26,7 +26,10 @@ int main(int argc,char**argv){
  if(argc==2){
   FILE*f=fopen(argv[1],"rb");long len;CHECK(f);CHECK(!fseek(f,0,SEEK_END));len=ftell(f);CHECK(len>0&&len<=128*1024*1024);
   rewind(f);b=malloc((size_t)len);CHECK(b);CHECK(fread(b,1,(size_t)len,f)==(size_t)len);fclose(f);
-  for(i=0;i<LMI_BUNDLE_ROWS;i++){char name[32];memcpy(name,b+32+i*56,32);name[31]=0;CHECK(!lmi_bundle_find(b,(size_t)len,name,&data,&size,&crc));}
+  unsigned rows=lmi_u32(b+12);CHECK(rows==5||rows==9);
+  for(i=0;i<rows;i++){char name[32];memcpy(name,b+32+i*56,32);name[31]=0;CHECK(!lmi_bundle_find(b,(size_t)len,name,&data,&size,&crc));}
+  b[12]=8;CHECK(lmi_bundle_find(b,(size_t)len,"android/kernel",&data,&size,&crc));b[12]=(unsigned char)rows;
+  put64(b+32+(rows-1)*56+40,UINT64_MAX);CHECK(lmi_bundle_find(b,(size_t)len,"android/kernel",&data,&size,&crc));
   free(b);
  }
  puts("BUNDLE_C_BOUNDS_AND_LAYOUT_PASS");return 0;

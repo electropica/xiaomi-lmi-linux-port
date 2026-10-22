@@ -5,7 +5,10 @@ int linux_boot_lmi_android_fstab(linux_boot *lb){
     int node,vendor,len,r;
     const char *compatible,*dev;
     static const char legacy_vendor[]="/dev/block/platform/soc/1d84000.ufshc/by-name/vendor";
-    if(!lb||!lb->config||strcmp(lb->config->tag,"android")||!lb->dtb.address)return -1;
+    if(!lb||!lb->config||!lb->dtb.address)return -1;
+    /* Mobian uses its exact pinned DT and initramfs, never Android surgery. */
+    if(!strcmp(lb->config->tag,"mobian"))return 0;
+    if(strcmp(lb->config->tag,"android"))return -1;
     if(fdt_check_header(lb->dtb.address))return -1;
     node=fdt_path_offset(lb->dtb.address,"/firmware/android/fstab");
     if(node==-FDT_ERR_NOTFOUND)return 0;

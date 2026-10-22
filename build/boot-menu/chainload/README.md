@@ -24,11 +24,10 @@ can safely replace that image. Touch input remains unqualified; buttons work.
 
 # Experimental LineageOS entry after the validated menu probe
 
-**Current status: stock Android boots successfully with encrypted data.
-The menu path reaches recovery with init_user0_failed. An isolated OS-version
-header control is prepared without rebuilding firmware; see
-[ANDROID-OS-VERSION-CONTROL.md](ANDROID-OS-VERSION-CONTROL.md). Its outcome
-and persistent menu installation remain unvalidated.**
+**Current status: Android boot from the temporary menu is hardware-qualified.
+A direct Mobian + Android candidate passes host checks but needs an operator
+build and temporary hardware trials. Persistent installation remains unvalidated.
+See [DUAL-DIRECT.md](DUAL-DIRECT.md).**
 
 Revision 2's untouched 15-second default and return to Mobian are now confirmed
 by the operator; SSH confirms root /dev/loop0p2 and running Phosh after return.

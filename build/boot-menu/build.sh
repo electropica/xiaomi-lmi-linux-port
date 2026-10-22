@@ -10,9 +10,10 @@ if [[ ${1:-} != --build ]]; then
   echo 'Builds only a temporary menu probe; does not yet launch Android.'
   exit 0
 fi
-lineage=0
+lineage=0;dual=0
 if [[ ${2:-} == --with-lineage && $# == 2 ]]; then lineage=1
-elif [[ $# != 1 ]]; then echo 'Use --build [--with-lineage]' >&2; exit 1; fi
+elif [[ ${2:-} == --with-dual && $# == 2 ]]; then lineage=1;dual=1
+elif [[ $# != 1 ]]; then echo 'Use --build [--with-lineage|--with-dual]' >&2; exit 1; fi
 [[ $EUID == 0 ]] || { echo 'Use sudo bash build.sh --build' >&2; exit 1; }
 command -v mmdebstrap >/dev/null
 command -v unshare >/dev/null
@@ -36,10 +37,11 @@ if [[ $lineage == 1 ]]; then
   for input in android.img android-dtbo.img; do
     [[ -f $build_root/inputs/$input ]] || { echo "Missing qualified input: $input" >&2; exit 1; }
   done
+  if [[ $dual == 1 ]]; then [[ -f $build_root/inputs/mobian.img ]] || { echo 'Missing pinned mobian.img' >&2; exit 1; }; fi
 fi
-exec unshare --mount --propagation private bash -s -- "$rootfs" "$recipe" "$build_root" "$lineage" <<'INNER'
+exec unshare --mount --propagation private bash -s -- "$rootfs" "$recipe" "$build_root" "$lineage" "$dual" <<'INNER'
 set -euo pipefail
-rootfs=$1;recipe=$2;build_root=$3;lineage=$4
+rootfs=$1;recipe=$2;build_root=$3;lineage=$4;dual=$5
 mkdir -p "$rootfs"/{recipe,source,output,proc,sys,dev}
 mount --bind "$recipe" "$rootfs/recipe"
 mount -o remount,bind,ro "$rootfs/recipe"
@@ -55,5 +57,5 @@ if [[ $lineage == 1 ]]; then
   mount -o remount,bind,ro "$rootfs/inputs"
 fi
 # Mount namespace cleanup is automatic when the process exits, including failure.
-chroot "$rootfs" /usr/bin/env LMI_MENU_LINEAGE="$lineage" /bin/bash /recipe/build-inside.sh 2>&1 | tee "$build_root/output/build.log"
+chroot "$rootfs" /usr/bin/env LMI_MENU_LINEAGE="$lineage" LMI_MENU_DUAL="$dual" /bin/bash /recipe/build-inside.sh 2>&1 | tee "$build_root/output/build.log"
 INNER

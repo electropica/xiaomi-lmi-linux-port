@@ -5,9 +5,9 @@ import argparse,hashlib,importlib.util,json,struct,zlib
 here=Path(__file__).resolve().parent;parent=here.parent
 s=importlib.util.spec_from_file_location('payloads',parent/'extract-payloads.py');p=importlib.util.module_from_spec(s);s.loader.exec_module(p)
 DTBO_SHA='45f0989700c68afcd817a6a4569ba67225cf128e3eedd35a658bad384632eec4'
-def bundle(inputs):
+def bundle(inputs,dual=False):
  lock=json.loads((parent/'sources.lock.json').read_text());entries=[]
- for os,file in [('android','android.img')]:
+ for os,file in ([('android','android.img'),('mobian','mobian.img')] if dual else [('android','android.img')]):
   raw=(inputs/file).read_bytes()
   if hashlib.sha256(raw).hexdigest()!=lock['os_images'][os]:raise ValueError('Wrong '+os+' boot image')
   parts=p.extract(raw)
@@ -36,8 +36,8 @@ def bundle(inputs):
  if len(out)>=120*1024**2:raise ValueError('Asset volume exceeds reserved budget')
  return bytes(out),manifest
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--inputs',type=Path,required=True);ap.add_argument('--output',type=Path,required=True);a=ap.parse_args()
- data,manifest=bundle(a.inputs)
+ ap=argparse.ArgumentParser();ap.add_argument('--inputs',type=Path,required=True);ap.add_argument('--output',type=Path,required=True);ap.add_argument('--dual',action='store_true');a=ap.parse_args()
+ data,manifest=bundle(a.inputs,a.dual)
  a.output.write_bytes(data)
  a.output.with_suffix('.json').write_text(json.dumps({'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'components':manifest},indent=2))
  print('RAM_ASSETS_BYTES',len(data))
