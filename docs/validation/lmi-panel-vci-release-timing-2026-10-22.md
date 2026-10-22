@@ -103,7 +103,7 @@ current figure.
   would not measure the current, would not identify the consumer that holds
   it, and would not establish the electrical state during the sleep.
 
-## 4. Cheapest discriminator
+## 6. Cheapest discriminator
 
 One **awake, read-only** observation, no policy change and no suspend:
 
@@ -127,7 +127,7 @@ If the state cannot be read without privilege on the LineageOS side, the same
 privileged read-only snapshot already required for the UFS policy covers it:
 both readings come from one capture set.
 
-## 5. Relation to the existing checklist
+## 7. Relation to the existing checklist
 
 `docs/validation/lmi-standby-peripheral-checklist-2026-10-20.md` lists the
 display row as **Open** with the gap *"Panel-specific sequence and rail
@@ -136,3 +136,42 @@ insufficient"*. The retained transition evidence above narrows that gap to the
 **idle gap before the suspend**, and adds the observation that the release
 happens at a different instant on the two platforms. It does not close the row:
 the current is still unmeasured and the Mobian build is unconfirmed.
+
+
+## 5. Current-build reading, 2026-10-22: R1 is refuted
+
+Two point-in-time regulator summary reads on the **current** Mobian kernel
+(`4.19.325-cip128-st12-perf-ga5b3099017ae-dirty`, root over the existing SSH
+route, USB connected, the device untouched in between):
+
+| moment | `display_panel_vci` | `pm8150_l14` | `gpu_cx_gdsc` | `vdd_boost_vreg` |
+|---|---|---|---|---|
+| 16:53, about 110 s after boot | **use=1**, open=2 | **use=1**, open=2 | use=0, open=4 | use=1, open=1 |
+| 17:00, about 536 s after boot, untouched | **use=0**, open=2 | **use=0**, open=2 | not sampled | use=1, open=1 |
+
+In both readings the consumer of the two panel rails is
+`soc:qcom,dsi-display-primary`, and it holds them *open* the whole time
+(`open=2`); the *enable* (`use`) is what changes. The rails went from enabled
+to disabled while the system stayed awake and was not touched, which is the
+signature of the display stack releasing them when the panel blanks.
+
+**The 2026-10-12 observation does not reproduce on the current build.** The
+retained 2026-10-12 regulator summary shows the same consumer and the same
+`open=2` throughout, with `use` toggling 0 -> 1 -> 0 across the session, so
+the release-at-blank path exists there as well. The reading of "the rails are
+released 0.301 s before the suspend" on that trial is therefore better
+explained by the panel still being lit until the suspend path of that
+particular run than by a missing release-at-blank behaviour.
+
+**Consequence.** R1 is **refuted as a standby difference**: on the current
+Mobian build the panel rails are not held enabled through the screen-off to
+suspend idle gap. The earlier statement in this note that Mobian "keeps the
+panel rails requested for the whole idle gap" does not hold and is withdrawn.
+
+**Limits that remain.** The absolute screen state is not directly readable on
+this platform: the DRM connector reports `connected` whether or not the panel
+is lit, and there is no backlight on this OLED panel. The conclusion therefore
+rests on the **differential** observation (use 1 -> use 0 while the system
+stayed awake and untouched), not on a directly observed blank event. A
+regulator `use` count is still a framework state, not an electrical
+measurement.

@@ -250,3 +250,20 @@ class: `vdd_boost_vreg` reads `use=1`, `open=1`, single `deviceless`
 consumer, that is enabled by its own `regulator-always-on` declaration and
 emits no transition at all. It is the rail class the transition comparisons
 structurally cannot see.
+
+
+## 2026-10-22 addendum — display row, R1 refuted on the current build
+
+Two point-in-time regulator summary reads on the current Mobian kernel, root
+over the existing SSH route, USB connected, untouched in between: the panel
+rails `display_panel_vci` and `pm8150_l14` are held **open** the whole time by
+`soc:qcom,dsi-display-primary` (`open=2`), and their **enable** count goes
+from 1 to 0 while the system stays awake. The display stack does release the
+panel rails when the panel blanks, so the 2026-10-12 transition evidence does
+not reproduce as a missing release-at-blank behaviour.
+
+The display row keeps its earlier gap, and the addendum of 2026-10-22 on the
+panel rail timing records the details. What is still unproven remains the
+panel-specific sequence and rail requests **during a qualified sleep
+interval**: the release-at-blank reading is taken awake, and the DRM connector
+state does not report the panel on/off state on this platform.

@@ -320,3 +320,57 @@ system still awake, and the consumer that holds them is now identified as
 `soc:qcom,dsi-display-primary`. R3 has a concrete instance
 (`vdd_boost_vreg`, always-on, single `deviceless` consumer) whose state
 during the suspend is still unknown.
+
+
+## Entry 6 — 2026-10-22 — R1 refuted on the current build; matched collector prepared
+
+**Hypothesis.** R1, the display panel rail timing, holds on the current Mobian
+build: the panel rails would stay requested through the screen-off to suspend
+idle gap. The discriminator is a point-in-time regulator summary read with the
+system awake and untouched, compared with a read taken while the panel was
+still lit.
+
+**Artifact identity.** Two point-in-time `regulator_summary` reads over the
+existing SSH route, root, USB connected, current Mobian kernel
+`4.19.325-cip128-st12-perf-ga5b3099017ae-dirty`: one at 16:53 local, about
+110 s after boot, one at 17:00, about 536 s after boot, untouched in between.
+Raw captures stay in the private workspace outside Git.
+
+**Evidence.** In both readings the consumer of `display_panel_vci` and
+`pm8150_l14` is `soc:qcom,dsi-display-primary`, which holds them **open**
+(`open=2`) throughout; the **enable** count changes from 1 to 0 while the
+system stays awake and is not touched. The retained 2026-10-12 summary shows
+the same consumer and the same `open=2` with `use` toggling 0 -> 1 -> 0, so the
+release-at-blank path exists on that build too. `vdd_boost_vreg` reads
+`use=1`, `open=1`, single `deviceless` consumer in every reading, and
+`gpu_cx_gdsc` reads `use=0`, `open=4`.
+
+**Changes.** The panel note records the current-build reading and withdraws the
+earlier statement that Mobian keeps the panel rails requested through the idle
+gap; the peripheral checklist display row is annotated; the matched collector
+is added as `userspace/power/diagnostics/collect-matched-standby-window.py`.
+
+**Validation.** The collector is read-only, plan-only by default, detects the
+suspend from the CLOCK_BOOTTIME / CLOCK_MONOTONIC divergence already used by
+the project observer, and writes one JSON file. Its plan mode contacts
+nothing.
+
+**Limitations.**
+* The absolute screen state is not directly readable on this platform: the DRM
+  connector reports `connected` either way and the OLED panel has no
+  backlight. The conclusion is **differential**, from the enable count
+  changing while the system stayed awake and untouched.
+* A regulator `use` count is a framework state, not an electrical
+  measurement, and the reading says nothing about the sleep interval.
+* The readings are point-in-time and single-occurrence.
+
+**Next decision.** R1 is refuted and R2 is closed for the policy, so the
+standby difference is not in the UFS policy and not in the display panel
+rails. What remains unmeasured is the **comparison method itself**: the
+Mobian standby figure has never been produced by the Android reference
+method, so the two platforms have still never been compared like for like.
+The single bounded discriminator is therefore one matched Mobian standby
+window, collected locally on the phone because the SSH route needs the cable
+connected and an unplugged suspend cannot be observed over it. That needs
+Julien's agreement and a local collector run, and it is prepared, not
+proposed as a generic discharge test.
