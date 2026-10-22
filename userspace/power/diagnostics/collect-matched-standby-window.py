@@ -63,19 +63,28 @@ def usb_state():
     interface losing its carrier.
     """
     online = []
+    usb_online = None
     for d in sorted(os.listdir("/sys/class/power_supply")):
         p = os.path.join("/sys/class/power_supply", d, "online")
         if os.path.exists(p):
-            online.append("%s=%s" % (d, read(p)))
+            value = read(p)
+            online.append("%s=%s" % (d, value))
+            if d == "usb":
+                usb_online = value
+    # the gadget is the interface whose name starts with usb; the loopback
+    # always reports carrier=1 and must not be counted
     links = []
     try:
         for name in sorted(os.listdir("/sys/class/net")):
+            if not name.startswith("usb"):
+                continue
             carrier = read(os.path.join("/sys/class/net", name, "carrier"))
             if carrier == "1":
                 links.append(name)
     except OSError:
         pass
-    return {"usb_power_supply": online, "usb_links_up": links}
+    return {"usb_power_supply": online, "usb_online": usb_online,
+            "usb_links_up": links}
 
 
 def sample(label):
@@ -93,8 +102,9 @@ def sample(label):
         out[name] = read(os.path.join(GAUGE, name))
     usb = usb_state()
     out["usb_power_supply"] = usb["usb_power_supply"]
+    out["usb_online"] = usb["usb_online"]
     out["usb_links_up"] = usb["usb_links_up"]
-    out["usb_attached"] = bool(usb["usb_power_supply"]) or bool(usb["usb_links_up"])
+    out["usb_attached"] = (usb["usb_online"] == "1") or bool(usb["usb_links_up"])
     out["ufshc_runtime_status"] = read(os.path.join(UFS, "power", "runtime_status"))
     for attr in ("clkgate_enable", "clkgate_delay_ms", "rpm_lvl", "spm_lvl",
                  "auto_hibern8", "rpm_target_link_state",
