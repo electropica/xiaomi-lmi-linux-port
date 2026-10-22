@@ -539,3 +539,80 @@ read the counter on both sides of the unplug. It needs the operator's
 unplug and replug, and it produces the Mobian window figure and the
 unplug discontinuity, not a calibrated current and not an explanation of
 the standby difference.
+## Entry 9 - 2026-10-22 - the esr-delta wake and the screen that came on: verified on the device, with a limited candidate
+
+**The question.** The second resume of the 15:21-15:47 window was caused
+by IRQ 445 `esr-delta`, and the display was programmed 0.16 s later. The
+quiet-gauge policy knows "438 msoc-delta" and, with guards, "441
+msoc-high", but not "445 esr-delta".
+
+**What is really installed and enabled, read on the device.** `phosh`
+`0.46.0-3+deb13u1+lmigaugewake3+homedrag7`, that is the v3 build; the v4
+candidate was never built nor installed. `/usr/libexec/gsd-power` sha256
+`244e3099…` and `/usr/libexec/phosh` sha256 `52412006…` contain the
+strings `438 msoc-delta` and `441 msoc-high`, and **neither contains `445
+esr-delta`**. Both opt-ins are live: `LMI_PHOSH_GAUGE_WAKE_FILTER=1` in
+the phosh process, `LMI_GSD_QUIET_GAUGE_RESUME=1` in the gsd-power
+process. `last_resume_reason` reads `445 esr-delta` on the device right
+now.
+
+**The path, from the installed sources.** Phosh calls
+`phosh_screen_saver_manager_wakeup_screen()` on every resume that is not
+a qualified gauge resume; GSD calls `backlight_enable()` in its fallback
+branch. The qualification is the exact-match list of the wake reason, and
+the reason list is the only condition that differs between the two
+resumes of that window.
+
+**The differential inside the window.** The screen was blank and USB was
+disconnected across both resumes. The first, by IRQ 438 `msoc-delta` at
+15:43:24, produced no display programming at all. The second, by IRQ 445
+`esr-delta` at 15:44:37, produced a full mode set 0.163 s later. Only the
+reason differed. The wake cost 186 s of screen-on time before the
+reconnection, about 17 % of the 1117 s the window spent awake; the other
+915 s is the idle delay after the screen blank and 16 s is the grace
+timer. **The standby difference is not attributed to this wake.**
+
+**The interrupt.** In `qpnp-fg-gen4.c` the `ESR_DELTA_IRQ` entry is named
+`esr-delta`, its handler is `fg_delta_esr_irq_handler`, it is
+`wakeable` and is armed with `enable_irq_wake`; the handler reads the
+battery resistance and may vote awake and schedule calibration. It is a
+fuel-gauge interrupt of the same family as the two the policy knows. No
+interrupt is disabled, no gauge processing is suppressed, and keeping the
+screen off stays a userspace policy decision.
+
+**How often.** A census of the 15 kept quiet captures, 2026-10-11 to
+2026-10-21: 995 `438 msoc-delta`, 23 `441 msoc-high`, 115
+`502 typec-cc-state-change`, 10 misconfigured-IRQ, 5 RTC alarm, and **zero
+`445 esr-delta`**. For the recognised reasons the quiet path worked every
+time: 15.16 s to 15.58 s (median 15.38 s) before going back to sleep over
+495 observed cycles. The esr-delta occurrence is the first one in the
+kept evidence, so its rate is unknown and its energy cost is not
+measured.
+
+**The candidate, prepared but not built.** A limited diff, outside the
+repository, `esr-delta-accept-20261022.patch` sha256 `6838a975…`, adds
+"445 esr-delta" to the gate in both trees, with the same fresh,
+noncritical, discharging guards as "441 msoc-high". It touches the
+policy only.
+
+**The off-phone test.** `check-esr-delta-policy-20261022.py` compiles the
+actual gate from both trees, patched and unpatched: the unpatched
+sources **fail** on `allow("445 esr-delta")`, the patched sources pass
+every assertion. The unknown reasons and the combined reasons keep failing
+open, that is they still turn the screen on: an unrecognised wake is
+never silenced.
+
+**Limitations.** Nothing was built, installed or deployed. The raw kernel
+log of the first window has rotated out of the ring buffer, so a
+simultaneous touch cannot be excluded from the preserved evidence; the
+grounds are the differential inside the window and the source path. The
+two userspace gates are not isolated by the log, and the patch changes
+both. Accepting the reason means an esr-delta wake keeps the screen blank,
+so the behaviour with real user activity has to be validated on the
+device.
+
+**Next decision.** Two independent tracks, both waiting on the operator:
+the second standby window with the corrected collector, and the
+esr-delta acceptance, which needs a build, an installation and a device
+observation. The patch is not to be deployed before the second window,
+because that window measures the system as it is now.
