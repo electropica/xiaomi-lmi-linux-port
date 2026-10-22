@@ -733,3 +733,73 @@ not be counted. The 186 s cost is one observation in one window.
 corrected collector, and separately the build, the installation and a
 device observation of the esr-delta acceptance. The patch is not to be
 deployed before the second window.
+## Entry 12 - 2026-10-22 - the second matched window: 68.1 % asleep and a matched figure of 77 mA
+
+**The window.** Collector revision 4 on the phone, unplugged from
+19:17:31.7 to 20:07:08.7 UTC, 2976.98 s. The operator unplugged, left
+the phone alone, and replugged without touching it.
+
+**The collector and the kernel agree.** The collector saw 511.696 s and
+763.389 s of sleep; the kernel's frozen gaps are 511.696 s and
+763.390 s. The first two sleeps match to the millisecond: the corrected
+clock pair is validated on a handset against the kernel's own wall-clock
+distance. A third sleep of 753.456 s, from 19:54:35 to the
+reconnection, is only in the kernel log, because the collector's one
+hour bound expired at 19:54:22 while the phone was asleep. The bound
+must be generous next time.
+
+**The awake durations, measured.** 2028.542 s asleep, 948.44 s awake, so
+**68.1 % asleep**. The awake time is fully accounted for: 901.2 s of idle
+delay after the screen blanked, 15.3 s of screen-on after the unplug, and
+two grace timers of 15.7 s and 15.9 s after the two `msoc-delta` resumes.
+With its 900 s inactivity delay the interval could reach at most 69.8 %
+asleep, and it reaches 68.1 %: the 47.3 s difference is the screen-on and
+the two graces. Against the first window at 28.1 % asleep, and the
+Android reference at 98.9 %, this window is close to the ceiling its own
+idle delay allows.
+
+**The screen stayed dark across both sleeps.** The display marks show
+exactly two programmings, at the unplug and at the reconnection. The two
+`msoc-delta` resumes did not light the screen: the quiet-gauge path
+works as intended during this window.
+
+**The counter variations, measured.** 187 qualified discharge endpoints
+out of 477 samples; the 290 rejected ones are the plugged-in samples,
+all with the reason `usb_online_present`, and **none rejected for an
+unknown or a failed read**. At the unplug the counter stepped
+2676998 -> 2533597, **-143401 uAh in five seconds**: the gauge
+recomputing itself when the charger went away, the same logical
+discontinuity the Android reference excluded at 86 mAh. The phone is at
+100 % again now, which confirms it is a reporting artefact of the
+charging side and not consumption. With the discontinuity excluded:
+**-47334 uAh over 2206.2 s, that is 77.2 mA** over the detached period,
+**56.7 mA** over the two sleeps and **106.3 mA** over the awake block.
+The gauge's own `current_now` agrees, 148 mA then 88 mA.
+
+**The matched Mobian figure, by the Android method: 77.2 mA against the
+reference's 13.84 mA**, and 56.7 mA against roughly 14 mA for the sleep
+period alone. The two gauges report the same full value, 2677 mAh
+against 2676 mAh, so the rates are comparable as gauge readings. **On
+this evidence the Mobian phone draws about four times more than the
+reference while asleep**, so the difference is not only a duty-cycle
+difference.
+
+**The energy actually measured: none.** No current is computed by the
+collector and none is derived beyond the counter quotients. The scale of
+the gauge against the design capacity is still not established, and
+neither gauge is an independent sensor. The gauge also reports 100 %
+while the counter reads 93.6 % of `charge_full`, so the percentage is a
+state estimate and not the counter ratio.
+
+**Limits.** One window, one build, one state of charge, 37 minutes of
+detached time against 8.5 hours for the reference. The collector's
+result is missing the third sleep and the reconnection reading.
+
+**What this changes.** The Mobian side now has a figure by the Android
+method, and it is several times the reference, so the earlier framing
+that the only difference was a duty-cycle difference does not hold. The
+remaining candidates act while the processor is down: the always-on
+rails and the peripheral states in suspend. The esr-delta acceptance
+stays a separate decision and this window does not make it urgent: the
+wake did not occur here, and the screen-on it caused in the first window
+is a duty-cycle cost, not a sleep-current cost.
