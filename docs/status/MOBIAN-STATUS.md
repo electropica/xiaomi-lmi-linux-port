@@ -2430,3 +2430,25 @@ The Android-start Windows RAM launcher passes plan-only verification. Actual
 outcome remains pending. Hardware-key version context and inherited AVB
 metadata are hypotheses; no AVB bypass is proposed. Standard builder unchanged
 until validation. See build/boot-menu/chainload/ANDROID-OS-VERSION-CONTROL.md.
+
+
+## Compatibility-DT variant correction, 2026-10-22 (host only)
+
+The successful temporary menu Android boot reports lmipro / CN / 3.9.0, whereas
+the recorded direct stock Android command line supplies std / GLOBAL / 3.19.1.
+The menu passes both sets. The pinned compatibility DT has the stale pro/CN
+values before the actual bootloader arguments, explaining the Zoom Edition
+identity. No system property or device identity was overwritten on the phone.
+
+The candidate now removes only those first three known stale variant tokens
+from the final in-memory DT bootargs, and only when a later value for the same
+key exists. Unknown or multiple ambiguity is rejected before any buffer change.
+Unrelated arguments (including AVB policy) remain byte-for-byte unchanged.
+This correction applies only to the qualified android/mobian menu targets.
+The source manifest now tracks seventeen edits for dual mode.
+
+Actual C tests cover the real compatibility/stock argument combination, repeated
+execution, unknown first value, empty value, excess duplicates and missing NUL.
+Four affected ARM64 units pass syntax checks; source restoration and tamper
+checks pass. The corrected fstab host checks retain the Mobian no-op. Hardware
+model identification is still unvalidated for the new candidate.

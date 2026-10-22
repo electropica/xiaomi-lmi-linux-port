@@ -33,7 +33,7 @@ neither output nor manifest asserts hardware validation.
 - Actual pinned inputs produce all nine components within the bundle budget.
 - Actual C parser accepts all nine rows; invalid row count, duplicate names,
   malformed offsets, truncated input and oversized last-row length are rejected.
-- Sixteen source edits apply and restore exactly. An altered reviewed file
+- Seventeen source edits apply and restore exactly. An altered reviewed file
   prevents all restoration, without partial writes.
 - Firmware/RAM boundaries are contiguous and conserve the original region end.
 - Four affected ARM64 C units pass syntax checking with generated build flags.
@@ -59,3 +59,25 @@ then prepare a hash-pinned Windows RAM launcher. Qualify Mobian first, including
 its dedicated root filesystem, interface and return path, then Android. Keep
 the installed Mobian boot as the fallback throughout these temporary trials.
 Persistent installation requires a separate reviewed step after both pass.
+
+
+## Compatibility-DT variant correction, 2026-10-22 (host only)
+
+The successful temporary menu Android boot reports lmipro / CN / 3.9.0, whereas
+the recorded direct stock Android command line supplies std / GLOBAL / 3.19.1.
+The menu passes both sets. The pinned compatibility DT has the stale pro/CN
+values before the actual bootloader arguments, explaining the Zoom Edition
+identity. No system property or device identity was overwritten on the phone.
+
+The candidate now removes only those first three known stale variant tokens
+from the final in-memory DT bootargs, and only when a later value for the same
+key exists. Unknown or multiple ambiguity is rejected before any buffer change.
+Unrelated arguments (including AVB policy) remain byte-for-byte unchanged.
+This correction applies only to the qualified android/mobian menu targets.
+The source manifest now tracks seventeen edits for dual mode.
+
+Actual C tests cover the real compatibility/stock argument combination, repeated
+execution, unknown first value, empty value, excess duplicates and missing NUL.
+Four affected ARM64 units pass syntax checks; source restoration and tamper
+checks pass. The corrected fstab host checks retain the Mobian no-op. Hardware
+model identification is still unvalidated for the new candidate.

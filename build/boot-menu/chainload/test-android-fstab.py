@@ -47,6 +47,8 @@ extern int fdt_path_offset(const void*,const char*);
 extern int fdt_subnode_offset(const void*,int,const char*);
 extern const void*fdt_getprop(const void*,int,const char*,int*);
 extern int fdt_del_node(void*,int);
+extern int fdt_setprop(void*,int,const char*,const void*,int);
+#define fdt_setprop_string(f,n,k,v) fdt_setprop(f,n,k,v,(int)strlen(v)+1)
 extern const char*fdt_strerror(int);
 static unsigned fdt_totalsize(const void*p){const unsigned char*b=p;return (unsigned)b[4]<<24|(unsigned)b[5]<<16|(unsigned)b[6]<<8|b[7];}
 '''+(here/'lmi-android-fstab.h').read_text()+'''
@@ -55,7 +57,7 @@ int test_fix(void*p,const char*tag){linux_config cfg={0};linux_boot lb={.config=
     results=[]
     with tempfile.TemporaryDirectory(prefix='lmi-android-fstab-') as tmp:
         src=Path(tmp)/'test.c';so=Path(tmp)/'test.so';src.write_text(c)
-        subprocess.run(['cc','-std=c11','-shared','-fPIC','-Wall','-Wextra','-Werror',str(src),str(a.libfdt),'-o',str(so)],check=True)
+        subprocess.run(['cc','-std=c11','-shared','-fPIC','-Wall','-Wextra','-Werror','-I'+str(here),str(src),str(a.libfdt),'-o',str(so)],check=True)
         test=ctypes.CDLL(str(so));test.test_fix.argtypes=[ctypes.c_void_p,ctypes.c_char_p];test.test_fix.restype=ctypes.c_int
         data=parts['dtb'];pos=0
         while pos+40<=len(data) and data[pos:pos+4]==b'\xd0\x0d\xfe\xed':

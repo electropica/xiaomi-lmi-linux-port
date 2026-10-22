@@ -7,6 +7,8 @@ def patch_entry(text):
         text=text.replace('\t'+needle,'\tlmi_boot_stage("'+label+'");\n\t'+needle)
     assert text.count('\tdone:\n')==1
     text=text.replace('\tlmi_boot_stage("15 execute / ARM handoff validation");','\tlmi_boot_stage("14 Android logical ramdisk fstab");\n\tif(linux_boot_lmi_android_fstab(lb)!=0)\n\t\tEDONE(tlog_error("prepare Android logical ramdisk fstab failed"));\n\tlmi_boot_stage("15 execute / ARM handoff validation");')
+    text=text.replace('extern int linux_boot_lmi_android_fstab(linux_boot*lb);','extern int linux_boot_lmi_android_fstab(linux_boot*lb);\nextern int linux_boot_lmi_variant(linux_boot*lb);')
+    text=text.replace('\tlmi_boot_stage("15 execute / ARM handoff validation");','\tif(linux_boot_lmi_variant(lb)!=0)\n\t\tEDONE(tlog_error("variant boot arguments remain ambiguous"));\n\tlmi_boot_stage("15 execute / ARM handoff validation");')
     return text.replace('\tdone:\n','\tdone:\n\tlmi_boot_failed();\n')
 
 def patch_prepare(text):
