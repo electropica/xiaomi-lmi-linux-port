@@ -671,3 +671,65 @@ unplug. The window remains a gauge reading.
 fixed operator-visible maximum duration, keeping the pre-replug
 disconnected samples as the endpoints. Nothing was built, installed or
 deployed.
+## Entry 11 - 2026-10-22 - the esr-delta wake on the reference platform: it recurs, and it costs a fraction of a second there
+
+**The question.** How often does the `445 esr-delta` wake happen on this
+hardware, and what does the reference platform do with it? Answered with
+the evidence already kept, without a new run.
+
+**The reference answer.** The LineageOS trace kept for the Android
+reference contains Android's own wakeup accounting for the night of
+2026-10-07: `445 esr-delta` 455 ms over 2 times, next to `438 msoc-delta`
+2s 173ms over 7 times and 63 RTC alarms. The battery-stats timeline in
+the same file gives the cost of each wake: **0.002 s, 0.326 s and 0.946 s
+for the esr-delta wakes, and 0.302 s to 0.360 s for the msoc-delta
+ones**. So the interrupt **recurs** on the reference platform, it costs
+the same as a msoc-delta wake there, and **a gauge wake does not turn the
+screen on**.
+
+**The Mobian side.** The same interrupt, on the same driver, programmed
+the display 0.163 s after the resume and left the screen lit for 186 s.
+The difference is not in the hardware, it is in the userspace reason
+gate of the quiet-gauge policy, which does not know this reason and
+therefore takes the path that lights the screen. The cost on Mobian is
+currently two orders of magnitude above the cost on the reference
+platform.
+
+**What stays open, and why.** `/sys/kernel/debug/wakeup_reasons` **does
+not exist on this Mobian build**: the debugfs is mounted and the file is
+simply not there, so the kernel wakeup accounting the reference platform
+exposes is not available here. The ring buffer rotates, t=452 to 7586 at
+17:12 and t=6332 to 13535 at 20:44, so the resume lines of the window are
+gone. A census of the whole retained corpus finds exactly one
+`Resume caused by IRQ 445, esr-delta` line, the one from the 2026-10-22
+window; the fifteen Mobian quiet captures record the wake reason at the
+observer's events and none of them carries this reason. The Mobian rate
+stays unknown.
+
+**The candidate is not extended.** `448 batt-temp-delta` also appears in
+the reference accounting, once. It is not added: it has never been
+observed on this platform, and the policy fails open by design, so an
+unknown reason keeps turning the screen on until it is observed and
+judged.
+
+**A proposal for the next revision, not implemented.** The Mobian rate
+could be measured during a window if the collector read
+`/sys/kernel/wakeup_reasons/last_resume_reason` at each sample. It is a
+passive sysfs read, with no runtime resume and no hardware query. It is
+left out of revision 4 on purpose: the review of 2026-10-22 covered the
+endpoint qualification and the snapshot, and changing the instrument
+again before it is deployed would move the review target.
+
+**Limits.** The two rates are not directly comparable: the reference
+night woke every about 50 s to an RTC alarm, a much shallower sleep than
+the Mobian quiet nights, and a shallower sleep means more load changes.
+The reference episodes come from Android's accounting and its policy, so
+Android treating a gauge wake as a wake is a platform behaviour and not
+a property of the interrupt. The Mobian captures record the reason at
+the observer's events, so an esr-delta wake that produced no event would
+not be counted. The 186 s cost is one observation in one window.
+
+**Next decision.** Unchanged: the second standby window with the
+corrected collector, and separately the build, the installation and a
+device observation of the esr-delta acceptance. The patch is not to be
+deployed before the second window.
