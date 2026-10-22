@@ -9,6 +9,9 @@ int main(void){
  char copy[4096];strcpy(copy,args);CHECK(!lmi_variant_args(args,sizeof(args))&&!strcmp(args,copy));
  strcpy(args,"androidboot.hwc=OTHER androidboot.hwc=GLOBAL");strcpy(copy,args);
  CHECK(lmi_variant_args(args,sizeof(args))==-1&&!strcmp(args,copy));
+ strcpy(args,"androidboot.camera.config=0 androidboot.camera.config=1 androidboot.serialno=EXAMPLE_STALE androidboot.serialno=EXAMPLE_REAL androidboot.veritymode=enforcing");
+ CHECK(!lmi_variant_args(args,sizeof(args)));
+ CHECK(!strcmp(args,"androidboot.camera.config=1 androidboot.serialno=EXAMPLE_REAL androidboot.veritymode=enforcing"));
  strcpy(args,"androidboot.hwc=CN androidboot.hwc=GLOBAL androidboot.hwc=EU");strcpy(copy,args);
  CHECK(lmi_variant_args(args,sizeof(args))==-1&&!strcmp(args,copy));
  strcpy(args,"androidboot.hwc=CN androidboot.hwc=");strcpy(copy,args);

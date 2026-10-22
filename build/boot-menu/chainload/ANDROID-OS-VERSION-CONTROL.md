@@ -73,3 +73,21 @@ execution, unknown first value, empty value, excess duplicates and missing NUL.
 Four affected ARM64 units pass syntax checks; source restoration and tamper
 checks pass. The corrected fstab host checks retain the Mobian no-op. Hardware
 model identification is still unvalidated for the new candidate.
+
+
+## Board argument audit follow-up (host only)
+
+The saved direct-stock/compatibility-DT audit finds nine differing duplicate
+board argument keys, not just the three model-variant keys. The candidate now
+also retains the later hardware-supplied camera configuration, network mode,
+DTBO index, certificate model and device identifiers instead of the earlier
+sample values in the pinned compatibility DT. No real identifiers are stored
+in source or public notes. Device properties on the running handset are unchanged.
+
+Only the nine explicitly reviewed keys are deduplicated, and only with exactly
+two non-empty occurrences. The three initial model fields additionally retain
+their known-template checks. Every other argument and its order remain unchanged,
+including AVB policy. This is not a generic command-line rewrite. Host C tests
+on the real saved compatibility/stock pair verify all nine later values and
+the complete unchanged unrelated-token sequence; malformed/ambiguous inputs
+are rejected. Hardware validation still requires the next temporary build.
