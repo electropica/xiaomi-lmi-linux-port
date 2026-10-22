@@ -456,3 +456,86 @@ instrument and to read the counter on both sides of the unplug. It needs the
 operator's unplug and replug, and it produces the Mobian window figure and
 the unplug discontinuity, not a calibrated current and not an explanation of
 the standby difference.
+## Entry 8 — 2026-10-22 — collector revision 3: the review defects fixed offline, failing tests first
+
+**The review.** The independent API review of 2026-10-22 confirmed five
+defects in revision 2 of the collector and rejected several of its claims.
+The results are kept outside the repository, in
+`work/MINIMAX-API-REVIEW-RESULTS-20261022.md`.
+
+**The sources were checked, not taken on trust.** In
+`drivers/scsi/ufs/ufs-sysfs.c` (sha256 `3e5307ab1eea…`, byte-identical
+between the Mobian and the Android revision), the `UFS_ATTRIBUTE` macro at
+lines 711-726 calls `pm_runtime_get_sync()`, `ufshcd_query_attr()` and
+`pm_runtime_put_sync()`, and `current_power_mode` (line 729) and
+`psa_state` (line 742) instantiate it. In `ufshcd.c` (sha256
+`cc3b00465c2c…`), line 4229 documents `ufshcd_query_attr` as the API that
+sends attribute requests. So each read of those two attributes
+runtime-resumes the UFS device and sends a hardware query: it is not a
+passive observation of a sleeping device. The attributes that stay in the
+sampling loop were checked too and are not hardware queries.
+
+**The five defects, fixed.** One pair of samples can now carry a suspend
+gap and a USB transition at the same time; the event log is bounded
+without the totals depending on its capacity and without the terminal
+transition being droppable; the deadline carries an explicit boot-clock
+value and a wall-clock value instead of a boot-clock value printed as a
+date; the result is written before the first event and every write is
+atomic, with a signal handler writing the final result; the two UFS
+hardware-query attributes are no longer read during the window, and a
+one-shot snapshot is available behind an explicit flag.
+
+**The claims that were rejected, corrected.** Both clocks derive from
+adjusted monotonic time, so the collector no longer claims that one of
+them is slewed and the other is not. A normal timer is not a wake source
+that would prevent a system suspend, and the limits now say what the
+polling really costs. The USB boolean is a proxy: transport, power and
+charge are reported apart, and only a reading taken with no power source
+attached is kept as a discharge endpoint. The difference across the
+unplug is no longer called a jump and is no longer presented as a
+consumption figure. The result no longer claims to keep every sample.
+
+**The tests.** The suite now holds 28 tests, and the collector under test
+is selected by `MINIMAX_COLLECTOR`, so the same suite runs against the
+previous revision taken from the history. Against revision 2 (`32bc1c2c…`)
+it gives **13 failures**, every one of them a confirmed defect. Against
+revision 3 (`67d0dca6…`) it gives **0 failures**. The other suite,
+`test-ufs-policy-reader.py`, still passes with 10 tests. No test mirrors
+the implementation: each drives the module with synthetic samples and
+checks an observable.
+
+**What was not touched.** The ESR IRQ, the charge protections, the normal
+sleep delay and the Phosh and GSD thresholds. The `50000` threshold is
+50 ms, not 50 s, because `lmi_sleep_total` counts microseconds; it was not
+modified. No RTC wake alarm was added, no policy, setting or permission
+was changed, and no kernel code was modified.
+
+**The armed run produced no window.** The revision-2 collector started on
+the phone at 17:08:10 UTC ran its full hour and stopped on its own
+deadline at 18:08:13 UTC. The cable was never removed, so there was no
+window: the phone stayed plugged in and did not suspend for a single
+second, the accumulated suspend time did not move at the 436.2216 s it
+had carried since the first window, and the counter went from 2676996 up
+to 2677000, which is `charge_full`, one more observation of a counter
+that is remaining charge and rises back while charging. That run also
+shows the perturbation of the fifth defect in the open: it read the two
+UFS attributes on every poll for an hour.
+
+**Limitations.** Revision 3 has not run on a handset. Nothing about the
+physical standby draw follows from this entry. The window remains a gauge
+reading, with no calibrated current and no established scale against the
+design capacity. The first window is still void as a collector result;
+its kernel-log analysis stands on its own. On the duty cycle: with a
+900 s inactivity delay, a 1554.1 s unplugged interval could reach at most
+(1554.1 − 900)/1554.1 ≈ 42.1 % asleep if the delay had started at the
+unplug, against the 436.222 s, about 28.1 %, actually observed, that is
+about 217.9 s of awake time beyond that hypothetical bound. That is
+conditional arithmetic, not proof that the timer started at the unplug.
+
+**Next decision.** Deploy revision 3 and run the second window: unplug,
+let the phone suspend and wake by itself, replug. Then cross-check the
+collector's suspend gaps against the frozen gaps of the kernel log, and
+read the counter on both sides of the unplug. It needs the operator's
+unplug and replug, and it produces the Mobian window figure and the
+unplug discontinuity, not a calibrated current and not an explanation of
+the standby difference.

@@ -8,21 +8,57 @@ Run from the repository root:
 No phone is contacted. The collector module is imported and driven with
 synthetic samples, so every test here is reproducible without a device.
 
-These tests exist because the previous collector revision read /proc/uptime
-and treated its second field as CLOCK_MONOTONIC. That field is the aggregate
-CPU idle time. Every suspended-time value and every suspend detection built
-on it was invalid, and the defect was invisible in the output: the file
-looked complete and the numbers looked plausible. The tests below pin the
-clock source, the detection of a real suspend gap and the refusal to collect
-when the clocks are missing.
+The collector under test can be chosen with the MINIMAX_COLLECTOR
+environment variable. That is how the regression tests are demonstrated:
+the same suite is run against the previous revision, taken from the
+repository history, and the new tests must fail there and pass here.
+
+Two revisions are covered.
+
+Revision 2 was born from a blocking defect: the collector read
+/proc/uptime and treated its second field as CLOCK_MONOTONIC. That field
+is the aggregate CPU idle time. Every suspended-time value and every
+suspend detection built on it was invalid, and the defect was invisible
+in the output: the file looked complete and the numbers looked plausible.
+
+Revision 3 comes from the API review of 2026-10-22, whose results are in
+work/MINIMAX-API-REVIEW-RESULTS-20261022.md. The review confirmed five
+defects in revision 2, each covered by a test below that fails against
+revision 2:
+
+  * one pair of samples could not carry both a suspend gap and a USB
+    transition, so a detach happening inside a suspend interval was
+    lost, with the counter readings on both sides of it;
+  * the event log was bounded by dropping events, so a saturated log
+    could hide the terminal replug, and the suspended total was the sum
+    of the surviving events, so a full log also shortened the measured
+    sleep;
+  * the deadline was printed as a wall-clock date but was computed from
+    the boot clock, which produced a 1970-era timestamp;
+  * the result was written only when an event happened and the write was
+    not atomic, so an interrupted run could leave nothing behind or a
+    truncated file;
+  * the UFS attributes current_power_mode and psa_state were read on
+    every poll, and each of those reads runtime-resumes the UFS device
+    and sends a hardware query.
+
+The review also rejected several claims that the collector used to make.
+The test that checks the claims is part of the suite.
 """
 
 import ast
 import importlib.util
+import json
+import os
 import pathlib
+import subprocess
 import sys
+import tempfile
+import time
 
-COLLECTOR = pathlib.Path(__file__).with_name("collect-matched-standby-window.py")
+COLLECTOR = pathlib.Path(os.environ.get(
+    "MINIMAX_COLLECTOR",
+    str(pathlib.Path(__file__).with_name("collect-matched-standby-window.py"))))
 spec = importlib.util.spec_from_file_location("collect_matched_standby_window",
                                               COLLECTOR)
 collector = importlib.util.module_from_spec(spec)
@@ -48,7 +84,13 @@ class FakeClock(object):
 
 
 def make_sample(boottime, monotonic, counter="2676998", usb=True,
-                label="poll", wall="2026-10-22T15:19:48Z"):
+                label="poll", wall="2026-10-22T15:19:48Z", power=None,
+                status=None):
+    """A synthetic sample, shaped like the ones the collector builds."""
+    if power is None:
+        power = usb
+    if status is None:
+        status = "Full" if power else "Discharging"
     return {
         "label": label,
         "wall_utc": wall,
@@ -56,8 +98,34 @@ def make_sample(boottime, monotonic, counter="2676998", usb=True,
         "monotonic": monotonic,
         "suspended_accumulated": boottime - monotonic,
         "charge_counter": counter,
+        "status": status,
+        "current_now": "0",
         "usb_attached": usb,
+        "usb_power_attached": power,
+        "usb_transport_attached": usb,
+        "usb_links_up": ["usb0"] if usb else [],
+        "usb_online": "1" if power else "0",
+        "usb_power_supply": ["usb=%d" % (1 if power else 0)],
+        "charging": power,
+        "charging_state": "full" if power else "discharging",
+        "detached": not power,
     }
+
+
+def deadline_for(boottime=1000.0, wall_epoch=1792688000.0, max_seconds=1000.0):
+    """Build the deadline the way the collector under test expects it.
+
+    Revision 2 took a bare boot-clock value, revision 3 takes both clock
+    bases. The helper keeps the tests that are not about the deadline
+    meaningful against either revision.
+    """
+    if hasattr(collector, "make_deadline"):
+        return collector.make_deadline(boottime, wall_epoch, max_seconds)
+    return boottime + max_seconds
+
+
+def args_stub():
+    return type("Args", (), {"poll": 5.0, "threshold": 1.0})()
 
 
 def code_strings_without_docstrings(source):
@@ -81,6 +149,9 @@ def code_strings_without_docstrings(source):
                 and id(node) not in docstring_nodes):
             out.append(node.value)
     return out
+
+
+# ---------------------------------------------------------------- revision 2
 
 
 def test_clocks_use_clock_gettime_not_proc_uptime():
@@ -115,12 +186,12 @@ def test_collector_code_does_not_read_proc_uptime():
 def test_real_clock_pair_is_close_and_matches_the_posix_clocks():
     """The real clocks must be the ones the collector reports.
 
-    On Linux CLOCK_BOOTTIME keeps counting across a suspend and
-    CLOCK_MONOTONIC does not, but the two are not the same clock: the
-    monotonic clock is slewed by the timekeeping layer and the boot clock
-    is not, so they drift apart slowly and the ordering is not guaranteed.
-    The collector must therefore measure a suspend as the change between
-    two readings, never as an absolute difference.
+    CLOCK_BOOTTIME keeps counting across a suspend and CLOCK_MONOTONIC
+    does not, but the two are not independent clocks: both are derived
+    from adjusted monotonic time, so the difference between them is not
+    guaranteed to be constant, and two sequential reads carry a sampling
+    skew. The collector must therefore measure a suspend as the change
+    between two readings, never as an absolute difference.
     """
     real_time = sys.modules["time"]
     boottime, monotonic = collector.clocks()
@@ -131,23 +202,22 @@ def test_real_clock_pair_is_close_and_matches_the_posix_clocks():
         real_time.CLOCK_MONOTONIC)) < 1.0
 
 
-def test_clock_slew_does_not_create_a_false_suspend():
-    """A slewed monotonic clock must not be read as a suspend.
+def test_a_drift_between_the_two_readings_is_not_a_suspend():
+    """A slow drift of the difference between the readings is not a sleep.
 
-    The monotonic clock is corrected by the timekeeping layer and the boot
-    clock is not, so the two drift apart at up to a few hundred parts per
-    million. Over a whole window that drift reaches seconds, but the
-    collector compares two readings that are one poll interval apart, so
-    the drift it has to reject is the drift of a single interval: 2.5 ms
-    at the extreme rate over a 5 s poll. A detector that compares two
-    readings is immune; one that trusts an absolute difference is not.
+    Both clocks derive from adjusted monotonic time, so the difference
+    between them can wander slowly. Over a whole window that wander
+    reaches seconds, but the collector compares two readings that are one
+    poll interval apart, so the drift it has to reject is the drift of a
+    single interval. A detector that compares two readings is immune; one
+    that trusts an absolute difference is not.
     """
     window = collector.Window()
     poll = 5.0
-    slew = 500e-6
+    drift = 500e-6
     for step in range(720):
         elapsed = poll * step
-        window.observe(make_sample(elapsed, elapsed * (1.0 - slew)))
+        window.observe(make_sample(elapsed, elapsed * (1.0 - drift)))
     assert window.suspend_events() == [], window.events[:3]
     assert window.suspended_seconds() == 0.0
 
@@ -189,7 +259,7 @@ def test_awake_passage_is_not_a_suspend():
     assert collector.suspend_gap(first, second, 1.0) == 0.0
     window = collector.Window()
     window.observe(first)
-    assert window.observe(second) is None
+    assert window.observe(second) == []
     assert window.suspend_events() == []
     assert window.suspended_seconds() == 0.0
 
@@ -259,6 +329,7 @@ def test_event_sequence_is_bounded():
         window.observe(make_sample(1605.0 + 605 * index, 905.0 + index))
     assert window.events_truncated is True
     assert len(window.events) <= 3, window.events
+    assert window.events_total == 10, window.events_total
 
 
 def test_deadline_uses_the_wall_clock():
@@ -300,24 +371,6 @@ def test_collector_refuses_to_run_without_the_clocks():
     assert code == 2, code
 
 
-def test_counter_jump_across_the_unplug_is_preserved():
-    """The discontinuity at the unplug must be reported, not smoothed."""
-    window = collector.Window()
-    started = make_sample(1000.0, 900.0, counter="2676998", usb=True)
-    window.observe(started)
-    window.observe(make_sample(1005.0, 905.0, counter="2508679", usb=False))
-    window.observe(make_sample(1010.0, 910.0, counter="2508600", usb=False))
-    window.observe(make_sample(1015.0, 915.0, counter="2508500", usb=True))
-    result = collector.build_result(
-        window, started, started, 2000.0,
-        type("Args", (), {"poll": 5.0, "threshold": 1.0})())
-    jump = result["counter"]["jump_across_unplug_uah"]
-    assert jump is not None, result["counter"]
-    assert jump == 2508679 - 2676998, jump
-    assert result["counter"]["read_before_unplug"] == "2676998"
-    assert result["counter"]["read_after_unplug"] == "2508679"
-
-
 def test_result_reports_the_suspended_fraction():
     """The window must state how much of it was actually suspended."""
     window = collector.Window()
@@ -326,8 +379,7 @@ def test_result_reports_the_suspended_fraction():
     window.observe(make_sample(1600.0, 900.0))
     window.observe(make_sample(1700.0, 1000.0))
     result = collector.build_result(
-        window, started, started, 3000.0,
-        type("Args", (), {"poll": 5.0, "threshold": 1.0})())
+        window, started, started, deadline_for(), args_stub())
     assert result["suspend_event_count"] == 1, result["suspend_event_count"]
     assert abs(result["suspended_seconds_total"] - 600.0) < 1e-6
     assert result["suspended_fraction_of_window"] is not None
@@ -341,18 +393,310 @@ def test_result_never_claims_a_calibrated_current():
     window.observe(started)
     window.observe(make_sample(1600.0, 900.0))
     result = collector.build_result(
-        window, started, started, 3000.0,
-        type("Args", (), {"poll": 5.0, "threshold": 1.0})())
+        window, started, started, deadline_for(), args_stub())
     text = result["estimators"]["sleep_window_net"].lower()
     assert "not a calibrated" in text or "not" in text
     assert "calibrated sleep current" in text
 
 
+# ---------------------------------------------------------------- revision 3
+
+
+def test_one_sample_pair_can_carry_both_a_suspend_gap_and_a_usb_transition():
+    """A detach that happens inside a suspend interval must not be lost.
+
+    Revision 2 let the suspend take the interval and skipped the
+    transition, so the unplug disappeared together with the counter
+    readings on both sides of it, and the collector could not stop on the
+    replug either.
+    """
+    window = collector.Window()
+    window.observe(make_sample(1000.0, 900.0, counter="2676998", usb=True))
+    window.observe(make_sample(1605.0, 905.0, counter="2676900", usb=False))
+    kinds = sorted(event["type"] for event in window.events)
+    assert kinds == ["suspend_gap", "usb_transition"], window.events
+    unplug = [e for e in window.events if e["type"] == "usb_transition"][0]
+    assert unplug["counter_before"] == "2676998", unplug
+    assert unplug["counter_after"] == "2676900", unplug
+
+
+def test_a_saturated_event_log_does_not_hide_the_replug():
+    """A long window must keep its terminal transition.
+
+    Revision 2 dropped events once the log was full, so the replug could
+    be dropped, and the collector would then never stop and never write
+    the terminal result.
+    """
+    window = collector.Window(max_events=3)
+    window.observe(make_sample(1000.0, 900.0, usb=True))
+    for index in range(10):
+        window.observe(make_sample(1605.0 + 605 * index, 905.0 + index,
+                                   usb=True))
+    window.observe(make_sample(3000.0, 1500.0, usb=False))
+    window.observe(make_sample(3005.0, 1505.0, counter="2676900", usb=True))
+    replug = window.replug_event()
+    assert replug is not None, window.events
+    assert replug["counter_after"] == "2676900", replug
+    assert window.events_truncated is True
+
+
+def test_the_suspended_total_is_not_limited_by_the_log_capacity():
+    """A full log must not shorten the measured suspended time.
+
+    Revision 2 summed the events that survived in the log, so a saturated
+    log silently under-reported the sleep.
+    """
+    window = collector.Window(max_events=3)
+    window.observe(make_sample(1000.0, 900.0))
+    for index in range(10):
+        # Each step advances the boot clock by 605 s and the monotonic clock
+        # by 5 s, so every gap is exactly 600 s of suspended time.
+        window.observe(make_sample(1000.0 + 605 * (index + 1),
+                                   900.0 + 5 * (index + 1)))
+    assert window.suspend_event_count == 10, window.suspend_event_count
+    assert abs(window.suspended_seconds() - 6000.0) < 1e-6, \
+        window.suspended_seconds()
+
+
+def test_the_readings_on_both_sides_of_the_unplug_are_preserved():
+    """The counter readings around the unplug must survive the fix.
+
+    The name of the field changed on purpose: revision 2 called it a
+    jump, which presented a difference as a pure discontinuity.
+    """
+    window = collector.Window()
+    started = make_sample(1000.0, 900.0, counter="2676998", usb=True)
+    window.observe(started)
+    window.observe(make_sample(1005.0, 905.0, counter="2508679", usb=False))
+    window.observe(make_sample(1010.0, 910.0, counter="2508600", usb=False))
+    window.observe(make_sample(1015.0, 915.0, counter="2508500", usb=True))
+    result = collector.build_result(
+        window, started, started, deadline_for(), args_stub())
+    counter = result["counter"]
+    assert counter["read_before_unplug"] == "2676998", counter
+    assert counter["read_after_unplug"] == "2508679", counter
+    assert "jump_across_unplug_uah" not in counter, counter
+    assert counter["difference_across_unplug_uah"] == 2508679 - 2676998, counter
+    note = counter["note"].lower()
+    assert "not a pure discontinuity" in note, counter["note"]
+    assert "not a consumption figure" in note, counter["note"]
+
+
+def test_a_reading_taken_while_charging_is_not_a_discharge_endpoint():
+    """The replug-side reading cannot end a discharge interval.
+
+    On this platform the counter moves back up towards charge_full while
+    charging, so a reading taken after the reconnection is a
+    charging-side reading and must be labelled as such.
+    """
+    window = collector.Window()
+    started = make_sample(1000.0, 900.0, counter="2676998", usb=True)
+    window.observe(started)
+    window.observe(make_sample(1005.0, 905.0, counter="2676900", usb=False))
+    window.observe(make_sample(1010.0, 910.0, counter="2676800", usb=False))
+    window.observe(make_sample(1015.0, 915.0, counter="2676990", usb=True))
+    result = collector.build_result(
+        window, started, started, deadline_for(), args_stub())
+    counter = result["counter"]
+    assert counter["read_at_replug"] == "2676990", counter
+    assert counter["replug_reading_is_valid_as_discharge_endpoint"] is False, \
+        counter
+    endpoints = counter["discharge_endpoints"]
+    assert endpoints, counter
+    assert all(point["detached"] for point in endpoints), endpoints
+    assert not any(point["charge_counter"] == "2676990"
+                   for point in endpoints), endpoints
+
+
+def test_the_deadline_is_labelled_with_a_valid_wall_clock_and_the_boot_clock():
+    """The deadline must not be a boot-clock value printed as a date.
+
+    Revision 2 called gmtime() on a boot-clock value, which produced a
+    date in 1970.
+    """
+    deadline = collector.make_deadline(1000.0, 1792688000.0, 600.0)
+    window = collector.Window()
+    started = make_sample(1000.0, 900.0)
+    window.observe(started)
+    result = collector.build_result(
+        window, started, started, deadline, args_stub())
+    label = result["deadline_wall_utc"]
+    assert label.startswith("2026-"), label
+    assert "1970" not in label, label
+    assert abs(result["deadline_boottime_s"] - 1600.0) < 1e-6, result
+    assert "deadline_utc" not in result, sorted(result)
+
+
+def test_the_result_is_persisted_before_the_first_event():
+    """An interrupted run must leave a complete file behind.
+
+    Revision 2 wrote the result only when an event happened, so a run
+    that was stopped before the first event left nothing at all.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out = os.path.join(tmpdir, "window.json")
+        proc = subprocess.Popen(
+            [sys.executable, str(COLLECTOR), "--execute", "--out", out,
+             "--poll", "0.2", "--max-seconds", "60"],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        try:
+            limit = time.time() + 20.0
+            appeared = None
+            while time.time() < limit:
+                if os.path.exists(out):
+                    appeared = time.time()
+                    break
+                time.sleep(0.2)
+            assert appeared is not None, "no result file before the first event"
+            with open(out) as fh:
+                first = json.load(fh)
+            assert first.get("version") == 3, first.get("version")
+            assert first.get("before"), first
+        finally:
+            proc.terminate()
+            try:
+                proc.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=15)
+        with open(out) as fh:
+            final = json.load(fh)
+        assert final.get("version") == 3, final.get("version")
+
+
+def test_a_write_interrupted_by_an_error_leaves_the_previous_file_intact():
+    """The result file is replaced atomically, never truncated in place.
+
+    Revision 2 opened the target and wrote into it, so a process killed
+    during the write left a partial file.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out = os.path.join(tmpdir, "window.json")
+        collector.write_result(out, {"version": 3, "marker": "first"})
+        with open(out) as fh:
+            good = fh.read()
+        real_dump = json.dump
+
+        def broken(*args, **kwargs):
+            raise RuntimeError("simulated failure during the write")
+
+        json.dump = broken
+        try:
+            collector.write_result(out, {"version": 3, "marker": "second"})
+        except RuntimeError:
+            pass
+        finally:
+            json.dump = real_dump
+        with open(out) as fh:
+            assert fh.read() == good, "the previous result was damaged"
+        assert json.loads(good)["marker"] == "first"
+
+
+def test_the_periodic_sample_does_not_query_the_ufs_hardware_attributes():
+    """Reading current_power_mode or psa_state is a hardware query.
+
+    In drivers/scsi/ufs/ufs-sysfs.c the UFS_ATTRIBUTE macro calls
+    pm_runtime_get_sync(), ufshcd_query_attr() and pm_runtime_put_sync(),
+    and current_power_mode and psa_state instantiate that macro. Each
+    read therefore runtime-resumes the UFS device and sends a query, so
+    it is not a passive observation of a sleeping device and it must not
+    happen on every poll of a standby window.
+    """
+    paths = []
+    real_read = collector.read
+
+    def recording_read(path):
+        paths.append(path)
+        return real_read(path)
+
+    collector.read = recording_read
+    try:
+        sample = collector.sample("poll")
+    finally:
+        collector.read = real_read
+    for path in paths:
+        assert "/attributes/" not in path, path
+        assert "current_power_mode" not in path, path
+        assert "psa_state" not in path, path
+    for attr in collector.UFS_HARDWARE_ATTRS:
+        assert ("ufs_" + attr) not in sample, sorted(sample)
+    snapshot = collector.ufs_hardware_snapshot()
+    assert "hardware query" in snapshot["note"], snapshot
+
+
+def test_transport_power_and_charge_are_reported_separately():
+    """The USB boolean is a proxy, not proof of attachment or charging.
+
+    A data link can be up while no power source is attached, and a power
+    source can be attached while the data link is down. The three states
+    are reported apart, and only a sample taken with no power source
+    attached may serve as a discharge endpoint.
+    """
+    real_usb_state = collector.usb_state
+    try:
+        collector.usb_state = lambda: {
+            "usb_power_supply": ["usb=1"], "usb_online": "1",
+            "usb_links_up": []}
+        sample = collector.sample("poll")
+        assert sample["usb_power_attached"] is True, sample
+        assert sample["usb_transport_attached"] is False, sample
+        assert sample["usb_attached"] is True, sample
+        assert sample["detached"] is False, sample
+
+        collector.usb_state = lambda: {
+            "usb_power_supply": ["usb=0"], "usb_online": "0",
+            "usb_links_up": ["usb0"]}
+        sample = collector.sample("poll")
+        assert sample["usb_power_attached"] is False, sample
+        assert sample["usb_transport_attached"] is True, sample
+        assert sample["usb_attached"] is True, sample
+        assert sample["detached"] is True, sample
+    finally:
+        collector.usb_state = real_usb_state
+
+
+def test_the_output_does_not_repeat_the_rejected_claims():
+    """The result must not state what the review rejected.
+
+    The review rejected three claims of the previous revision: that the
+    collector records every sample, that a poll wakes the processor, and
+    that one of the two clocks is slewed while the other is not.
+    """
+    window = collector.Window()
+    started = make_sample(1000.0, 900.0)
+    window.observe(started)
+    window.observe(make_sample(1605.0, 905.0, usb=False))
+    result = collector.build_result(
+        window, started, started, deadline_for(), args_stub())
+    text = json.dumps(result).lower()
+    forbidden = [
+        "records every sample",
+        "wakes the processor every",
+        "the monotonic clock is slewed by the timekeeping layer and the "
+        "boot clock is not",
+    ]
+    for phrase in forbidden:
+        assert phrase not in text, phrase
+    source = COLLECTOR.read_text(encoding="utf-8").lower()
+    for phrase in forbidden:
+        assert phrase not in source, phrase
+
+
 def main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
+    failures = []
     for t in tests:
-        t()
-        print("PASS %s" % t.__name__)
+        try:
+            t()
+        except Exception as exc:  # noqa: BLE001 - the runner reports them
+            failures.append((t.__name__, exc))
+            print("FAIL %s: %s: %s" % (t.__name__, type(exc).__name__, exc))
+        else:
+            print("PASS %s" % t.__name__)
+    print("%d tests, %d failures" % (len(tests), len(failures)))
+    if failures:
+        print("failing: %s" % ", ".join(name for name, _ in failures))
+        return 1
     print("%d tests passed" % len(tests))
     return 0
 
