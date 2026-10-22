@@ -1,3 +1,19 @@
+## 2026-10-22: 32-MiB external Mobian ramdisk candidate prepared, not built
+
+The historical resetguard1 menu has all four operator outcomes confirmed, but
+Mobian still restarts the installed boot. Permanent installation is not ready.
+A new isolated recipe in `build/boot-menu/external-mobian/` retains the historical
+32-MiB Android firmware and uses the outer boot ramdisk for pinned Mobian assets.
+It adds early memory reservation, bounded endian-correct input parsing, runtime
+reservation/CRC checks, direct Mobian loading and a command-line provenance marker.
+
+Actual C host replays, exact overlay restoration/tamper refusal, container tests
+and five actual ARM64 unit syntax checks pass. A real-input container test fits
+within the boot-partition limit. No new firmware build or handset trial has been
+performed. ABL placement and direct OS handoff remain unvalidated. The current
+active menu recipe and installed phone are unchanged. See the candidate README
+for the manual menu-only build command and required temporary validation.
+
 ## 2026-10-22: resetguard1 Fastboot and Recovery handset validation
 
 The operator reports Fastboot works from the temporary menu, then Recovery
