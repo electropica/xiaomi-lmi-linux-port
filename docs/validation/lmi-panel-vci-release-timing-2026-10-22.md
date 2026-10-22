@@ -51,16 +51,25 @@ absence.
 
 ## 2. Reading
 
-* On the LineageOS reference the display panel VCI and `pm8150_l14` are
-  released **at screen-off**, 255 s to 1796 s before the machine suspend.
-* On Mobian they are released **inside the suspend path**, 0.301 s before the
-  machine suspend, and are not re-enabled in the observed post-resume window
-  (the LineageOS reference re-enables both 43 s to 1584 s after the resume).
+* On the LineageOS reference the regulator framework is asked to release
+  `display_panel_vci` and `pm8150_l14` at screen-off, 255 s to 1796 s before
+  the machine suspend.
+* On Mobian the same release is requested **inside the suspend path**, 0.301 s
+  before the machine suspend, and no re-enable appears in the observed
+  post-resume window (the LineageOS reference re-enables both 43 s to 1584 s
+  after the resume).
 
-During the powered-down interval both rails are off on both platforms, so this
-is **not** a difference in the deep-suspend state. It is a difference in the
-**screen-off to suspend idle gap**: on Mobian the panel rails stay requested
-for the whole idle gap, on LineageOS they do not.
+**A regulator disable event is a software request by the regulator core.** It
+does not prove that the rail was electrically cut, that the consumer released
+it, or that the rail was powered before the request. What is established here
+is *when the framework was asked to release the rail*, not the electrical state
+of the panel during the sleep.
+
+During the powered-down interval both rails are released on both platforms, so
+this is **not** a difference in the deep-suspend state. It is a difference in
+the **screen-off to suspend idle gap**: on Mobian the panel rails stay
+*requested by the regulator framework* for the whole idle gap, on LineageOS
+they do not.
 
 That gap is governed by the inactivity delay. The shipped Mobian profile sets
 `sleep-inactive-battery-timeout=900`
@@ -89,6 +98,10 @@ current figure.
   power-down sequence is not observed; only the regulator requests are.
 * The mechanism (who keeps the rail requested on Mobian: the panel driver not
   releasing at blank, or another consumer) is **not established**.
+* An awake read of the rail state would settle **one** precise question:
+  whether the regulator framework still holds the rail during the idle gap. It
+  would not measure the current, would not identify the consumer that holds
+  it, and would not establish the electrical state during the sleep.
 
 ## 4. Cheapest discriminator
 

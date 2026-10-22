@@ -205,3 +205,23 @@ is not measured, the Mobian observation comes from an uncertified older build,
 and the length of the Mobian idle gap is not measured. The cheapest
 discriminator is one awake, read-only observation of the panel rail state
 during the idle gap on both platforms.
+
+
+## 2026-10-22 addendum — UFS row narrow result
+
+A privileged, read-only LineageOS read (operator-authorised `adb root`,
+reversed with `adb unroot` in the same script) and the retained Mobian
+snapshot give **the same value for every UFS policy attribute that exists on
+both sides**: `clkgate_enable=1`, `clkgate_delay_ms=50`, `rpm_lvl=3`,
+`spm_lvl=3`, `auto_hibern8=1000`. Neither clock-scaling spelling is
+enumerated on the reference. The line "Actual selected low-power link/clock
+state is not proven by source alone" is narrowed to: the **policy values**
+now agree for the five shared attributes, on the reference kernel, at one
+plugged awake moment.
+
+The row stays **Open**: a plugged awake read is not a sleep observation, the
+Mobian side of the newer attributes (`rpm/spm_target_link_state`,
+`rpm/spm_target_dev_state`, `psa_state`, `current_power_mode`,
+`qcom/power_mode`, `max_bus_bw`) is still missing, the `ufs_core.c` show/store
+implementations were not compared, and the actual link and PHY state during a
+qualified sleep interval is still unproven.

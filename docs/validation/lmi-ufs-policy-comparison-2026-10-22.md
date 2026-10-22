@@ -49,14 +49,20 @@ fails closed.
 Mobian base `a5b3099017ae581aae8bf597b2f9c8c765026af1`, Android reference
 `71b13e62f057a649b77fe4062feb73ee72ad609c`.
 
-**S — the UFS platform driver is byte-identical:**
+**S — one UFS driver file is byte-identical:**
 
 ```
 5914361ac55598d1e2ffb6105bbe161d93536aba7144310cc67cb94d400ac739  drivers/sci/ufs/ufs-qcom.c  @ a5b3099017ae
 5914361ac55598d1e2ffb6105bbe161d93536aba7144310cc67cb94d400ac739  drivers/sci/ufs/ufs-qcom.c  @ 71b13e62f057
 ```
 
-Any UFS difference must therefore come from **values**, not from code.
+Any UFS difference *inside this file* must therefore come from **values**,
+not from code. **This is one file, not the driver.** The sysfs show/store
+implementations of these attributes live in the Qualcomm-patched `ufs_core.c`,
+which was **not** compared and was not reachable (see the limit below); the
+device tree overlays were not compared either; and the consumers of the same
+rails outside this file are not covered by it. An identical file here does not
+exclude a difference elsewhere in the UFS stack.
 
 **S — where the suspend-relevant decision is taken**, in
 `drivers/scsi/ufs/ufs-qcom.c` (identical on both sides), `ufs_qcom_suspend()`
@@ -115,7 +121,7 @@ CPU-idle result.
    the kernel.
 2. The UFS platform driver is identical on both platforms, so the remaining
    candidate is a **value** difference, not a code difference.
-3. The only OS-level UFS policy difference identified is that **Android
+3. The only OS-level UFS policy difference identified so far is that **Android
    explicitly writes `clkgate_enable`** (1 at `sys.boot_completed` and on
    charger, 0 during `on init`) while **Mobian never writes it** and keeps the
    driver default. The retained 2026-10-12 Mobian snapshot (plugged, root,
@@ -159,3 +165,66 @@ timestamped raw captures outside Git.
 
 If the privileged access is not granted, the comparison stays **UNKNOWN** — not
 a match and not a difference — and no further test is proposed.
+
+
+## 6. Privileged LineageOS read, 2026-10-22 (root, USB connected, awake)
+
+The operator authorised `adb root` for one diagnostic read and its reversal.
+Sequence, performed in one script: `adb devices` -> `adb root` -> wait ->
+one read -> `adb unroot` -> verify. At the moment of the read the shell was
+`uid=0(root)`, SELinux context `u:r:su:s0`; after `adb unroot` the shell was
+back to `uid=2000(shell)`, context `u:r:shell:s0`. The device was plugged
+(`usb_online=1`), awake, and the kernel was
+`4.19.325-cip131-st15-perf-g71b13e62f057`.
+
+Every directory listing succeeded (`failed_listings: none`), so the verdicts
+below rest on successful enumerations.
+
+| Attribute | LineageOS 23.2 (privileged read) | Mobian 2026-10-12 retained snapshot |
+|---|---|---|
+| `clkgate_enable` | **1** | **1** |
+| `clkgate_delay_ms` | **50** | **50** |
+| `rpm_lvl` | **3** | **3** |
+| `spm_lvl` | **3** | **3** |
+| `auto_hibern8` | **1000** | **1000** |
+| `clkscale_enable` | not enumerated (listing succeeded) | not observed |
+| `clk_scaling_enable` | not enumerated (listing succeeded) | not observed |
+| `rpm_target_link_state` | `HIBERN8` | not observed |
+| `rpm_target_dev_state` | `SLEEP` | not observed |
+| `spm_target_link_state` | `HIBERN8` | not observed |
+| `spm_target_dev_state` | `SLEEP` | not observed |
+| `attributes/psa_state` | `0x00000000` | not observed |
+| `attributes/current_power_mode` | `0x00000011` | not observed |
+| `attributes/bkops_status` | `0x00000000` | not observed |
+| `attributes/active_icc_level` | `0x0000000F` | not observed |
+| `qcom/power_mode` | `[Rx,Tx]: Gear[4,4], Lane[2,2], PWR[FAST MODE,FAST MODE], Rate-A` | not observed |
+| `qcom/clk_status` | `0` | not observed |
+| `qcom/bus_speed_mode` | `0` | not observed |
+| `qcom/err_count` | all counters 0 | not observed |
+| `qcom/err_state` | `0` | not observed |
+| `max_bus_bw` | `0` | not observed |
+| `power/control` | `auto` | not observed |
+| `power/runtime_status` | `suspended` (platform) / `active` (host0) | not observed |
+
+**Narrow result.** The five UFS policy attributes that exist on both sides are
+**identical**: `clkgate_enable=1`, `clkgate_delay_ms=50`, `rpm_lvl=3`,
+`spm_lvl=3`, `auto_hibern8=1000`. Neither clock-scaling spelling exists on
+LineageOS. The Android init writes `clkgate_enable=1` explicitly, and Mobian
+reaches the same value through the driver default, so the two platforms
+converge on the value that the suspend path consumes.
+
+**What this settles, and what it does not.** It settles the UFS *policy
+value* question for the five shared attributes, on the reference kernel, at one
+plugged awake moment. It does **not** establish the UFS state during a suspend
+(a plugged awake read is not a sleep observation), it does not identify who
+holds the rails, it does not cover the attributes the older Mobian snapshot
+never captured, and it does not exclude a difference in the parts of the UFS
+stack that were not compared (`ufs_core.c`, the device tree overlays, the
+other consumers of the same rails).
+
+**Remaining Mobian datum.** The same reader over the same extended paths, on
+Mobian, with USB connected, so that `rpm/spm_target_link_state`,
+`rpm/spm_target_dev_state`, `psa_state`, `current_power_mode`,
+`qcom/power_mode`, `max_bus_bw` and the runtime bookkeeping can be compared.
+The Mobian side of that comparison is still missing, and the reader now
+carries the enumerated names so the result is auditable from one capture.

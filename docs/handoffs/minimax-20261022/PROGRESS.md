@@ -212,3 +212,55 @@ it. The Mobian route needs the cable connected and the phone awake.
 read-only snapshot on the LineageOS reference, and (b) make Mobian available
 with USB connected for one read-only snapshot over the same fixed paths, with
 an awake read of the display panel rail during the idle gap.
+
+
+## Entry 4 — 2026-10-22 — privileged LineageOS read and the UFS narrow result
+
+**Hypothesis.** The UFS suspend policy differs between the two platforms in a
+way that could keep a rail powered across a suspend window. The privileged
+read should either expose a value difference or close the value question for
+the attributes that exist on both sides.
+
+**Artifact identity.** One privileged LineageOS read, 2026-10-22 16:44 local,
+kernel `4.19.325-cip131-st15-perf-g71b13e62f057`, ROM family
+`Redmi/lmipro/lmipro:12/...`, USB connected, device awake, shell `uid=0(root)`
+in SELinux context `u:r:su:s0`. The Mobian side is the retained 2026-10-12
+root snapshot. The raw capture stays in the private workspace, outside Git,
+with its SHA256 recorded in the private evidence manifest.
+
+**Evidence.** At the moment of the read `usb_online=1` and every directory
+listing succeeded (`failed_listings: none`). The five UFS policy attributes
+that exist on both sides read **identically** on the two platforms:
+`clkgate_enable=1`, `clkgate_delay_ms=50`, `rpm_lvl=3`, `spm_lvl=3`,
+`auto_hibern8=1000`. Neither clock-scaling spelling is enumerated on the
+reference. The reference additionally reports
+`rpm/spm_target_link_state=HIBERN8`, `rpm/spm_target_dev_state=SLEEP`,
+`attributes/psa_state=0x00000000`, `attributes/current_power_mode=0x00000011`,
+`qcom/power_mode=[Rx,Tx]: Gear[4,4], Lane[2,2], PWR[FAST MODE,FAST MODE],
+Rate-A`, `max_bus_bw=0`, `qcom/clk_status=0`, `qcom/bus_speed_mode=0`.
+
+**Changes.** The reader now carries the enumerated listing names in its
+summary, so an absence claim is auditable from one capture, with a test for
+it. The UFS comparison note, the panel note, the peripheral checklist and this
+ledger are updated. The privilege was restored in the same script: after
+`adb unroot` the shell was back to `uid=2000(shell)`, context `u:r:shell:s0`.
+
+**Validation.** Reader self-test and the repository test file pass. The
+privileged read is reproducible with the committed reader; the restoration of
+the unprivileged state is recorded in the capture.
+
+**Limitations.**
+* The read is plugged and awake. It is **not** a sleep observation, it does
+  not identify which consumer holds a rail, and it does not measure a current.
+* An identical `ufs-qcom.c` excludes nothing elsewhere in the UFS stack: the
+  show/store implementations live in `ufs_core.c`, which was not compared and
+  was not reachable; the device tree overlays were not compared; other
+  consumers of the same rails are outside that file.
+* A regulator disable event is a request, not proof of an electrical cut.
+* The Mobian side of the newer attributes is still missing.
+
+**Next decision.** The remaining Mobian datum is one reader run over the same
+extended paths with USB connected, so the target, PSA and power-mode attributes
+can be compared. Until then the UFS value comparison stays open for the newer
+attributes and closed for the five shared ones. R1 (display panel rail
+timing) is unaffected by this read and still needs its own awake observation.

@@ -114,6 +114,20 @@ def test_identity_guard_fails_closed_on_other_builds():
     assert reader.check_identity(props)["verdict"] == "REJECTED"
 
 
+def test_summary_carries_the_listing_names():
+    """An absence claim must be auditable from the capture alone."""
+    parsed = reader.parse("\n".join([
+        "LIST /r OK clkgate_enable",
+        "ATTR /r/clkscale_enable UNKNOWN 1 cat: /r/clkscale_enable: No such file",
+    ]))
+    summary = reader.summarise(parsed)
+    assert summary["listing_names"]["/r"] == ["clkgate_enable"], summary
+    assert summary["listing_status"]["/r"] == "OK", summary
+    absent = [a for a in summary["attributes"]
+              if a["attribute"] == "clkscale_enable"]
+    assert absent and absent[0]["state"] == "ABSENT", absent
+
+
 def main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

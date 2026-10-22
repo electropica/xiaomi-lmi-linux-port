@@ -203,11 +203,15 @@ def summarise(parsed):
     for v in verdicts:
         seen.setdefault(v["attribute"], v)
     listing_status = {k: v["status"] for k, v in parsed["listings"].items()}
+    # the enumerated names are carried so that an absence claim is auditable
+    # from the capture alone
+    listing_names = {k: v.get("names", []) for k, v in parsed["listings"].items()}
     failed_listings = [k for k, v in listing_status.items() if v != "OK"]
     return {
         "info": parsed["info"],
         "roots": parsed["roots"],
         "listing_status": listing_status,
+        "listing_names": listing_names,
         "failed_listings": failed_listings,
         "attributes": list(seen.values()),
         "all_attribute_verdicts": verdicts,
