@@ -1,4 +1,39 @@
 
+## 2026-10-22: Mobian returns; screen-fitting text and provenance marker prepared
+
+The operator reports Mobian started after choosing it in dual candidate
+35a8bf8d508d1b7b98f435d871ee50665a6321eaef496feea132bf0815f129c8.
+SSH confirms kernel 4.19.325-cip128-st12, Phosh running and /dev/loop0p2 backed
+by dedicated /dev/sda35. No pstore file is present. However, the chosen node has
+no simpleinit metadata and the command line lacks the compatibility video flag.
+The correct userspace return is confirmed; direct handoff versus a reboot fallback
+is not conclusively established. Do not promote this to persistent-menu approval.
+The new dual image's Android entry also remains untested.
+
+At the operator's request, the next recipe formats screen console logs to the
+largest supported text mode with side margins and bounded wrapping. It preserves
+the original serial/file log text and does not implement font scaling. Actual
+formatter C tests cover a 16000-character line, embedded line breaks/tabs, screen
+width and margins; the ARM64 logger unit passes syntax with generated flags.
+
+The same next candidate adds lmi_menu=direct-v2 to the kernel command line and
+/chosen/lmi,menu-os to the RAM DT. A later runtime check must find these before
+claiming direct handoff. No current phone settings or boot partition were changed.
+Nineteen source changes apply/restore exactly and reject tampering; four boot
+units and the logger pass ARM64 syntax. No new firmware was built by the agent.
+
+Operator command (same isolated cache, no kernel/rootfs rebuild):
+
+```bash
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/build.sh --build --with-dual
+```
+
+Expected marker remains DUAL_DIRECT_RAM_HANDOFF_BUILD_COMPLETE_NOT_FOR_FLASHING.
+Variant suffix: consolefit1-marker2. After build, qualify the new actual hash
+and prepare a new Windows RAM launcher. The existing launcher pins the older
+35a8bf image and must not be changed to accept an unverified file. Do not flash.
+
+
 ## 2026-10-21: Android boots from the temporary menu
 
 The operator confirmed a successful LineageOS start after selecting it in the

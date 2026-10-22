@@ -7,6 +7,7 @@ int linux_boot_lmi_variant(linux_boot *lb){
     if(!lb||!lb->config||!lb->dtb.address)return -1;
     if(strcmp(lb->config->tag,"android")&&strcmp(lb->config->tag,"mobian"))return -1;
     chosen=fdt_path_offset(lb->dtb.address,"/chosen");if(chosen<0)return -1;
+    if(fdt_setprop_string(lb->dtb.address,chosen,"lmi,menu-os",lb->config->tag))return -1;
     original=fdt_getprop(lb->dtb.address,chosen,"bootargs",&len);
     if(!original||len<=0||(size_t)len>sizeof(args)||original[len-1]!=0)return -1;
     memcpy(args,original,(size_t)len);

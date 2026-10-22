@@ -65,9 +65,16 @@ def main():
  assert (base/path).read_bytes()==original
  raw=dtbopatch.patch(original.decode().replace('\r\n','\n')).encode()
  edits[path]=(raw,{'after':sha(raw),'upstream':sha(original),'new_file':False})
- for name in ['bundle-format.h','lmi-bundle-loader.h','lmi-boot-diagnostic.h','lmi-android-fstab.h','variant-args.h']:
+ for name in ['bundle-format.h','lmi-bundle-loader.h','lmi-boot-diagnostic.h','lmi-android-fstab.h','variant-args.h','lmi-console-fit.h']:
   path='src/linux-boot/'+name;assert not (base/path).exists()
   raw=(here/name).read_bytes();edits[path]=(raw,{'after':sha(raw),'new_file':True})
+ path='src/loggerd/client.c';original=subprocess.check_output(['git','-C',str(base),'show','HEAD:'+path]);assert (base/path).read_bytes()==original
+ old=original.decode().replace('\r\n','\n')
+ assert old.count('static char print_buff[16384];')==1
+ new=old.replace('static char print_buff[16384];','#include "../linux-boot/lmi-console-fit.h"\nstatic char print_buff[16384];')
+ needle='\t\tAsciiPrint("%a",print_buff);\n\t\tAsciiPrint("\\n");';assert new.count(needle)==1
+ new=new.replace(needle,'\t\tlmi_fit_console_line(print_buff);')
+ edits[path]=(new.encode(),{'after':sha(new.encode()),'upstream':sha(original),'new_file':False})
  path='src/linux-boot/SimpleInitBootLinux.inf'
  f=base/path;old=f.read_text();original=subprocess.check_output(['git','-C',str(base),'show','HEAD:'+path]);assert old==original.decode().replace('\r\n','\n')
  assert old.count('[LibraryClasses]\n')==1

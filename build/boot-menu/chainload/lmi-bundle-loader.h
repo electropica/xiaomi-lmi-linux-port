@@ -58,6 +58,8 @@ int linux_boot_lmi_bundle(linux_boot*lb,const char*ident){
     if(android){CopyMem(dtbo_owned,&dtbo,sizeof(dtbo));list_obj_add_new(&cfg->dtbo,dtbo_owned);}
     if(!cfg->initrd||(android&&!cfg->dtbo))return -1;
     CopyMem(cfg->cmdline,cmd.pointer,cmd.size);
+    if(strlen(cfg->cmdline)+sizeof(" lmi_menu=direct-v2")>sizeof(cfg->cmdline))return -1;
+    strcat(cfg->cmdline," lmi_menu=direct-v2");
     cfg->use_uefi=false;cfg->arch=ARCH_ARM64;cfg->skip_dtb_after_kernel=true;
     cfg->use_kfdt_ramdisk_abootimg=false;cfg->use_kfdt_ramdisk_kernel=false;
     cfg->screen.update_splash=false;cfg->ignore_dtbo_error=false;
