@@ -107,9 +107,18 @@ def main():
 
     deadline = time.monotonic() + args.max_seconds
     seen_suspend = False
+    at_unplug = None
+    previous = started
     while time.monotonic() < deadline:
         time.sleep(args.poll)
         now = sample("poll")
+        # the counter jumps exactly at the unplug; keep that sample so the
+        # Android reference method can exclude the discontinuity
+        if (at_unplug is None
+                and previous.get("usb_online") == "1"
+                and now.get("usb_online") == "0"):
+            at_unplug = now
+            print("unplug observed", flush=True)
         delta = now["suspended_accumulated"] - started["suspended_accumulated"]
         if delta >= max(args.poll, 1.0):
             # the monotonic clock lost time: a suspend happened
@@ -117,6 +126,7 @@ def main():
             started = now
             print("suspend detected, delta=%.3f" % delta, flush=True)
             break
+        previous = now
     after = sample("after")
 
     result = {
@@ -125,10 +135,18 @@ def main():
         "started_utc": started["wall_utc"],
         "ended_utc": after["wall_utc"],
         "suspend_detected": seen_suspend,
+        "at_unplug": at_unplug,
         "suspended_seconds_estimate": round(
             after["suspended_accumulated"] - started["suspended_accumulated"], 3),
         "before": started,
         "after": after,
+        "method": "The Android reference needs three points: the counter at "
+                  "the unplug, the counter after the sleep and the suspended "
+                  "interval, so that the counter discontinuity at the unplug "
+                  "can be excluded exactly as the reference does. The "
+                  "'at_unplug' sample is the one observed by the poll that "
+                  "sees usb_online fall from 1 to 0; it is null if the "
+                  "unplug was not observed.",
         "limits": "Gauge counters, not a calibrated current. The counter path, "
                   "the capacity scale and the unplug discontinuity handling "
                   "must be applied exactly as in the Android reference before "
