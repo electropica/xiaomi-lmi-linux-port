@@ -9,8 +9,8 @@ uses direct RAM loading for both operating systems and preserves platform reset.
 
 ## Pinned files in Windows Downloads
 
-- Menu `lmi-menu-outer-mobian-20261022.img`, 80654336 bytes,
-  SHA256 ece3f4c4e6e2f6ed485d159b0b2f3f682ba8f758962a395490937120d44f423e.
+- Menu `lmi-menu-outer-dual-extent-20261023.img`, 81051648 bytes,
+  SHA256 be9841c76cbe34d0c72606c47877f99582aee224144744349a9e78d15cfd0a94.
 - Dedicated-root rescue `mobian-lmi-dualboot-boot-20261021.img`, 54652928 bytes,
   SHA256 75bb65facbd4146d4a1e668039ef52433ef90c2b6bdb07f2c59980caf3191374.
 - Existing native `Downloads/platform-tools/fastboot.exe`.
@@ -22,9 +22,9 @@ Do not install it over boot: it would not provide direct Mobian startup.
 
 1. Finish MiniMax's battery observation and retrieve its files before any reboot.
 2. Operator places the phone in Fastboot, cable connected. Run the existing
-   `work/test-outer-menu-windows.py --execute`: temporary RAM boot only.
+   `work/test-dual-extent-menu-windows.py --execute`: temporary RAM boot only.
 3. Leave the15s default to Mobian. Once it starts, run this folder's
-   `verify-mobian.py --execute`. It reads the marker lmi_menu=outer-v1, root
+   `verify-mobian.py --execute`. It reads the marker lmi_menu=outer-v2, root
    block/loop backing and16GiB partition size through the existing SSH route.
    A visual return to Mobian without that marker does NOT qualify direct boot.
 4. Record the operator-confirmed GUI/default outcome using
@@ -58,4 +58,4 @@ The dualboot OS images remain on their existing partitions.
 contact. `test_manage.py` uses fake Fastboot output and simulated runtime records;
 no handset call or flash. Private launch/runtime/operator evidence stays in ignored
 private-state/. No remote publication. Do not modify MiniMax's active branch while
-it is being used for battery work; this preparation is retained on a separate local menu worktree branch.
+it is being used for battery work; this preparation is currently in Windows work/.

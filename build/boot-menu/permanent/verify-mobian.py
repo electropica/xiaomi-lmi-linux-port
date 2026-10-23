@@ -24,7 +24,7 @@ out={'kernel':os.uname().release,'cmdline':text('/proc/cmdline'),
      'mobian_partition_sectors':text('/sys/class/block/sda35/size'),
      'root_mount':[s for s in pathlib.Path('/proc/mounts').read_text().splitlines() if s.split()[1]=='/']}
 if phase=='installed':
-    left=80654336;digest=hashlib.sha256()
+    left=81051648;digest=hashlib.sha256()
     with open('/dev/disk/by-partlabel/boot','rb') as source:
         while left:
             block=source.read(min(left,1048576))
@@ -37,7 +37,7 @@ print(json.dumps(out))
 
 def validate_runtime(value, installed=False):
     cmdline = value.get('cmdline') or ''
-    if 'lmi_menu=outer-v1' not in cmdline.split():
+    if 'lmi_menu=outer-v2' not in cmdline.split():
         raise RuntimeError('Direct menu marker absent; may be an ordinary reboot fallback.')
     if not value.get('root_block', '').startswith('loop'):
         raise RuntimeError('Unexpected root block device.')
@@ -54,7 +54,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--phase', choices=['temporary', 'installed'], default='temporary')
     parser.add_argument('--launch-record', type=Path,
-                        default=Path.home() / 'Documents/ChatGPT/Mobian/work/outer-menu-launch-20261022-private.json')
+                        default=Path.home() / 'Documents/ChatGPT/Mobian/work/dual-extent-menu-launch-20261023-private.json')
     parser.add_argument('--execute', action='store_true')
     args = parser.parse_args()
     manage.host_preflight(Path.home() / 'Downloads')

@@ -42,17 +42,17 @@ class MenuTests(unittest.TestCase):
 
     def test_wrong_root_backing_refused(self):
         with self.assertRaises(RuntimeError):
-            verify.validate_runtime({'cmdline': 'lmi_menu=outer-v1',
+            verify.validate_runtime({'cmdline': 'lmi_menu=outer-v2',
                 'root_block': 'loop0p2', 'root_loop_backing': '/dev/sda34'})
 
     def test_marker_and_dedicated_root_accepted(self):
-        verify.validate_runtime({'cmdline': 'quiet lmi_menu=outer-v1',
+        verify.validate_runtime({'cmdline': 'quiet lmi_menu=outer-v2',
             'root_block': 'loop0p2', 'root_loop_backing': '/dev/sda35',
             'mobian_partition_sectors': str(17179869184 // 512)})
 
     def test_installed_readback_must_match(self):
         with self.assertRaises(RuntimeError):
-            verify.validate_runtime({'cmdline': 'lmi_menu=outer-v1',
+            verify.validate_runtime({'cmdline': 'lmi_menu=outer-v2',
                 'root_block': 'loop0p2', 'root_loop_backing': '/dev/sda35',
                 'mobian_partition_sectors': str(17179869184 // 512),
                 'installed_boot_prefix_sha256': 'wrong'}, installed=True)

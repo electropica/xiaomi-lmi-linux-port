@@ -9,13 +9,13 @@ import struct
 import subprocess
 import sys
 
-MENU_SHA = 'ece3f4c4e6e2f6ed485d159b0b2f3f682ba8f758962a395490937120d44f423e'
-MENU_BYTES = 80654336
+MENU_SHA = 'be9841c76cbe34d0c72606c47877f99582aee224144744349a9e78d15cfd0a94'
+MENU_BYTES = 81051648
 RESCUE_SHA = '75bb65facbd4146d4a1e668039ef52433ef90c2b6bdb07f2c59980caf3191374'
 RESCUE_BYTES = 54652928
 HERE = Path(__file__).resolve().parent
-RECEIPT = HERE / 'private-state' / 'validation.json'
-RECORDS = HERE / 'private-state'
+RECEIPT = HERE / 'private-state' / 'dual-extent' / 'validation.json'
+RECORDS = HERE / 'private-state' / 'dual-extent'
 ENTRIES = ('mobian-default', 'lineageos', 'fastboot', 'recovery')
 
 
@@ -33,14 +33,14 @@ def pinned(path, digest, length):
 
 
 def host_preflight(downloads):
-    menu = downloads / 'lmi-menu-outer-mobian-20261022.img'
+    menu = downloads / 'lmi-menu-outer-dual-extent-20261023.img'
     rescue = downloads / 'mobian-lmi-dualboot-boot-20261021.img'
     fastboot = downloads / 'platform-tools' / 'fastboot.exe'
     raw = pinned(menu, MENU_SHA, MENU_BYTES)
     pinned(rescue, RESCUE_SHA, RESCUE_BYTES)
     if struct.unpack_from('<II', raw, 40) != (1, 536871337):
         raise RuntimeError('Unexpected menu boot-header version/OS identity.')
-    if struct.unpack_from('<I', raw, 16)[0] != 54657037:
+    if struct.unpack_from('<I', raw, 16)[0] != 55054349:
         raise RuntimeError('Unexpected outer ramdisk size.')
     if not fastboot.is_file():
         raise RuntimeError('Native Windows fastboot.exe missing.')

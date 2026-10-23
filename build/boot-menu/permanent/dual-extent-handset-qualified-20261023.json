@@ -1,0 +1,14 @@
+{
+  "sha256": "be9841c76cbe34d0c72606c47877f99582aee224144744349a9e78d15cfd0a94",
+  "bytes": 81051648,
+  "temporary_handset_outcomes": {
+    "mobian-default": true,
+    "lineageos": true,
+    "fastboot": true,
+    "recovery": true
+  },
+  "direct_mobian_marker_verified": true,
+  "dedicated_root_verified": true,
+  "permanent_flash_completed": false,
+  "installed_readback_verified": false
+}

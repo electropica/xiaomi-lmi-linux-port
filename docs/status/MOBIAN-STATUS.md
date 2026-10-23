@@ -1,3 +1,7 @@
+## 2026-10-23: dual-extent menu passed all four temporary handset entries
+
+Candidate be9841c76cbe34d0c72606c47877f99582aee224144744349a9e78d15cfd0a94 (81,051,648 bytes) passed operator tests: Mobian default after15s, LineageOS, Fastboot, Recovery. Read-only SSH independently confirmed the direct outer-v2 Mobian marker and dedicated16GiB root. The Android full-runtime-extent candidate resolves the reported boot failure in this handset trial; an actual collision address was not captured. The pinned installation helper is ready for the operator. No permanent flash or installed readback has yet been performed. Private raw evidence remains outside Git.
+
 ## 2026-10-23: board7 Mobian PASS, Android FAIL; dual kernel extent candidate
 
 The operator temporarily booted board7 SHA256 9c7923502a7906470488c06ac5e640c0a1991bafad3a143bbe6f4eb4fcc0fd95. Mobian default boot passed; read-only SSH independently confirmed outer-v2 and the dedicated 16GiB root. Selecting LineageOS instead produced display corruption followed by a reboot to installed Mobian. No pstore record survived. This candidate is NOT qualified for permanent installation.
