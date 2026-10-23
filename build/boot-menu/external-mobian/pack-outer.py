@@ -30,13 +30,13 @@ if __name__=='__main__':
     outer=(out/'lmi-outer-mobian.bin').read_bytes()
     info=json.loads((out/'lmi-outer-mobian.json').read_text())
     assert hashlib.sha256(outer).hexdigest()==info['sha256']
-    image=pack(raw,outer);target=out/'boot-lmi-outer-mobian-board7-test.img';target.write_bytes(image)
+    image=pack(raw,outer);target=out/'boot-lmi-outer-dual-extent-test.img';target.write_bytes(image)
     record.update({'sha256':hashlib.sha256(image).hexdigest(),'bytes':len(image),
-                   'candidate_variant':'historical-32MiB-outer-mobian-board7-resetguard1',
+                   'candidate_variant':'historical-32MiB-outer-board7-dual-extent-resetguard1',
                    'outer_assets':info,'hardware_validated':False,'temporary_boot_only':True,
                    'reset_guard':json.loads((out/'reset-guard-manifest.json').read_text()),
                    'outer_source_manifest':json.loads((out/'outer-source-manifest.json').read_text())})
     assert record['reset_guard']['restored'] and record['reset_guard']['builder_exit']==0
-    (out/'outer-mobian-board7-artifact-manifest.json').write_text(json.dumps(record,indent=2)+'\n')
-    print('OUTER_MOBIAN_BOARD7_MENU_BUILD_COMPLETE_NOT_FOR_FLASHING')
+    (out/'outer-dual-extent-artifact-manifest.json').write_text(json.dumps(record,indent=2)+'\n')
+    print('OUTER_DUAL_EXTENT_MENU_BUILD_COMPLETE_NOT_FOR_FLASHING')
     print('IMAGE='+str(target));print('SHA256='+record['sha256'])

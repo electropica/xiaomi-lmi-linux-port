@@ -1,3 +1,13 @@
+## 2026-10-23: board7 Mobian PASS, Android FAIL; dual kernel extent candidate
+
+The operator temporarily booted board7 SHA256 9c7923502a7906470488c06ac5e640c0a1991bafad3a143bbe6f4eb4fcc0fd95. Mobian default boot passed; read-only SSH independently confirmed outer-v2 and the dedicated 16GiB root. Selecting LineageOS instead produced display corruption followed by a reboot to installed Mobian. No pstore record survived. This candidate is NOT qualified for permanent installation.
+
+Offline inspection confirms an Android loader allocation defect: its pinned ARM64 Image file is 53,456,920 bytes, but its header requires 64,811,008 bytes. The generic loader reserves only 54,525,952 bytes after text_offset, leaving 10,285,056 bytes of required runtime extent outside that allocation. The working historical layout does not prove the allocation is sufficient; the added outer bundle changes memory placement. An actual collision is plausible, but not proven without runtime addresses.
+
+The existing full-extent reservation helper previously ran only for Mobian. The candidate now invokes the same helper for both locked OS tags after decompression, before DT/initrd allocations. It preserves the board7 overlay, outer-v2 marker, reset guard, kernel/initrd inputs and Android DT selection. No new kernel or rootfs build is needed.
+
+Host tests execute the exact helper with EFI allocation stubs using both pinned Image sizes: expansion, copied bytes, zeroed runtime tail, repeat-call idempotence, malformed magic refusal and failed-allocation preservation pass. This is host validation only. User-run menu firmware build and fresh temporary tests remain required. No installation or additional phone operation was performed.
+
 ## October23: board overlay omission found and corrected in the recipe
 
 The previous ece3f4c4 candidate displayed its menu, then black-screened after
@@ -73,7 +83,7 @@ and no partition layout is changed. Exact image hashes remain pinned.
   its normal kernel/initrd/DT buffers.
 - Switch only Mobian to `BOOT_LINUX`; skip Android fstab surgery for Mobian.
   Reserve the complete ARM64 Image runtime extent for Mobian only. Keep the
-  existing Android path. Append `lmi_menu=outer-v1` to Mobian's command line
+  existing Android path. Append `lmi_menu=outer-v2` to Mobian's command line
   so a reset to the installed Mobian boot cannot be mistaken for direct handoff.
 - Repackage the menu's v1 boot image with the Mobian bundle as its outer ramdisk.
   Preserve the kernel bytes and boot-header OS version; update ramdisk size and
@@ -103,7 +113,7 @@ firmware image or proof that ABL will place the incoming ramdisk as required.
 ## Operator build
 
 ```sh
-sudo python3 -B /home/linuxagent/xiaomi-lmi-linux-port/build/boot-menu/external-mobian/build-external.py --build
+sudo python3 -B /home/linuxagent/lmi-permanent-menu-20261023/build/boot-menu/external-mobian/build-external.py --build
 ```
 
 This builds only the menu firmware using the existing isolated cache. It does
@@ -111,11 +121,11 @@ not rebuild Linux or Mobian, contact the phone, flash, or install anything.
 Expected final marker:
 
 ```text
-OUTER_MOBIAN_MENU_BUILD_COMPLETE_NOT_FOR_FLASHING
+OUTER_DUAL_EXTENT_MENU_BUILD_COMPLETE_NOT_FOR_FLASHING
 ```
 
-Output: `/home/linuxagent/lmi-boot-menu-build/output/boot-lmi-outer-mobian-test.img`,
-with `outer-mobian-artifact-manifest.json` recording component, overlay and reset
+Output: `/home/linuxagent/lmi-boot-menu-build/output/boot-lmi-outer-dual-extent-test.img`,
+with `outer-dual-extent-artifact-manifest.json` recording component, overlay and reset
 guard provenance. The historical source manifest describes the baseline;
 `outer-source-manifest.json` supersedes entries changed by this overlay.
 The next invocation restores the qualified overlay before restoring the baseline.
@@ -126,7 +136,7 @@ Unexpected edits stop restoration. Interrupted builds require inspection.
 1. Qualify actual source hashes, FD size and BootShim/FD payload, outer ramdisk
    bytes/CRC/SHA256, boot header and final size before transfer.
 2. Temporary boot only; let the 15-second default choose Mobian.
-3. Confirm `lmi_menu=outer-v1` in the running kernel command line, the dedicated
+3. Confirm `lmi_menu=outer-v2` in the running kernel command line, the dedicated
    Mobian root, and working interface. An ordinary return to Mobian is insufficient.
 4. Re-test LineageOS, Fastboot and Recovery on this exact image.
 5. Only then prepare a permanent installation and recovery command for the

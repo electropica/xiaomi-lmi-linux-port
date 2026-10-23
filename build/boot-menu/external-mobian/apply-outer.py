@@ -25,7 +25,7 @@ def patchset(source,recipe,output):
     def prepare(t):
         t=replace(t,'extern void lmi_boot_stage(const char*stage);','extern void lmi_boot_stage(const char*stage);\nextern int linux_boot_lmi_kernel_extent(linux_boot*lb);')
         return replace(t,'\tif(linux_boot_select_fdt(lb)!=0)',
-                       '\tif(!strcmp(lb->config->tag,"mobian")&&linux_boot_lmi_kernel_extent(lb)!=0)\n\t\treturn trlog_error(-1,"Mobian runtime extent reservation failed");\n\tif(linux_boot_select_fdt(lb)!=0)')
+                       '\tif((!strcmp(lb->config->tag,"mobian")||!strcmp(lb->config->tag,"android"))&&linux_boot_lmi_kernel_extent(lb)!=0)\n\t\treturn trlog_error(-1,"Pinned kernel runtime extent reservation failed");\n\tif(linux_boot_select_fdt(lb)!=0)')
     edit('src/linux-boot/linux.c',prepare)
     def fstab(t):
         return replace(t,'    if(!lb||!lb->config||strcmp(lb->config->tag,"android")||!lb->dtb.address)return -1;',

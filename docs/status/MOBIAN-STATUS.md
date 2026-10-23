@@ -1,3 +1,13 @@
+## 2026-10-23: board7 Mobian PASS, Android FAIL; dual kernel extent candidate
+
+The operator temporarily booted board7 SHA256 9c7923502a7906470488c06ac5e640c0a1991bafad3a143bbe6f4eb4fcc0fd95. Mobian default boot passed; read-only SSH independently confirmed outer-v2 and the dedicated 16GiB root. Selecting LineageOS instead produced display corruption followed by a reboot to installed Mobian. No pstore record survived. This candidate is NOT qualified for permanent installation.
+
+Offline inspection confirms an Android loader allocation defect: its pinned ARM64 Image file is 53,456,920 bytes, but its header requires 64,811,008 bytes. The generic loader reserves only 54,525,952 bytes after text_offset, leaving 10,285,056 bytes of required runtime extent outside that allocation. The working historical layout does not prove the allocation is sufficient; the added outer bundle changes memory placement. An actual collision is plausible, but not proven without runtime addresses.
+
+The existing full-extent reservation helper previously ran only for Mobian. The candidate now invokes the same helper for both locked OS tags after decompression, before DT/initrd allocations. It preserves the board7 overlay, outer-v2 marker, reset guard, kernel/initrd inputs and Android DT selection. No new kernel or rootfs build is needed.
+
+Host tests execute the exact helper with EFI allocation stubs using both pinned Image sizes: expansion, copied bytes, zeroed runtime tail, repeat-call idempotence, malformed magic refusal and failed-allocation preservation pass. This is host validation only. User-run menu firmware build and fresh temporary tests remain required. No installation or additional phone operation was performed.
+
 ## 2026-10-23: direct Mobian failure traced to an omitted board overlay
 
 The outer-v1 image ece3f4c4 displayed its menu and loading text, then went black
