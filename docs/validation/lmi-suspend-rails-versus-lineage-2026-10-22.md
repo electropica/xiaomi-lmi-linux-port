@@ -84,8 +84,9 @@ Three things are missing, and none of them can be replaced by an
 argument:
 
 1. the **point-in-time regulator summary of LineageOS in the unplugged
-   state**, so that the two always-on sets can be compared rail by rail
-   in the state that matters;
+   state**, so that the two sets of observed requests can be compared
+   rail by rail. LineageOS and Mobian share the same phone in dual
+   boot, so this needs an OS change and cannot be done in parallel;
 2. the **Mobian regulator summary in the unplugged state**, that is
    which rails are still requested once the cable is out, which the
    point-in-time capture cannot answer because it was taken with the
@@ -95,17 +96,32 @@ argument:
 
 ## The one discriminating verification proposed
 
-**Read the regulator summary in the unplugged state on both platforms,
-and compare the rail sets.** It is a read-only command, it changes
-nothing, it disables nothing, and it is the only step that separates
-"a rail that both platforms hold" from "a rail only Mobian holds". On
-Mobian it is one `cat /sys/kernel/debug/regulator/regulator_summary`
-during a short unplug; on LineageOS the same.
+**Read the regulator summary in the unplugged state, and compare the
+observed requests.** On Mobian it is one
+`cat /sys/kernel/debug/regulator/regulator_summary` during a short
+unplug, taken by the phone itself because the phone is only reachable
+over the cable. It is a read-only command, it changes nothing and it
+disables nothing.
 
-It is proposed, not scheduled. No new unplug is arranged for now, and
-nothing is disabled. The night run in progress gives the counter and
-the duty cycle over a full night, which is the other half of the
-question, but it does not touch the rails.
+What it gives, and what it does not. It gives **the requests observed
+in one state**, the unplugged and awake one, and the difference with
+the connected state. It does **not** bound what is held while the
+processor is down: the requests and the modes of the rails can change
+in both directions, so the suspend state does not follow from it
+automatically. It can eliminate a candidate, by showing that the unplug
+releases it; it cannot designate one.
+
+The cross-platform half needs the same reading on the reference
+platform, and **LineageOS and Mobian share the same phone in dual
+boot**: the Android capture waits for an OS change and cannot run in
+parallel with a Mobian run, so that half is deferred to a separate
+operation. The software-level comparison that needs no OS change is
+already done above, from the suspend-path calls recorded in the two
+traces.
+
+The night run gives the counter and the duty cycle over a full night,
+which is the other half of the question, but it does not touch the
+rails.
 
 ## Limits
 
