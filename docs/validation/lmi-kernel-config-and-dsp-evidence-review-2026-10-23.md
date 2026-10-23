@@ -492,3 +492,72 @@ patch against the exact driver and retry/status path, then decide the smallest
 appropriate build with the operator. Do not assert that all historical Mobian
 measurements lacked a profile: retained earlier boots show 4700000 and j11sun.
 Do not treat missing modem enumeration as proof of electrical shutdown.
+
+## Profile lookup candidate review and successful Android retries
+
+The candidate resolves the explicit qcom,battery-data phandle first and uses
+the prior name scan only as fallback. The fallback takes a reference before
+passing the device's borrowed node to a function that drops its argument.
+This is a justified deterministic-selection correction, not proof that the
+failing boot selected the wrong container or that it alone explains drain.
+
+## Source corrections to the independent analysis
+
+- of_find_node_by_name starts AFTER the supplied node, not inclusively. The
+  comment above the exact implementation explicitly states this. The iterator
+  traverses the live tree's child/sibling links; do not equate it unconditionally
+  with a flat blob or the ordering returned by ls -U on sysfs.
+- profile_available is set before fg_gen4_get_batt_profile_dt_props, which can
+  still fail. Unknown Battery/design=0 does not prove execution never reached
+  profile_available=true. A selected profile is not a completed load.
+- charge_full equality does not establish equality of raw/software state or
+  scale. Counter getters use different SRAM state variables and multipliers.
+- A profile may affect configuration and wake behavior. Neither an exclusively
+  fictitious discharge nor an absolute physical-current excess is established.
+
+## New successful Android boot evidence
+
+The full current kernel ring output and binary boot FDT were preserved privately
+without settings changes. The retained FG subset contains an initial missing
+profile / using-OTP warning at about 1.175 s, then successful j11sun_4700mah
+lookups at about 3.202 s and 3.584 s. The already-taken runtime snapshot reports
+j11sun_4700mah and design 4700000. This is a concrete successful retry sequence;
+an initial OTP warning cannot be an unconditional rejection criterion.
+Authentication identifiers in the raw log remain private and are not published.
+
+Raw kernel output SHA256:
+e6f94a9152938ddf42c2f0bd1fb3d45ebe09bab2d3ca740d4ae1712e08f5a4d0.
+The 1 MiB binary FDT read is preserved for later parsing, not presented as a
+validated reconstruction of every runtime tree mutation.
+
+## Candidate checks and scope
+
+The patch is regenerated with ordinary context against source SHA256
+0f5676829cb2a40daa191a456998c700d744afe8346e07dd3c7af2a7e8685957.
+git apply --check, patch --dry-run and an actual application to a temporary
+copy all pass and produce exactly the intended lookup change. The replacement
+retains the existing diagnostic candidate's lookup behavior and short comment;
+the repository change improves patch context, not gauge policy.
+
+The existing host C-stub test checks explicit-link priority, legacy fallback,
+missing data and borrowed-node reference preservation. It does not execute the
+full kernel function or validate complete container-reference lifetime. The
+candidate remains UNVALIDATED on-device and is not part of a new kernel build.
+
+## Revised on-device acceptance after an operator build
+
+Require a settled final j11sun_4700mah / design4700000 state and intact normal
+charging, not zero transient retries. Preserve the full boot log before local
+filtering; distinguish the selected node, profile-data validation, property
+parsing and load/skip result. Record learned capacity and all relevant metadata
+before and after. Do not require charge_full to remain exactly2677000: the
+unmodified successful profile-load path can update ACT_BATT_CAP from nominal
+capacity. Any change must be reported and accounted for; no manual calibration
+or force-load is introduced by this patch. Do not use that transition window
+as a standby-consumption measurement. Counter/energy comparison follows only
+after profile behavior is qualified and scale limitations remain explicit.
+
+No build, flash, reset, battery-setting write or protection modification was
+performed for this review. Phone remains LineageOS, USB connected. The relevant
+failed Mobian boot's complete journal still needs preservation if available;
+current Android success does not substitute for that missing failing trace.
