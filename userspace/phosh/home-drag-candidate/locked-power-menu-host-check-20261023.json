@@ -1,0 +1,12 @@
+{
+  "version": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8",
+  "changed_source_files": [
+    "src/power-menu-manager.c"
+  ],
+  "quiet_gauge_unchanged": true,
+  "other_qualified_home_sources_unchanged": true,
+  "native_confirmation_handlers_unchanged": true,
+  "candidate_source_sha256": "c921cf7e4dbaf7a1b12233e539a99295bac0020f281a7b7bb9b40efb391f9587",
+  "built": false,
+  "installed": false
+}

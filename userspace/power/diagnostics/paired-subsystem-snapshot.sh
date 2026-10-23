@@ -28,7 +28,7 @@ if [ -r /sys/kernel/debug/gpio ]; then
  awk '/^gpiochip/ {wanted=($0 ~ /f000000/)} wanted {print}' /sys/kernel/debug/gpio
 else printf 'UNAVAILABLE: gpio debugfs not readable\n'; fi
 printf '\nMASTER_STATS\n'
-for p in /sys/kernel/debug/rpm_master_stats /sys/kernel/debug/rpmh_stats/master_stats /sys/power/rpmh/master_stats; do
+for p in /sys/power/rpmh_stats/master_stats /sys/kernel/debug/rpm_master_stats /sys/kernel/debug/rpmh_stats/master_stats /sys/power/rpmh/master_stats; do
  if [ -r "$p" ]; then printf '%s\n' "$p"; cat "$p"; fi
 done
 printf '\nNPU_POWER\n'

@@ -3,7 +3,7 @@
 import argparse,hashlib,json,xml.etree.ElementTree as E
 from pathlib import Path
 
-VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag7'
+VERSION='0.46.0-3+deb13u1+lmigaugewake3+homedrag8'
 QUIET='f8cbde684bd1920eebcfab70c39d2adef8696498fadc5443e6d2bde37669f019'
 
 def once(text,before,after):
@@ -113,6 +113,14 @@ on_reboot_activated (GSimpleAction *action, GVariant *param, gpointer data)
     manager=once(manager,'static void\non_suspend_activated',reboot+'static void\non_suspend_activated')
     manager=once(manager,'  { .name = "poweroff", .activate = on_power_off_activated },','  { .name = "poweroff", .activate = on_power_off_activated },\n  { .name = "reboot", .activate = on_reboot_activated },')
     manager=once(manager,'  action = g_action_map_lookup_action (G_ACTION_MAP (self->menu_actions), "poweroff");\n  g_simple_action_set_enabled (G_SIMPLE_ACTION (action), !locked);','  action = g_action_map_lookup_action (G_ACTION_MAP (self->menu_actions), "poweroff");\n  g_simple_action_set_enabled (G_SIMPLE_ACTION (action), !locked);\n  action = g_action_map_lookup_action (G_ACTION_MAP (self->menu_actions), "reboot");\n  g_simple_action_set_enabled (G_SIMPLE_ACTION (action), !locked);')
+    # Keep native session confirmation available above the lock screen.
+    # Screen-lock remains disabled when already locked; no unlock is requested.
+    for action_name in ('poweroff', 'reboot'):
+        before_action = ('  action = g_action_map_lookup_action (G_ACTION_MAP (self->menu_actions), "%s");\n'
+                         '  g_simple_action_set_enabled (G_SIMPLE_ACTION (action), !locked);') % action_name
+        manager=once(manager, before_action, before_action.replace('!locked', 'TRUE'))
+    manager=once(manager, '  /* TODO: Make them work on the lock screen too */',
+                 '  /* Power actions use native confirmation, including while locked. */')
     outputs['src/power-menu-manager.c']=manager
     import copy
     power=E.fromstring((source/'src/ui/power-menu.ui').read_text())

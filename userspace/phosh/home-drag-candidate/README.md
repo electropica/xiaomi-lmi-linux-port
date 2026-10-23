@@ -1,5 +1,28 @@
 # Native home drag candidate
 
+## homedrag8: power actions while locked (prepared; operator build pending)
+
+Shutdown and Restart remain enabled on the lock screen and retain the native
+session-manager confirmation. The session is not unlocked. Screen-lock stays
+disabled when already locked. No authentication or logind policy is changed.
+
+Host preparation was checked against the qualified homedrag7 source identity:
+only src/power-menu-manager.c differs. All other generated home/drawer sources,
+the quiet-gauge source and native confirmation handlers are unchanged. Shell
+syntax passes. Package compilation/tests and lock-screen confirmation/cancel
+remain pending; the installed reference is still homedrag7. This candidate
+does not update the full-image package pins before qualification.
+
+Operator command (WSL):
+
+```sh
+sudo bash /home/linuxagent/xiaomi-lmi-linux-port/userspace/phosh/home-drag-candidate/build-arm64.sh
+```
+
+This builds the matched phosh and phosh-common homedrag8 packages only. It
+does not flash, install, reboot, rebuild the kernel or build a full image.
+
+
 ## homedrag7: native Restart button (installed; confirmation validated)
 
 The operator-built pair passes 36/36 tests and is installed with executable
@@ -11,9 +34,8 @@ statements below describe preparation history.
 Adds Restart to the long-press power menu, translated through the existing
 French catalog. It calls the existing session-manager reboot flow and is
 disabled on the lock screen. Manager/resource compilation and static action
-checks pass; no reboot was issued. The command below now builds homedrag7.
-The handset remains on the qualified homedrag6 pair until operator build and
-installation; check button visibility and cancel the normal confirmation first.
+checks pass; no reboot was issued. That version was installed and its cancellable confirmation was validated.
+The current operator command now prepares homedrag8 as described above.
 
 
 ## homedrag6: move between saved surfaces (installed and confirmed)
