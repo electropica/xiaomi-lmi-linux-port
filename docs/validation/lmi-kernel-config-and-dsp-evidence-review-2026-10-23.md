@@ -236,3 +236,69 @@ qualified detached endpoints and a causal question before it is armed.
 
 No new physical action is requested now. MiniMax's GPU investigation remains
 independent and its result should be reviewed before selecting the next test.
+
+## Comparative report identity and runtime-policy correction
+
+The original report is preserved outside the repository under the user's
+MiniMax dossier. Its central device identity is wrong: the actual handset and
+project are POCO F2 Pro / lmi, not surya. Official LineageOS device metadata
+identifies lmi variant 1 as POCO F2 Pro with Snapdragon 865; surya is POCO X3
+NFC with Snapdragon 732G. Therefore the proposed lmi-to-surya transfer matrix
+and a missing-surya-DT blocker do not apply to this project.
+
+Primary identity reference:
+https://github.com/LineageOS/lineage_wiki/blob/main/_data/devices/lmi_variant1.yml
+
+## Scale-mode claim checked against preserved and current evidence
+
+The claim that Mobian scale_mode_en was never read is false. Retained October
+16 gauge-percentage data has scale_mode_en=0; the October 21 runtime flag
+snapshot also records cached_scale_mode_en=0. A bounded current read now
+confirms bms/scale_mode_en=0 again. This does not calibrate the other gauge
+channels or prove that every internal state remained identical throughout a
+discharge. It removes the stated missing-read premise for this flag.
+
+## Actual LPM topology instead of assumed Android script paths
+
+One connected-awake read found no attributes under the proposed
+/sys/module/lpm_levels/system subtree. A second bounded topology read established
+that this is a path mismatch, not an empty supported-state set:
+
+- module root contains parameters and L3;
+- L3/l3-wfi and L3/llcc-off both expose idle_enabled=Y and suspend_enabled=Y;
+- L3/cpu0 through cpu7/rail-pc all expose idle_enabled=Y and suspend_enabled=Y;
+- cpu0 cpuidle state0 is C0/wfi and state1 is C1/rail-pc, both disable=0;
+- sleep_disabled=N.
+
+The live config hash still matches the pinned Mobian input:
+c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78.
+These are policy permissions, not proof that a state was physically reached.
+The topology must not be misread as equivalent to unrelated system/pwr/perf/ret
+nodes. No attribute was written and no suspend/discharge was requested.
+
+The retained Android post-boot script has several platform branches with
+different paths. Near lines 3251–3260 it writes ten system/perf|pwr/ret paths;
+near lines 5980–5991 it writes twelve paths with different CPU group labels.
+A source occurrence is not proof of a successful write on this device.
+In the pinned lpm-levels.c, idle selection calls lpm_cpu_mode_allow(..., true)
+around line 714, whereas system suspend scans deepest-first with
+lpm_cpu_mode_allow(..., false) around line 1734. This is enough to reject
+assuming an idle_enabled path is automatically the system-suspend control;
+the helper implementation and actual Android topology still require matching.
+
+## GPU claim and prioritization
+
+The comparative report restates an old gpu_cx_gdsc difference that the separate
+GPU review withdrew after source and event-order analysis. Do not treat it as
+the sole surviving difference without resolving that contradiction. Conversely,
+identical GPU source/DT does not exclude differing runtime votes or firmware.
+
+Decision: no build or policy copying follows from this report. Correct device
+identity first; compare the actual LPM hierarchy on the next already-planned
+Android visit, before considering any retention-policy experiment. Do not
+repeat the scale_mode read as if it were missing evidence. Existing peripheral,
+modem and gauge questions remain scoped separately.
+
+Private receipts: battery-lpm-policy-20261023-private.json and
+battery-lpm-topology-20261023-private.json. Reads used only existing USB SSH;
+no firmware, GPIO, regulator, protection, service or policy control was changed.
