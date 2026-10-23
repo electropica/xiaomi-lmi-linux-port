@@ -561,3 +561,37 @@ No build, flash, reset, battery-setting write or protection modification was
 performed for this review. Phone remains LineageOS, USB connected. The relevant
 failed Mobian boot's complete journal still needs preservation if available;
 current Android success does not substitute for that missing failing trace.
+
+## FG lookup candidate first temporary boot
+
+The operator completed the kernel-only build with Image SHA256
+`1d9f27226385c0454ed0911a4b09aedc98098284e1ea4763ac3e2938634afee0`.
+The build receipt and independent artifact/config hashes were checked. The
+compiled source contains the phandle-first lookup; the config remains
+`c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78`.
+MiniMax's review of recipe commit ac54e8f reported no blocking defect.
+
+A host-only repack used dedicated Mobian boot reference SHA256
+`75bb65facbd4146d4a1e668039ef52433ef90c2b6bdb07f2c59980caf3191374`.
+Ramdisk, DTB and other payload segments remained byte-identical. Only the
+kernel and corresponding boot header content identity/size fields changed.
+Test boot SHA256: `d9c88d686ae56bd4a3baa766139834722c737514e06b1ea4b7ce14b283d14a7f`.
+
+After lmi identity and dedicated partition size checks, fastboot boot succeeded.
+No partition was flashed and the permanent dualboot menu was not replaced.
+At uptime 45.71 seconds, the connected-awake observation reported
+`battery_type=j11sun_4700mah`, `charge_full_design=4700000`,
+`charge_full=2677000`, `scale_mode_en=0`, and `soc_reporting_ready=1`.
+The initial OTP/authentication retry at 1.234 seconds recovered: the expected
+profile was found at 3.232 and 3.648 seconds. The initial warning alone is
+therefore not an acceptance failure. ESR cached publication fields remain 0;
+they are not physical ESR/comparator measurements.
+
+The operator confirmed normal touchscreen, application scrolling and power
+button behavior. This establishes one successful candidate boot and interface
+smoke check, not repeated-boot reliability or a measured standby improvement.
+Earlier Mobian boots have also recognized the profile; boot-to-boot variation
+prevents treating this single before/after observation as exclusive causal
+proof. A discharge comparison must exclude the loading transition and retain
+the existing gauge scale and physical-current limitations. Candidate use is
+temporary; reboot restores the installed kernel/menu path.
