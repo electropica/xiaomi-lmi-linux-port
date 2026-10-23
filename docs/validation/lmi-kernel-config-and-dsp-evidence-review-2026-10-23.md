@@ -333,3 +333,65 @@ Next already-planned Android visit: use the bounded LPM reader and existing
 matched-gauge reader in the same awake session. No unplug or extra long test is
 needed to establish availability and current policy flags. A matched result
 closes that specific permission/topology comparison, not physical LPM state.
+
+## ESOC IPC observation and reader correction
+
+The pinned esoc_mdm_log macro calls ipc_log_string on a context, not printk.
+The inspected debugfs implementation exposes log with cont=0 and log_cont with
+cont=1; the latter waits for read_avail when empty. ipc_log_extract uses a shared
+non-destructive read cursor. Therefore a wildcard cat can block on log_cont,
+and a second marker grep of debugfs is not a replay of the first extraction.
+
+The proposed MiniMax script is preserved unchanged and was not executed. Its
+wildcard cat and repeated greps are unsuitable for the bounded observation.
+An independent reader opened only esoc-mdm/log, with 64 KiB read chunks, at
+most 16 reads and a 3-second between-read deadline. The checked cont=0 callback
+does not wait for future events. No clear/control file or log_cont was opened.
+
+## Actual connected Mobian observation
+
+Existing debugfs/context/log were available. One extraction reached EOF after
+645 bytes, seven lines; SHA256:
+2ab6c46d60164546d32b44b634cfd9823b2836a1406c693ec67e06e6dca84e97.
+Both uptime brackets were 6471.57 seconds. The lines are timestamped around
+1.221 seconds and report IRQ disable, GPIO/ESOC setup completion, four handshake
+GPIO identifiers and AP2MDM_SOFT_RESET=-1. None of the searched powerup,
+boot-fail, shutdown, already-powered-off or warm-reset markers is present.
+
+This positively establishes that the context and setup logging existed on
+this boot. It does not certify the entire log history, lack of ring overwrite,
+lack of another reader, or which physical state the modem occupied. Absence
+of boot-failure printk markers in a bounded kernel capture only constrains
+retained messages; do not assert unconditional non-execution without complete
+coverage and applicable logging guarantees.
+
+## The reset GPIO is not a missing SDX55M reset implementation
+
+In retained esoc-mdm-pon.c, sdx55m_toggle_soft_reset (around 76–93) invokes
+qpnp_pon_modem_pwr_off(PON_POWER_OFF_WARM_RESET) through SPMI. It does not use
+AP2MDM_SOFT_RESET. sdx55m_power_down (175–179) delegates to that warm-reset
+helper. Thus GPIO=-1 must not be promoted to a broken reset path or invalid
+GPIO access for this SDX55M helper. A successful warm reset is likewise not
+evidence of a physical rail cut. No reset or power command was attempted.
+
+## Evidence handling and next scope
+
+Raw text and metadata remain private in battery-esoc-ipc-20261023-private.json;
+marker analysis is computed from the host copy, not a second debugfs read.
+Reading advanced the debugfs non-destructive cursor; it did not modify modem
+policy, mounts, GPIOs or firmware. No suspend or new discharge was requested.
+
+The source-log-routing gap is resolved and the actual retained setup is now
+observed. Physical modem power remains unknown. No build, force-off or new
+long test is justified by these seven setup lines. The next planned Android
+visit can still collect LPM permissions and matched gauge channels; do not
+attempt the IPC debugfs path there because its pinned config has DEBUG_FS=n.
+
+Pinned primary sources:
+- drivers/esoc/esoc.h:25–29 (macro).
+- kernel/trace/ipc_logging_debug.c: debug_read/debug_read_cont/debug_log and
+  create_ctx_debugfs (bounded versus continuous behavior).
+- kernel/trace/ipc_logging.c: ipc_log_extract and non-destructive cursor.
+- drivers/esoc/esoc-mdm-pon.c: SDX55M SPMI reset and power-down helper.
+All are at a5b3099017ae581aae8bf597b2f9c8c765026af1; original source receipts
+remain with the MiniMax review. No raw capture or unique identifier is published.
