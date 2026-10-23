@@ -171,3 +171,68 @@ this audit. A future matched comparison must preserve channel identity, exclude
 charging/rebasing boundaries, and state whether it tests gauge behavior or a
 specific power-policy hypothesis. Repeating an unchanged standby test would not
 resolve the outstanding measurement scale.
+
+## Matched gauge-channel coverage follow-up
+
+## Decision
+
+Prepare one common explicit reader for a future already-awake OS visit, not a
+new standby test. Nothing was deployed or read from the phone for this review.
+The reader is `userspace/power/diagnostics/matched-gauge-snapshot.sh`. It is intentionally not
+armed and cannot determine sleep current from a single observation.
+
+## Verified source identity and channel contracts
+
+The retained exact-source manifest pins Mobian a5b3099017ae581aae8bf597b2f9c8c765026af1
+and Android 71b13e62f057a649b77fe4062feb73ee72ad609c. Both qpnp-fg-gen4.c
+files hash to 0f5676829cb2a40daa191a456998c700d744afe8346e07dd3c7af2a7e8685957.
+This verifies identical source for this file, not identical gauge firmware,
+configuration, learned capacity, SRAM contents or init behavior at runtime.
+
+- charge_counter: CC_SOC_SW times learned capacity / CC_SOC_30BIT (793–812).
+- charge_counter_shadow: BATT_SOC times learned capacity / BATT_SOC_32BIT
+  (814–835). It is not an independent electrical meter.
+- charge_now_raw: CC_SOC times nominal capacity / CC_SOC_30BIT (preceding
+  getter, dispatched at 5269). Its scale cannot be equated to the software
+  counter simply because both attributes use charge units.
+- current_now and current_avg dispatch at 5236 and 5239; the latter uses
+  FG_SRAM_IBAT_FLT. Its filter cadence during suspend remains unestablished.
+- The retained qpnp-smb5.c battery CHARGE_COUNTER getter forwards to BMS at
+  3158–3160. This verifies that forwarding path in the retained source; the
+  exact Android health-service selection/overrides are not established here.
+
+## Existing evidence and the missing comparison
+
+The two retained Android batterystats histories used in the unplug analysis
+contain rounded software-charge history, not a matched time series of raw,
+shadow, filtered-current and capacity channels. Searching their saved JSON
+also finds none of the charge_counter_shadow, charge_now_raw, current_avg or
+charge_full attribute names. This is a coverage statement about those two
+artifacts, not every Android capture in the project.
+
+Mobian's October 15 awake discharge control found software-counter/integrated
+current ratio 1.009 and raw-counter/integrated-current ratio 1.739. The latter
+was close to design/learned capacity 1.720, without establishing a universal
+normalization rule. That control cannot calibrate Android or suspended current.
+Do not repeat that already-completed Mobian-only control.
+
+The October 22–23 night audit confirms a changing software-counter rate while
+suspension remains high, but cannot choose between a changing physical load and
+gauge state. This is why a GPU result and a gauge result must remain distinct.
+
+## Reader scope and interpretation
+
+Explicit read list avoids uevent and charge_done. Missing supplies, missing
+files and failed reads have different output tags; none is converted to zero.
+Raw signs are retained, and /proc/uptime brackets the sequential snapshot.
+The reader does not mount, write a property, acquire an inhibitor, poll, start
+a service or request suspend. Telemetry getters themselves can briefly access
+gauge SRAM, so this is not a zero-overhead suspended measurement.
+
+A single future Android snapshot can verify channel availability and capacity
+scale. A connected snapshot cannot measure detached consumption or establish
+the history of a counter. Any subsequent paired discharge protocol must have
+qualified detached endpoints and a causal question before it is armed.
+
+No new physical action is requested now. MiniMax's GPU investigation remains
+independent and its result should be reviewed before selecting the next test.
