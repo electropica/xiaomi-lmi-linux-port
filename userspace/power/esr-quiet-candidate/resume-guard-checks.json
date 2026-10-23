@@ -1,0 +1,21 @@
+{
+  "checks": [
+    {
+      "cases": 44800,
+      "esr_allowed_cases": 6,
+      "result": "PASS",
+      "component": "phosh"
+    },
+    {
+      "cases": 358400,
+      "esr_allowed_cases": 6,
+      "result": "PASS",
+      "component": "gnome-settings-daemon"
+    }
+  ],
+  "result": "PASS",
+  "total_cases": 403200,
+  "scope": "Extracted reason and qualification helpers with isolated sysfs fixtures; no D-Bus/event-loop/package/device validation",
+  "phone_contact": false,
+  "package_build": false
+}

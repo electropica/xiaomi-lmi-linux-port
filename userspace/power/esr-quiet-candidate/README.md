@@ -59,3 +59,13 @@ After any future installation, confirm normal UI/manual wake and then observe
 a natural exactESRwake, preserving unknown/combined/critical wake behavior.
 If that wake does not occur in a bounded observation, the test is incomplete.
 Never inject an IRQ or change calibration to manufacture acceptance.
+
+## Additional qualification-helper check
+
+The native host test test-resume-guards-host.py extracts the actual old/new
+reason and qualification helpers. Across403200input combinations it checks
+that patched445has the existing441semantics and every other reason retains
+its old result. It covers the opt-in/locked/clock, GSD peer/blank/activity/sleep
+flags, duration boundaries, USB, capacity/status and read-failure fixtures.
+Both components pass. This is a differential pure-helper check, not event-loop,
+D-Bus timing, package or handset validation. It makes no power-saving claim.
