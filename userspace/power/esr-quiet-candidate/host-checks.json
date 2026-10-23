@@ -1,0 +1,14 @@
+{
+  "result": "PASS",
+  "checks": [
+    "clean_patch_replay",
+    "already_patched_reverse_then_replay",
+    "changed_patch_with_stale_after_rejected",
+    "source_changelog_mismatch_rejected",
+    "mixed_state_rejected",
+    "phosh_rollback_binary_extraction",
+    "gnome-settings-daemon_rollback_binary_extraction"
+  ],
+  "package_build": false,
+  "phone_contact": false
+}

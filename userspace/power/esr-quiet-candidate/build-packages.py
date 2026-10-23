@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Operator-only incremental package build. Default preflight, no phone access."""
 from pathlib import Path
-import argparse,fcntl,hashlib,json,os,shutil,subprocess,sys,tempfile
+import argparse,fcntl,hashlib,io,json,os,shutil,subprocess,sys,tarfile,tempfile
 
 ROOT=Path('/home/linuxagent/phosh-gauge-wake-build/rootfs')
 TASK=Path(__file__).resolve().parent
@@ -11,14 +11,21 @@ def verify(manifest):
  assert sha(TASK/'esr-delta-accept.patch')==manifest['patch_sha256']
  for spec in manifest['sources']:
   tree=ROOT/'build'/spec['tree'];assert tree.is_dir() and not tree.is_symlink()
-  assert sha(tree/spec['file']) in (spec['before'],spec['after'])
+  digest=sha(tree/spec['file']);assert digest in (spec['before'],spec['after'])
   head=(tree/'debian/changelog').read_text().splitlines()[0]
-  assert head in [spec['package']+' ('+v+') UNRELEASED; urgency=medium' for v in (spec['old'],spec['new'])]
+  expected=spec['new'] if digest==spec['after'] else spec['old']
+  assert head==spec['package']+' ('+expected+') UNRELEASED; urgency=medium','Source/changelog state mismatch'
   for pkg,arch in ((spec['package'],'arm64'),(spec['package']+'-common','all')):
-   assert (ROOT/'build'/f'{pkg}_{spec["old"]}_{arch}.deb').is_file(), 'Rollback package missing'
+   rollback=ROOT/'build'/f'{pkg}_{spec["old"]}_{arch}.deb'
+   assert rollback.is_file(), 'Rollback package missing'
+   assert subprocess.check_output(['dpkg-deb','-f',str(rollback),'Version'],text=True).strip()==spec['old']
+   assert subprocess.check_output(['dpkg-deb','-f',str(rollback),'Architecture'],text=True).strip()==arch
  for rel,digest in manifest['preserve_home8'].items():
   assert not Path(rel).is_absolute() and '..' not in Path(rel).parts
   assert sha(ROOT/'build/phosh-0.46.0'/rel)==digest,rel
+ for rel,digest in manifest.get('preserve_extra',{}).items():
+  assert not Path(rel).is_absolute() and '..' not in Path(rel).parts
+  assert sha(ROOT/'build'/rel)==digest,rel
 
 def patched_sources(manifest,tmp):
  for spec in manifest['sources']:
@@ -26,10 +33,25 @@ def patched_sources(manifest,tmp):
   shutil.copyfile(ROOT/'build'/spec['tree']/spec['file'],target)
  # All inputs must be either entirely old or entirely new for patch staging.
  states=[sha(tmp/s['file'])==s['after'] for s in manifest['sources']]
- if not all(states):
-  assert not any(states),'Partial source preparation; inspect before retry'
-  subprocess.run(['patch','--batch','--fuzz=0','-p1','-i',str(TASK/'esr-delta-accept.patch')],cwd=tmp,check=True)
+ assert all(states) or not any(states),'Partial source preparation; inspect before retry'
+ if all(states):
+  # Reconstruct the pinned baseline before replaying even on an incremental rerun.
+  subprocess.run(['patch','--batch','--fuzz=0','-R','-p1','-i',str(TASK/'esr-delta-accept.patch')],cwd=tmp,check=True)
+ for spec in manifest['sources']:assert sha(tmp/spec['file'])==spec['before']
+ subprocess.run(['patch','--batch','--fuzz=0','-p1','-i',str(TASK/'esr-delta-accept.patch')],cwd=tmp,check=True)
  for spec in manifest['sources']:assert sha(tmp/spec['file'])==spec['after']
+
+def payload_identity(package,binary=None):
+ raw=subprocess.check_output(['dpkg-deb','--fsys-tarfile',str(package)])
+ with tarfile.open(fileobj=io.BytesIO(raw),mode='r:') as tf:
+  members=tf.getmembers()
+  entries=sorted((m.name,m.type.decode('ascii'),m.linkname) for m in members)
+  data=None
+  if binary:
+   match=[m for m in members if m.name.lstrip('./')==binary]
+   assert len(match)==1 and match[0].isfile(),'Expected package executable missing'
+   data=tf.extractfile(match[0]).read()
+ return entries,data
 
 def build(manifest,repo):
  assert os.geteuid()==0
@@ -46,6 +68,7 @@ def build(manifest,repo):
    guest='/build/'+spec['tree']
    if not (tree/'debian/changelog').read_text().startswith(spec['package']+' ('+spec['new']+')'):
     subprocess.run(['chroot',str(ROOT),'/usr/bin/env','DEBIAN_FRONTEND=noninteractive','DEBFULLNAME=Local lmi','DEBEMAIL=local@example.invalid','/bin/sh','-c','cd "$1" && dch --newversion "$2" --distribution UNRELEASED "Keep guarded esr-delta gauge resumes quiet; preserve home8 and fifteen-second grace."','sh',guest,spec['new']],check=True)
+   assert (tree/'debian/changelog').read_text().splitlines()[0]==spec['package']+' ('+spec['new']+') UNRELEASED; urgency=medium'
    subprocess.run(['chroot',str(ROOT),'chown','builder:builder',guest+'/'+spec['file'],guest+'/debian/changelog'],check=True)
    stamp=tree/'debian/debhelper-build-stamp';assert not stamp.is_symlink()
    if stamp.exists():assert stamp.is_file();stamp.unlink()
@@ -60,7 +83,19 @@ def build(manifest,repo):
   for pkg,arch in ((spec['package'],'arm64'),(spec['package']+'-common','all')):
    p=ROOT/'build'/f'{pkg}_{spec["new"]}_{arch}.deb';assert p.is_file()
    actual=subprocess.check_output(['dpkg-deb','-f',str(p),'Version'],text=True).strip()
-   assert actual==spec['new'];packages.append({'path':str(p),'sha256':sha(p)})
+   assert actual==spec['new']
+   assert subprocess.check_output(['dpkg-deb','-f',str(p),'Architecture'],text=True).strip()==arch
+   old=ROOT/'build'/f'{pkg}_{spec["old"]}_{arch}.deb'
+   binary={'phosh':'usr/libexec/phosh','gnome-settings-daemon':'usr/libexec/gsd-power'}.get(pkg)
+   entries,newbytes=payload_identity(p,binary);oldentries,oldbytes=payload_identity(old,binary)
+   assert entries==oldentries,'Package file/type/link list changed: '+pkg
+   record={'path':str(p),'sha256':sha(p),'version':actual,'architecture':arch,
+           'rollback_sha256':sha(old),'file_list_unchanged':True}
+   if binary:
+    assert newbytes!=oldbytes and b'445 esr-delta' in newbytes,'Missing compiled ESR policy'
+    record.update(binary_path=binary,binary_sha256=hashlib.sha256(newbytes).hexdigest(),
+                  rollback_binary_sha256=hashlib.sha256(oldbytes).hexdigest())
+   packages.append(record)
  (ROOT/'build/lmi-esrquiet1-build-result.json').write_text(json.dumps({'packages':packages,'identity':manifest,'phone_contact':False},indent=2)+'\n')
  print(json.dumps(packages,indent=2));print('ESR_QUIET_PACKAGES_BUILT\nNo phone installation, kernel or image build performed.')
 
@@ -80,7 +115,10 @@ def main():
  assert os.geteuid()==0,'Run --execute with sudo'
  locks=[]
  for name in ('lmi-gsd-quiet-build.lock','lmi-phosh-gauge-build.lock'):
-  f=open('/run/'+name,'a');fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB);locks.append(f)
+  f=open('/run/'+name,'a')
+  try:fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:raise SystemExit('Another package build holds '+name)
+  locks.append(f)
  subprocess.run(['unshare','--mount','--fork','--propagation','private',sys.executable,str(Path(__file__).resolve()),'--execute','--inside'],check=True)
 
 if __name__=='__main__':main()

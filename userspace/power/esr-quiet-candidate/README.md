@@ -1,7 +1,8 @@
 # Guarded esr-delta quiet-resume candidate
 
 Status: source patch and host policy fixture checked; package/device validation
-pending. No claim of lower physical standby current. MiniMax review is pending.
+pending. No claim of lower physical standby current. MiniMax found no blocker;
+its restart/artifact-check suggestions were independently reviewed and addressed.
 
 The October23 temporary-kernel test recovered the expected FG profile but an
 esr-delta wake took the ordinary screen-on path. This candidate extends the
@@ -33,6 +34,20 @@ No package build, phone installation or full image/kernel build occurs in
 default mode. Final marker is ESR_QUIET_PACKAGES_BUILT; four package hashes and
 a receipt are written under the retained chroot build directory. Old packages
 are not removed. Package versions add +esrquiet1 to qualified home8/quiet3.
+
+On a rerun, an already-patched source is first reversed to the pinned baseline
+in temporary staging, checked, then patched forward again. Source/changelog
+states must match. Rollback versions/architectures are checked. New packages
+must have unchanged file/type/link lists and correct version/architecture.
+The two policy binaries must differ from their rollback binaries and contain
+the exact new ESR reason; both executable hashes are included in the receipt.
+This is an artifact guard, not a substitute for package and device tests.
+
+The fifteen-second grace is defined in plugins/power/gsd-power-constants.h,
+now separately pinned. The900second timeout is a runtime setting, not changed
+by this patch. Hash coverage remains limited to the two policy files,13home8
+files and that constants header; unrelated source-tree drift is not exhaustively
+audited. Installation must still use the four named deliverable packages only.
 
 If preparation is interrupted with only one source changed, the bounded staging
 check deliberately stops rather than guessing a rollback. Inspect source and

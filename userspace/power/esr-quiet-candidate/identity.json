@@ -34,5 +34,8 @@
     "src/lmi-home-dnd.h": "eb49e33a904ae29e994444302ac6896ef0c3f0dde3ca0799f01d2963f782fe16",
     "src/lmi-home-grid.inc": "6a101abe16fb9c178f95257d7fbf42cb7c11893b30b84688fccf1f32ecd73e01",
     "src/lmi-home-remove.inc": "2190b90df88bb774c5eae9bd324be36bf6ff465ebd5f3c8c62175970ecc4f062"
+  },
+  "preserve_extra": {
+    "gnome-settings-daemon-48.1/plugins/power/gsd-power-constants.h": "2924763ccaaef30e7eb4b6eabf2a4a7b833f08d3a9f313ba145c18d1591b7d7a"
   }
 }
