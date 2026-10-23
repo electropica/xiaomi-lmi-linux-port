@@ -628,3 +628,25 @@ files, not every generated or untouched file. Configuration remained pinned.
 
 The temporary candidate's detached thirty-minute observation was still running
 when this note was written. No standby improvement is established yet.
+
+## Historical night profile classification correction
+
+The preserved second window (2026-10-22 18:53:24 to19:54:22 UTC) reports
+charge_full_design4700000 and charge_full2677000 at both endpoints. The night
+window (2026-10-22 20:24:50 to2026-10-23 04:35:54 UTC) also reports those values
+at both endpoints. These collector fields came from the battery power supply,
+not a retained battery_type read. The exact pinned charger source forwards
+CHARGE_FULL_DESIGN and CHARGE_FULL from its bms power-supply provider.
+
+This is not interchangeable with the later current-boot BMS observation of
+Unknown Battery/design0. Do not assign the entire historical night to that
+later failed-profile state without matching boot evidence. Conversely, design
+4700000 alone does not prove PROFILE_LOADED: the Gen4 getter may publish the
+profile field or, when it is -EINVAL, obtain the nominal value from SRAM. The
+historical windows lack a retained direct battery_type field in their endpoint
+schema. Classify their precise runtime profile status as unestablished.
+
+No historical night/candidate difference can be described as an established
+missing-profile versus loaded-profile energy experiment. Compare only what
+the matched evidence supports and preserve the distinction between a reported
+counter trend, profile reliability and calibrated electrical consumption.
