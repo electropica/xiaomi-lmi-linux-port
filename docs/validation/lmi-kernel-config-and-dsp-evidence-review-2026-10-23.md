@@ -718,3 +718,49 @@ and GSD constants header. This limitation is documented rather than silently
 claiming a full source-tree reproduction audit. No package build or installation
 was performed during review. The passive detached night observation is left
 unchanged and the phone was not contacted.
+
+## Offline wake history and matched learning policy
+
+An offline replay of14preserved passive event logs found495closed detached
+resume-to-next-PrepareForSleep intervals attributed to exact438msoc-delta.
+Their durations range15.1649–15.5825seconds, with median15.3825seconds. No
+ActiveChanged(false) signal was recorded inside these495intervals. This is
+evidence of the existing quiet return path, not proof that the following
+kernel suspend succeeded in every case or a current measurement. Different
+captures may have different package versions; this is not a treatment-effect
+estimate. Checking matching boot IDs and resume times found no cross-capture
+duplicate within one second.
+
+Ten closed441msoc-high intervals include one1200.216second interval in the
+October12 night capture, with ActiveChanged(false)0.164seconds after resume.
+This predates the guarded441support and was already identified in that night's
+review; it is not a new regression. No445esr-delta resume-signal occurs in these
+14logs. The two retained October22/23 raw Mobian kernel rings likewise contain
+438/502markers but no445marker; the candidate ring has one438and one445. Rings
+have limited, overlapping coverage and different boot/runtime conditions, so
+these observations do not establish a changed ESR interrupt frequency.
+
+The complete MiniMax night collector span is29463.542seconds, with
+27675.691seconds suspended:93.932percent of its full observed span. The earlier
+99.462percent number concerned29selected detached sleep brackets, not the full
+night. Those two denominators must never be substituted for one another when
+estimating awake overhead or comparing with the new thirty-minute window.
+
+The Android kernel revision71b13e62f057a649b77fe4062feb73ee72ad609c has byte-
+identical fg-alg.c/h to the retained Mobian a5b3099017ae source archive:
+fg-alg.c SHA256436db2892f19c0055bcb1f21916bbfe3bbcdb9429db694aad0cabbb4c79166f1;
+fg-alg.h SHA256e95d5e4bfa5db105368f10f63a5ae0b65415f211b77210d75f125fea780444a7.
+Public source reference: https://github.com/LineageOS/android_kernel_xiaomi_sm8250/blob/71b13e62f057a649b77fe4062feb73ee72ad609c/drivers/power/supply/qcom/fg-alg.c
+
+All11selectedcapacity-learningDTproperties match between the retained Android
+bootFDT and the Mobian liveOF snapshot taken before the night. Both enable
+qcom,cl-wt-enable and lack overrides for the other ten selected fields. With
+the matched source this supports the same static learning-policy defaults,
+not equal SRAM history, effective learned capacity evolution or physical power.
+
+The temporary candidate used direct fastboot boot; historical installed boots
+can use the permanent menu. Any future attribution of profile reliability to
+the FG change must control boot route as well as source/config and settling.
+No extra reboot or experiment is justified tonight. Preserve the running night
+measurement, then retrieve it on operator-confirmed return before changing
+userspace packages. No phone contact or settings change occurred in this work.
