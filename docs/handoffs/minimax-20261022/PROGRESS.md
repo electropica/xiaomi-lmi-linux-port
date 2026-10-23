@@ -979,3 +979,69 @@ requests from the traces already kept, which needs no OS change.
 is of the requests in the unplugged and awake state. The baseline was
 taken while charging and the unplugged ones while discharging, so the
 battery state differs as well as the USB.
+
+## Entry 16 - 2026-10-23 - the sleep current: three eliminations, one independent check, and what is left
+
+**Eliminated, the USB rails.** The unplug releases the enable requests of
+`hsphy@88e3000`, `usb30_prim_gdsc` and `pm8150_l2`, so they are not what
+the unplugged period keeps alive.
+
+**Eliminated, the GPU core rail.** Its parent level `pm8150a_s3_level`
+loses its enable request at the unplug, so the candidate that survived the
+suspend-path comparison concerns a plugged suspend.
+
+**Eliminated, the always-on set.** `vdd_boost_vreg` and the other rails
+requested exclusively by a `deviceless` consumer come from the shared
+device tree.
+
+**Eliminated, the peripheral sleep requests.** The RPMh traffic of a
+suspend window is the same on both platforms: the Android trace gives 26
+messages, 6 BCM messages and zero valid non-zero in each of its four
+windows, with the same tcs masks, and the Mobian observer trial gives 26
+messages and 6 BCM messages in its window. The addresses differ on a
+handful of registers, which the two kernel revisions explain.
+
+**The independent check on the scale.** The night readings carry the
+gauge's own current: `current_now` reads 48.8 to 330.1 mA over the
+detached period, median 87.9 mA, at the sample instants, and the counter
+implies about 106 mA over the awake blocks and 33.6 to 57.1 mA over the
+sleeps. The counter is not a lagging model of the state of charge. The
+scale was then checked against the power path, which is not the gauge:
+`usb/input_current_now` reads about 460 mA at 5.04 V while the battery
+takes about 289 mA at 4.47 V, that is 2.32 W in, 1.29 W to the battery
+and about 1.03 W for the phone itself, while plugged and awake. The
+gauge's figures, 193 mW during a sleep and 456 mW awake and unplugged,
+are of the same order, so a scale error large enough to explain the whole
+difference is not supported.
+
+**The budget.** The sleep rate is the dominant term: 33.6 to 57.1 mA,
+median 45.3, against about 14 mA for the reference night, with 95.1 % and
+98.9 % asleep. The wake frequency is a duty-cycle cost, a few tens of mAh
+and not hundreds.
+
+**What remains** is what the kernel traces do not show: the modem's own
+behaviour, since the RPMh request that puts it to sleep is identical; the
+APSS's deeper states; the gauge's own consumption during the sleep; and
+the scale of the two gauges, which the USB check supports but does not
+establish.
+
+**The structural limit.** The phone cannot sleep while it is plugged in,
+so during an unplugged sleep the gauge is the only instrument available.
+The Mobian sleep current can be estimated only through the same gauge
+whose scale is in question. The comparison rests on both platforms running
+the same gauge driver, on the same battery, reporting the same full
+value: a strong argument, not a measurement.
+
+**The one discriminating verification proposed.** Calibrate the gauge's
+current scale against the power path in the state that matters, by tying
+the counter's slope to the gauge's current reading over the same window,
+which the collector already samples every five seconds. Everything else
+needs an instrument the project does not have: the Android point in time
+reading waits for an OS change, the two systems sharing the phone.
+
+**Limits.** One night, one build, one device. The sleep brackets carry
+about five seconds of awake time. The same `charge_full` does not prove a
+comparable coulomb scale. The factor of about 3.4 is a difference of gauge
+readings, and the sleep rate itself moves during the night, 54.9 to
+37.1 mA of median per third. The USB check was taken while plugged and
+awake, and its input current includes the charger's losses.
