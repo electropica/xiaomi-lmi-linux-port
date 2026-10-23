@@ -1,0 +1,101 @@
+{
+  "source_hashes": {
+    "android_trace": "9a36000df4ec57c3380a180b8992c81bdaeb472754934d1f2574eb017e6f59b4",
+    "mobian_return": "838aa138b34d9aee063b2fe424ff58cc4635ebd2fce4a98f379b8ff62c300692"
+  },
+  "windows": {
+    "android": 4,
+    "mobian": 1
+  },
+  "pairs": [
+    {
+      "android_window_start": 32414.029061,
+      "sleep_rows": 12,
+      "sleep_ordered_identical": true,
+      "wake_differences": [
+        {
+          "address": "0x50000",
+          "android": "0x60124a6f",
+          "mobian": "0x60003f55"
+        },
+        {
+          "address": "0x50004",
+          "android": "0x2018d2bf",
+          "mobian": "0x20003e7f"
+        },
+        {
+          "address": "0x50014",
+          "android": "0x6018c95f",
+          "mobian": "0x60001f3f"
+        }
+      ]
+    },
+    {
+      "android_window_start": 32755.020884,
+      "sleep_rows": 12,
+      "sleep_ordered_identical": true,
+      "wake_differences": [
+        {
+          "address": "0x50000",
+          "android": "0x6024ca6f",
+          "mobian": "0x60003f55"
+        },
+        {
+          "address": "0x50004",
+          "android": "0x2018d2bf",
+          "mobian": "0x20003e7f"
+        },
+        {
+          "address": "0x50014",
+          "android": "0x6018c95f",
+          "mobian": "0x60001f3f"
+        }
+      ]
+    },
+    {
+      "android_window_start": 33355.010812,
+      "sleep_rows": 12,
+      "sleep_ordered_identical": true,
+      "wake_differences": [
+        {
+          "address": "0x50000",
+          "android": "0x60124a6f",
+          "mobian": "0x60003f55"
+        },
+        {
+          "address": "0x50004",
+          "android": "0x2018d2bf",
+          "mobian": "0x20003e7f"
+        },
+        {
+          "address": "0x50014",
+          "android": "0x6018c95f",
+          "mobian": "0x60001f3f"
+        }
+      ]
+    },
+    {
+      "android_window_start": 33955.021388,
+      "sleep_rows": 12,
+      "sleep_ordered_identical": true,
+      "wake_differences": [
+        {
+          "address": "0x50000",
+          "android": "0x6024ca6f",
+          "mobian": "0x60003f55"
+        },
+        {
+          "address": "0x50004",
+          "android": "0x2018d2bf",
+          "mobian": "0x20003e7f"
+        },
+        {
+          "address": "0x50014",
+          "android": "0x6018c95f",
+          "mobian": "0x60001f3f"
+        }
+      ]
+    }
+  ],
+  "scope": "Only complete apps_rsc machine_suspend windows in retained Android suffix; not physical state or current; no current-build equivalence asserted."
+}

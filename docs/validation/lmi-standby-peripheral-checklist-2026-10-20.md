@@ -186,3 +186,84 @@ failure. It does not justify toggling the bit or claiming the GPU electrically
 excluded. No new unplugged comparison was requested for this negative check.
 
 The [completed same-kernel graphical/headless A/B/A](lmi-headless-aba-result-2026-10-21.md) reports no demonstrated reduction after stopping Phosh/Phoc; all phases and restoration passed.
+
+## 2026-10-22 addendum — display row transition evidence
+
+`docs/validation/lmi-panel-vci-release-timing-2026-10-22.md` adds **T** level
+evidence to the display row, from the retained raw traces only. On the
+LineageOS reference `display_panel_vci` and `pm8150_l14` are released at
+screen-off, 255 s to 1796 s before the corresponding suspend entry; on the
+2026-10-12 Mobian wide trial they are released 0.301 s before the suspend
+entry, inside the suspend path, and are not re-enabled in the observed
+post-resume window. The rails are off during the powered-down interval on both
+platforms, so this is a difference in the **screen-off to suspend idle gap**,
+not in the suspend state. It is invisible to a deep-suspend current
+measurement.
+
+The row stays **Open**: the current drawn by a requested display panel rail
+is not measured, the Mobian observation comes from an uncertified older build,
+and the length of the Mobian idle gap is not measured. The cheapest
+discriminator is one awake, read-only observation of the panel rail state
+during the idle gap on both platforms.
+
+
+## 2026-10-22 addendum — UFS row narrow result
+
+A privileged, read-only LineageOS read (operator-authorised `adb root`,
+reversed with `adb unroot` in the same script) and the retained Mobian
+snapshot give **the same value for every UFS policy attribute that exists on
+both sides**: `clkgate_enable=1`, `clkgate_delay_ms=50`, `rpm_lvl=3`,
+`spm_lvl=3`, `auto_hibern8=1000`. Neither clock-scaling spelling is
+enumerated on the reference. The line "Actual selected low-power link/clock
+state is not proven by source alone" is narrowed to: the **policy values**
+now agree for the five shared attributes, on the reference kernel, at one
+plugged awake moment.
+
+The row stays **Open**: a plugged awake read is not a sleep observation, the
+Mobian side of the newer attributes (`rpm/spm_target_link_state`,
+`rpm/spm_target_dev_state`, `psa_state`, `current_power_mode`,
+`qcom/power_mode`, `max_bus_bw`) is still missing, the `ufs_core.c` show/store
+implementations were not compared, and the actual link and PHY state during a
+qualified sleep interval is still unproven.
+
+
+## 2026-10-22 addendum — UFS row closed for the policy
+
+With the Mobian privileged capture (current kernel `a5b3099017ae`, root over
+the existing SSH route, USB connected) the UFS comparison is now **complete on
+the policy**: every UFS policy attribute observed on both platforms has the
+**same value**, including `clkgate_enable=1`, `clkgate_delay_ms=50`,
+`rpm_lvl=3`, `spm_lvl=3`, `auto_hibern8=1000`,
+`rpm/spm_target_link_state=HIBERN8`, `rpm/spm_target_dev_state=SLEEP`,
+`attributes/psa_state=0x00000000`, `attributes/current_power_mode=0x00000011`
+and `qcom/power_mode`. The only differing reading is `qcom/clk_status`
+(0 against 1), which is a live clock status, not a policy.
+
+The **UFS policy** is therefore not a candidate for the standby difference.
+The row's original gap, "actual selected low-power link/clock state is not
+proven by source alone", remains open in its **state** form: a plugged awake
+policy read is not a sleep observation, and the actual link and PHY state
+during a qualified sleep interval is still unproven.
+
+The same session produced the first concrete instance of the always-on
+class: `vdd_boost_vreg` reads `use=1`, `open=1`, single `deviceless`
+consumer, that is enabled by its own `regulator-always-on` declaration and
+emits no transition at all. It is the rail class the transition comparisons
+structurally cannot see.
+
+
+## 2026-10-22 addendum — display row, R1 refuted on the current build
+
+Two point-in-time regulator summary reads on the current Mobian kernel, root
+over the existing SSH route, USB connected, untouched in between: the panel
+rails `display_panel_vci` and `pm8150_l14` are held **open** the whole time by
+`soc:qcom,dsi-display-primary` (`open=2`), and their **enable** count goes
+from 1 to 0 while the system stays awake. The display stack does release the
+panel rails when the panel blanks, so the 2026-10-12 transition evidence does
+not reproduce as a missing release-at-blank behaviour.
+
+The display row keeps its earlier gap, and the addendum of 2026-10-22 on the
+panel rail timing records the details. What is still unproven remains the
+panel-specific sequence and rail requests **during a qualified sleep
+interval**: the release-at-blank reading is taken awake, and the DRM connector
+state does not report the panel on/off state on this platform.
