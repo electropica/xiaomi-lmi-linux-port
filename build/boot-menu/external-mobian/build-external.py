@@ -19,7 +19,7 @@ def files():
     inner=inner.replace(needle,'python3 -B /recipe/external-mobian/make-outer.py /recipe /inputs /output\npython3 -B /recipe/external-mobian/apply-outer.py /source/edk2-msm /recipe /output\n'+needle)
     result['build-inside.sh']=inner.encode()
     for name in ['outer-range.h','outer-pei.h','outer-loader.h','lmi-kernel-extent.h',
-                 'make-outer.py','apply-outer.py','pack-outer.py']:
+                 'make-outer.py','board-overlay.py','apply-outer.py','pack-outer.py']:
         result['external-mobian/'+name]=(here/name).read_bytes()
     return result
 

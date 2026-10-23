@@ -1,3 +1,33 @@
+## October23: board overlay omission found and corrected in the recipe
+
+The previous ece3f4c4 candidate displayed its menu, then black-screened after
+the15s default Mobian selection. A forced restart recovered the original Mobian;
+no flash occurred and pstore was empty. This is a failed temporary trial.
+
+Offline comparison found that its Mobian component was only the generic Kona
+base DTB (2896 nodes), whereas the functional ABL-started Mobian uses4018 nodes.
+Applying the already-pinned Xiaomi DTBO entry7 restores4017 nodes, including the
+display supplies, GPIO keys, USB and board peripherals. Only the runtime fstab
+exaid node remains additional;13 shared properties differ, mostly dynamic ABL
+fixups. This does not prove every handoff issue is fixed, but it establishes a
+specific missing pre-kernel board overlay. No runtime DT dump is used as input.
+
+The recipe now pre-applies the exact pinned board7 overlay while packaging Mobian
+assets, preserves the tested Android loader, keeps the32MiB firmware, and uses
+`lmi_menu=outer-v2`. The new output is boot-lmi-outer-mobian-board7-test.img and
+outer-mobian-board7-artifact-manifest.json. The previous installer remains pinned
+to a failed image and MUST NOT be used for this revision; repin only after build
+qualification and fresh temporary trials of all four destinations.
+
+Manual menu-only build from the isolated checkout:
+
+```sh
+sudo python3 -B /home/linuxagent/lmi-permanent-menu-20261023/build/boot-menu/external-mobian/build-external.py --build
+```
+
+Expected marker: OUTER_MOBIAN_BOARD7_MENU_BUILD_COMPLETE_NOT_FOR_FLASHING.
+This is not a kernel/rootfs build, and no agent has run the firmware compilation.
+
 # Direct Mobian with an external input ramdisk — candidate only
 
 Status: preparation and host/ARM64 syntax checks pass. No firmware build or

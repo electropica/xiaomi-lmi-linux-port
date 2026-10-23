@@ -10,9 +10,12 @@ def make(recipe,inputs):
     expected=json.loads((recipe/'sources.lock.json').read_text())['os_images']['mobian']
     assert hashlib.sha256(raw).hexdigest()==expected
     parts=module.extract(raw)
+    board_spec=importlib.util.spec_from_file_location('board_overlay',Path(__file__).with_name('board-overlay.py'))
+    board_module=importlib.util.module_from_spec(board_spec);board_spec.loader.exec_module(board_module)
+    parts['dtb'],board_info=board_module.apply_board(parts['dtb'],(inputs/'android-dtbo.img').read_bytes())
     entries=[('mobian/'+name,parts['cmdline.txt'][:-1]+b'\0' if name=='cmdline' else parts[name])
              for name in ['kernel','initrd','dtb','cmdline']]
-    entries.append(('mobian/identity',b'lmi-outer-v1\0'))
+    entries.append(('mobian/identity',b'lmi-outer-v2\0'))
     data=bytearray(4096);report={}
     for i,(name,payload) in enumerate(entries):
         data.extend(b'\0'*(-len(data)%4096));offset=len(data);data.extend(payload)
@@ -21,7 +24,7 @@ def make(recipe,inputs):
     struct.pack_into('<8sIIQ',data,0,b'LMIBNDL1',1,5,len(data))
     assert len(data)<=64*1024*1024
     return bytes(data),{'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),
-                        'crc32':zlib.crc32(data),'source_boot_sha256':expected,'components':report}
+                        'crc32':zlib.crc32(data),'source_boot_sha256':expected,'components':report,'board_overlay':board_info}
 
 if __name__=='__main__':
     ap=argparse.ArgumentParser();ap.add_argument('recipe',type=Path);ap.add_argument('inputs',type=Path);ap.add_argument('output',type=Path)

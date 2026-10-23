@@ -1,0 +1,15 @@
+{
+  "candidate_sha256": "ece3f4c4e6e2f6ed485d159b0b2f3f682ba8f758962a395490937120d44f423e",
+  "temporary_launch_host_utc": "2026-10-23T05:16:26.055224+00:00",
+  "flash_performed": false,
+  "menu_visible": true,
+  "automatic_mobian_after_15_seconds": "FAILED_BLACK_SCREEN",
+  "direct_mobian_provenance_confirmed": false,
+  "ssh_during_black_screen": "connection refused",
+  "recovery": "operator confirms installed Mobian after forced restart",
+  "recovered_kernel": "4.19.325-cip128-st12-perf-ga5b3099017ae-dirty",
+  "recovered_direct_marker_present": false,
+  "pstore_entries_after_recovery": 0,
+  "permanent_installation_qualified": false,
+  "next_step": "Offline direct-Mobian handoff investigation; do not reflash or repeat this unchanged image"
+}

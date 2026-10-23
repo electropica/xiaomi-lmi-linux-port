@@ -1,3 +1,11 @@
+## October23 direct Mobian correction
+
+The first outer-ramdisk candidate failed its temporary Mobian boot because its
+base DTB lacked the board overlay used by the functional ABL path. The corrected
+recipe and its bounded tests are in [external-mobian](external-mobian/README.md).
+It requires an operator menu-only build and new temporary hardware validation.
+No permanent installation has been qualified.
+
 ## 2026-10-22: 32-MiB external Mobian ramdisk candidate prepared, not built
 
 The historical resetguard1 menu has all four operator outcomes confirmed, but

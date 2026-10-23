@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "firmware_compiled": false,
+  "phone_contact": false,
+  "board_overlay": {
+    "board_index": 7,
+    "base_dtb_sha256": "74edf0671376aa58df50897766500d04840af13d4bf27d0f78598ab7343d02f9",
+    "dtbo_partition_sha256": "45f0989700c68afcd817a6a4569ba67225cf128e3eedd35a658bad384632eec4",
+    "board_sha256": "019bd837d01396d86dcecc65a39c6591fc0ceeb6aa5ef98cc7374cc6248c7466",
+    "merged_dtb_sha256": "340b7130748c722fd6a9ef8d9a0bbc79373baaf9fa22e5ccbc78610722fa43eb",
+    "merged_dtb_bytes": 874386,
+    "applied_offline": true,
+    "runtime_dump_used_as_boot_input": false
+  },
+  "bundle_bytes": 55054349,
+  "bundle_sha256": "230f605e38b7ff4c9fc13b9463accfa2303456d2fbb35536920ed4c47bf19cda",
+  "test_container_bytes": 81051648,
+  "test_container_is_new_firmware": false,
+  "kernel_initrd_cmdline_unchanged": true,
+  "unknown_or_corrupt_inputs_rejected": true,
+  "expected_display_keys_touch_nodes_present": true,
+  "outer_assets": {
+    "bytes": 55054349,
+    "sha256": "230f605e38b7ff4c9fc13b9463accfa2303456d2fbb35536920ed4c47bf19cda",
+    "crc32": 1930238310,
+    "source_boot_sha256": "75bb65facbd4146d4a1e668039ef52433ef90c2b6bdb07f2c59980caf3191374",
+    "components": {
+      "mobian/kernel": {
+        "offset": 4096,
+        "bytes": 45359128,
+        "sha256": "87c53d33202d4607591fa0ba6d2bf091dc2dfc4673a3326436740a1f0e7bae6a"
+      },
+      "mobian/initrd": {
+        "offset": 45367296,
+        "bytes": 8805650,
+        "sha256": "5622088331db3e8dbd0266dedb5e1606747fdf0fa74cf7c0797ad22dd3042530"
+      },
+      "mobian/dtb": {
+        "offset": 54173696,
+        "bytes": 874386,
+        "sha256": "340b7130748c722fd6a9ef8d9a0bbc79373baaf9fa22e5ccbc78610722fa43eb"
+      },
+      "mobian/cmdline": {
+        "offset": 55050240,
+        "bytes": 470,
+        "sha256": "f718c08f1f3d257311ead88e60bb10b66eae170130bd36678e5cf3cf6e75dadd"
+      },
+      "mobian/identity": {
+        "offset": 55054336,
+        "bytes": 13,
+        "sha256": "b21e4cfb40fb16d834aed5b2fc75a98e0b154532806364a50f222b43c4582b13"
+      }
+    },
+    "board_overlay": {
+      "board_index": 7,
+      "base_dtb_sha256": "74edf0671376aa58df50897766500d04840af13d4bf27d0f78598ab7343d02f9",
+      "dtbo_partition_sha256": "45f0989700c68afcd817a6a4569ba67225cf128e3eedd35a658bad384632eec4",
+      "board_sha256": "019bd837d01396d86dcecc65a39c6591fc0ceeb6aa5ef98cc7374cc6248c7466",
+      "merged_dtb_sha256": "340b7130748c722fd6a9ef8d9a0bbc79373baaf9fa22e5ccbc78610722fa43eb",
+      "merged_dtb_bytes": 874386,
+      "applied_offline": true,
+      "runtime_dump_used_as_boot_input": false
+    }
+  }
+}

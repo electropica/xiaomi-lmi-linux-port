@@ -1,3 +1,30 @@
+## 2026-10-23: direct Mobian failure traced to an omitted board overlay
+
+The outer-v1 image ece3f4c4 displayed its menu and loading text, then went black
+after the15s Mobian default. SSH was unavailable; a forced reboot recovered the
+unchanged installed Mobian. No flash occurred and no pstore records survived.
+Permanent installation remains unqualified.
+
+The bundle carried the generic Kona base DTB,2896 nodes. The functional ABL boot
+uses4018 nodes. Offline application of exact pinned Xiaomi DTBO entry7 restores
+4017 nodes, including the board display supplies, input and other peripherals;
+the only additional runtime node is the fstab exaid entry.13 shared properties
+remain different, including normal dynamic bootloader fixups. This is a confirmed
+missing board-overlay step, not proof that every possible handoff issue is solved.
+
+The external-mobian recipe now applies this exact overlay offline to the locked
+Mobian base before packaging; no runtime DT dump is booted. Kernel, initramfs and
+command line are preserved, Android's working loader and32MiB FD are unchanged.
+The new direct marker is lmi_menu=outer-v2. Tests on real locked inputs, corrupted
+input refusal, critical board nodes, bundle bounds/component preservation and
+container construction pass; range/loader/container unit checks also pass. The
+content-addressed recipe is prepared; firmware compilation is NOT run by the agent.
+
+Next operator menu-only build: see build/boot-menu/external-mobian/README.md.
+New output boot-lmi-outer-mobian-board7-test.img must be host-qualified and
+temporarily tested before any installation. The old installation helper still
+pins the failed image and must be repinned only after the new candidate qualifies.
+
 ## 2026-10-23: permanent menu operator workflow prepared; handset qualification pending
 
 The outer-Mobian candidate was manually built on October22 and host-qualified:
