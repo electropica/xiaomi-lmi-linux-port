@@ -595,3 +595,36 @@ prevents treating this single before/after observation as exclusive causal
 proof. A discharge comparison must exclude the loading transition and retain
 the existing gauge scale and physical-current limitations. Candidate use is
 temporary; reboot restores the installed kernel/menu path.
+
+## Learned capacity acceptance and profile review limits
+
+The retained exact fg-alg.c fills a source gap in the external review.
+cap_learning_post_profile_init obtains nominal capacity from its caller and
+learned capacity through a driver callback. With a nonzero nominal value,
+it replaces a nonzero learned value only when its distance from nominal is
+strictly greater than 50 percent. A learned 2677000 is therefore accepted if
+the SRAM nominal value is 4700000 (43.04 percent below it). The published DT
+design capacity alone does not establish that SRAM nominal value. This is an
+algorithm acceptance rule, not battery-health or physical-capacity validation.
+
+If learned differs from nominal, the same initialization function calls its
+store callback even when the accepted numeric value remains unchanged. In
+this driver, fg_gen4_store_learned_capacity writes ACT_BATT_CAP SRAM first and,
+when fg_nvmem exists, also writes the learned-capacity SDAM field. Thus payload
+loading being skipped does not imply that the later common path has no writes.
+No direct calibration or debug SRAM operations were performed for this review.
+
+The raw and software charge functions read CC_SOC and CC_SOC_SW respectively;
+they are different SRAM properties. Equal published charge_full supports at
+most an equal capacity factor at the observations, not equal accumulator
+dynamics or calibrated physical-current scaling. Their divisor is
+GENMASK(29,0), exactly 2^30-1. A matching payload already present in SRAM would
+not by itself rule out differences in the common post-load configuration.
+
+Independent post-build verification also confirmed byte equality for all
+13 source files touched by the pinned seven-patch sequence against a fresh
+bounded archive extraction and patch replay. This verifies those touched
+files, not every generated or untouched file. Configuration remained pinned.
+
+The temporary candidate's detached thirty-minute observation was still running
+when this note was written. No standby improvement is established yet.
