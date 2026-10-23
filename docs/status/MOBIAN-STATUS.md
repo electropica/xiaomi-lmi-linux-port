@@ -1,3 +1,7 @@
+## 2026-10-23: permanent dualboot installed and read-back verified
+
+The operator installed candidate be9841c76cbe34d0c72606c47877f99582aee224144744349a9e78d15cfd0a94 to boot and confirmed automatic Mobian startup. Read-only SSH verified the installed boot prefix over the complete 81,051,648-byte artifact against its SHA256, the direct outer-v2 marker and the dedicated16GiB root. The permanent installation is confirmed. All four exact-image entries had previously passed temporary handset trials; only Mobian has additionally been confirmed after permanent installation. No kernel/rootfs rebuild or battery policy modification was part of the installation. Private raw receipts remain outside Git. No further menu build is required.
+
 ## 2026-10-23: dual-extent menu passed all four temporary handset entries
 
 Candidate be9841c76cbe34d0c72606c47877f99582aee224144744349a9e78d15cfd0a94 (81,051,648 bytes) passed operator tests: Mobian default after15s, LineageOS, Fastboot, Recovery. Read-only SSH independently confirmed the direct outer-v2 Mobian marker and dedicated16GiB root. The Android full-runtime-extent candidate resolves the reported boot failure in this handset trial; an actual collision address was not captured. The pinned installation helper is ready for the operator. No permanent flash or installed readback has yet been performed. Private raw evidence remains outside Git.

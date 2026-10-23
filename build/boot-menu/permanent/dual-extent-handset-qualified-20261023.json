@@ -9,6 +9,7 @@
   },
   "direct_mobian_marker_verified": true,
   "dedicated_root_verified": true,
-  "permanent_flash_completed": false,
-  "installed_readback_verified": false
+  "permanent_flash_completed": true,
+  "installed_readback_verified": true,
+  "installed_mobian_boot_operator_confirmed": true
 }
