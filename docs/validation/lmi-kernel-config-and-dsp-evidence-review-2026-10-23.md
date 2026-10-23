@@ -650,3 +650,41 @@ No historical night/candidate difference can be described as an established
 missing-profile versus loaded-profile energy experiment. Compare only what
 the matched evidence supports and preserve the distinction between a reported
 counter trend, profile reliability and calibrated electrical consumption.
+
+## Temporary FG kernel thirty-minute window result
+
+The returned collector JSON is preserved privately with SHA256
+e6e5041fef321972041f5b38ef51a01f401175ec644098373fe280ef8e516a2d.
+Its observed span is1858.372 seconds, including286.543 seconds suspended
+(15.419 percent). The two detached suspend gaps are246.331 and40.212 seconds.
+The first follows the normal900second idle delay. Kernel logs identify the
+wakes as438msoc-delta and445esr-delta respectively. After the first wake another
+suspend starts about15seconds later. After the second, DSI and touch resume.
+No third suspend occurs before USB returns about10minutes later; that is less
+than the ordinary900second idle delay, so it does not prove permanent inability
+to re-suspend.
+
+The profile remains j11sun_4700mah/design4700000/learned2677000/scale0/ready1
+after the test. The collector exited, its log records replug, and the NPU
+suspend-state file is absent after return. No timeout, IRQ or calibration
+settings were changed. The system phosh unit is inactive, but the actual user
+Phosh process is alive: system-unit status alone must not be used as a crash
+diagnosis.
+
+The retained qualified counter span is1563.030seconds and its decrease is52991
+reported units. Only256of312qualified endpoints are retained, so that span is
+shorter than the whole detached interval. Charging return and unplug-crossing
+readings are excluded from this calculation. It is mostly an awake interval,
+not a sleep-only consumption measurement or proof of physical current gain.
+
+Actual running packages are Phosh homedrag8 on lmigaugewake3 and GSD
+48.1-1+lmiquietgauge3; their expected quiet environment variables are present.
+Both active binaries lack the exact445esr-delta reason string. Their matched
+source policies accept438msoc-delta and guarded441msoc-high, not445esr-delta.
+This explains the ordinary screen-on resume path, independently of whether
+loading the FG profile changes physical power. The existing two-component ESR
+policy patch applies to those exact source hashes and its isolated native
+before/after reason-policy tests pass. It has NOT been package-built or
+installed. Its proposed build preserves13qualified homedrag8 files and does not
+introduce the separate quiet-grace4 experiment. Keep these validation boundaries
+distinct from the already-booted kernel candidate.
