@@ -1,3 +1,25 @@
+## 2026-10-23: permanent menu operator workflow prepared; handset qualification pending
+
+The outer-Mobian candidate was manually built on October22 and host-qualified:
+SHA256 `ece3f4c4e6e2f6ed485d159b0b2f3f682ba8f758962a395490937120d44f423e`,
+80,654,336 bytes. It retains the32MiB firmware and carries the pinned Mobian
+components in the outer ramdisk. No additional firmware build was run for this
+preparation. The historical resetguard1 restart-only reference remains unsuitable
+for permanent installation over boot.
+
+`build/boot-menu/permanent/` adds plan-only native Windows operator tools,
+candidate/rescue hash checks, actual direct-root provenance capture, per-entry
+operator evidence, product/partition guards, a qualification-gated boot-only
+installer and installed boot-prefix readback. Nine offline tests pass; local
+plan mode verifies both existing downloaded images. There has been no phone
+contact, reboot, flash or hardware validation by this preparation.
+
+Next: finish and save any battery observation, temporary-boot this exact image,
+verify `lmi_menu=outer-v1` and the dedicated16GiB root, then test Mobian default,
+LineageOS, Fastboot and Recovery. Only after those actual outcomes are recorded
+can the operator installation run. Permanent readback remains unperformed.
+See the operator README for the pinned rescue image and rollback procedure.
+
 ## 2026-10-22: 32-MiB external Mobian ramdisk candidate prepared, not built
 
 The historical resetguard1 menu has all four operator outcomes confirmed, but
