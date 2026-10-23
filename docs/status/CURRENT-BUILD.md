@@ -1,3 +1,13 @@
+## Current permanent dualboot reference — October 23, 2026
+
+The permanent four-entry menu has passed temporary Mobian/LineageOS/Fastboot/
+Recovery trials; persistent Mobian startup and boot-prefix readback are verified.
+The qualified artifact identities and retention rules are recorded in
+docs/maintenance/ARTIFACT-RETENTION.md. The current menu-only recipe is
+build/boot-menu/external-mobian/build-external.py; the pinned operator installer
+is build/boot-menu/permanent/manage.py. Older chronological entries below
+describe superseded experiments and are not the current installation procedure.
+
 ## 2026-10-23: direct Mobian failure traced to an omitted board overlay
 
 The outer-v1 image ece3f4c4 displayed its menu and loading text, then went black

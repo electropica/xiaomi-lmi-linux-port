@@ -106,3 +106,8 @@ English, following the project's original language. Operator conversations
 may remain in French. Preserve original UI labels and operator quotations
 where needed to identify a control or retain evidence. Do not translate
 technical identifiers, paths, versions or diagnostic output.
+
+
+## Artifact retention and external backups
+
+Follow `docs/maintenance/ARTIFACT-RETENTION.md`. Keep one current qualified build plus its compatible rescue and latest installable system image. Do not accumulate dated home directories or external-disk copies of reproducible builds. External backups retain only useful unique material absent from Git. Preserve and verify any required external inputs and uncommitted changes before removing a dependency. Record cleanup targets and results.
