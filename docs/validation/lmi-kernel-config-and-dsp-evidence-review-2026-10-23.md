@@ -302,3 +302,34 @@ modem and gauge questions remain scoped separately.
 Private receipts: battery-lpm-policy-20261023-private.json and
 battery-lpm-topology-20261023-private.json. Reads used only existing USB SSH;
 no firmware, GPIO, regulator, protection, service or policy control was changed.
+
+## LPM source follow-up accepted with runtime limits
+
+Verified the supplied lpm-idle-versus-suspend-review against pinned sources.
+lpm-levels-of.c:317–341 chooses independent idle_enabled/suspend_enabled fields
+using from_idle. lpm_suspend_enter passes false in the CPU loop and passes false
+to cluster_prepare; cpu_power_select passes true. This rejects the proposed
+direct system-suspend fix based on ret/idle_enabled=N.
+
+In the retained Android post-boot script the kona block begins at 5673–5674
+and ends after sleep_disabled=N at 5841. It contains no proposed ret writes.
+Those writes belong to other platform branches. The runtime Mobian hierarchy
+is L3, with rail-pc and llcc-off permitted for both idle and suspend.
+
+Scope accepted: no demonstrated missing kona retention policy in this script;
+do not copy the proposed ret writes. Scope not accepted: permanent exclusion of
+all LPM differences, assertions about successful/failed Android writes without
+runtime evidence, or 'nobody changes defaults' merely because current values
+match defaults. Actual Android permissions/topology remain unobserved.
+
+The supplied reader is preserved unchanged, not executed. Its claims of reading
+only three LPM attributes are inaccurate: it also reads full /proc/cmdline,
+mem_sleep, pm_async and wakeup_count, and invokes Android-only getprop. A stricter
+cross-OS reader is prepared as userspace/power/diagnostics/lpm-policy-snapshot.sh. It reads only the
+three attribute names under lpm_levels and a non-unique kernel release. No
+phone contact was needed for this acceptance; no policy/build/test changed.
+
+Next already-planned Android visit: use the bounded LPM reader and existing
+matched-gauge reader in the same awake session. No unplug or extra long test is
+needed to establish availability and current policy flags. A matched result
+closes that specific permission/topology comparison, not physical LPM state.
