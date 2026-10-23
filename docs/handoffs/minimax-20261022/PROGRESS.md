@@ -1153,3 +1153,66 @@ for the Android half, the two systems sharing the phone.
 
 **State.** Commit below, local only, thirteen commits ahead of origin,
 nothing pushed. No device was contacted.
+
+## Entry 19 - 2026-10-23 - the RPMh mechanism audited, the hypothesis retired, and the question narrowed to the masters not covered
+
+**Two of my sentences were wrong and are corrected.** The SLEEP and
+WAKE_ONLY requests are not "only sent in the ACTIVE_ONLY state": every
+declaration is cached (`rpmh.c` line 228), only the ACTIVE_ONLY one goes
+out immediately (line 235), and the deferred ones are submitted by
+`rpmh_flush()` **with their own state** (SLEEP line 589, WAKE_ONLY line
+592). And the requests are not identical: the addresses and the tcs
+masks match, but two of the mask 5 declarations differ, `0x50004`
+`0x2018d2bf` against `0x20003e7f` and `0x50014` `0x6018c95f` against
+`0x60001f3f`, while `0x50000` changes between the LineageOS windows
+themselves, so those values are state-dependent.
+
+**The hypothesis of a missing flush is retired.** `rpmh_flush()` is
+documented, lines 552 to 554, as "always called from the sleep code
+from the last CPU that is powering down the entire system". The flush is
+part of the suspend path that is actually executed, so a cached SLEEP
+declaration that is never flushed is not a mechanism compatible with it.
+
+**The question about the masters is already answered for two of them.**
+The audit of 14 October, on the retained current-build trial 36, gives an
+APSS residency of 720.556 s over a 721.244 s window, 99.90 % and 9.3 ms
+from the Linux sleep, and an ADSP residency of 721.271 s, 100.00 %. Its
+own limits say that only APSS and ADSP are present, so **MPSS,
+ADSP_ISLAND, CDSP, SLPI, SLPI_ISLAND, GPU and DISPLAY have no record
+and their residency is unknown, not zero**.
+
+**What `master_stats` measures, exactly.** One read-only attribute,
+mode 0444, on `b221200.qcom,rpmh-master-stats`. The APSS values come
+from the profile units POWER_DOWN_END and POWER_UP_START, computed in
+the kernel; the other masters' come from SMEM, written by their own
+firmware. The durations are architectural counter ticks, the retained
+`rpm_stats.c` giving 19.2 MHz and no fresh CNTFRQ read being performed.
+The update runs on the power management callback, so once per suspend
+and resume, and it is rejected when the power-profile validity bits are
+not set, so the sleep count is not a count of Linux system-suspend cycles.
+The count is a uint32 and the durations uint64, and a reboot resets them.
+
+**The question left** is the residency of the masters the trial did not
+cover, the GPU master in particular, since the GPU core rail is the one
+where the two suspend paths differ observably.
+
+**A minimal control is prepared**, two tools validated off-device,
+`master-stats-once.py` for Mobian and `master-stats-once.sh` for
+LineageOS, in the private area. They print the attribute verbatim with
+the wall time and the uptime, they read one file, they do not poll, they
+do not wake anything, they read no register and they change no setting.
+The validation ran them against a fixture, checked the output, the
+missing-path case, that there is no write open and no polling loop. The
+protocol rules from the audit apply: the displayed duration already
+includes a running sleep and must be differenced as printed, the unit is
+ticks at 19.2 MHz, a reboot resets the counters, and a master absent
+from the output is not reported, not off.
+
+**If the residency is not conclusive**, the next discriminating question
+is the two differing declarations captured on the current Mobian build
+with the observer method of 12 October, whose LineageOS counterpart is
+already kept, compared in a state-controlled way.
+
+**State.** Commit below, local only, fourteen commits ahead of origin,
+nothing pushed. No device was contacted, no build, no installation, no
+physical test.
