@@ -449,3 +449,46 @@ state and existing ownership of the subsystem node, alongside the already
 prepared LPM/gauge snapshot. A client difference would establish software
 initialization, not a battery cause. No new long discharge or modem control is
 justified by this report. Original MiniMax files remain preserved unchanged.
+
+## Paired profile discrepancy and matching LPM permissions
+
+After the operator reconnected Mobian, explicit getters confirmed Unknown
+Battery, charge_full_design=0, charge_full=2677000, scale_mode_en=0,
+soc_reporting_ready=1, esr_nominal=0 and esr_actual=0. The running configuration
+still matches c6da6e71cc7418f36997325ff5d72693d9861945cc4999b6be9661a150451e78.
+The actual /sys/power/rpmh_stats/master_stats remains accessible with APSS/ADSP;
+the independent report's search only under /sys/devices was not an absence test.
+
+The live Mobian DT contains both soc/qcom,battery-data (phandle 0x534, including
+j11sun_4700mah) and vendor/qcom,battery-data (phandle 0x64c, other profiles).
+The gauge's qcom,battery-data property points to 0x534, the intended container.
+This is a concrete driver/profile-state discrepancy to investigate before a
+new discharge comparison. It does not prove the wrong container was selected
+or that a later lookup was permanently too late. Existing source contains
+retry/loading paths whose outcome must be traced rather than assumed.
+
+The operator then booted LineageOS. A single awake USB snapshot at about
+187 seconds uptime reported battery_type=j11sun_4700mah,
+charge_full_design=4700000, charge_full=2677000, scale_mode_en=0 and
+soc_reporting_ready=1. Both ESR fields reported -22; these cached publication
+fields are not direct proof of hardware ESR-comparator programming. The source
+updates them under particular charging/SOC conditions (ESR_SOH_SOC=50), and
+allows writes to the cached fields. Zero alone cannot explain esr-delta IRQs.
+
+All 21 observed LPM permission fields match: eight rail-pc levels plus l3-wfi
+and llcc-off, each idle/suspend flag Y, and sleep_disabled=N. This closes the
+specific proposed difference in these current permissions/topology; it does
+not measure actual physical low-power residency. Android masters APSS, ADSP,
+CDSP, SLPI and SLPI_ISLAND remain visible as in the earlier paired capture.
+
+No discharge, calibration, modem control, mount, protection change or kernel
+build was performed. Previously authorized adb root was needed for the Android
+read; no persistent Android setting was changed. Raw snapshots stay private.
+The host master-name display initially mishandled CRLF; offline re-parsing
+corrected the display without repeating the phone read.
+
+Next source priority: validate the existing unvalidated phandle-first profile
+patch against the exact driver and retry/status path, then decide the smallest
+appropriate build with the operator. Do not assert that all historical Mobian
+measurements lacked a profile: retained earlier boots show 4700000 and j11sun.
+Do not treat missing modem enumeration as proof of electrical shutdown.
