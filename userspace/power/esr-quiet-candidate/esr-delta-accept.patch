@@ -1,0 +1,67 @@
+Accept the esr-delta gauge wake as a gauge-only resume reason.
+
+"445 esr-delta" is a fuel-gauge interrupt. In
+drivers/power/supply/qcom/qpnp-fg-gen4.c the ESR_DELTA_IRQ entry is named
+"esr-delta", its handler is fg_delta_esr_irq_handler, it is enabled with
+enable_irq_wake, and the handler reads the battery resistance and may vote
+awake and schedule ESR calibration.
+
+The quiet-gauge policy recognises "438 msoc-delta" and, only with a fresh
+noncritical discharging reading, "441 msoc-high". It does not recognise
+"445 esr-delta", so a resume caused by that interrupt takes the ordinary
+path: Phosh calls phosh_screen_saver_manager_wakeup_screen() and GSD calls
+backlight_enable(), and the screen comes on.
+
+This change touches the userspace policy only. The interrupt is still
+enabled, the handler still runs, the calibration still happens, and the
+charge protections are untouched. Unknown reasons and combined reasons
+keep failing open, that is they still turn the screen on.
+
+--- a/plugins/power/gsd-power-manager.c
++++ b/plugins/power/gsd-power-manager.c
+@@ -2910,8 +2910,9 @@
+         return TRUE;
+ }
+ 
+-/* IRQ 441 is accepted only with a fresh, noncritical discharging reading.
+- * Missing data, low/empty events and combined IRQ reasons fail open. */
++/* IRQ 441 and IRQ 445 are accepted only with a fresh, noncritical
++ * discharging reading. Missing data, low/empty events and combined IRQ
++ * reasons fail open. */
+ static gboolean
+ lmi_quiet_reason_allowed (const char *reason)
+ {
+@@ -2922,7 +2923,8 @@
+ 
+   if (g_strcmp0 (reason, "438 msoc-delta") == 0)
+     return TRUE;
+-  if (g_strcmp0 (reason, "441 msoc-high") != 0)
++  if (g_strcmp0 (reason, "441 msoc-high") != 0 &&
++      g_strcmp0 (reason, "445 esr-delta") != 0)
+     return FALSE;
+   if (!g_file_get_contents ("/sys/class/power_supply/battery/capacity",
+                             &capacity, NULL, NULL) ||
+--- a/src/screen-saver-manager.c
++++ b/src/screen-saver-manager.c
+@@ -564,8 +564,9 @@
+   return TRUE;
+ }
+ 
+-/* IRQ 441 is accepted only with a fresh, noncritical discharging reading.
+- * Missing data, low/empty events and combined IRQ reasons fail open. */
++/* IRQ 441 and IRQ 445 are accepted only with a fresh, noncritical
++ * discharging reading. Missing data, low/empty events and combined IRQ
++ * reasons fail open. */
+ static gboolean
+ lmi_quiet_reason_allowed (const char *reason)
+ {
+@@ -576,7 +577,8 @@
+ 
+   if (g_strcmp0 (reason, "438 msoc-delta") == 0)
+     return TRUE;
+-  if (g_strcmp0 (reason, "441 msoc-high") != 0)
++  if (g_strcmp0 (reason, "441 msoc-high") != 0 &&
++      g_strcmp0 (reason, "445 esr-delta") != 0)
+     return FALSE;
+   if (!g_file_get_contents ("/sys/class/power_supply/battery/capacity",
+                             &capacity, NULL, NULL) ||
