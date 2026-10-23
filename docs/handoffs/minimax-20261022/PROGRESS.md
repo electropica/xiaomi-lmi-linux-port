@@ -918,3 +918,64 @@ bounded to the last 256 detached readings, so the whole-night
 reconstruction comes from the events and the counters. The attachment
 flag lagged at the reconnection, so the detached period is bounded
 between 28,306 s and 29,068 s.
+
+## Entry 15 - 2026-10-23 - the Mobian regulator requests, connected and unplugged: the USB hypothesis is eliminated
+
+**The reading.** Three regulator summaries taken by the phone itself,
+because the phone has no Wi-Fi address and is only reachable over the
+cable: the connected baseline at 04:49:51 UTC and the unplugged state
+at +30 s and +180 s. The two unplugged snapshots are identical, the
+state settled within thirty seconds. The connected baseline has 21 rails
+requested and open, the unplugged state 16.
+
+**What the unplug releases**, with the open references and the consumer
+lists unchanged: `hsphy@88e3000` use 1->0, `usb30_prim_gdsc` 1->0,
+`pm8150_l2` 2->0, `pm8150_l12` 1->0, `pm8150a_s3_level` 1->0 and
+`pm8150_l5` 2->1.
+
+**The USB hypothesis is eliminated.** The three USB rails were the most
+plausible candidate in the connected baseline, being requested while
+the cable is plugged and held by the USB stack. The unplug releases
+their enable requests, so they are not what the unplugged period keeps
+alive.
+
+**The GPU core rail is not requested once unplugged either**: its parent
+level `pm8150a_s3_level` loses its enable request at the unplug and the
+rail itself is not among the requested ones. The candidate that had
+survived the suspend-path comparison, `gpu_cx_gdsc`, which LineageOS
+disables in its suspend path and Mobian does not, therefore concerns a
+**plugged** suspend and does not explain the unplugged window.
+
+**What stays requested and open**: `vdd_boost_vreg`, still the only rail
+requested exclusively by a `deviceless` consumer and therefore still
+excluded as an explanation, the device tree being shared; the WLAN rails
+`pm8150_s5`, `pm8150_s6` and `pm8009_s2`; the CPU rails `pm8150_l5_ao`
+and `pm8150_l12_ao`; the UFS rails `pm8150_l6`, `pm8150_l17` and
+`pm8150a_s8`; the codec rail `pm8150_s4`; the camera rails
+`pm8150a_bob`; the touch rail `pm8150a_l1`; `pcie_0_gdsc`, `pm8150_l5`,
+`pm8150a_s3_level_ao` and `regulator-dummy`.
+
+**What it does and does not say.** It eliminates two candidates for the
+unplugged period. It does not bound what is held while the processor is
+down, because the requests and the modes can change in both directions.
+It does not tell whether the sixteen remaining rails are more than the
+reference platform holds, because that needs the same reading there and
+LineageOS and Mobian share the phone in dual boot, so the Android half
+waits for an OS change. Nothing here is an electrical measurement: every
+current column reads 0 mA.
+
+**Where the question stands.** The rails are not where the unplugged
+difference comes from, as far as the evidence goes. What is left is the
+behaviour that is not a rail: the wake frequency, which is a duty-cycle
+cost and cannot explain a sleep current about three times higher; the
+peripheral states and the remote-master votes, which the regulator
+summary does not show and which both traces carry, the Android one with
+its RPMh commands and the 12 October Mobian trials with
+`rpmh-sleep-analysis.json`; and the gauge's own behaviour during the
+suspend. The next step is the comparison of the peripheral sleep
+requests from the traces already kept, which needs no OS change.
+
+**Limits.** One observation, one build, one state of charge. The reading
+is of the requests in the unplugged and awake state. The baseline was
+taken while charging and the unplugged ones while discharging, so the
+battery state differs as well as the USB.
