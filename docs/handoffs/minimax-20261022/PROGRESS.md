@@ -1216,3 +1216,65 @@ already kept, compared in a state-controlled way.
 **State.** Commit below, local only, fourteen commits ahead of origin,
 nothing pushed. No device was contacted, no build, no installation, no
 physical test.
+
+## Entry 20 - 2026-10-23 - the master counters are not populated, and the proposed control is withdrawn
+
+**What the driver expects, what the firmware reports, what our phone
+shows.** The driver expects nine masters, the APSS plus the eight of its
+table at lines 64 to 73, MPSS, ADSP, ADSP_ISLAND, CDSP, SLPI,
+SLPI_ISLAND, GPU and DISPLAY, each read from SMEM. The firmware on our
+phone reports **two of them**: the raw snapshots of the retained trial
+36, in `claude-coverage-review-20261014-private.json`, hold exactly
+APSS and ADSP in every snapshot, with the five printed fields, the
+version, the sleep count, the last sleep entry, the last sleep exit and
+the accumulated duration. GPU, DISPLAY, SLPI, SLPI_ISLAND, ADSP_ISLAND,
+CDSP and MPSS are **not reported, because the firmware writes no SMEM
+record for them**; the reader skips a master whose SMEM read returns
+nothing.
+
+**So a new unplug cannot change it.** The counters are cumulative since
+the probe and reset only by a reboot, so a further interval would yield
+the same two masters and would not have measured the GPU master's
+residency at all. **The master_stats control proposed in the previous
+entry is withdrawn.** The two one-shot readers stay in the private area:
+the Mobian one is not needed, the LineageOS one is the tool for the next
+boot.
+
+**There is no LineageOS capture to compare the availability with.** The
+reference packet contains the script that reads
+`/sys/kernel/debug/rpm_master_stats`, but the kept `start.json`,
+`return.json` and the menu night file hold no master statistics block.
+The availability on the reference platform is unknown, and it is the one
+question this interface can still answer.
+
+**The scope of the conclusions is narrowed.** A residency shows that the
+master was powered down for that share of the interval; it does not
+establish a complete electrical shutdown, the retained votes of the
+other resources, a rail voltage or a current, so the sentence that it
+"closes that master as a consumer" is corrected. And the comment that
+`rpmh_flush()` is called by the sleep code is the **intended path**, not
+a proof of a call; the traces show the submissions for the traced
+cycles, the **result** can still be an error, and the **material effect**
+is a further step that a submission does not establish. The missing
+flush hypothesis has no support and is not reintroduced.
+
+**The RPMh differences cannot be decoded.** The tree of this exact
+revision contains no TCM or TCS register map, the RPMh client does not
+decode the payloads, and the meaning of the addresses and of the
+fourteen-bit fields belongs to the AOSS Traffic Channel Manager, which
+is firmware. The missing datum is named rather than an attribution
+invented. What is comparable is the structure: same addresses, same
+masks, one differing value in two registers, and one register that
+varies between windows of the same platform, with the Mobian side a
+single window from an older build, so a build difference cannot be
+separated from a policy difference.
+
+**Decision.** The table is in the note. The only action justified now is
+**one read of `master_stats` on LineageOS, at the next boot**: one
+`cat`, no unplug, no test, no change, no wakeup. It answers the
+availability question, and if the reference firmware reports the masters
+ours does not, the residency comparison becomes possible at all. **No
+other manipulation is justified now.**
+
+**State.** Commit below, local only, fifteen commits ahead of origin,
+nothing pushed. No device was contacted.

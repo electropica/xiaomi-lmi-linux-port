@@ -119,8 +119,9 @@ CDSP, SLPI, SLPI_ISLAND, GPU and DISPLAY, each read from SMEM with
 ## What a good residency would let us conclude, and what it would not
 
 A residency close to the elapsed time for a master would show that the
-master was powered down for that share of the interval, and it would
-close that master as a consumer during the suspend. It would **not**
+master was powered down for that share of the interval. It would not
+close it as a consumer: it says nothing about the retained votes of
+the other resources, about the rail voltages or about the current. It would **not**
 exclude the rails: the regulator summary describes requests, the profiling
 units describe the power state of a master, and neither is a rail
 voltage or a current. The audit says the same: residency "does not
@@ -135,8 +136,12 @@ observably, LineageOS disabling `gpu_cx_gdsc` and Mobian not, and the
 declarations at `0x50004` and `0x50014` differ between the platforms,
 even if state-dependently.
 
-**The control** is one reading of `master_stats`, before and after a
-known unplugged interval, on Mobian and then on LineageOS. Two tools are
+**The control is withdrawn.** The counters are not populated on this
+phone: the firmware writes no SMEM record for the GPU, the DISPLAY, the
+SLPI, the CDSP, the MPSS or the islands, so a further unplugged interval
+would produce the same two masters and would not measure the residency
+of the GPU master. The reasoning and the references are in
+`docs/validation/lmi-master-counters-availability-2026-10-23.md`. Two tools are
 prepared and validated off-device, `master-stats-once.py` for Mobian and
 `master-stats-once.sh` for LineageOS, in the private area. They print the
 attribute verbatim with the wall time and the uptime, they read one file,
@@ -153,7 +158,11 @@ and not a fresh CNTFRQ read; the counters are reset by a reboot, so no
 reboot may happen inside a pair; and a master absent from the output is
 not reported, not off.
 
-**The next discriminating question, if the residency is not conclusive**:
+**The next discriminating question** is now a single read of
+`master_stats` on LineageOS, at the next boot: it needs no unplug, no
+test and no change, and it answers whether the reference firmware
+reports the masters that ours does not. If it does, the residency
+comparison becomes possible at all.:
 the two differing declarations, captured on the **current** Mobian build
 with the observer method of 12 October, whose LineageOS counterpart is
 already kept. The 12 October Mobian trace is from an older build, so it
