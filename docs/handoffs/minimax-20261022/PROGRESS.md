@@ -1111,3 +1111,45 @@ state and says nothing about the suspend path, a different code path.
 Not that the modem, the APSS or the gauge are excluded. And it does not
 change the status of the factor of about 3.4, which remains a difference
 of gauge readings and not an established electrical measurement.
+
+## Entry 18 - 2026-10-23 - the verification is specified: one read-only sysfs attribute
+
+**The instrument is settled by the source of the exact revision.**
+`drivers/soc/qcom/rpmh_master_stat.c` creates one read-only sysfs
+attribute, `master_stats`, mode 0444, on the kobject of the device
+`b221200.qcom,rpmh-master-stats`, and the binding
+`arch/arm64/boot/dts/vendor/bindings/arm/msm/rpmh-master-stat.txt` says
+what it reads: the master's data is kept in SMEM, and the statistics are
+the system sleep counts, the last sleep entry and the **accumulated sleep
+duration**, with the application processor's own power down and power up
+stats computed from the profiling units.
+
+**So the reading is of the hardware's own accounting of how long the
+master was down**, not of a request. It is a single attribute, to be
+located with `find /sys -name master_stats`.
+
+**The protocol** is two reads around a known unplugged interval, on each
+platform: the delta of the accumulated sleep duration is the master's
+sleep over that interval, compared with the interval itself and with the
+collector's own measurement of the suspended time. That gives three
+independent measures of the same thing: the collector's clock pair, the
+wall clock, and the hardware profiling units.
+
+**What it would decide.** If the master accumulates sleep in proportion
+to the interval on both platforms, the hypothesis of a resource left
+ACTIVE is eliminated, and the next smallest thing is the suspend-path
+regulator trace of the current Mobian build, with the observer method of
+12 October, whose Android counterpart is already kept. If the Mobian
+master accumulates noticeably less sleep than the interval while the
+Android one accumulates it in full, the hypothesis stands and the cost of
+a resource left ACTIVE becomes the thing to measure.
+
+**Limits.** The two platforms have to be measured over comparable
+unplugged intervals, and the difference between the accumulated sleep
+duration and the interval has to be attributed. Nothing here is an
+electrical measurement: the profiling units say how long the master was
+down, not what it drew while down. And the comparison needs the OS switch
+for the Android half, the two systems sharing the phone.
+
+**State.** Commit below, local only, thirteen commits ahead of origin,
+nothing pushed. No device was contacted.

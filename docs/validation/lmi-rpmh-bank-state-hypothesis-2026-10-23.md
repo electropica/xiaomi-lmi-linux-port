@@ -76,15 +76,57 @@ rather than the addresses.
 
 **Read the state the resources are left in, on both platforms, instead of
 the requests.** The candidate instrument is already visible in both
-traces: the device `b221200.qcom,rpmh-master-stats`, the RPMh master's
-own statistics, which appears as a suspend callback in the Android trace
-and in the Mobian observer trace.
+The instrument is the `rpmh-master-stats` device,
+`b221200.qcom,rpmh-master-stats`, and the source of this revision settles
+what it exposes. `drivers/soc/qcom/rpmh_master_stat.c` creates one
+read-only sysfs attribute:
+
+```c
+prvdata->ka.attr.mode = 0444;
+prvdata->ka.attr.name = "master_stats";
+ret = sysfs_create_file(prvdata->ka.attr);
+```
+
+and the binding `arch/arm64/boot/dts/vendor/bindings/arm/msm/rpmh-master-stat.txt`
+says what it reads: the master's data is kept in SMEM, and the statistics
+are "system sleep counts", "system sleep last entered at" and "system
+sleep accumulated duration", with the application processor's own power
+down and power up stats computed from the profiling units.
+
+So the reading is of the **hardware's own accounting of how long the
+master was down**, not of a request, and it is a single attribute,
+`master_stats`, mode 0444, under the kobject of the device, to be located
+with `find /sys -name master_stats`.
+
+The protocol is two reads around a known unplugged interval, on each
+platform: the delta of the accumulated sleep duration is the master's
+sleep over that interval, and it is compared with the interval itself and
+with the collector's own measurement of the suspended time. That gives
+three independent measures of the same thing, the clock pair of the
+collector, the wall clock, and the hardware profiling units.
+
+Two things have to be closed in order: the comparison needs the same
+interval on the two platforms, and the difference between the accumulated
+sleep duration and the interval has to be attributed, since a master that
+is asked to sleep and does not sleep would show a shorter accumulated
+duration than the elapsed time.
+
+On Mobian the reading is one `cat`, taken by the phone itself because the
+phone is only reachable over the cable; on LineageOS the same reading
+needs the OS switch, which is already planned and which the two systems
+sharing the phone makes serial rather than parallel.
 
 Two things have to be closed in order:
 
-1. **What that device exposes.** Its driver was not located among the
-   files fetched from this revision, so whether it reports the
-   per-resource state is not established here.
+1. **What that device exposes.** The driver was located in
+   this revision, and the answer is one read-only attribute, `master_stats`,
+   holding the master's sleep counts, the last sleep entry and the
+   accumulated sleep duration;
+2. **Whether what it reports is the state that decides the
+   consumption.** A per-resource state is necessary but not sufficient:
+   the profiling units say how long the master was down, not what it drew
+   while down, and the gauge remains the only instrument for that.
+
 2. **Whether what it reports is the state that decides the consumption.**
    A per-resource state is necessary but not sufficient: the cost of a
    resource left ACTIVE still has to be measured, and the gauge is the
