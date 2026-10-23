@@ -4,7 +4,10 @@ set -euo pipefail
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 repo=/home/linuxagent/xiaomi-lmi-linux-port
 name=mobian-lmi-dualboot-20261021
-boot=/mnt/c/Users/julien/Downloads/D-repro-01-power-rpmh-votes-diagnostic-boot.img
+# Retained external input; override when restoring it elsewhere.
+boot=${DUALBOOT_SOURCE_BOOT:-/mnt/d/Mobian/BuildInputs/current-mobian/kernel-rpmh-source-boot.img}
+[[ -r $boot ]] || { echo "Missing source boot input: $boot" >&2; exit 1; }
+printf '%s  %s\n' a89ae4d9529dcef55d3969eb6b5a75c2617d9ef0e2e1f568c5f619eb1adf5c50 "$boot" | sha256sum -c - >/dev/null
 layout=/mnt/c/Users/julien/Documents/ChatGPT/Mobian/work/dualboot-layout-20261021-private.json
 test -s "$repo/output/$name.img"
 test -s "$repo/output/$name.img.android-sparse.img"

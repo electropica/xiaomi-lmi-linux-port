@@ -102,7 +102,7 @@ if [ "$MODE" = full ]; then
 
 	tail -n +2 "$LOCK_DIR/ARTIFACTS.tsv" |
 	while IFS="$TAB" read -r role path expected_size expected_sha availability; do
-		[ "$availability" = present ] || continue
+		[ "$availability" = present ] || fail "$role unavailable at its historical external path (status: $availability)"
 		need_file "$path"
 		actual_size=$(stat -c %s "$path")
 		[ "$actual_size" = "$expected_size" ] ||

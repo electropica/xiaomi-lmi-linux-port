@@ -38,10 +38,9 @@ See `BOOT-USERSPACE-CONTRACT.md` for the compatibility boundary.
 ## Reproducibility levels
 
 - **Exact clone:** copy the existing sparse image byte-for-byte and verify its
-  SHA-256. This is possible now.
+  SHA-256. This requires the exact historical sparse, which was not found in the October 23, 2026 inventory.
 - **Functional equivalence:** derive a new userdata from the verified rootfs,
-  locked packages and local overlay while retaining the D-repro boot. This is
-  feasible without rebuilding the kernel or GPU72.
+  locked packages and local overlay while retaining the D-repro boot. This requires restoring the historical external rootfs; the current image recipe uses a different retained input set.
 - **Bit-for-bit source rebuild:** not currently established. The historical M0
   package closure/cache, original base tree, GPU sysroot and complete GPU72
   build invocation are not all present.
@@ -74,3 +73,23 @@ deb-cache/verify-deb-cache.sh /path/to/archi-validation-02-deb-cache
 The verifier accepts the cache directory explicitly, compares its package
 triplets with this lock, validates every `.deb` with `dpkg-deb`, and checks
 all archive SHA-256 values.
+
+## Availability review — October 23, 2026
+
+This is a historical validation lock, not the current build inventory. The
+recorded external paths no longer exist. ARTIFACTS.tsv now distinguishes
+missing paths, a versioned patch and a retained external RAM boot. Its RAM
+boot hash was checked against the external archive, but its recorded path
+is preserved as provenance. The exact archi-validation-02 sparse and raw
+rootfs were not found in the audited locations; exact cloning cannot
+currently be claimed. No loss date or cause is established by this check.
+
+The four embedded payloads are not confirmed recoverable from the retained
+RAM boot: this lock explicitly identifies a different embedded boot hash.
+Do not equate those images or claim extraction without checking its hashes.
+The userspace builder has evolved in Git; its historical hash is not the
+current script. Current builds are described in docs/status/CURRENT-BUILD.md.
+
+Manifest-only verification checks metadata integrity, not external payload
+availability. Full verification must fail if any locked artifact cannot be
+verified, rather than skipping unavailable rows.
