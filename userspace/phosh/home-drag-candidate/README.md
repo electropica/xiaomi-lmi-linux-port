@@ -1,6 +1,6 @@
 # Native home drag candidate
 
-## homedrag8: power actions while locked (prepared; operator build pending)
+## homedrag8: power actions while locked (installed and operator validated)
 
 Shutdown and Restart remain enabled on the lock screen and retain the native
 session-manager confirmation. The session is not unlocked. Screen-lock stays
@@ -9,9 +9,11 @@ disabled when already locked. No authentication or logind policy is changed.
 Host preparation was checked against the qualified homedrag7 source identity:
 only src/power-menu-manager.c differs. All other generated home/drawer sources,
 the quiet-gauge source and native confirmation handlers are unchanged. Shell
-syntax passes. Package compilation/tests and lock-screen confirmation/cancel
-remain pending; the installed reference is still homedrag7. This candidate
-does not update the full-image package pins before qualification.
+syntax passes. The operator-built pair passes 36/36 tests and is installed.
+The operator confirmed the locked menu and confirmation and explicitly
+confirmed a successful voluntary restart. Full-image package pins now select
+homedrag8; no new full image has been generated. Actual shutdown was not
+executed during this validation.
 
 Operator command (WSL):
 

@@ -1,5 +1,14 @@
 ## Current permanent dualboot reference — October 23, 2026
 
+## October 23: locked power menu package update
+
+The installed Phosh/common pair is now homedrag8. Its 36 package tests,
+locked power-menu confirmation and operator-requested restart are validated.
+The next complete build selects this pair; the existing installed rootfs and
+boot/menu artifacts are unchanged. See
+[the validation record](../validation/lmi-locked-power-menu-2026-10-23.md).
+
+
 The permanent four-entry menu has passed temporary Mobian/LineageOS/Fastboot/
 Recovery trials; persistent Mobian startup and boot-prefix readback are verified.
 The qualified artifact identities and retention rules are recorded in

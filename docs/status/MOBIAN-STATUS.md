@@ -1,5 +1,14 @@
 ## 2026-10-23: battery work integrated with explicit evidence limits
 
+## October 23: locked power menu package update
+
+The installed Phosh/common pair is now homedrag8. Its 36 package tests,
+locked power-menu confirmation and operator-requested restart are validated.
+The next complete build selects this pair; the existing installed rootfs and
+boot/menu artifacts are unchanged. See
+[the validation record](../validation/lmi-locked-power-menu-2026-10-23.md).
+
+
 The corrected standby collector and UFS policy reader are retained with
 offline tests, alongside the MiniMax investigation notes. The publication
 review at docs/validation/lmi-battery-evidence-review-2026-10-23.md supersedes

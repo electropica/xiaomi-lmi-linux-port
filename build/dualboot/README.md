@@ -35,7 +35,7 @@ recovery. No destructive command is supplied or executed by this build.
 ## Full current image
 
 `build.sh` invokes the maintained `build/build-complete-lmi.sh` entry point,
-including the qualified homedrag7 Phosh, matching Phoc, GSD, NPU policy,
+including the qualified homedrag8 Phosh, matching Phoc, GSD, NPU policy,
 application/audio/torch layers and complete Snapshot bundle. All normal recipe
 input guards remain. It does not reuse an old userdata as if it contained the
 latest runtime package changes. Existing firmware and source inputs stay private.
