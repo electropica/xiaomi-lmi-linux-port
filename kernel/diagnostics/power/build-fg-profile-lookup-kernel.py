@@ -3,6 +3,7 @@
 
 Default: bounded offline preflight. --execute must be run by the operator.
 No boot repack, flash, mounts, package installation or deletion.
+Build mode creates missing standard native-chroot character devices only.
 """
 import argparse
 import hashlib
@@ -35,6 +36,30 @@ def digest(p):
 
 def require_hash(p,expected):
  if not p.is_file() or digest(p)!=expected:raise SystemExit('Missing or mismatched input: '+str(p))
+
+def prepare_native_devices(chroot):
+ # A WSL shutdown removes pmbootstrap's bind mounts. Do not mount the host /dev.
+ dev=chroot/'dev'
+ if dev.is_symlink() or not dev.is_dir():raise SystemExit('Native dev must be a real directory')
+ nodes=(('null',1,3),('zero',1,5),('random',1,8),('urandom',1,9))
+ # Reject unexpected existing entries before creating anything; never replace them.
+ for name,major,minor in nodes:
+  p=dev/name
+  if p.is_symlink():raise SystemExit('Refusing native device symlink: '+str(p))
+  if p.exists():
+   s=p.stat()
+   if not stat.S_ISCHR(s.st_mode) or s.st_rdev!=os.makedev(major,minor):
+    raise SystemExit('Unexpected native device: '+str(p))
+ for name,major,minor in nodes:
+  p=dev/name
+  if not p.exists():
+   os.mknod(p,stat.S_IFCHR|0o666,os.makedev(major,minor))
+   p.chmod(0o666)
+ # Verify device usability from inside the chroot, not just inode type.
+ subprocess.run(['chroot',str(chroot),'/bin/sh','-c',
+                 'test -c /dev/null && test -w /dev/null && : > /dev/null && '
+                 'test -r /dev/zero && test -r /dev/random && test -r /dev/urandom'],check=True)
+ print('NATIVE_DEVICES_READY: null, zero, random, urandom; no mounts',flush=True)
 
 def main():
  parser=argparse.ArgumentParser(description=__doc__)
@@ -73,11 +98,11 @@ def main():
  print('PREFLIGHT_PASS: pinned archive/config, seven-patch sequence and native tool files',flush=True)
  if not args.execute:return
  if os.geteuid()!=0:raise SystemExit('Run --execute with sudo; no build started')
+ prepare_native_devices(chroot)
  version=subprocess.check_output(['chroot',str(chroot),'/usr/lib/llvm22/bin/clang','--version'],text=True)
  if 'Alpine clang version 22.1.8' not in version:raise SystemExit('Native Clang version mismatch')
  lld=subprocess.check_output(['chroot',str(chroot),'/usr/bin/ld.lld','--version'],text=True)
  if 'LLD 22.1.8' not in lld:raise SystemExit('Native LLD version mismatch')
- if not stat.S_ISCHR((chroot/'dev/null').stat().st_mode):raise SystemExit('Native /dev/null is unavailable')
  if shutil.disk_usage(chroot/'home/pmos').free<12*1024**3:raise SystemExit('At least12GiB free is required before extracting/building')
  stage=Path(tempfile.mkdtemp(prefix='lmi-fg-lookup-',dir=chroot/'home/pmos'))
  (stage/'BUILD_STATUS').write_text('INCOMPLETE: preparation or build in progress\n')

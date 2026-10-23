@@ -20,6 +20,15 @@ application order were checked successfully on October23. This does not compile
 or enter the chroot. In build mode, version checks, dynamic/static link probes
 and olddefconfig run before the Image target. Any config-byte change aborts.
 
+After a WSL shutdown the native chroot may have no device bind mounts. Build
+mode therefore creates missing standard character devices null (1:3), zero
+(1:5), random (1:8) and urandom (1:9), then checks access inside the chroot.
+It refuses symlinks or unexpected existing node types/numbers instead of
+replacing them. No host /dev bind mount, proc mount or package install is used.
+These four small nodes remain available for later builds. Default preflight
+does not create them. An earlier failure at the missing /dev/null check occurred
+before source extraction or compilation; rerun the same command after updating.
+
 ## Operator command in WSL
 
 ```sh
