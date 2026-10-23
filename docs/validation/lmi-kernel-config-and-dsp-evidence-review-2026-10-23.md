@@ -395,3 +395,57 @@ Pinned primary sources:
 - drivers/esoc/esoc-mdm-pon.c: SDX55M SPMI reset and power-down helper.
 All are at a5b3099017ae581aae8bf597b2f9c8c765026af1; original source receipts
 remain with the MiniMax review. No raw capture or unique identifier is published.
+
+## Modem lifecycle first-acquisition correction
+
+The new MiniMax report usefully distinguishes ESOC setup, link handshake and
+physical power, and finds no established initialized-means-lower-current
+mechanism. Its strongest lifecycle statement, however, is incorrect: the
+powerup callback is not restricted to a crash/restart recovery path.
+
+## Verified first-acquisition entry point
+
+In pinned drivers/soc/qcom/subsystem_restart.c:
+
+- subsys_device_open (1358–1378) invokes subsystem_get_with_fwname;
+- __subsystem_get (945 onward) calls subsys_start when the subsystem reference
+  count is zero (around 972–978), then increments the count;
+- subsys_start (834–868) calls desc->powerup;
+- subsys_device_close calls subsystem_put;
+- subsys_char_device_add names the character device subsys_<subsystem name>
+  (around 1446), yielding /dev/subsys_esoc0 for this subsystem.
+
+In esoc-mdm-drv.c:565 the descriptor's powerup is mdm_subsys_powerup. Therefore
+a first character-device open can request ESOC powerup without a preceding
+crash or SSR recovery. An SSR-framework callback name does not establish a
+restart-only trigger. Identifying which Android process takes this reference
+remains necessary; no actual process ownership is proved by these functions.
+
+Do NOT open /dev/subsys_esoc0 as a diagnostic read. Open itself can change
+hardware state. Any later ownership check must inspect metadata or existing
+file-descriptor links, not open the target node. No such open was performed.
+
+## Boundaries retained
+
+The retained init.mdm.sh starts vendor.mdm_helper only for ro.baseband=mdm/mdm2.
+Its presence does not establish this property on the actual Android boot,
+service availability, process execution or ownership of the subsystem device.
+Do not substitute rild, mdm_helper or per_mgr for a demonstrated first client.
+
+The seven-line IPC extraction shows setup messages from early boot and EOF
+at the observation. It does not prove no previous reader or complete history;
+old surviving lines alone do not establish the absence of all lost messages.
+Use the narrow statement that no powerup marker was present in this extraction.
+
+The proposed PCI reader was not executed. It broadly matches MHI-named devices
+(which can include WLAN), uses guessed attributes and compares connected-awake
+metadata with claims about unplugged suspension. Enumerated link speed is not
+ASPM residency; runtime_status is not physical modem current. Candidate identity
+must be exact and getter side effects source-checked before using new attributes.
+Neither a suspended endpoint nor an active awake endpoint closes modem power.
+
+Next useful evidence on the planned Android visit: determine actual service
+state and existing ownership of the subsystem node, alongside the already
+prepared LPM/gauge snapshot. A client difference would establish software
+initialization, not a battery cause. No new long discharge or modem control is
+justified by this report. Original MiniMax files remain preserved unchanged.
