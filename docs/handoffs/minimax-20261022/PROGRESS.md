@@ -861,3 +861,60 @@ and not current-carrying ones. The suspend-path lists come from two
 different dates and two different builds, and the 12 October Mobian
 observer artefacts record no kernel release string. No electrical
 measurement exists, so nothing here designates a responsible party.
+
+## Entry 14 - 2026-10-23 - the night window: 95 % asleep, 47 mA by the Android method
+
+**The window.** Collector revision 4, eighteen hour bound on the boot
+clock, no `--ufs-hardware-snapshot`, no RTC alarm, nothing changed on
+the phone, which was not touched during the night. Unplugged
+2026-10-22 20:31:25 to 2026-10-23 04:35:53 UTC. The collector saw **30
+suspend events**, 27,675.691 s suspended, with **no log truncation**; the
+kernel log still holds the tail of the night, nine
+`Resume caused by IRQ 438, msoc-delta` resumes and the reconnection
+waking by `IRQ 502, typec-cc-state-change`.
+
+**Awake durations, measured.** 1388.2 s awake inside the 28,306 s
+endpoint set, so **95.1 % asleep**, 93.9 % over the collector's own
+window. The awake time is fully accounted for: 926 s before the first
+sleep, that is the 900 s inactivity delay plus the screen-on after the
+unplug; 29 gaps of 10 s to 15 s between the sleeps, the grace timers;
+and about 145 s of awake time inside the sleep brackets, five seconds
+each. By third of the night: 89.0 % asleep, then 98.3 %, then 98.7 %.
+**The quiet-gauge path worked all night**: every wake was a
+`438 msoc-delta`, the screen never came on, the device went back to
+sleep after the grace timer each time.
+
+**Counter variations, measured.** At the unplug the counter stepped
+−143074 uAh in five seconds, the gauge recomputing itself, the same
+logical discontinuity the Android reference excluded at 86 mAh and the
+same value as the day window's −143401. With it excluded: −369243 uAh
+over 28,306 s, that is **47.0 mA**, against the reference's 13.84 mA, a
+ratio of **3.4**. The per-sleep slope, exact, is minimum 33.6 mA,
+median 45.3 mA, maximum 102.1 mA; the bracket carries about five seconds
+of awake time, some 147 uAh, about 1.3 % of a typical bracket.
+
+**The slope is not constant through the night**: the median per third
+falls 54.9, 42.5, 37.1 mA while the sleeps get longer, 793, 992,
+1142 s of median. That is a reason not to present a single factor as an
+established quantity.
+
+**Energy really measured: none.** The gauge scale against the design
+capacity is still not established, the same `charge_full` on both
+platforms does not prove a comparable coulomb scale, and the reference's
+own figures are one gauge's rounded software history.
+
+**What this changes.** The day window was **not representative of the
+duty cycle**, 68.1 % asleep there against 95.1 % here, and its 77.2 mA
+was inflated by the 900 s idle delay and by the awake rate around it.
+The difference from the reference persists but is smaller than the day
+window suggested, about 3.4 times on the net rate and about three times
+on the sleep-only rate. **It is still not an established electrical
+measurement.** The candidate remains whatever holds the processor down,
+and the discriminating verification remains the regulator summary read
+in the unplugged state on both platforms.
+
+**Limits.** One night, one build, one device. The endpoint sequence is
+bounded to the last 256 detached readings, so the whole-night
+reconstruction comes from the events and the counters. The attachment
+flag lagged at the reconnection, so the detached period is bounded
+between 28,306 s and 29,068 s.
