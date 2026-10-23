@@ -27,20 +27,21 @@ references and their consumer lists unchanged:
 | `pm8150a_s3_level` | 1 -> 0 | 5 -> 5 | the level that carries the GPU core rail |
 | `pm8150_l5` | 2 -> 1 | 7 -> 7 | the DSI, PCIe and UFS memory rail |
 
-**The USB hypothesis is eliminated.** The three USB rails were the most
-plausible candidate in the connected baseline, because they are requested
-while the cable is plugged and are held by the USB stack. The unplug
-releases their enable requests. They are not what the unplugged period
-keeps alive.
-
-**The GPU core rail is not requested once unplugged either.** Its parent
-level, `pm8150a_s3_level`, loses its enable request at the unplug, and
-the rail itself does not appear among the requested ones. The candidate
-that had survived the suspend-path comparison, `gpu_cx_gdsc`, which
-LineageOS disables in its suspend path and Mobian does not, therefore
-concerns a **plugged** suspend. It does not explain the unplugged
-window, where the rail is not requested.
-
+**The USB rails' requests are released at the unplug.** The three
+USB rails were the most plausible candidate in the connected baseline,
+because they are requested while the cable is plugged and are held by
+the USB stack. The unplug releases their enable requests, so the USB
+stack is no longer among the requesters in the state observed. That is
+a statement about the requests: it does not physically exclude the USB
+blocks from drawing, because a request state and a material state are
+different things, and both readings were taken while the processor was
+up.
+**The GPU core rail is not requested once unplugged either.** Its
+parent level, `pm8150a_s3_level`, loses its enable request at the
+unplug, and the rail itself does not appear among the requested ones.
+In the state observed, the unplugged and awake one, the rail is not
+requested. That is all this shows about it: the suspend path is a
+different code path, and an awake reading does not describe it.
 ## What stays requested and open once unplugged
 
 `vdd_boost_vreg`, the only rail requested exclusively by a `deviceless`
@@ -79,12 +80,13 @@ on this platform, and a rail that is requested is not a rail that draws.
 
 ## Where the question stands now
 
-The rails are not where the unplugged difference comes from, as far as
-the evidence goes: the USB rails are released at the unplug, the GPU
-core rail is not requested once unplugged, and the always-on set comes
-from the shared device tree. What is left is the behaviour that is not
-a rail:
-
+**What the rails give, and what they do not.** The USB rails'
+requests are released at the unplug, the GPU core rail is not requested
+in the unplugged and awake state, and the always-on set comes from the
+shared device tree. All three are statements about the **requests**,
+observed in an awake state. They narrow what may still be asked; they do
+not exclude a difference of consumption. What is left is the behaviour
+that is not a rail:
 * the **wake frequency**: the Mobian night had 30 gauge wakes, the
   Android night had deep idle periods of one to nine hours. That is a
   duty-cycle cost, about 460 s of grace timers over the night, and it

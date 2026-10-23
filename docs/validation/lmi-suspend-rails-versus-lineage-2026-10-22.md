@@ -60,18 +60,20 @@ and `pm8150_l12_ao` (the CPU `limits-dcvs` rails), `pm8150_l9`,
 `vdd_boost_vreg` is the one the project has followed since 12 October:
 use=1, open=1, a single `deviceless` consumer.
 
-**The important observation is the opposite of a lead.** A `deviceless`
-consumer means the request comes from the device tree or from the
-bootloader, and the device tree is the same on the two platforms: the
-Mobian and the LineageOS images run the same `live.dtb` and the same
-menu dtbo, which are kept in the private area. An always-on rail that
-comes from the shared device tree is very likely always-on on
-LineageOS too, and an always-on rail on both platforms cannot by itself
-explain a difference between them.
-
-That removes the most obvious candidate, `vdd_boost_vreg`, as an
-explanation of the difference: it is a rail both platforms hold.
-
+**The important observation is about the requests, not about the
+consumption.** A `deviceless` consumer means the request comes from the
+device tree or from the bootloader, and the device tree is the same on
+the two platforms: the Mobian and the LineageOS images run the same
+`live.dtb` and the same menu dtbo, which are kept in the private area.
+So the request is very likely made on both sides. That is a statement
+about the **request**, not about the **consumption**: what the rail is
+connected to, and the mode it is put in, are decided at run time, and
+nothing read here settles them. The observation therefore does not
+exclude `vdd_boost_vreg` as part of an explanation; it only shows that
+it is requested on both sides.
+So `vdd_boost_vreg` can be neither excluded nor designated: the
+requests are the same on both platforms, and the requests are not the
+consumption.
 ## What remains, and what is still missing
 
 The candidate that survives the comparison is the GPU core rail:

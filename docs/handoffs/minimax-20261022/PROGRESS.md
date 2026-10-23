@@ -1045,3 +1045,69 @@ comparable coulomb scale. The factor of about 3.4 is a difference of gauge
 readings, and the sleep rate itself moves during the night, 54.9 to
 37.1 mA of median per third. The USB check was taken while plugged and
 awake, and its input current includes the charger's losses.
+
+## Entry 17 - 2026-10-23 - five exclusions corrected, and one hypothesis left: a resource left ACTIVE
+
+**Five conclusions of Entry 16 were too strong and are corrected in the
+notes.** A `deviceless` consumer and a shared device tree say that the
+**request** is the same on the two platforms; they say nothing about the
+consumption, because what the rail is connected to and the mode it is put
+in are decided at run time, so `vdd_boost_vreg` is neither excluded nor
+designated. Identical RPMh messages do not prove identical material
+states, and the ACTIVE, SLEEP and WAKE distinction is exactly where the
+difference can sit. `current_now` and `charge_counter` come from the same
+gauge, so their agreement is an internal consistency and not a
+calibration. The USB power difference includes the conversion losses, the
+USB-PD path, the cable and a variable load, and a plugged and awake
+snapshot does not calibrate the current during the suspend. And the
+unplugged snapshots are software requests observed in an awake state, not
+a physical exclusion of the USB and GPU blocks.
+
+**The hypothesis.** On Mobian the APSS goes into the RPM suspend with at
+least one resource still **ACTIVE** that LineageOS has put to **SLEEP**.
+The mechanism is in the source, `drivers/soc/qcom/rpmh.c`, revision
+`a5b3099017ae`, byte identical between the platforms: the RPMh master has
+three request states, ACTIVE_ONLY, SLEEP and WAKE_ONLY, and it **caches
+the SLEEP and WAKE_ONLY requests**, sending them only in the ACTIVE_ONLY
+state. A request that was made is therefore not proof that the resource
+was put to sleep: if the system goes down before the cached request is
+flushed, the resource stays ACTIVE while the request log still shows the
+SLEEP request. The two platforms reach that moment by different paths,
+Mobian's 900 s inactivity delay and its gauge-driven wake cycles every
+fifteen minutes against LineageOS's doze.
+
+**The counter-evidence.** The requests are identical and the driver is
+byte identical, so nothing held points at a request difference and the
+hypothesis rests on a state that is not observed. The Mobian trace used
+for the comparison is from an older build, not certified to be the
+current one. Nothing measures the cost of a resource left ACTIVE, the
+regulator framework reporting no current. The gauge is three times faster
+on Mobian, which implies more wake cycles and more occasions on which the
+master could be in a different state, so the hypothesis is one of several
+contributors and nothing held separates it today. The 86 mAh and 143 mAh
+discontinuities show that the gauge's own reporting changes at the charger
+removal, so a gauge reading is not a direct measurement of a physical
+quantity either.
+
+**The smallest discriminating verification.** Read the state the resources
+are left in, on both platforms, instead of the requests. The instrument
+is the `rpmh-master-stats` device, `b221200.qcom,rpmh-master-stats`,
+which appears in both traces as the master's own statistics. Two things
+have to be closed in order: what that device exposes, its driver not
+having been located in the files fetched from this revision, and whether
+what it reports is the state that decides the consumption. On Mobian the
+reading is one `cat`, taken by the phone itself because the phone is
+only reachable over the cable; on LineageOS the same reading needs the OS
+switch, which is already planned and which the two systems sharing the
+phone makes serial. If that device does not expose the per-resource
+state, the next smallest thing is the suspend-path regulator trace of the
+**current** Mobian build, with the observer method of 12 October, whose
+Android counterpart is already kept.
+
+**What it does not claim.** Not that the GPU core rail, or any other
+rail, is the responsible one: in the unplugged and awake state on Mobian
+the GPU core rail is not requested, which is evidence against it in that
+state and says nothing about the suspend path, a different code path.
+Not that the modem, the APSS or the gauge are excluded. And it does not
+change the status of the factor of about 3.4, which remains a difference
+of gauge readings and not an established electrical measurement.
