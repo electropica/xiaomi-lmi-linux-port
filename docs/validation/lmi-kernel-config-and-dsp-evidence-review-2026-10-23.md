@@ -688,3 +688,33 @@ before/after reason-policy tests pass. It has NOT been package-built or
 installed. Its proposed build preserves13qualified homedrag8 files and does not
 introduce the separate quiet-grace4 experiment. Keep these validation boundaries
 distinct from the already-booted kernel candidate.
+
+## ESR quiet candidate external review and recipe hardening
+
+MiniMax reported no blocker in the two userspace reason-policy changes. The
+existing guards and kernel ESR handling are unchanged. Package and device tests
+remain pending; a userspace policy can change later screen/awake behavior, so
+it should not be described as affecting illumination alone or as proving no
+possible energy effect. No physical gain has been measured.
+
+Accepted recipe improvements: source/changelog state pairing; reverse-and-replay
+against the pinned baseline on already-patched reruns; rollback package version
+and architecture validation; new package version/architecture and file/type/link
+list comparison; executable hashes and presence of445esr-delta; clear lock error;
+explicit pin of the constants header carrying the unchanged15second grace.
+The receipt already listed exactly four deliverables before this review.
+
+Seven host-only checks pass: clean replay, already-patched reverse/replay,
+changed patch with stale after-source rejection, source/changelog mismatch
+rejection, mixed-state rejection, and executable extraction from both rollback
+packages. The deliberately revised-patch negative case fails patch application
+in temporary staging as expected, not in either real source tree. Both old
+executables contain the existing438/441reason strings, confirming that the
+new executable-content guard targets the relevant package payloads.
+
+The recipe does not audit all unrelated source-tree modifications; its source
+coverage is explicitly limited to the two policy files,13qualifiedhome8 files
+and GSD constants header. This limitation is documented rather than silently
+claiming a full source-tree reproduction audit. No package build or installation
+was performed during review. The passive detached night observation is left
+unchanged and the phone was not contacted.
