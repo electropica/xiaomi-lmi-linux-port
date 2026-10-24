@@ -1,5 +1,11 @@
 ## October 24: fuel-gauge profile lookup depends on board-tree order
 
+## October 24 follow-up: quiet battery comparison remains pending
+
+The temporary old-kernel/intended-profile boot completed a normal deep-sleep diagnostic (295.868715303 seconds), awakened only by USB. The prior 14-second RTC-interrupted counter window is not a valid long-suspend comparison; the RTC diagnostic recorded no battery counter endpoints. No battery fix or calibrated current is established. See [window and RTC follow-up](../validation/lmi-fg-dt-order-window-2026-10-24.md).
+
+Installed Phoc +thumblinear1 still shows striped app cards in a fresh capture. A thumbnail-only row-readback candidate is host-tested but **not built or installed**; see [recipe](../../userspace/phosh/thumbnail-row-readback-candidate/README.md). No new kernel/full image build or complete-image pin promotion. No UI restart occurred for this candidate. The next passive measurement is planned for tonight, after recording actual UI changes.
+
 The qualified menu startup reference remains unchanged. Offline replay of its exact Mobian DTB shows that the old FG name lookup reaches the vendor container rather than the intended SOC profile container. A separate order-only diagnostic image (7425c00b...) has now temporarily started Mobian on the original October7 kernel and published the intended j11sun/design4700000 profile. UI acceptance and battery observation remain pending; no battery-current cause is established. The candidate is not permanently installed, its output paths are isolated, and the qualified reference image remains unchanged. See [the evidence and limits](../validation/lmi-fg-profile-dt-order-2026-10-24.md).
 
 ## 2026-10-23: battery work integrated with explicit evidence limits

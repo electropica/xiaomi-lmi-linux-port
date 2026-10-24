@@ -1,0 +1,11 @@
+{
+  "stage": "native-host-mock-pixel-reader",
+  "layout_cases": 96,
+  "sanitizers": [
+    "address",
+    "undefined"
+  ],
+  "failure_overflow_fallback_controls_pass": true,
+  "device_fix_verified": false,
+  "package_build_started": false
+}
