@@ -764,3 +764,23 @@ the FG change must control boot route as well as source/config and settling.
 No extra reboot or experiment is justified tonight. Preserve the running night
 measurement, then retrieve it on operator-confirmed return before changing
 userspace packages. No phone contact or settings change occurred in this work.
+
+## October 24 overnight FG baseline and ESR package interface acceptance
+
+The return evidence is preserved in `quiet-night-fg-20261023-private/return.json` and `events.jsonl`, with host analysis in `analysis.json`. The current boot matches both the observer's initial record and the separate arm receipt. No reboot or candidate ESR package installation occurred during this capture. Wi-Fi remained enabled.
+
+The complete observed unplug-to-replug interval is 42402.935968 seconds (about 11 h 47 min). Boottime-minus-monotonic accounting yields 40222.936275 suspended seconds, or 94.858847% of that full interval, with no rejected clock interval. Both-endpoints-USB-off coverage is separately 42214.895654 elapsed seconds and 40037.941996 suspended seconds. The return USB interval is excluded from counter comparisons. Poll boundaries and event callbacks remain observational limits.
+
+The displayed capacity was 100% at observed unplug and 61% at observed replug, already marked Charging. The latter is not an exact pre-charge endpoint. The recognized BMS label remains `j11sun_4700mah` throughout recorded observations, with design 4700000, learned capacity 2677000, scale mode 0 and reporting ready on return. Thus this run does not support a claim that recognizing the intended profile resolves the battery problem.
+
+There are 79 observed detached resume signals: 78 exact `438 msoc-delta` and one exact `441 msoc-high`. No observed episode reports screen unblanking. There is no recorded `445 esr-delta` episode. This night therefore does not qualify the new ESR screen policy, which was not installed. It also does not refute the previously captured ESR screen-on episode.
+
+Across 161 detached Discharging endpoints, spanning 42214.895654 seconds, software counter decrease is 978101 reported units, shadow decrease 978146 and raw decrease 1949821. No conversion to physical mA or calibrated energy is justified. The raw/software ratio is not itself a measured hardware power ratio.
+
+The observer is inactive with Result=success; RTC wakealarm is empty and no NPU recovery state file remains. Both user Phosh and GSD power services are active with NRestarts=0 and their existing quiet-wake environment enabled. These return checks do not establish every hardware state during sleep.
+
+The operator-built ESR package set separately passed read-only source identity, four package hashes, rollback hashes, payload file-list equality and compiled `445 esr-delta` binary checks. Receipt: `esrquiet-build-verification-20261024.json`. No new packages have yet been installed. Preserve this baseline before any subsequent installation; retain temporary-kernel provenance and do not reboot merely to install userspace packages.
+
+## Subsequent userspace installation
+
+After preserving the baseline, the four matched esrquiet1 packages were installed with a twenty-minute automatic rollback armed. Installed package and executable hashes match the verified build, including the executables of the two running processes. Julien confirmed normal unlocking, application use, scrolling and power-button blank/unblank. Both services are active with NRestarts=0 and existing quiet-wake options. The rollback timer was then stopped and verified inactive/not-found. The temporary FG kernel and boot identity remain unchanged; no phone reboot was performed. Natural exact ESR-wake behavior and any energy benefit remain unvalidated. Private installation and acceptance receipts are retained in work/esrquiet-install-20261024-private.json and work/esrquiet-acceptance-20261024-private.json. Full-image pins are not promoted by this interface-only acceptance.
