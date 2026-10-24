@@ -1,5 +1,13 @@
 # GLES thumbnail row-readback candidate
 
+## Device outcome: rejected, rollback completed
+
+The operator built the package (17 Meson test records, no unexpected failures). The installed runtime binary was independently verified and the kernel boot was preserved. The user reported the thumbnail still striped; a fresh screenshot independently confirms it. This candidate does **not** fix the observed defect and has been rolled back to +thumblinear1. Do not promote its image/package pins or infer a proved row-pitch cause from the native tests.
+
+A runtime-only pixman diagnostic was then attempted with automatic restoration. The user reported unusable lag, so it was restored early; pixel correctness was not established. GLES2 is again running, the runtime override and owned restore timer are removed/stopped, and the same temporary battery kernel/profile remain available. This is not a successful software-renderer fix or an electrical battery conclusion.
+
+The prior shutdown log specifically records a short Power-key event followed by logind poweroff during the graphics transition. Guarded activation now uses a temporary handle-power-key/shutdown inhibitor; the kernel stayed running during these tests. One rollback needed a second compositor start after GNOME finished its delayed session teardown. Future activation must handle that clean exit and verify stable Phosh, not simply assume an immediate start succeeds.
+
 The installed linear-modifier backport did not fix striped running-app cards on lmi. A fresh screenshot after the RTC test reproduces stripes in all three cards while surrounding icons and output capture remain readable. No source-level cause is claimed proven.
 
 This candidate restricts the workaround to GLES2 ARGB8888 per-view thumbnails. A staging row pitch of width*4+4 selects the existing wlroots0.18 GLES row-by-row read path, then copies exactly width*4 bytes per row into the client-provided stride. Other renderers/formats use the original call. Output rendering, GPU selection, panel, kernel, battery policy, Phosh drawer code and qualified cursor DnD are untouched. The linear modifier is retained.

@@ -1,0 +1,17 @@
+{
+  "stage": "device-validation",
+  "built": true,
+  "package_sha256": "2bc8968ed9d5fcd13745bf058921452ed52811174084d5b092e6f02f35e04e60",
+  "meson_test_records": 17,
+  "meson_unexpected_failures": 0,
+  "installed_runtime_binary_verified": true,
+  "striping_fixed": false,
+  "user_result": "still striped",
+  "rolled_back_to": "0.46.0-1+lmishelldnd1+thumblinear1",
+  "same_kernel_boot_preserved": true,
+  "software_renderer_test": "inconclusive for pixels; user reported unusable lag",
+  "software_override_removed": true,
+  "current_renderer": "gles2",
+  "battery_profile_after": "j11sun_4700mah",
+  "complete_image_pins_promoted": false
+}
