@@ -1,6 +1,6 @@
 ## October 24: fuel-gauge profile lookup depends on board-tree order
 
-An independent, unbuilt battery diagnostic preserves the qualified menu and its kernel while changing only the passive FG profile-container order. It is not the active recipe or an installation update. See [the diagnostic recipe](../../../kernel/diagnostics/power/fg-dt-order-candidate/README.md).
+An independent battery diagnostic preserves the qualified menu and its kernel while changing only the passive FG profile-container order. Its built image (7425c00b...) is host-checked but hardware-unqualified; all diagnostic outputs are isolated under output/fg-dt-order-candidate/, and the reference packer refuses a different existing reference image. It is not the active recipe or an installation update. See [the diagnostic recipe](../../../kernel/diagnostics/power/fg-dt-order-candidate/README.md).
 
 ## 2026-10-23: board7 Mobian PASS, Android FAIL; dual kernel extent candidate
 

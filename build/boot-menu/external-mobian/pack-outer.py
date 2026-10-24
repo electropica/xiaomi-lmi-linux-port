@@ -22,6 +22,15 @@ def pack(raw,outer):
     assert result[page:page+kernel_size]==kernel
     return result
 
+def write_image(target,image):
+    if target.is_symlink():
+        raise RuntimeError('Refusing an image symlink')
+    if target.name=='boot-lmi-outer-dual-extent-test.img' and target.exists():
+        if not target.is_file() or target.read_bytes()!=image:
+            raise RuntimeError('Refusing to replace the existing reference menu; use isolated candidate output')
+        return
+    target.write_bytes(image)
+
 if __name__=='__main__':
     ap=argparse.ArgumentParser();ap.add_argument('output',type=Path);a=ap.parse_args()
     out=a.output;raw=(out/'boot-lmi-lineage-test.img').read_bytes()
@@ -30,7 +39,7 @@ if __name__=='__main__':
     outer=(out/'lmi-outer-mobian.bin').read_bytes()
     info=json.loads((out/'lmi-outer-mobian.json').read_text())
     assert hashlib.sha256(outer).hexdigest()==info['sha256']
-    image=pack(raw,outer);target=out/'boot-lmi-outer-dual-extent-test.img';target.write_bytes(image)
+    image=pack(raw,outer);target=out/'boot-lmi-outer-dual-extent-test.img';write_image(target,image)
     record.update({'sha256':hashlib.sha256(image).hexdigest(),'bytes':len(image),
                    'candidate_variant':'historical-32MiB-outer-board7-dual-extent-resetguard1',
                    'outer_assets':info,'hardware_validated':False,'temporary_boot_only':True,
