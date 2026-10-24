@@ -1,3 +1,7 @@
+## October 24: fuel-gauge profile lookup depends on board-tree order
+
+An independent, unbuilt battery diagnostic preserves the qualified menu and its kernel while changing only the passive FG profile-container order. It is not the active recipe or an installation update. See [the diagnostic recipe](../../../kernel/diagnostics/power/fg-dt-order-candidate/README.md).
+
 ## 2026-10-23: board7 Mobian PASS, Android FAIL; dual kernel extent candidate
 
 The operator temporarily booted board7 SHA256 9c7923502a7906470488c06ac5e640c0a1991bafad3a143bbe6f4eb4fcc0fd95. Mobian default boot passed; read-only SSH independently confirmed outer-v2 and the dedicated 16GiB root. Selecting LineageOS instead produced display corruption followed by a reboot to installed Mobian. No pstore record survived. This candidate is NOT qualified for permanent installation.

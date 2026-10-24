@@ -1,3 +1,7 @@
+## October 24: fuel-gauge profile lookup depends on board-tree order
+
+The qualified menu startup reference remains unchanged. Offline replay of its exact Mobian DTB shows that the old FG name lookup reaches the vendor container rather than the intended SOC profile container. A separate order-only diagnostic recipe is host-checked but unbuilt and unqualified; no battery-current cause is established. See [the evidence and limits](../validation/lmi-fg-profile-dt-order-2026-10-24.md).
+
 ## 2026-10-23: battery work integrated with explicit evidence limits
 
 ## October 23: locked power menu package update
