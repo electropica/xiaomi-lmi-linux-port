@@ -1,0 +1,103 @@
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -52,6 +52,7 @@
+   GtkWidget *favs_revealer;
+   GtkWidget *lmi_home_slots;
+   GtkWidget *lmi_favorites_drawer;
++  GtkWidget *lmi_drawer_activities;
+   GtkWidget *scrolled_window;
+   GtkWidget *btn_adaptive;
+   GtkWidget *btn_adaptive_img;
+@@ -755,6 +756,7 @@
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, empty_folder_label);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_home_slots);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_favorites_drawer);
++  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_drawer_activities);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, favs);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, favs_revealer);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, folder_apps);
+--- a/src/overview.c
++++ b/src/overview.c
+@@ -370,31 +370,6 @@
+ 
+ 
+ static void
+-lmi_update_activity_visibility (PhoshOverview *self)
+-{
+-  PhoshOverviewPrivate *priv = phosh_overview_get_instance_private (self);
+-  GtkWidget *drawer = GTK_WIDGET (gtk_widget_get_template_child (
+-    GTK_WIDGET (priv->app_grid), PHOSH_TYPE_APP_GRID, "lmi_favorites_drawer"));
+-
+-  g_return_if_fail (HDY_IS_DECK (drawer));
+-  /* Keep the swipe surface allocation stable until its gesture/animation ends. */
+-  if (hdy_deck_get_transition_running (HDY_DECK (drawer)))
+-    return;
+-
+-  gtk_widget_set_visible (priv->carousel_running_activities,
+-    priv->has_activities &&
+-    g_strcmp0 (hdy_deck_get_visible_child_name (HDY_DECK (drawer)), "home") != 0);
+-}
+-
+-
+-static void
+-lmi_drawer_visibility_changed (PhoshOverview *self, GParamSpec *pspec, HdyDeck *deck)
+-{
+-  lmi_update_activity_visibility (self);
+-}
+-
+-
+-static void
+ get_running_activities (PhoshOverview *self)
+ {
+   PhoshOverviewPrivate *priv;
+@@ -464,7 +439,7 @@
+     return;
+ 
+   priv->has_activities = has_activities;
+-  lmi_update_activity_visibility (self);
++  gtk_widget_set_visible (priv->carousel_running_activities, has_activities);
+   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_HAS_ACTIVITIES]);
+ }
+ 
+@@ -561,17 +536,20 @@
+                            self,
+                            G_CONNECT_SWAPPED);
+ 
++  /* Activity previews belong to the apps page, not above the whole drawer.
++   * Let the deck map that page; changing carousel visibility on page changes
++   * would also change the home surface's drag-handle geometry. */
++  GtkWidget *activity_box = GTK_WIDGET (gtk_widget_get_template_child (
++    GTK_WIDGET (priv->app_grid), PHOSH_TYPE_APP_GRID, "lmi_drawer_activities"));
++  g_return_if_fail (GTK_IS_BOX (activity_box));
++  g_object_ref (priv->carousel_running_activities);
++  gtk_container_remove (GTK_CONTAINER (self), priv->carousel_running_activities);
++  gtk_box_pack_start (GTK_BOX (activity_box), priv->carousel_running_activities,
++                      FALSE, TRUE, 0);
++  gtk_box_reorder_child (GTK_BOX (activity_box), priv->carousel_running_activities, 0);
++  g_object_unref (priv->carousel_running_activities);
++
+   get_running_activities (self);
+-
+-  GtkWidget *drawer = GTK_WIDGET (gtk_widget_get_template_child (
+-    GTK_WIDGET (priv->app_grid), PHOSH_TYPE_APP_GRID, "lmi_favorites_drawer"));
+-  g_return_if_fail (HDY_IS_DECK (drawer));
+-  g_signal_connect_object (drawer, "notify::visible-child",
+-                           G_CALLBACK (lmi_drawer_visibility_changed), self, G_CONNECT_SWAPPED);
+-  g_signal_connect_object (drawer, "notify::transition-running",
+-                           G_CALLBACK (lmi_drawer_visibility_changed), self, G_CONNECT_SWAPPED);
+-  lmi_update_activity_visibility (self);
+-
+ 
+   g_signal_connect_swapped (priv->app_grid, "app-launched",
+                             G_CALLBACK (app_launched_cb), self);
+--- a/src/ui/app-grid.ui
++++ b/src/ui/app-grid.ui
+@@ -77,7 +77,7 @@
+           </packing>
+         </child>
+         <child>
+-          <object class="GtkBox">
++          <object class="GtkBox" id="lmi_drawer_activities">
+             <property name="visible">1</property>
+             <property name="orientation">vertical</property>
+             <property name="hexpand">1</property>
