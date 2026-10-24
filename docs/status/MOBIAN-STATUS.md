@@ -1,5 +1,9 @@
 ## October 24: fuel-gauge profile lookup depends on board-tree order
 
+## Thumbnail source localization, October 24
+
+Raw thumbnail pixels are already striped before Phosh paints them. Standalone GPU controls reproduce corruption in the shared GBM target while the internal target gives twelve exact cases including orientation. A private-target Phoc candidate is prepared and syntax/preflight checked; real app validation remains pending. The installed phone remains on the reverted +thumblinear1 GLES2 baseline, same temporary battery kernel/profile. See [evidence and limits](../validation/lmi-thumbnail-private-target-2026-10-24.md).
+
 ## October 24 follow-up: quiet battery comparison remains pending
 
 The temporary old-kernel/intended-profile boot completed a normal deep-sleep diagnostic (295.868715303 seconds), awakened only by USB. The prior 14-second RTC-interrupted counter window is not a valid long-suspend comparison; the RTC diagnostic recorded no battery counter endpoints. No battery fix or calibrated current is established. See [window and RTC follow-up](../validation/lmi-fg-dt-order-window-2026-10-24.md).

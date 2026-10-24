@@ -1,0 +1,755 @@
+{
+  "offscreen": {
+    "exit": 0,
+    "same_compositor_pid": true,
+    "rows": [
+      {
+        "mode": 0,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 592,
+        "pixels": 84288
+      },
+      {
+        "mode": 0,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 10164,
+        "pixels": 92190
+      },
+      {
+        "mode": 0,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 16288,
+        "pixels": 112384
+      },
+      {
+        "mode": 1,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 8208,
+        "pixels": 84288
+      },
+      {
+        "mode": 1,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 10870,
+        "pixels": 92190
+      },
+      {
+        "mode": 1,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 12688,
+        "pixels": 112384
+      },
+      {
+        "mode": 2,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 10672,
+        "pixels": 84288
+      },
+      {
+        "mode": 2,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 13954,
+        "pixels": 92190
+      },
+      {
+        "mode": 2,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 23757,
+        "pixels": 112384
+      }
+    ]
+  },
+  "sync": {
+    "exit": 0,
+    "same_compositor_pid": true,
+    "rows": [
+      {
+        "sync": 0,
+        "mode": 0,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 656,
+        "bad_rgb": 656,
+        "bad_alpha": 656,
+        "pixels": 84288
+      },
+      {
+        "sync": 0,
+        "mode": 0,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 10750,
+        "bad_rgb": 10750,
+        "bad_alpha": 10750,
+        "pixels": 92190
+      },
+      {
+        "sync": 0,
+        "mode": 0,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 5326,
+        "bad_rgb": 5326,
+        "bad_alpha": 5326,
+        "pixels": 112384
+      },
+      {
+        "sync": 0,
+        "mode": 1,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 6597,
+        "bad_rgb": 6597,
+        "bad_alpha": 6597,
+        "pixels": 84288
+      },
+      {
+        "sync": 0,
+        "mode": 1,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 10398,
+        "bad_rgb": 10398,
+        "bad_alpha": 10398,
+        "pixels": 92190
+      },
+      {
+        "sync": 0,
+        "mode": 1,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 2960,
+        "bad_rgb": 2960,
+        "bad_alpha": 2960,
+        "pixels": 112384
+      },
+      {
+        "sync": 0,
+        "mode": 2,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 5888,
+        "bad_rgb": 5888,
+        "bad_alpha": 5888,
+        "pixels": 84288
+      },
+      {
+        "sync": 0,
+        "mode": 2,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 29726,
+        "bad_rgb": 29726,
+        "bad_alpha": 29726,
+        "pixels": 92190
+      },
+      {
+        "sync": 0,
+        "mode": 2,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 22127,
+        "bad_rgb": 22127,
+        "bad_alpha": 22127,
+        "pixels": 112384
+      },
+      {
+        "sync": 1,
+        "mode": 0,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 5857,
+        "bad_rgb": 5857,
+        "bad_alpha": 5857,
+        "pixels": 84288
+      },
+      {
+        "sync": 1,
+        "mode": 0,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 12652,
+        "bad_rgb": 12652,
+        "bad_alpha": 12652,
+        "pixels": 92190
+      },
+      {
+        "sync": 1,
+        "mode": 0,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 10080,
+        "bad_rgb": 10080,
+        "bad_alpha": 10080,
+        "pixels": 112384
+      },
+      {
+        "sync": 1,
+        "mode": 1,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 4544,
+        "bad_rgb": 4544,
+        "bad_alpha": 4544,
+        "pixels": 84288
+      },
+      {
+        "sync": 1,
+        "mode": 1,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 5126,
+        "bad_rgb": 5126,
+        "bad_alpha": 5126,
+        "pixels": 92190
+      },
+      {
+        "sync": 1,
+        "mode": 1,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 3456,
+        "bad_rgb": 3456,
+        "bad_alpha": 3456,
+        "pixels": 112384
+      },
+      {
+        "sync": 1,
+        "mode": 2,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 5547,
+        "bad_rgb": 5547,
+        "bad_alpha": 5547,
+        "pixels": 84288
+      },
+      {
+        "sync": 1,
+        "mode": 2,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 13166,
+        "bad_rgb": 13166,
+        "bad_alpha": 13166,
+        "pixels": 92190
+      },
+      {
+        "sync": 1,
+        "mode": 2,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 24871,
+        "bad_rgb": 24871,
+        "bad_alpha": 24871,
+        "pixels": 112384
+      },
+      {
+        "sync": 2,
+        "mode": 0,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 35164,
+        "bad_rgb": 35164,
+        "bad_alpha": 35164,
+        "pixels": 84288
+      },
+      {
+        "sync": 2,
+        "mode": 0,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 44438,
+        "bad_rgb": 44438,
+        "bad_alpha": 44438,
+        "pixels": 92190
+      },
+      {
+        "sync": 2,
+        "mode": 0,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 111296,
+        "bad_rgb": 111296,
+        "bad_alpha": 111296,
+        "pixels": 112384
+      },
+      {
+        "sync": 2,
+        "mode": 1,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 76096,
+        "bad_rgb": 76096,
+        "bad_alpha": 76096,
+        "pixels": 84288
+      },
+      {
+        "sync": 2,
+        "mode": 1,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 90662,
+        "bad_rgb": 90662,
+        "bad_alpha": 90662,
+        "pixels": 92190
+      },
+      {
+        "sync": 2,
+        "mode": 1,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 108896,
+        "bad_rgb": 108896,
+        "bad_alpha": 108896,
+        "pixels": 112384
+      },
+      {
+        "sync": 2,
+        "mode": 2,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 77376,
+        "bad_rgb": 77376,
+        "bad_alpha": 77376,
+        "pixels": 84288
+      },
+      {
+        "sync": 2,
+        "mode": 2,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 82284,
+        "bad_rgb": 82284,
+        "bad_alpha": 82284,
+        "pixels": 92190
+      },
+      {
+        "sync": 2,
+        "mode": 2,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 103479,
+        "bad_rgb": 103479,
+        "bad_alpha": 103479,
+        "pixels": 112384
+      }
+    ]
+  },
+  "import": {
+    "exit": 0,
+    "same_compositor_pid": true,
+    "rows": [
+      {
+        "mode": 0,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 272,
+        "error_before": 0,
+        "bad_after_submit_direct": 832,
+        "error_after": 0,
+        "bad_reimport": 1440,
+        "pixels": 84288
+      },
+      {
+        "mode": 0,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 7014,
+        "error_before": 0,
+        "bad_after_submit_direct": 12940,
+        "error_after": 0,
+        "bad_reimport": 19162,
+        "pixels": 92190
+      },
+      {
+        "mode": 0,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 6173,
+        "error_before": 0,
+        "bad_after_submit_direct": 14349,
+        "error_after": 0,
+        "bad_reimport": 17917,
+        "pixels": 112384
+      },
+      {
+        "mode": 1,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 560,
+        "error_before": 0,
+        "bad_after_submit_direct": 1184,
+        "error_after": 0,
+        "bad_reimport": 2224,
+        "pixels": 84288
+      },
+      {
+        "mode": 1,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 4420,
+        "error_before": 0,
+        "bad_after_submit_direct": 10196,
+        "error_after": 0,
+        "bad_reimport": 15272,
+        "pixels": 92190
+      },
+      {
+        "mode": 1,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 2924,
+        "error_before": 0,
+        "bad_after_submit_direct": 11596,
+        "error_after": 0,
+        "bad_reimport": 15772,
+        "pixels": 112384
+      },
+      {
+        "mode": 2,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 3328,
+        "error_before": 0,
+        "bad_after_submit_direct": 20896,
+        "error_after": 0,
+        "bad_reimport": 38800,
+        "pixels": 84288
+      },
+      {
+        "mode": 2,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 4560,
+        "error_before": 0,
+        "bad_after_submit_direct": 10868,
+        "error_after": 0,
+        "bad_reimport": 14954,
+        "pixels": 92190
+      },
+      {
+        "mode": 2,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_before_submit": 2688,
+        "error_before": 0,
+        "bad_after_submit_direct": 7504,
+        "error_after": 0,
+        "bad_reimport": 14288,
+        "pixels": 112384
+      }
+    ]
+  },
+  "internal": {
+    "exit": 0,
+    "same_compositor_pid": true,
+    "rows": [
+      {
+        "width": 192,
+        "height": 439,
+        "channel": 0,
+        "bad_pixels": 0,
+        "pixels": 84288,
+        "gl_error": 0
+      },
+      {
+        "width": 192,
+        "height": 439,
+        "channel": 1,
+        "bad_pixels": 0,
+        "pixels": 84288,
+        "gl_error": 0
+      },
+      {
+        "width": 192,
+        "height": 439,
+        "channel": 2,
+        "bad_pixels": 0,
+        "pixels": 84288,
+        "gl_error": 0
+      },
+      {
+        "width": 210,
+        "height": 439,
+        "channel": 0,
+        "bad_pixels": 0,
+        "pixels": 92190,
+        "gl_error": 0
+      },
+      {
+        "width": 210,
+        "height": 439,
+        "channel": 1,
+        "bad_pixels": 0,
+        "pixels": 92190,
+        "gl_error": 0
+      },
+      {
+        "width": 210,
+        "height": 439,
+        "channel": 2,
+        "bad_pixels": 0,
+        "pixels": 92190,
+        "gl_error": 0
+      },
+      {
+        "width": 256,
+        "height": 439,
+        "channel": 0,
+        "bad_pixels": 0,
+        "pixels": 112384,
+        "gl_error": 0
+      },
+      {
+        "width": 256,
+        "height": 439,
+        "channel": 1,
+        "bad_pixels": 0,
+        "pixels": 112384,
+        "gl_error": 0
+      },
+      {
+        "width": 256,
+        "height": 439,
+        "channel": 2,
+        "bad_pixels": 0,
+        "pixels": 112384,
+        "gl_error": 0
+      }
+    ]
+  },
+  "private-target": {
+    "exit": 0,
+    "same_compositor_pid": true,
+    "rows": [
+      {
+        "mode": 0,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 84288
+      },
+      {
+        "mode": 0,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 92190
+      },
+      {
+        "mode": 0,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 112384
+      },
+      {
+        "mode": 1,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 84288
+      },
+      {
+        "mode": 1,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 92190
+      },
+      {
+        "mode": 1,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 112384
+      },
+      {
+        "mode": 2,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 84288
+      },
+      {
+        "mode": 2,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 92190
+      },
+      {
+        "mode": 2,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 112384
+      }
+    ]
+  },
+  "orientation": {
+    "exit": 0,
+    "same_compositor_pid": true,
+    "rows": [
+      {
+        "mode": 0,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 84288
+      },
+      {
+        "mode": 0,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 92190
+      },
+      {
+        "mode": 0,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 112384
+      },
+      {
+        "mode": 1,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 84288
+      },
+      {
+        "mode": 1,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 92190
+      },
+      {
+        "mode": 1,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 112384
+      },
+      {
+        "mode": 2,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 84288
+      },
+      {
+        "mode": 2,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 92190
+      },
+      {
+        "mode": 2,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 112384
+      },
+      {
+        "mode": 3,
+        "width": 192,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 84288
+      },
+      {
+        "mode": 3,
+        "width": 210,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 92190
+      },
+      {
+        "mode": 3,
+        "width": 256,
+        "height": 439,
+        "read_ok": true,
+        "bad_pixels": 0,
+        "pixels": 112384
+      }
+    ]
+  }
+}
