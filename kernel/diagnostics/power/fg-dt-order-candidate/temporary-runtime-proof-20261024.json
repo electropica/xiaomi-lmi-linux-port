@@ -1,0 +1,16 @@
+{
+  "candidate_sha256": "7425c00bffefb677f52d76fa360c024a0c4b5d6e58312f33350b4eb8928cb9ff",
+  "scope": "temporary-mobian-start-and-profile-publication",
+  "operator_reported_mobian_started": true,
+  "new_boot_observed": true,
+  "kernel_version_matches_baseline": true,
+  "installed_fallback_boot_sha256": "be9841c76cbe34d0c72606c47877f99582aee224144744349a9e78d15cfd0a94",
+  "legacy_container": "/soc/qcom,battery-data",
+  "phandle_target": "/soc/qcom,battery-data",
+  "battery_type": "j11sun_4700mah",
+  "charge_full_design": "4700000",
+  "learned_capacity_unchanged": true,
+  "operator_ui_confirmation": "pending",
+  "discharge_observation": "not-started",
+  "permanent_installation": false
+}

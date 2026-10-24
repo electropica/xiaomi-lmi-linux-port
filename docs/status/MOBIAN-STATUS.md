@@ -1,6 +1,6 @@
 ## October 24: fuel-gauge profile lookup depends on board-tree order
 
-The qualified menu startup reference remains unchanged. Offline replay of its exact Mobian DTB shows that the old FG name lookup reaches the vendor container rather than the intended SOC profile container. A separate order-only diagnostic image has been built and host-checked (7425c00b...), but remains hardware-unqualified; no battery-current cause is established. Its intermediate/output paths are isolated, and the qualified reference image remains unchanged. See [the evidence and limits](../validation/lmi-fg-profile-dt-order-2026-10-24.md).
+The qualified menu startup reference remains unchanged. Offline replay of its exact Mobian DTB shows that the old FG name lookup reaches the vendor container rather than the intended SOC profile container. A separate order-only diagnostic image (7425c00b...) has now temporarily started Mobian on the original October7 kernel and published the intended j11sun/design4700000 profile. UI acceptance and battery observation remain pending; no battery-current cause is established. The candidate is not permanently installed, its output paths are isolated, and the qualified reference image remains unchanged. See [the evidence and limits](../validation/lmi-fg-profile-dt-order-2026-10-24.md).
 
 ## 2026-10-23: battery work integrated with explicit evidence limits
 
