@@ -1,0 +1,58 @@
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -441,23 +441,7 @@
+   gboolean at_top = gtk_adjustment_get_value (adjustment) <=
+                     gtk_adjustment_get_lower (adjustment);
+ 
+-  gboolean at_home = g_strcmp0 (hdy_deck_get_visible_child_name (
+-    HDY_DECK (priv->lmi_favorites_drawer)), "home") == 0;
+-
+-  /* The last page must not compete with the list for upward gestures. */
+-  hdy_deck_set_can_swipe_forward (HDY_DECK (priv->lmi_favorites_drawer), at_home);
+-  hdy_deck_set_can_swipe_back (HDY_DECK (priv->lmi_favorites_drawer), !at_home && at_top);
+-}
+-
+-
+-static void
+-lmi_drawer_page_changed (PhoshAppGrid *self, GParamSpec *pspec, HdyDeck *deck)
+-{
+-  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
+-  GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
+-    GTK_SCROLLED_WINDOW (priv->scrolled_window));
+-
+-  lmi_drawer_update_swipe_back (self, adjustment);
++  hdy_deck_set_can_swipe_back (HDY_DECK (priv->lmi_favorites_drawer), at_top);
+ }
+ 
+ 
+@@ -519,8 +503,6 @@
+                            G_CALLBACK (lmi_drawer_update_swipe_back), self, G_CONNECT_SWAPPED);
+   g_signal_connect_object (adjustment, "changed",
+                            G_CALLBACK (lmi_drawer_update_swipe_back), self, G_CONNECT_SWAPPED);
+-  g_signal_connect_object (priv->lmi_favorites_drawer, "notify::visible-child",
+-                           G_CALLBACK (lmi_drawer_page_changed), self, G_CONNECT_SWAPPED);
+   lmi_drawer_update_swipe_back (self, adjustment);
+ }
+ 
+--- a/src/overview.c
++++ b/src/overview.c
+@@ -377,6 +377,10 @@
+     GTK_WIDGET (priv->app_grid), PHOSH_TYPE_APP_GRID, "lmi_favorites_drawer"));
+ 
+   g_return_if_fail (HDY_IS_DECK (drawer));
++  /* Keep the swipe surface allocation stable until its gesture/animation ends. */
++  if (hdy_deck_get_transition_running (HDY_DECK (drawer)))
++    return;
++
+   gtk_widget_set_visible (priv->carousel_running_activities,
+     priv->has_activities &&
+     g_strcmp0 (hdy_deck_get_visible_child_name (HDY_DECK (drawer)), "home") != 0);
+@@ -563,6 +567,8 @@
+     GTK_WIDGET (priv->app_grid), PHOSH_TYPE_APP_GRID, "lmi_favorites_drawer"));
+   g_return_if_fail (HDY_IS_DECK (drawer));
+   g_signal_connect_object (drawer, "notify::visible-child",
++                           G_CALLBACK (lmi_drawer_visibility_changed), self, G_CONNECT_SWAPPED);
++  g_signal_connect_object (drawer, "notify::transition-running",
+                            G_CALLBACK (lmi_drawer_visibility_changed), self, G_CONNECT_SWAPPED);
+   lmi_update_activity_visibility (self);
+ 
