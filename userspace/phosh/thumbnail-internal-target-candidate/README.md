@@ -1,5 +1,11 @@
 # Private GLES thumbnail target for lmi
 
+## Device acceptance, October 24
+
+The package built with17/17 Meson tests, was installed and its actual running binary verified. Julien confirms clear upright thumbnails. A new screenshot independently shows clean Horloges and Fichiers previews. Overview scrolling, opening an app from its preview and horizontal favorite drag all work normally. The rollback timer is cancelled, GLES2 acceleration retained, no software/debug override left, and the same temporary battery kernel/profile preserved. See device-outcome-20261024.json.
+
+The complete-image builder, staging identities and install checks now select this exact Phoc version; the builder also verifies its qualified package SHA256. No full image was rebuilt or flashed by this acceptance. Source preparation supports either the qualified linear source or the already-built row source, yielding the identical final render.c, so a future rebuild need not compile the rejected row intermediate. The version suffix retains lineage; the row workaround itself is removed. The compatible rollback remains the installed-before-test linear package.
+
 ## Evidence before another package build
 
 A raw shared-memory thumbnail is already striped before Phosh paints it (210x439, stride840). No screenshot/client-side rescaling repair is applied. The unsuccessful linear and row-readback packages were reverted; software rendering was unusably slow and did not qualify pixel correctness.
@@ -12,12 +18,12 @@ An internal GL texture/FBO gives zero incorrect pixels for RGB fills at192/210/2
 
 Only the per-view thumbnail function changes. The GBM allocation remains as a carrier for wlroots pass dimensions/context. During GLES drawing a same-size private GL framebuffer is bound, existing surface draw operations are reused, and BGRA pixels are copied directly to the client's declared SHM stride before pass submission. The original framebuffer and pack alignment are restored and private GL objects deleted. Non-GLES renderers retain the standard path. The failed row helper is removed. No CPU renderer, display/output renderer change, kernel change, radio or battery policy adjustment.
 
-This relies on the pinned0.18 GLES render-pass context and immediate draw behavior, verified by the offscreen control; do not silently reuse it across wlroots major changes. SHM access, GL allocation, framebuffer completeness and pass failures have cleanup paths. The actual modified render unit passed syntax-only compilation with the existing Meson command/headers. Standard package tests remain enabled for the operator build. Real application thumbnails remain UNVALIDATED until installation and screenshots.
+This relies on the pinned0.18 GLES render-pass context and immediate draw behavior, verified by the offscreen control; do not silently reuse it across wlroots major changes. SHM access, GL allocation, framebuffer completeness and pass failures have cleanup paths. The actual modified render unit passed syntax-only compilation with the existing Meson command/headers. Standard package tests remain enabled for the operator build. Real application acceptance is recorded above; the following operator workflow remains reproducible.
 
 ## Operator build
 
 Run `sudo python3 userspace/phosh/thumbnail-internal-target-candidate/build-packages.py --execute`. It builds only Phoc; no phone install, kernel or image build. Default invocation verifies source pins, exact scratch patch output, qualified cursor DnD and rollback.
 
-Source baseline is the already built rejected row candidate, but the rollback package is explicitly the currently installed +thumblinear1. Do not substitute the rejected row package as rollback. The new version is +thumbrows1+thumbfbo1 for monotonic source-changelog history; the row workaround itself is removed.
+Source baselines are the qualified linear source and the already built row source; the rollback package is explicitly +thumblinear1. Do not substitute the rejected row package as rollback. The new version is +thumbrows1+thumbfbo1 for monotonic source-changelog history; the row workaround itself is removed.
 
 Activation must use the protected graphics restart (temporary power-key/shutdown inhibition, wait for GNOME teardown, bounded retry after clean exit and stable shell verification), with automatic package rollback. Check actual runtime binary, unchanged temporary kernel/profile, clean thumbnails/orientation, responsiveness and home drag/drop. Do not promote complete-image pins before acceptance. The next overnight battery observer must be armed only after graphical work and logging cleanup are finished, recording actual package versions.

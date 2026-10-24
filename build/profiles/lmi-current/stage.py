@@ -23,7 +23,7 @@ packages=[
     ('gnome-settings-daemon-common', '48.1-1+lmiquietgauge3', 'all'),
 ]
 if complete:
-    packages.append(('phoc', '0.46.0-1+lmishelldnd1', 'arm64'))
+    packages.append(('phoc', '0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1', 'arm64'))
 files=[]
 for name, version, arch in packages:
     f=a.inputs/(name+'_'+version+'_'+arch+'.deb')

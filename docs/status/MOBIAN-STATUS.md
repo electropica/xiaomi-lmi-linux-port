@@ -2,7 +2,7 @@
 
 ## Thumbnail source localization, October 24
 
-Raw thumbnail pixels are already striped before Phosh paints them. Standalone GPU controls reproduce corruption in the shared GBM target while the internal target gives twelve exact cases including orientation. A private-target Phoc candidate is prepared and syntax/preflight checked; real app validation remains pending. The installed phone remains on the reverted +thumblinear1 GLES2 baseline, same temporary battery kernel/profile. See [evidence and limits](../validation/lmi-thumbnail-private-target-2026-10-24.md).
+Raw thumbnail pixels are already striped before Phosh paints them. Standalone GPU controls reproduce corruption in the shared GBM target while the internal target gives twelve exact cases including orientation. The private-target Phoc package is now device-accepted: clear upright Horloges/Fichiers previews plus responsive overview, app activation and horizontal favorite drag. Its running binary is verified and the complete-image Phoc pin updated. GLES2, the same temporary kernel and the published battery profile are preserved; no full image was rebuilt. See [evidence and limits](../validation/lmi-thumbnail-private-target-2026-10-24.md).
 
 ## October 24 follow-up: quiet battery comparison remains pending
 

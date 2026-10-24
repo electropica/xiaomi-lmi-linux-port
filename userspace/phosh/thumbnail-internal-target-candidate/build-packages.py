@@ -6,6 +6,7 @@ ROOT=Path('/home/linuxagent/phosh-gauge-wake-build/rootfs')
 TREE=ROOT/'build/phoc-lmi-shell-dnd1'
 HERE=Path(__file__).resolve().parent
 BEFORE='9910e7165e1cb94b5be2986efef7d85b3967f414ff9095f59221a8a856264b0c'
+LINEAR_BEFORE='01f63468e5da660bad34874fb626913ca2ea482c2a4672899e814301c699198d'
 AFTER='e46eff42a6353c4393c846d45f183f8ef817b4293ffb3b29eed489bb7a2b525b'
 CURSOR='cf6a54c4cd77fe74e69e350f9b0836810917a1f020531004505c995b8f90b892'
 OLD='0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1'
@@ -15,8 +16,8 @@ ROLLBACK='cfb248dd31a256e1a46c7a17742f479424ac01d9d5b16943ad4fb8bc1614fccf'
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def validate():
  assert sha(TREE/'src/cursor.c')==CURSOR,'Preserve qualified shell DnD'
- h=sha(TREE/'src/render.c');assert h in (BEFORE,AFTER),'Unexpected renderer source'
- assert (TREE/'debian/changelog').read_text().splitlines()[0].startswith('phoc ('+(OLD if h==BEFORE else NEW)+') '),'Source/changelog mismatch'
+ h=sha(TREE/'src/render.c');assert h in (BEFORE,LINEAR_BEFORE,AFTER),'Unexpected renderer source'
+ assert (TREE/'debian/changelog').read_text().splitlines()[0].startswith('phoc ('+(PHONE_BASELINE if h==LINEAR_BEFORE else OLD if h==BEFORE else NEW)+') '),'Source/changelog mismatch'
  p=ROOT/'build'/('phoc_'+PHONE_BASELINE+'_arm64.deb');assert sha(p)==ROLLBACK
  return h,p
 
@@ -24,7 +25,7 @@ def prepare(h):
  if h==AFTER:return (TREE/'src/render.c').read_text()
  with tempfile.TemporaryDirectory(prefix='lmi-thumb-rows-check-') as tmp:
   p=Path(tmp);(p/'src').mkdir();(p/'src/render.c').write_bytes((TREE/'src/render.c').read_bytes())
-  subprocess.run(['patch','--batch','--fuzz=0','-p1'],cwd=p,input=(HERE/'private-target.patch').read_bytes(),check=True,capture_output=True)
+  subprocess.run(['patch','--batch','--fuzz=0','-p1'],cwd=p,input=(HERE/('private-target-from-linear.patch' if h==LINEAR_BEFORE else 'private-target.patch')).read_bytes(),check=True,capture_output=True)
   s=(p/'src/render.c').read_text();assert hashlib.sha256(s.encode()).hexdigest()==AFTER
  return s
 
@@ -45,7 +46,7 @@ def main():
  subprocess.run(['python3',str(repo/'userspace/camera/snapshot-bundle/prepare-chroot.py'),str(ROOT)],check=True)
  subprocess.run(['mount','-t','tmpfs','-o','mode=1777,nosuid,nodev,size=256m','tmpfs',str(ROOT/'dev/shm')],check=True)
  assert subprocess.check_output(['chroot',str(ROOT),'dpkg','--print-architecture'],text=True).strip()=='arm64'
- if h==BEFORE:
+ if h!=AFTER:
   (TREE/'src/render.c').write_text(s)
   subprocess.run(['chroot',str(ROOT),'/bin/bash','-c','cd /build/phoc-lmi-shell-dnd1 && DEBFULLNAME="Local lmi" DEBEMAIL=local@example.invalid dch --newversion "$1" --distribution UNRELEASED "Use a private GL target for GLES thumbnails; preserve shell drag and drop."','bash',NEW],check=True)
  validate()

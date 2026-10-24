@@ -1,0 +1,21 @@
+{
+  "stage": "device-accepted",
+  "version": "0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1",
+  "package_sha256": "b212c98ca155e57bcd10a29be57fe02fabf9b947826ffb1d4900c52648cedbb5",
+  "render_source_sha256": "e46eff42a6353c4393c846d45f183f8ef817b4293ffb3b29eed489bb7a2b525b",
+  "running_binary_sha256": "1376d4c89ee06c0d82f5a8e860836a7794e36c000b158c2a93297769bd96bea7",
+  "package_tests_ok": 17,
+  "manual_clear_upright_thumbnails": true,
+  "screenshot_verified_apps": [
+    "Horloges",
+    "Fichiers"
+  ],
+  "manual_overview_scrolling_app_opening_favorite_horizontal_drag": true,
+  "renderer": "gles2",
+  "software_fallback": false,
+  "kernel_boot_unchanged": true,
+  "profile_after": "j11sun_4700mah",
+  "rollback_timer_cancelled": true,
+  "full_image_rebuilt": false,
+  "battery_benefit_claimed": false
+}

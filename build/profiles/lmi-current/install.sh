@@ -8,7 +8,7 @@ src=/run/lmi-current-profile
 (cd "$src/inputs"; sha256sum -c SHA256SUMS)
 extra=()
 if [[ -f $src/COMPLETE_PROFILE ]]; then
-    extra+=("$src/inputs/phoc_0.46.0-1+lmishelldnd1_arm64.deb")
+    extra+=("$src/inputs/phoc_0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1_arm64.deb")
 fi
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y --no-remove --no-install-recommends python3-gi gir1.2-gtk-3.0 psmisc \
@@ -26,7 +26,7 @@ done
 phosh_version=0.46.0-3+deb13u1+lmigaugewake3
 if [[ -f $src/COMPLETE_PROFILE ]]; then
     phosh_version+=+homedrag8
-    test "$(dpkg-query -W -f='${Version}' phoc)" = 0.46.0-1+lmishelldnd1
+    test "$(dpkg-query -W -f='${Version}' phoc)" = 0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1
 fi
 for p in phosh phosh-common; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = "$phosh_version"

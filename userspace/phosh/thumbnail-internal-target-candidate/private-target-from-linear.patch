@@ -1,0 +1,158 @@
+--- a/src/render.c
++++ b/src/render.c
+@@ -340,15 +340,18 @@
+                                      struct wlr_buffer *shm_buffer)
+ {
+   struct wlr_surface *surface = view->wlr_surface;
+-  struct wlr_buffer *buffer;
++  struct wlr_buffer *buffer = NULL;
+   void *data;
+   uint32_t format;
+   size_t stride;
+   int32_t width, height;
+-  struct wlr_render_pass *render_pass;
++  struct wlr_render_pass *render_pass = NULL;
+   const struct wlr_drm_format *fmt;
+   struct wlr_drm_format_set fmt_set = {};
+-  bool success;
++  bool success = false, mapped = false, saved_gl_state = false;
++  bool private_target;
++  GLuint private_texture = 0, private_fbo = 0;
++  GLint original_fbo = 0, original_pack_alignment = 4, original_texture = 0;
+ 
+   g_return_val_if_fail (surface, false);
+   g_return_val_if_fail (self->wlr_allocator, false);
+@@ -356,17 +359,47 @@
+ 
+   width = shm_buffer->width;
+   height = shm_buffer->height;
++  if (width <= 0 || height <= 0)
++    return false;
++  private_target = wlr_renderer_is_gles2 (self->wlr_renderer) &&
++    wlr_gles2_renderer_check_ext (self->wlr_renderer, "GL_EXT_read_format_bgra");
+   wlr_drm_format_set_add (&fmt_set, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_LINEAR);
+   fmt = wlr_drm_format_set_get (&fmt_set, DRM_FORMAT_ARGB8888);
+ 
+   buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
+-  if (!buffer) {
+-    wlr_drm_format_set_finish (&fmt_set);
+-    g_return_val_if_reached (false);
+-  }
+-
++  if (!buffer)
++    goto out;
++
++  /* A carrier provides wlroots' pass size/context. Its shared GBM pixels are
++   * not used on the affected GLES path: render into a private GL target.
++   */
+   render_pass = wlr_renderer_begin_buffer_pass (self->wlr_renderer, buffer, NULL);
++  if (!render_pass)
++    goto out;
++  if (private_target) {
++    glGetIntegerv (GL_FRAMEBUFFER_BINDING, &original_fbo);
++    glGetIntegerv (GL_PACK_ALIGNMENT, &original_pack_alignment);
++    glGetIntegerv (GL_TEXTURE_BINDING_2D, &original_texture);
++    saved_gl_state = true;
++    glGetError ();
++    glGenTextures (1, &private_texture);
++    glBindTexture (GL_TEXTURE_2D, private_texture);
++    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
++    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
++    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
++                  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
++    glBindTexture (GL_TEXTURE_2D, original_texture);
++    glGenFramebuffers (1, &private_fbo);
++    glBindFramebuffer (GL_FRAMEBUFFER, private_fbo);
++    glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
++                            GL_TEXTURE_2D, private_texture, 0);
++    if (!private_texture || !private_fbo ||
++        glCheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE ||
++        glGetError () != GL_NO_ERROR)
++      goto out;
++  }
+   wlr_render_pass_add_rect (render_pass, &(struct wlr_render_rect_options){
++      .box = { .x = 0, .y = 0, .width = width, .height = height },
+       .color = { 0, 0, 0, 0 },
+       .blend_mode = WLR_RENDER_BLEND_MODE_NONE,
+     });
+@@ -378,28 +411,62 @@
+     .render_pass = render_pass,
+   };
+   wlr_surface_for_each_surface (surface, view_render_to_buffer_iterator, &render_data);
+-  wlr_render_pass_submit (render_pass);
++  if (!private_target) {
++    bool submitted = wlr_render_pass_submit (render_pass);
++    render_pass = NULL;
++    if (!submitted)
++      goto out;
++  }
+ 
+   if (!wlr_buffer_begin_data_ptr_access (shm_buffer,
+                                          WLR_BUFFER_DATA_PTR_ACCESS_WRITE,
+-                                         &data, &format, &stride)) {
+-    return false;
+-  }
+-
+-  struct wlr_texture *texture = wlr_texture_from_buffer (self->wlr_renderer, buffer);
+-  success = wlr_texture_read_pixels (texture, &(struct wlr_texture_read_pixels_options) {
+-      .data = data,
+-      .format = format,
+-      .stride = stride,
+-      .src_box = (struct wlr_box) { .x = 0, .y = 0, .width = width, .height = height },
+-    });
+-  wlr_texture_destroy (texture);
+-
+-  wlr_buffer_drop (buffer);
++                                         &data, &format, &stride))
++    goto out;
++  mapped = true;
++
++  if (private_target) {
++    size_t row_bytes = (size_t) width * 4;
++    if (format != DRM_FORMAT_ARGB8888 || stride < row_bytes)
++      goto out;
++    /* Copy before pass submission/context restoration, without reimporting
++     * the shared carrier as an EGL image. The orientation is unchanged.
++     */
++    glPixelStorei (GL_PACK_ALIGNMENT, 1);
++    glGetError ();
++    if (stride == row_bytes) {
++      glReadPixels (0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, data);
++    } else {
++      for (int32_t y = 0; y < height; y++)
++        glReadPixels (0, y, width, 1, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
++                       (unsigned char *) data + (size_t) y * stride);
++    }
++    success = glGetError () == GL_NO_ERROR;
++  } else {
++    struct wlr_texture *texture = wlr_texture_from_buffer (self->wlr_renderer, buffer);
++    if (texture) {
++      success = wlr_texture_read_pixels (texture, &(struct wlr_texture_read_pixels_options) {
++          .data = data, .format = format, .stride = stride,
++          .src_box = { .x = 0, .y = 0, .width = width, .height = height },
++        });
++      wlr_texture_destroy (texture);
++    }
++  }
++out:
++  if (mapped)
++    wlr_buffer_end_data_ptr_access (shm_buffer);
++  if (saved_gl_state) {
++    glBindFramebuffer (GL_FRAMEBUFFER, original_fbo);
++    glPixelStorei (GL_PACK_ALIGNMENT, original_pack_alignment);
++    if (private_fbo)
++      glDeleteFramebuffers (1, &private_fbo);
++    if (private_texture)
++      glDeleteTextures (1, &private_texture);
++  }
++  if (render_pass && !wlr_render_pass_submit (render_pass))
++    success = false;
++  if (buffer)
++    wlr_buffer_drop (buffer);
+   wlr_drm_format_set_finish (&fmt_set);
+-
+-  wlr_buffer_end_data_ptr_access (shm_buffer);
+-
+   return success;
+ }
+ 

@@ -1,1 +1,1 @@
-private-target.patch -whitespace
+*.patch -whitespace

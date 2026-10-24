@@ -131,3 +131,7 @@ The current next-build selection is homedrag8 plus the same Phoc package.
 It adds a native Restart power-menu action; its source compiles, but the pair
 build and physical menu/confirmation checks are pending. No restart was issued
 while preparing it. The installed handset is still homedrag6.
+
+## Qualified Phoc thumbnail update, October 24
+
+The complete-image Phoc input is now `0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1`, package SHA256 `b212c98ca155e57bcd10a29be57fe02fabf9b947826ffb1d4900c52648cedbb5`. The builder checks that hash, and profile staging/install checks require this version. The private-target recipe supports preparing from the qualified linear source without building the failed row intermediate. This is a Phoc-only input update: no full image was built or flashed and no unrelated Phosh/GSD version is silently promoted.

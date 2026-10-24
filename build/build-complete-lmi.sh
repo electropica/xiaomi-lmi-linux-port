@@ -34,9 +34,10 @@ fi
 for package in "$phosh" "$common"; do
     test "$(dpkg-deb -f "$package" Version)" = "$version"
 done
-phoc="$root/build/phoc_0.46.0-1+lmishelldnd1_arm64.deb"
-test -f "$phoc" || { echo "Build the reviewed Phoc shell-DnD package first." >&2; exit 1; }
-test "$(dpkg-deb -f "$phoc" Version)" = 0.46.0-1+lmishelldnd1
+phoc="$root/build/phoc_0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1_arm64.deb"
+test -f "$phoc" || { echo "Build the qualified Phoc private-thumbnail package first." >&2; exit 1; }
+test "$(dpkg-deb -f "$phoc" Version)" = 0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1
+test "$(sha256sum "$phoc" | cut -d' ' -f1)" = b212c98ca155e57bcd10a29be57fe02fabf9b947826ffb1d4900c52648cedbb5
 # Serialize later use of the shared ARM build root as well.
 exec 9>/run/lmi-phosh-gauge-build.lock
 flock -n 9 || { echo 'Shared ARM build root is busy.' >&2; exit 1; }

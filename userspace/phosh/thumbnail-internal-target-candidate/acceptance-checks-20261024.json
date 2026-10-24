@@ -1,0 +1,10 @@
+{
+  "package_meson_tests_ok": 17,
+  "complete_profile_staging_tests_ok": 6,
+  "base_profile_staging_tests_ok": 9,
+  "source_baseline_patch_paths_ok": 2,
+  "final_render_source_unchanged": "e46eff42a6353c4393c846d45f183f8ef817b4293ffb3b29eed489bb7a2b525b",
+  "shell_syntax_ok": true,
+  "hardware_thumbnail_and_ui_acceptance": true,
+  "full_image_built": false
+}
