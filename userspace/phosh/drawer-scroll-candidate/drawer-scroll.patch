@@ -1,0 +1,36 @@
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -433,6 +433,18 @@
+ }
+ 
+ 
++/* The app list consumes downward scrolling until its first row is reached. */
++static void
++lmi_drawer_update_swipe_back (PhoshAppGrid *self, GtkAdjustment *adjustment)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++  gboolean at_top = gtk_adjustment_get_value (adjustment) <=
++                    gtk_adjustment_get_lower (adjustment);
++
++  hdy_deck_set_can_swipe_back (HDY_DECK (priv->lmi_favorites_drawer), at_top);
++}
++
++
+ static void
+ phosh_app_grid_init (PhoshAppGrid *self)
+ {
+@@ -484,6 +496,14 @@
+ 
+   toggle_favorites_revealer (self);
+   lmi_home_setup (self);
++
++  GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
++    GTK_SCROLLED_WINDOW (priv->scrolled_window));
++  g_signal_connect_object (adjustment, "value-changed",
++                           G_CALLBACK (lmi_drawer_update_swipe_back), self, G_CONNECT_SWAPPED);
++  g_signal_connect_object (adjustment, "changed",
++                           G_CALLBACK (lmi_drawer_update_swipe_back), self, G_CONNECT_SWAPPED);
++  lmi_drawer_update_swipe_back (self, adjustment);
+ }
+ 
+ 

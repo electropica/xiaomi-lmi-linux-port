@@ -1,0 +1,32 @@
+{
+  "patch_sha256": "b2a8e1204177f5569929fbe4df86eb90e096da0032fb53b8908d91b84ea76a6b",
+  "sources": [
+    {
+      "tree": "phosh-0.46.0",
+      "file": "src/app-grid.c",
+      "before": "79c483f45d39b961c1e6a8c25ec0efad651db642f9c722ba1fc0f7054dcc3419",
+      "after": "ce8565d438a007ee05f30cbce39f7bcd588a47781372d1416ec3b0c3118cb9d2",
+      "package": "phosh",
+      "old": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1",
+      "new": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1"
+    }
+  ],
+  "preserve_home8": {
+    "src/app-grid-button.c": "5ca2e2006b319e17e7f52569371f3d7be80c1d5122df1e90af4004bf88b29d1f",
+    "src/home.c": "7bbcb4a57e06240453c54519577968e90a7733e837b3caecdcc950cda55cd893",
+    "src/ui/app-grid-button.ui": "1a360e4e27fe1033a013a8f0d365600fe770414debd5e83ac951f118c3a2c195",
+    "tests/test-app-grid-button.c": "ca0c5d66e060bef6b367482bc07ebe87ed55f7b1a7bbb039d5f972252f127792",
+    "src/power-menu-manager.c": "c921cf7e4dbaf7a1b12233e539a99295bac0020f281a7b7bb9b40efb391f9587",
+    "src/ui/power-menu.ui": "b0646d4a92b5210c8032b52fba02e75ab7bf606ccc4b3d07105b64ce50da6d33",
+    "data/mobi.phosh.shell.gschema.xml": "d31101e8aff1c8cfea5c814daa1727b832121b9cf2021e8666a89378c52a538d",
+    "src/ui/app-grid.ui": "00c6f5a8eafc368cd42ba880194a7d1a6ebd48d8f82e96a5903182cc8546abc3",
+    "src/lmi-home-order.h": "1c7d8aadd7143c9828ad13e105b56b0db0b0d208245f6f9def75d07527e3641a",
+    "src/lmi-home-dnd.h": "eb49e33a904ae29e994444302ac6896ef0c3f0dde3ca0799f01d2963f782fe16",
+    "src/lmi-home-grid.inc": "6a101abe16fb9c178f95257d7fbf42cb7c11893b30b84688fccf1f32ecd73e01",
+    "src/lmi-home-remove.inc": "2190b90df88bb774c5eae9bd324be36bf6ff465ebd5f3c8c62175970ecc4f062",
+    "src/screen-saver-manager.c": "406e9ebf73cdd44f3b0c0651299964381791c03d72240fc0705b0d1bee23149c"
+  },
+  "preserve_extra": {
+    "gnome-settings-daemon-48.1/plugins/power/gsd-power-constants.h": "2924763ccaaef30e7eb4b6eabf2a4a7b833f08d3a9f313ba145c18d1591b7d7a"
+  }
+}
