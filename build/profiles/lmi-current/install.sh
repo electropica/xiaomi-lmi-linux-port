@@ -24,15 +24,17 @@ for p in upower libupower-glib3 gir1.2-upowerglib-1.0; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = 1.90.9-1+lmi1
 done
 phosh_version=0.46.0-3+deb13u1+lmigaugewake3
+gsd_version=48.1-1+lmiquietgauge3
 if [[ -f $src/COMPLETE_PROFILE ]]; then
-    phosh_version+=+homedrag8
+    phosh_version+=+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1
+    gsd_version+=+esrquiet1+irqnames1
     test "$(dpkg-query -W -f='${Version}' phoc)" = 0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1
 fi
 for p in phosh phosh-common; do
     test "$(dpkg-query -W -f='${Version}' "$p")" = "$phosh_version"
 done
 for p in gnome-settings-daemon gnome-settings-daemon-common; do
-    test "$(dpkg-query -W -f='${Version}' "$p")" = 48.1-1+lmiquietgauge3
+    test "$(dpkg-query -W -f='${Version}' "$p")" = "$gsd_version"
 done
 # Native drag builds own their matching UI/schema; an old overlay would break bindings.
 if [[ -f $src/COMPLETE_PROFILE ]]; then

@@ -1,3 +1,20 @@
+# Current complete-build selection —25 October 2026
+
+The next complete image now consumes the exact handset-qualified package set:
+
+- Phosh/common `0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1` (accepted closed/open drawer previews, gestures and favorites).
+- GSD/common `48.1-1+lmiquietgauge3+esrquiet1+irqnames1` (two natural gauge wakes returned to deep sleep in about16s instead of20min).
+- Phoc `0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1` (clear thumbnails and functioning DnD).
+
+The complete orchestrator verifies all five accepted package SHA256 values, includes both new GSD packages instead of accidentally retaining the old pair, and refuses missing packages. It no longer falls back to an obsolete home-drag package build. The non-complete historical stable-profile package selection is unchanged. Battery percentage is now an explicit profile default.
+
+No new image or kernel was built, installed or flashed by this recipe update. The temporary diagnostic kernel/DT arrangement is NOT promoted. Existing image identities below remain historical. Current checks:9 stable staging tests,7 complete staging tests, strict GSettings schema validation, shell syntax and actual five-package hashes pass. Autonomy over several hours remains unmeasured.
+
+The external input/password/partition requirements still apply. A future operator build uses a new unused output name and retains the existing paired boot/partition guards. Heavy builds remain operator-run.
+
+---
+## Earlier complete-build history (superseded selections)
+
 # Complete operator image — 2026-10-18
 
 `build/build-complete-lmi.sh BASE_RAW M0_EXT4 OUTPUT_NAME` is the combined

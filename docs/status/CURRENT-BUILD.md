@@ -2283,3 +2283,9 @@ Two detached msoc-delta resumes with the IRQ-name policy returned to suspend aft
 The return-to-sleep defect is hardware-validated for these two cycles. A final USB-triggered resume is excluded. Two separate raw-counter brackets give25.201 and24.614 reported units per suspended second (awake callback margin included in the numerator); these are not calibrated current. Current charge_full2637000 differs from the historical2677000. Historical comparison and autonomy/sole-cause conclusions remain limited. Full-image pins have not yet been promoted to these incremental runtime packages.
 
 Evidence: userspace/power/irq-name-candidate/natural-resume-validation-20261025.json. No additional test, reboot or policy change was launched on return.
+
+## Next complete-image recipe updated —25 October 2026
+
+Following the runtime validations, the complete-image recipe now selects the accepted Phosh drawerpreview1+irqnames1 pair, GSD esrquiet1+irqnames1 pair and existing private-FBO Phoc. Five exact package SHA256 guards prevent fallback to older variants; both Phosh and GSD are replaced in the nine-input manifest. The percentage display is an explicit profile default. Base non-complete package selection is retained.
+
+Host validation passed:9 stable and7 complete staging tests, strict GSettings schema compilation, shell syntax and five actual package hashes. No new image/kernel/flash was performed. The temporary diagnostic boot/DT is not promoted. See build/profiles/lmi-current/COMPLETE-BUILD.md for the current selection; earlier image identities remain historical.

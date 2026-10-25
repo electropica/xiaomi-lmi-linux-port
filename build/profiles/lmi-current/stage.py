@@ -12,15 +12,16 @@ camera_bundle=None
 if complete:
     camera_bundle=Path(os.environ['M1_COMPLETE_CAMERA_BUNDLE'])
     subprocess.run(['python3',str(repo/'userspace/camera/snapshot-bundle/check-bundle.py'),str(camera_bundle)],check=True)
-phosh_version='0.46.0-3+deb13u1+lmigaugewake3'+('+homedrag8' if complete else '')
+phosh_version='0.46.0-3+deb13u1+lmigaugewake3'+('+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1' if complete else '')
+gsd_version='48.1-1+lmiquietgauge3'+('+esrquiet1+irqnames1' if complete else '')
 packages=[
     ('upower', '1.90.9-1+lmi1', 'arm64'),
     ('libupower-glib3', '1.90.9-1+lmi1', 'arm64'),
     ('gir1.2-upowerglib-1.0', '1.90.9-1+lmi1', 'arm64'),
     ('phosh', phosh_version, 'arm64'),
     ('phosh-common', phosh_version, 'all'),
-    ('gnome-settings-daemon', '48.1-1+lmiquietgauge3', 'arm64'),
-    ('gnome-settings-daemon-common', '48.1-1+lmiquietgauge3', 'all'),
+    ('gnome-settings-daemon', gsd_version, 'arm64'),
+    ('gnome-settings-daemon-common', gsd_version, 'all'),
 ]
 if complete:
     packages.append(('phoc', '0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1', 'arm64'))
@@ -77,9 +78,9 @@ if complete:
     (a.destination/'camera').mkdir()
     for name in sorted(module.NAMES|{'SHA256SUMS'}):
         shutil.copy2(camera_bundle/name,a.destination/'camera'/name)
-    (a.destination/'COMPLETE_PROFILE').write_text('native-home-drag-and-snapshot-v8\n')
+    (a.destination/'COMPLETE_PROFILE').write_text('native-home-drag-irqnames-preview-and-snapshot-v9\n')
     profile=a.destination/'PROFILE.txt'
     text=profile.read_text().replace('Camera Snapshot bridge remains experimental and is not installed by this profile.',
         'Experimental Snapshot rear-camera bridge is installed; the new foreground lifecycle and native drag gestures require post-flash testing.')
-    profile.write_text(text+'Native Phosh home drag homedrag8: persistent home slots, up to five favorites added by drag, favorite reorder, shortcut removal, compact labels, native drawer/dock UI, confirmed lock-screen shutdown/restart actions and Phoc shell-layer DnD grab routing; old resource overlay deliberately omitted.\n')
+    profile.write_text(text+'Native Phosh home drag homedrag8: persistent home slots, up to five favorites added by drag, favorite reorder, shortcut removal, compact labels, native drawer/dock UI, confirmed lock-screen shutdown/restart actions and Phoc shell-layer DnD grab routing; old resource overlay deliberately omitted. IRQ-independent quiet resumes, accepted closed-drawer previews and private-FBO thumbnails are selected; temporary diagnostic kernel/DT state is not promoted.\n')
 print('CURRENT_PROFILE_INPUTS_VALIDATED')

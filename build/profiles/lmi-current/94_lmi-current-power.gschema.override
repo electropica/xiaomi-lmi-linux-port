@@ -7,3 +7,7 @@ sleep-inactive-battery-timeout=900
 # Notifications remain available; screen wake by notification is disabled.
 [sm.puri.phosh.notifications]
 wakeup-screen-triggers=[]
+
+# Operator-requested persistent battery percentage.
+[org.gnome.desktop.interface]
+show-battery-percentage=true

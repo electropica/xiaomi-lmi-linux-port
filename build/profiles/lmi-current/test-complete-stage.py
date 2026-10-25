@@ -10,13 +10,14 @@ class CompleteTests(unittest.TestCase):
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
   self.inputs=self.root/'inputs';shutil.copytree(stable,self.inputs)
-  for name,arch in [('phosh','arm64'),('phosh-common','all'),('phoc','arm64')]:
+  for name,arch in [('phosh','arm64'),('phosh-common','all'),('phoc','arm64'),('gnome-settings-daemon','arm64'),('gnome-settings-daemon-common','all')]:
    tree=self.root/name;(tree/'DEBIAN').mkdir(parents=True)
-   version='0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1' if name=='phoc' else '0.46.0-3+deb13u1+lmigaugewake3+homedrag8'
+   version='0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1' if name=='phoc' else ('48.1-1+lmiquietgauge3+esrquiet1+irqnames1' if name.startswith('gnome-settings-daemon') else '0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1')
    (tree/'DEBIAN/control').write_text(f'Package: {name}\nVersion: {version}\nArchitecture: {arch}\nMaintainer: Test <test@example.invalid>\nDescription: metadata-only preflight fixture\n')
    subprocess.run(['dpkg-deb','--build',str(tree),str(self.inputs/f'{name}_{version}_{arch}.deb')],check=True,capture_output=True)
   names=[line.split('  ',1)[1] for line in (stable/'SHA256SUMS').read_text().splitlines()]
-  names=[n.replace('lmigaugewake3_','lmigaugewake3+homedrag8_') for n in names]
+  names=[n.replace('lmigaugewake3_','lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1_') for n in names]
+  names=[n.replace('lmiquietgauge3_','lmiquietgauge3+esrquiet1+irqnames1_') for n in names]
   names.append('phoc_0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1_arm64.deb')
   (self.inputs/'SHA256SUMS').write_text(''.join(hashlib.sha256((self.inputs/n).read_bytes()).hexdigest()+'  '+n+'\n' for n in names))
   self.bundle=self.root/'bundle';self.bundle.mkdir()
@@ -41,9 +42,13 @@ class CompleteTests(unittest.TestCase):
   self.assertTrue((self.dest/'COMPLETE_PROFILE').is_file())
   self.assertTrue((self.dest/'inputs/phoc_0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1_arm64.deb').is_file())
   self.assertEqual((self.dest/'camera/SHA256SUMS').read_bytes(),(self.bundle/'SHA256SUMS').read_bytes())
-  self.assertTrue((self.dest/'inputs/phosh_0.46.0-3+deb13u1+lmigaugewake3+homedrag8_arm64.deb').is_file())
+  self.assertTrue((self.dest/'inputs/phosh_0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1_arm64.deb').is_file())
+  self.assertTrue((self.dest/'inputs/gnome-settings-daemon_48.1-1+lmiquietgauge3+esrquiet1+irqnames1_arm64.deb').is_file())
  def test_missing_phoc_prevents_staging(self):
   (self.inputs/'phoc_0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1_arm64.deb').unlink()
+  self.assertNotEqual(self.run_stage().returncode,0);self.assertFalse(self.dest.exists())
+ def test_missing_irq_name_gsd_prevents_staging(self):
+  (self.inputs/'gnome-settings-daemon_48.1-1+lmiquietgauge3+esrquiet1+irqnames1_arm64.deb').unlink()
   self.assertNotEqual(self.run_stage().returncode,0);self.assertFalse(self.dest.exists())
  def test_camera_tampering_prevents_staging(self):
   (self.bundle/'lmi-snapshot').write_text('changed')
