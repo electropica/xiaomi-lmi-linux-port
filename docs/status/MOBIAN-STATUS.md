@@ -2972,3 +2972,16 @@ but the rescue remains installed drawerpreview1. No package built or installed,
 and no complete-image pin changed. See
 docs/validation/lmi-empty-search-drawer-close-candidate-2026-10-25.md and
 userspace/phosh/drawer-empty-search-close-candidate/README.md.
+
+
+## Host-only follow-up and pending UI build — 25 October 2026
+
+The operator has built drawersearch1+draweremptysearch1 (36 package tests OK,
+zero skipped); it is NOT installed. The handset remains on accepted
+irqnames1+drawerpreview1 with the accepted Phoc/GSD. Complete-image pins stay
+unchanged. The passive night is armed; no handset contact occurs while unplugged.
+
+Offline recheck extends the existing, unintegrated ADC shadow-retry test to
+32 cases per implementation. It is a shared source defect, already documented
+on 7 October, with no demonstrated occurrence or battery-current causality.
+See docs/validation/lmi-offline-gauge-recheck-2026-10-25.md.

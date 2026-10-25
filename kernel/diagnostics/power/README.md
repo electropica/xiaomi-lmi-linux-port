@@ -3392,3 +3392,14 @@ is captured; same-phone rebuilds can supply M1_RTC_TIME_ANCHOR_FILE privately.
 Sources: userspace/power/diagnostics/recovery-control and userspace/power/clock.
 The image recipe includes the helper and conditional service; no heavy build,
 image generation or flash was started. Longer recovery variants remain unvalidated.
+
+
+## Offline gauge recheck — 25 October 2026
+
+The existing ADC shadow-retry candidate was rechecked against both pinned
+kernel revisions; it remains a shared correctness issue, not a new drain
+cause. The native actual-function test now covers all ten injected bus-read
+error positions (32 cases per implementation). No kernel integration or
+handset operation followed. Saved DT options and source-level percentage
+mapping narrow the full-charge-display explanation; see
+[the offline recheck](../../../docs/validation/lmi-offline-gauge-recheck-2026-10-25.md).

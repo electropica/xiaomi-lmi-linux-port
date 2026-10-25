@@ -75,8 +75,8 @@ int main(void) {
         assert(calls==10);
         if(EXPECT_FIXED) assert(value==12345);
         cases++;
-        const int errors[]={1,2,9,10};
-        for(unsigned i=0;i<4;i++) {
+        const int errors[]={1,2,3,4,5,6,7,8,9,10};
+        for(unsigned i=0;i<sizeof(errors)/sizeof(errors[0]);i++) {
             calls=0; match_at=0; error_at=errors[i]; value=12345;
             assert(readers[reader](&fg,&value)==-EIO);
             assert(value==12345 && calls==errors[i]);
