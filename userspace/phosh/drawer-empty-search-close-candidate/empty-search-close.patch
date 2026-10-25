@@ -1,0 +1,220 @@
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -78,0 +79,15 @@
++
++  /* Query actually applied to the filter model. The text of the entry changes
++   * as soon as the user types, the model only follows when the debounce
++   * fires. */
++  char *lmi_applied_search;
++  /* Text of the entry as it is right now. GtkSearchEntry delays its
++   * "search-changed" signal by about 150 ms, so the raw text is the only
++   * immediate information about what the user typed. */
++  char *lmi_entry_text;
++  /* Bumped every time the text of the entry really changes. */
++  guint lmi_input_generation;
++  /* Input generation observed when the drawer close was confirmed. */
++  guint lmi_close_generation;
++  /* A confirmed drawer close waiting for the verdict of the current query. */
++  gboolean lmi_close_pending;
+@@ -476,0 +492,8 @@
++/* All defined below, next to do_search(). */
++static void lmi_maybe_clear_search (PhoshAppGrid *self);
++static void on_lmi_drawer_transition_running (GObject    *object,
++                                              GParamSpec *pspec,
++                                              gpointer    user_data);
++static void on_search_entry_changed (GtkEditable *editable,
++                                     gpointer    user_data);
++
+@@ -485,0 +509,5 @@
++
++  /* "search-changed" is delayed by GtkSearchEntry, "changed" is immediate. */
++  priv->lmi_entry_text = g_strdup ("");
++  g_signal_connect_object (priv->search, "changed",
++                           G_CALLBACK (on_search_entry_changed), self, 0);
+@@ -530,0 +559,5 @@
++  /* The drawer is only really closed when its transition ended: during a
++   * swipe the visible child changes as soon as the finger moves. */
++  g_signal_connect_object (priv->lmi_favorites_drawer, "notify::transition-running",
++                           G_CALLBACK (on_lmi_drawer_transition_running), self, 0);
++
+@@ -563,0 +597,2 @@
++  g_clear_pointer (&priv->lmi_applied_search, g_free);
++  g_clear_pointer (&priv->lmi_entry_text, g_free);
+@@ -591,0 +627,4 @@
++
++  /* The timeout has fired, its id is stale: drop it before anything tries to
++   * remove it. */
++  priv->debounce = 0;
+@@ -607 +646,161 @@
+-  priv->debounce = 0;
++  /* Remember which query the model holds now, so that a decision is never
++   * taken on the results of another query. */
++  g_free (priv->lmi_applied_search);
++  priv->lmi_applied_search = g_strdup (priv->search_string ? priv->search_string : "");
++
++  /* A close confirmed while this query was still pending is decided now. */
++  lmi_maybe_clear_search (self);
++}
++
++
++/* Remember the text of the entry and count the real input changes.
++ *
++ * GtkSearchEntry delays "search-changed" by about 150 ms, so the raw text of
++ * the entry is the only immediate information about what the user typed.  The
++ * generation tells a change made before the drawer was closed from the
++ * delayed signal of that very change. */
++static void
++lmi_set_entry_text (PhoshAppGrid *self, const char *text)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++  char *folded = g_utf8_casefold (text ? text : "", -1);
++
++  if (g_strcmp0 (folded, priv->lmi_entry_text) == 0) {
++    g_free (folded);
++    return;
++  }
++
++  g_free (priv->lmi_entry_text);
++  priv->lmi_entry_text = folded;
++  priv->lmi_input_generation++;
++}
++
++
++/* Whether the model currently holds the results of the text of the entry.
++ *
++ * The model is refiltered from priv->search_string, which only follows the
++ * delayed "search-changed" signal.  Judging the model against the raw text
++ * of the entry avoids taking a decision on the results of a query that is
++ * not displayed any more. */
++static gboolean
++lmi_model_matches_entry (PhoshAppGrid *self)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++  const char *current = priv->lmi_entry_text ? priv->lmi_entry_text : "";
++
++  return g_strcmp0 (priv->lmi_applied_search, current) == 0;
++}
++
++
++/* Drop a search without results and show the favourites again.
++ *
++ * The entry is cleared like the clear button does it, the regular search
++ * path then refilters, resets the scroll position and shows the favourites. */
++static void
++lmi_clear_search (PhoshAppGrid *self)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++
++  priv->lmi_close_pending = FALSE;
++
++  /* A pending debounce would apply the query that is dropped here. */
++  g_clear_handle_id (&priv->debounce, g_source_remove);
++
++  g_clear_pointer (&priv->search_string, g_free);
++  gtk_entry_set_text (GTK_ENTRY (priv->search), "");
++
++  do_search (self);
++}
++
++
++/* Decide if a search without results has to be dropped.
++ *
++ * Called when the drawer transition ended and after every applied query, so
++ * that a query whose debounce was still pending when the drawer was closed
++ * is judged on its own results and not on the ones of the previous query. */
++static void
++lmi_maybe_clear_search (PhoshAppGrid *self)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++  const char *current;
++
++  /* No drawer close was confirmed. */
++  if (!priv->lmi_close_pending)
++    return;
++
++  /* The entry was edited after the close: that is a new search, an older
++   * close must not drop it.  The delayed "search-changed" of a change made
++   * before the close does not touch the generation and keeps the close. */
++  if (priv->lmi_input_generation != priv->lmi_close_generation)
++    return;
++
++  current = priv->lmi_entry_text ? priv->lmi_entry_text : "";
++
++  /* No search to drop. */
++  if (current[0] == '\0')
++    return;
++
++  /* The model does not hold the text of the entry yet, wait for the
++   * debounce. */
++  if (!lmi_model_matches_entry (self))
++    return;
++
++  /* The search has results, keep it. */
++  if (g_list_model_get_n_items (G_LIST_MODEL (priv->model)) != 0)
++    return;
++
++  lmi_clear_search (self);
++}
++
++
++/* The text of the entry changed, immediately.
++ *
++ * GtkSearchEntry delays "search-changed", this signal is the only immediate
++ * information about the input. */
++static void
++on_search_entry_changed (GtkEditable *editable,
++                         gpointer    user_data)
++{
++  PhoshAppGrid *self = user_data;
++
++  g_return_if_fail (PHOSH_IS_APP_GRID (self));
++
++  lmi_set_entry_text (self, gtk_entry_get_text (GTK_ENTRY (editable)));
++}
++
++
++/* The drawer finished a transition.
++ *
++ * HdyDeck notifies "transition-running" when a transition starts and when it
++ * ends. The visible child is only final at the end: during a swipe it
++ * changes as soon as the finger moves and a cancelled swipe restores it
++ * when the snap back ends. */
++static void
++on_lmi_drawer_transition_running (GObject    *object,
++                                   GParamSpec *pspec,
++                                   gpointer    user_data)
++{
++  PhoshAppGrid *self = user_data;
++  PhoshAppGridPrivate *priv;
++  const char *visible_child_name;
++
++  g_return_if_fail (PHOSH_IS_APP_GRID (self));
++
++  priv = phosh_app_grid_get_instance_private (self);
++
++  /* Only the end of a transition is of interest. */
++  if (hdy_deck_get_transition_running (HDY_DECK (object)))
++    return;
++
++  visible_child_name = hdy_deck_get_visible_child_name (HDY_DECK (object));
++
++  if (g_strcmp0 (visible_child_name, "home") == 0) {
++    /* The drawer is closed: remember the input this close concerns, so that
++     * a search without results is dropped and the favourites show up again. */
++    priv->lmi_close_pending = TRUE;
++    priv->lmi_close_generation = priv->lmi_input_generation;
++    lmi_maybe_clear_search (self);
++  } else {
++    /* The drawer is open again, a close is not confirmed any more. */
++    priv->lmi_close_pending = FALSE;
++  }
+@@ -679,0 +879,5 @@
++
++  /* The preedit is the text the user is typing right now. */
++  lmi_set_entry_text (self,
++                      preedit && *preedit != '\0' ?
++                      preedit : gtk_entry_get_text (GTK_ENTRY (entry)));
+@@ -839,0 +1044,3 @@
++  /* A reset drops any close that is still waiting for its verdict. */
++  priv->lmi_close_pending = FALSE;
++

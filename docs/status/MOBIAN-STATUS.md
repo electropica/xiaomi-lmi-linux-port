@@ -2955,3 +2955,20 @@ using actual native GObject signal marshalling; this is not GTK/phone validation
 Default recipe preflight passes and preserves the accepted home/power/renderer
 sources and rollback packages. Complete-image pins remain on the accepted
 drawerpreview1 build. Recipe: userspace/phosh/drawer-search-candidate/README.md.
+
+
+## Pending empty-search swipe-close candidate —25 October2026
+
+The handset remains on accepted drawerpreview1 after the unaccepted search test
+was rolled back. The reported empty screen was resolved by clearing retained
+text on that older version; no new-version crash was established. The requested
+UX change is now a separate revision2 candidate: clear a zero-result query only
+after completed drawer closure, preserving result-bearing/cancelled searches.
+The delayed GTK search signal gap has explicit raw-input/generation guards.
+
+Recipe preflight, strict source/patch hashes and the15-case design model pass.
+These are host checks, not GTK/tactile acceptance. The build input is drawersearch1
+but the rescue remains installed drawerpreview1. No package built or installed,
+and no complete-image pin changed. See
+docs/validation/lmi-empty-search-drawer-close-candidate-2026-10-25.md and
+userspace/phosh/drawer-empty-search-close-candidate/README.md.
