@@ -1,0 +1,98 @@
+{
+  "result": "NATURAL_GAUGE_RESUME_RETURN_TO_SLEEP_VALIDATED_FOR_TWO_CYCLES",
+  "same_boot": true,
+  "log_sha256": "63ae28243a973b2570727e406a1a4e1780dc585a8e3f8475e607a63bd453e7c1",
+  "profile": {
+    "battery_type": "j11sun_4700mah",
+    "charge_full_design": "4700000",
+    "charge_full": "2637000",
+    "scale_mode_en": "0",
+    "soc_reporting_ready": "1"
+  },
+  "collector_closed": true,
+  "observer_inactive": true,
+  "natural_msoc_cycles": 2,
+  "post_gauge_awake_s": [
+    14.86236345198995,
+    15.009935420996044
+  ],
+  "kernel_exit_to_next_deep_entry_s": [
+    15.673285007476807,
+    15.791944026947021
+  ],
+  "timing_boundary_note": "D-Bus resume->prepare values exclude part of kernel/userspace transition; kernel exit->next deep entry is separately reported.",
+  "wakeup_screen_during_natural_cycles": false,
+  "screen_saver_remained_active_during_natural_cycles": true,
+  "previous_observation_awake_median_s": 1201.0761734247208,
+  "counter_brackets": [
+    {
+      "rows": [
+        5,
+        6
+      ],
+      "reason": "451 msoc-delta",
+      "qualified": true,
+      "rejections": [],
+      "raw_delta": 4839,
+      "suspended_s": 192.0131198730087,
+      "awake_margin_in_delta_s": 0.9478128769987961,
+      "reported_units_per_suspended_second": 25.201402920802284,
+      "raw_per_soc_relative_drift": 3.61404600053399e-05,
+      "charge_full_start": "2637000",
+      "charge_full_end": "2637000"
+    },
+    {
+      "rows": [
+        7,
+        8
+      ],
+      "reason": "451 msoc-delta",
+      "qualified": true,
+      "rejections": [],
+      "raw_delta": 15777,
+      "suspended_s": 640.9872670450059,
+      "awake_margin_in_delta_s": 0.991550416998507,
+      "reported_units_per_suspended_second": 24.61359345363134,
+      "raw_per_soc_relative_drift": 6.259768986979621e-05,
+      "charge_full_start": "2637000",
+      "charge_full_end": "2637000"
+    },
+    {
+      "rows": [
+        9,
+        10
+      ],
+      "reason": "473 typec-cc-state-change",
+      "qualified": false,
+      "rejections": [
+        "USB-triggered resume",
+        "USB/charge boundary",
+        "adjacent USB/charge boundary"
+      ],
+      "raw_delta": 2388,
+      "suspended_s": 91.55511168400699,
+      "awake_margin_in_delta_s": 0.9510383720044047,
+      "reported_units_per_suspended_second": null,
+      "raw_per_soc_relative_drift": 9.467143391987604e-06,
+      "charge_full_start": "2637000",
+      "charge_full_end": "2637000"
+    }
+  ],
+  "qualified_counter_brackets": 2,
+  "reported_rate_median": 24.90749818721681,
+  "historical_reference_median": 45.607360385,
+  "comparison_scope": "limited descriptive comparison between configurations, not exclusive kernel/profile cause",
+  "electrical_current": "NOT_MEASURED",
+  "limitations": [
+    "Only two natural gauge wake cycles.",
+    "Raw-counter delta includes awake callback margin while denominator is suspended time.",
+    "Current charge_full2637000 differs from historical2677000; no equal-scale physical calibration.",
+    "Kernel/profile/IRQ-policy/UI configuration differs from historical comparison.",
+    "Wi-Fi associated; final USB-triggered endpoint rejected."
+  ],
+  "services_after": {
+    "phosh_active": true,
+    "gsd_active": true,
+    "restarts_observed": 0
+  }
+}

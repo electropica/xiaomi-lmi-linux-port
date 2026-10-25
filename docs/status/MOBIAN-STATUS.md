@@ -2921,3 +2921,11 @@ The original fixed-IRQ mismatch is established; corrected natural gauge-resume b
 The incremental Phosh drawerpreview1 package is installed and operator-accepted: running previews are hidden on the closed home page and visible inside the open drawer; favorites remain at the bottom and gestures respond normally. All36 Phosh package tests passed. The actual running binary SHA256 is17f5cb077e08a1e93b13b6a828e69b225d7008e3c3db4faa03e26325b58ea159. Rescue rollback was cancelled after acceptance.
 
 The same temporary kernel/published j11 profile, GSD IRQ-name policy and accepted Phoc private-FBO thumbnail renderer are retained. This is an incremental userspace milestone, not a new full image. Natural gauge-resume/energy validation remains pending. Evidence: userspace/phosh/closed-drawer-preview-candidate/device-acceptance-20261025.json.
+
+## Natural gauge-resume validation —25 October 2026
+
+Two detached msoc-delta resumes with the IRQ-name policy returned to suspend after14.862s and15.010s between D-Bus events; kernel suspend-exit to next deep-entry intervals were15.673s and15.792s. The preceding uncorrected-night median was1201.076s. No WakeUpScreen signal occurred during these two natural cycles and ScreenSaver.GetActive stayed true. This is not a direct panel-power measurement. Same boot/profile, clean capture closure and active Phosh/GSD with zero restarts were confirmed; the collector finished successfully.
+
+The return-to-sleep defect is hardware-validated for these two cycles. A final USB-triggered resume is excluded. Two separate raw-counter brackets give25.201 and24.614 reported units per suspended second (awake callback margin included in the numerator); these are not calibrated current. Current charge_full2637000 differs from the historical2677000. Historical comparison and autonomy/sole-cause conclusions remain limited. Full-image pins have not yet been promoted to these incremental runtime packages.
+
+Evidence: userspace/power/irq-name-candidate/natural-resume-validation-20261025.json. No additional test, reboot or policy change was launched on return.
