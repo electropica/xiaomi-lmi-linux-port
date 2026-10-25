@@ -13,3 +13,9 @@ The existing Phosh source tree had unqualified drawerscroll4 changes. The operat
 ## Required next milestone
 
 After an operator build, inspect the generated package manifest and normal test results; install only the four targeted packages with a bounded rescue path and protected graphical restart. Keep the temporary kernel/profile and accepted Phoc. Validate normal UI, explicit button/USB wake, and a naturally occurring detached gauge wake. The latter must keep the screen blank and restore suspend promptly before any autonomy improvement is claimed. Report actual awake intervals and qualified gauge units separately from electrical current.
+
+## Incremental runtime activation — 25 October 2026
+
+The IRQ-name-independent Phosh/GSD packages are installed and user-accepted for normal application use, drawer and power-button handling. Runtime process hashes and both opt-ins match the built artifacts; same temporary kernel boot and published j11 profile were retained, as was the accepted private-FBO Phoc renderer. The owned automatic rescue timer was cancelled after acceptance. Phosh package tests:36 OK; GSD:1 OK and9 SKIP.
+
+The original fixed-IRQ mismatch is established; corrected natural gauge-resume behavior and battery benefit are still unvalidated. No full image or permanent boot was changed or promoted. See `userspace/power/irq-name-candidate/device-activation-20261025.json` and `docs/validation/lmi-irq-name-policy-2026-10-25.md`.

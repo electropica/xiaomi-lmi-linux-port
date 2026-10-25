@@ -2909,3 +2909,9 @@ including AVB policy. This is not a generic command-line rewrite. Host C tests
 on the real saved compatibility/stock pair verify all nine later values and
 the complete unchanged unrelated-token sequence; malformed/ambiguous inputs
 are rejected. Hardware validation still requires the next temporary build.
+
+## Incremental runtime activation — 25 October 2026
+
+The IRQ-name-independent Phosh/GSD packages are installed and user-accepted for normal application use, drawer and power-button handling. Runtime process hashes and both opt-ins match the built artifacts; same temporary kernel boot and published j11 profile were retained, as was the accepted private-FBO Phoc renderer. The owned automatic rescue timer was cancelled after acceptance. Phosh package tests:36 OK; GSD:1 OK and9 SKIP.
+
+The original fixed-IRQ mismatch is established; corrected natural gauge-resume behavior and battery benefit are still unvalidated. No full image or permanent boot was changed or promoted. See `userspace/power/irq-name-candidate/device-activation-20261025.json` and `docs/validation/lmi-irq-name-policy-2026-10-25.md`.

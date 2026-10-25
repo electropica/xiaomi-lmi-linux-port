@@ -1,0 +1,69 @@
+{
+  "scope": "incremental four-package userspace activation",
+  "ui_acceptance": "operator confirmed app, drawer and power button normal",
+  "runtime_checks": {
+    "result": "PASS",
+    "same_boot": true,
+    "profile": "j11sun_4700mah",
+    "operator_ui": "confirmed normal",
+    "states": {
+      "mobi.phosh.Shell.service": {
+        "active": true,
+        "binary_sha256": "e191b057acce90c720be0bccd04842591304932c7db6f1ed63bf6995c46b7b7d",
+        "filter_enabled": true
+      },
+      "org.gnome.SettingsDaemon.Power.service": {
+        "active": true,
+        "binary_sha256": "fac2406127d06f0a1e76fe8397888e3891d8b7f2117aa8ef9fb187eb0ae82c4f",
+        "filter_enabled": true
+      }
+    },
+    "settings": {
+      "org.gnome.desktop.session.idle-delay": "uint32 300",
+      "org.gnome.settings-daemon.plugins.power.sleep-inactive-battery-timeout": "900",
+      "org.gnome.desktop.interface.show-battery-percentage": "true"
+    },
+    "rollback_timer": "cancelled after UI acceptance",
+    "natural_gauge_resume_validation": "pending",
+    "electrical_benefit": "not measured"
+  },
+  "tests": {
+    "phosh-0.46.0": {
+      "OK": 36,
+      "SKIP": 0
+    },
+    "gnome-settings-daemon-48.1": {
+      "OK": 1,
+      "SKIP": 9
+    }
+  },
+  "packages": [
+    {
+      "path": "/home/linuxagent/phosh-gauge-wake-build/rootfs/build/phosh_0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1_arm64.deb",
+      "sha256": "379236155d5b58f7e499151c3ba90587b1d0525b907fcf8936a095b6b27b051b",
+      "version": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1",
+      "architecture": "arm64"
+    },
+    {
+      "path": "/home/linuxagent/phosh-gauge-wake-build/rootfs/build/phosh-common_0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1_all.deb",
+      "sha256": "4a9c284d398951423e51b3a9419839b270133f08d13e8ec5a27f674a559046d5",
+      "version": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1",
+      "architecture": "all"
+    },
+    {
+      "path": "/home/linuxagent/phosh-gauge-wake-build/rootfs/build/gnome-settings-daemon_48.1-1+lmiquietgauge3+esrquiet1+irqnames1_arm64.deb",
+      "sha256": "eca42cc04d0f509c93c28e8e37a3ecaf65316fecd92a9438ba62031862889972",
+      "version": "48.1-1+lmiquietgauge3+esrquiet1+irqnames1",
+      "architecture": "arm64"
+    },
+    {
+      "path": "/home/linuxagent/phosh-gauge-wake-build/rootfs/build/gnome-settings-daemon-common_48.1-1+lmiquietgauge3+esrquiet1+irqnames1_all.deb",
+      "sha256": "fdc6e4513be1eaf07c61899d9ac86ae55a84744bda4476ecf003e354cb8e2345",
+      "version": "48.1-1+lmiquietgauge3+esrquiet1+irqnames1",
+      "architecture": "all"
+    }
+  ],
+  "natural_gauge_resume": "pending",
+  "electrical_benefit": "not measured",
+  "full_image_promoted": false
+}
