@@ -2985,3 +2985,12 @@ Offline recheck extends the existing, unintegrated ADC shadow-retry test to
 32 cases per implementation. It is a shared source defect, already documented
 on 7 October, with no demonstrated occurrence or battery-current causality.
 See docs/validation/lmi-offline-gauge-recheck-2026-10-25.md.
+
+
+## Battery research checkpoint — evening25October2026
+
+The [current research checkpoint](BATTERY-RESEARCH-CURRENT.md) identifies accepted
+quiet-wake behavior, the untouched passive night, pending UI acceptance and
+known hypotheses that must not be rediscovered as new causes. A source review
+of Wi-Fi STA power-save finds a conditional host-suspend path, not an active
+phone-setting mismatch or a battery cause. No device operation followed.
