@@ -7,7 +7,7 @@ state. No physical residual-current calibration or culprit is established.
 ## Accepted behavior and current boundaries
 
 The IRQ-name userspace fixes return naturally from gauge wakes to suspension
-in about15s between D-Bus callbacks, about16s in retained kernel boundaries.
+in about 15 s between D-Bus callbacks, about 16 s in retained kernel boundaries.
 Seven natural callback cycles are available across two current short/long
 windows. The historical ~1201s dwell has not recurred in those windows.
 This is a real behavior improvement, not proof of a particular mA reduction.
@@ -38,7 +38,7 @@ The local coordinator records the exact fetch command and receipt identities.
 
 | Topic | What is established | What must not be inferred |
 | --- | --- | --- |
-| ADC retry boundary | Known since7October; shared source bug, host repro now32cases | New cause or reason for an immediate kernel build |
+| ADC retry boundary | Known since 7 October; shared source bug, host repro now32 cases | New cause or reason for an immediate kernel build |
 | Gauge capacity scales | Distinct source state/multipliers; SW counter can be primed | Learned/design ratio is physical wear or a universal correction factor |
 | Displayed full state | Optional full-extension DT flags absent; normal tracking remains | All100->95loss is display-only, or percentage is calibrated energy |
 | Modem / DSP labels | Availability/startup information and known interfaces | Missing enumeration, OFFLINING or missing SMEM means physically off |
@@ -46,6 +46,7 @@ The local coordinator records the exact fetch command and receipt identities.
 | Camera idle rails | Awake supply/pin observations | A complete deep-state electrical exclusion |
 | GPU / RPMh | Static wiring and cached request evidence | Getters measure physical sleep rails |
 | UFS / CNSS | Driver paths and retained transition evidence | A mainline patch automatically applies, or HIBERN8/DRV calibrates current |
+| EUD debug USB | Matched sources/DT; explicit noirq clock-vote callbacks; secure mode can override default zero | Missing boot flag proves off, or callback presence measures physical power |
 | Wi-Fi PS | Host suspend flush is conditional; generic getter is cached | Same INI means same runtime policy, or current policy has been measured |
 | Grouped radio-off trial | No robust matched gain established | Every radio is electrically excluded, or identical repeat is justified |
 
@@ -59,3 +60,18 @@ The local coordinator records the exact fetch command and receipt identities.
 No automatic new experiment follows from an inconclusive night or missing
 debug log. Name the remaining mechanism and what a proposed observation can
 actually distinguish before involving the handset again.
+
+
+### EUD infrastructure follow-up
+
+The exact EUD source files at both retained kernel revisions are byte-identical
+(SHA256 624232b87b13f26674ae655cd6201c22f47a962fb14cfff71c6e32aa56202da8).
+Saved EUD DT properties also match. Its noirq suspend/resume callbacks release
+and restore the optional ahb2phy clock vote. This contradicts only the proposed
+missing-callback mechanism, not every possible EUD electrical contribution.
+
+The default-zero enable parameter can inherit secure firmware mode at probe.
+A conditional UART registration guard anomaly was noted against the inspected
+serial-core return contract, but its runtime path is unobserved and changing it
+could enable debug hardware. No patch, getter, control or new trial is selected.
+See the [pinned source](https://github.com/LineageOS/android_kernel_xiaomi_sm8250/blob/a5b3099017ae581aae8bf597b2f9c8c765026af1/drivers/soc/qcom/eud.c).

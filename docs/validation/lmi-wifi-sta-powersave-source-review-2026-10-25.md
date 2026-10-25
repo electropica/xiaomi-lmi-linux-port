@@ -31,11 +31,11 @@ LineageOS/android_kernel_xiaomi_sm8250. Independently downloaded sources:
   the SME user flag; the generic cfg80211 callback does not directly write it.
   SME initializes that flag true. These are separate from the wdev->ps cache.
 - SME timer flush, lines403-452, applies the enable guards and returns without
-  an enable when the timer is not running. HDD suspend calls it at2024-2034.
+  an enable when the timer is not running. HDD suspend calls it at 2024-2034.
   It is therefore not an unconditional STA-PS enable.
 - Additional WMA source inspection finds disable at wma_power.c:834-857 calling
   wmi_unified_set_sta_ps(...,false), then updating in_bmps after host submission.
-  Normal enable reaches wma_set_force_sleep with enable_ps=true at762-763.
+  Normal enable reaches wma_set_force_sleep with enable_ps=true at 762-763.
   Successful host submission is not measured firmware residency.
 
 A no-op timer flush does not establish PS disabled: it may already be active.
@@ -44,7 +44,7 @@ waits for acknowledgment. Closed firmware can apply behavior not established
 by the host sources. Do not assert that PS remains off physically during deep.
 
 The cfg80211 callback also maps disable/enable to start/stop DHCP indications
-and a connect runtime-PM hold (HDD2181-2212,2264-2267). The retained afternoon
+and a connect runtime-PM hold (HDD 2181-2212,2264-2267). The retained afternoon
 shows successful CNSS runtime suspends. That weighs against a simple permanent
 connect hold, subject to actual callback paths and wrapper configuration.
 
@@ -61,7 +61,7 @@ Do not infer a distribution default.
 
 ## Safe next discriminator and its limits
 
-The exact nl80211 GET_POWER_SAVE at10384-10425 returns wdev->ps. It does not
+The exact nl80211 GET_POWER_SAVE at 10384-10425 returns wdev->ps. It does not
 query hardware, firmware or a driver getter. After preserving the night capture,
 one cached read can check whether the generic requested policy is off or on.
 It cannot measure radio power or reconstruct the policy selected during deep.

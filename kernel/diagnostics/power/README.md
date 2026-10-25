@@ -3403,3 +3403,11 @@ error positions (32 cases per implementation). No kernel integration or
 handset operation followed. Saved DT options and source-level percentage
 mapping narrow the full-charge-display explanation; see
 [the offline recheck](../../../docs/validation/lmi-offline-gauge-recheck-2026-10-25.md).
+
+
+### EUD infrastructure source follow-up — 25 October 2026
+
+EUD now has a bounded source/DT review: matched retained source/DT and explicit
+noirq clock callbacks, with secure-mode inheritance and physical state still
+unmeasured. No control, patch or trial follows. See the EUD section in
+[the current battery checkpoint](../../../docs/status/BATTERY-RESEARCH-CURRENT.md).
