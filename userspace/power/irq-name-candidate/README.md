@@ -29,3 +29,23 @@ Two detached msoc-delta resumes with the IRQ-name policy returned to suspend aft
 The return-to-sleep defect is hardware-validated for these two cycles. A final USB-triggered resume is excluded. Two separate raw-counter brackets give25.201 and24.614 reported units per suspended second (awake callback margin included in the numerator); these are not calibrated current. Current charge_full2637000 differs from the historical2677000. Historical comparison and autonomy/sole-cause conclusions remain limited. Full-image pins have not yet been promoted to these incremental runtime packages.
 
 Evidence: userspace/power/irq-name-candidate/natural-resume-validation-20261025.json. No additional test, reboot or policy change was launched on return.
+
+
+## Sustained quiet wakes and pending search improvements —25 October 2026
+
+Five further natural gauge wakeups returned to suspend in about16seconds at
+kernel boundaries, extending accepted coverage to seven cycles. The81.775minute
+unplug included65.192minutes suspended and the normal initial idle wait. Displayed
+capacity100->95% and raw progression24.676663reportedunits/suspendedsecond are
+gauge observations, not calibrated current or projected autonomy. The old
+~1201-second awake dwell did not recur. Capture finished cleanly; collector
+inactive/success, same boot/profile, no alarm or recovery pending. See
+docs/validation/lmi-quiet-wake-long-baseline-2026-10-25.md.
+
+A separate drawer-search candidate is prepared but NOT built or installed:
+Enter activates folder results and empty searches show an explicit hint.
+An incorrect external signal callback was corrected and independently checked
+using actual native GObject signal marshalling; this is not GTK/phone validation.
+Default recipe preflight passes and preserves the accepted home/power/renderer
+sources and rollback packages. Complete-image pins remain on the accepted
+drawerpreview1 build. Recipe: userspace/phosh/drawer-search-candidate/README.md.

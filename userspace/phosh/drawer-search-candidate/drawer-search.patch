@@ -1,0 +1,59 @@
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -54,0 +55 @@
++  GtkWidget *lmi_no_results;
+@@ -435,0 +437,17 @@
++/* Show a hint when the current search matches nothing.
++ *
++ * The filter model is the single source of truth: it is refiltered on every
++ * search change (see do_search()), so this one handler covers typed searches,
++ * a cleared search (the string is cleared before the refilter) and successive
++ * searches. */
++static void
++update_no_results (PhoshAppGrid *self)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++  g_autoptr(GObject) item = g_list_model_get_item (G_LIST_MODEL (priv->model), 0);
++  gboolean searching = priv->search_string && *priv->search_string != '\0';
++
++  gtk_widget_set_visible (priv->lmi_no_results, searching && item == NULL);
++}
++
++
+@@ -444,0 +463,11 @@
++}
++
++
++static void
++on_search_results_changed (GListModel   *model,
++                           guint         position,
++                           guint         removed,
++                           guint         added,
++                           PhoshAppGrid *self)
++{
++  update_no_results (self);
+@@ -480,0 +510,2 @@
++  g_signal_connect_object (priv->model, "items-changed",
++                           G_CALLBACK (on_search_results_changed), self, 0);
+@@ -573,0 +605 @@
++  update_no_results (self);
+@@ -676 +708,2 @@
+-  if (G_LIKELY (PHOSH_IS_APP_GRID_BUTTON (child))) {
++  if (G_LIKELY (PHOSH_IS_APP_GRID_BUTTON (child) ||
++                PHOSH_IS_APP_GRID_FOLDER_BUTTON (child))) {
+@@ -758,0 +792 @@
++  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_no_results);
+--- a/src/ui/app-grid.ui
++++ b/src/ui/app-grid.ui
+@@ -131,0 +132,11 @@
++                            <child>
++                              <object class="GtkLabel" id="lmi_no_results">
++                                <property name="visible">0</property>
++                                <property name="label">Aucune application trouvée</property>
++                                <property name="halign">center</property>
++                                <property name="margin-top">24</property>
++                                <style>
++                                  <class name="heading" />
++                                </style>
++                              </object>
++                            </child>

@@ -2935,3 +2935,23 @@ Evidence: userspace/power/irq-name-candidate/natural-resume-validation-20261025.
 Following the runtime validations, the complete-image recipe now selects the accepted Phosh drawerpreview1+irqnames1 pair, GSD esrquiet1+irqnames1 pair and existing private-FBO Phoc. Five exact package SHA256 guards prevent fallback to older variants; both Phosh and GSD are replaced in the nine-input manifest. The percentage display is an explicit profile default. Base non-complete package selection is retained.
 
 Host validation passed:9 stable and7 complete staging tests, strict GSettings schema compilation, shell syntax and five actual package hashes. No new image/kernel/flash was performed. The temporary diagnostic boot/DT is not promoted. See build/profiles/lmi-current/COMPLETE-BUILD.md for the current selection; earlier image identities remain historical.
+
+
+## Sustained quiet wakes and pending search improvements —25 October 2026
+
+Five further natural gauge wakeups returned to suspend in about16seconds at
+kernel boundaries, extending accepted coverage to seven cycles. The81.775minute
+unplug included65.192minutes suspended and the normal initial idle wait. Displayed
+capacity100->95% and raw progression24.676663reportedunits/suspendedsecond are
+gauge observations, not calibrated current or projected autonomy. The old
+~1201-second awake dwell did not recur. Capture finished cleanly; collector
+inactive/success, same boot/profile, no alarm or recovery pending. See
+docs/validation/lmi-quiet-wake-long-baseline-2026-10-25.md.
+
+A separate drawer-search candidate is prepared but NOT built or installed:
+Enter activates folder results and empty searches show an explicit hint.
+An incorrect external signal callback was corrected and independently checked
+using actual native GObject signal marshalling; this is not GTK/phone validation.
+Default recipe preflight passes and preserves the accepted home/power/renderer
+sources and rollback packages. Complete-image pins remain on the accepted
+drawerpreview1 build. Recipe: userspace/phosh/drawer-search-candidate/README.md.

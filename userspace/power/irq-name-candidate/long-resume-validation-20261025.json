@@ -1,0 +1,34 @@
+{
+  "capture_sha256": "c712d5d527a3dd54452425a0d87e68c7e2da00a2a0242f6663608f952a5137cf",
+  "row_count": 20,
+  "observed_unplug_elapsed_s": 4906.523844873998,
+  "suspended_s_including_final_usb_wake_interval": 3911.5326603249996,
+  "suspend_fraction_whole_observation": 0.7972105678058616,
+  "displayed_capacity_before_unplug": "100",
+  "displayed_capacity_at_usb_resume": "95",
+  "natural_gauge_returns": 5,
+  "dbus_awake_gaps_s": [
+    14.906908963006572,
+    14.947220182992169,
+    14.987383379004314,
+    14.887212354005896,
+    14.983792544007883
+  ],
+  "available_kernel_awake_gaps_s": [
+    15.799266815185547,
+    15.927796125411987,
+    15.72654104232788,
+    15.95556902885437
+  ],
+  "raw_progression_median_reported_units_per_suspended_second": 24.676663203900425,
+  "calibrated_current": null,
+  "limits": [
+    "Kernel journal bounded: first natural return omitted; D-Bus contains all five.",
+    "Final USB-triggered bracket excluded from counter discharge analysis.",
+    "Displayed percentage loss includes initial roughly fifteen minutes awake.",
+    "Current samples are endpoints, not a whole-suspend electrical integral.",
+    "Software counter may be re-primed; shadow/raw not calibrated references."
+  ],
+  "state": "completed; collector inactive/success; same accepted boot/profile; no policy or package change",
+  "counter_brackets": 5
+}
