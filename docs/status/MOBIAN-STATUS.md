@@ -2915,3 +2915,9 @@ are rejected. Hardware validation still requires the next temporary build.
 The IRQ-name-independent Phosh/GSD packages are installed and user-accepted for normal application use, drawer and power-button handling. Runtime process hashes and both opt-ins match the built artifacts; same temporary kernel boot and published j11 profile were retained, as was the accepted private-FBO Phoc renderer. The owned automatic rescue timer was cancelled after acceptance. Phosh package tests:36 OK; GSD:1 OK and9 SKIP.
 
 The original fixed-IRQ mismatch is established; corrected natural gauge-resume behavior and battery benefit are still unvalidated. No full image or permanent boot was changed or promoted. See `userspace/power/irq-name-candidate/device-activation-20261025.json` and `docs/validation/lmi-irq-name-policy-2026-10-25.md`.
+
+## Accepted closed-drawer previews — 25 October 2026
+
+The incremental Phosh drawerpreview1 package is installed and operator-accepted: running previews are hidden on the closed home page and visible inside the open drawer; favorites remain at the bottom and gestures respond normally. All36 Phosh package tests passed. The actual running binary SHA256 is17f5cb077e08a1e93b13b6a828e69b225d7008e3c3db4faa03e26325b58ea159. Rescue rollback was cancelled after acceptance.
+
+The same temporary kernel/published j11 profile, GSD IRQ-name policy and accepted Phoc private-FBO thumbnail renderer are retained. This is an incremental userspace milestone, not a new full image. Natural gauge-resume/energy validation remains pending. Evidence: userspace/phosh/closed-drawer-preview-candidate/device-acceptance-20261025.json.

@@ -1,0 +1,51 @@
+{
+  "operator_checks": {
+    "closed_drawer_previews_hidden": true,
+    "open_drawer_previews_visible": true,
+    "favorites_at_bottom": true,
+    "gestures_responsive": true
+  },
+  "runtime": {
+    "result": "PASS",
+    "same_boot": true,
+    "profile": "j11sun_4700mah",
+    "operator_ui": "confirmed previews hidden closed, visible open, gestures normal",
+    "states": {
+      "mobi.phosh.Shell.service": {
+        "active": true,
+        "binary_sha256": "17f5cb077e08a1e93b13b6a828e69b225d7008e3c3db4faa03e26325b58ea159",
+        "filter_enabled": true
+      }
+    },
+    "settings": {
+      "org.gnome.desktop.session.idle-delay": "uint32 300",
+      "org.gnome.settings-daemon.plugins.power.sleep-inactive-battery-timeout": "900",
+      "org.gnome.desktop.interface.show-battery-percentage": "true"
+    },
+    "rollback_timer": "cancelled after UI acceptance",
+    "natural_gauge_resume_validation": "pending",
+    "electrical_benefit": "not measured"
+  },
+  "tests": {
+    "phosh-0.46.0": {
+      "OK": 36,
+      "SKIP": 0
+    }
+  },
+  "packages": [
+    {
+      "path": "/home/linuxagent/phosh-gauge-wake-build/rootfs/build/phosh_0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1_arm64.deb",
+      "sha256": "41ffc0657495dc250f5b551b6ab505ff5354bc207f0ad2e885efc7953624cd11",
+      "version": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1",
+      "architecture": "arm64",
+      "binary_sha256": "17f5cb077e08a1e93b13b6a828e69b225d7008e3c3db4faa03e26325b58ea159"
+    },
+    {
+      "path": "/home/linuxagent/phosh-gauge-wake-build/rootfs/build/phosh-common_0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1_all.deb",
+      "sha256": "5bbd163f674ccb16fcd37fac3655fc4cee0e7bdab5508d8579486b4db5ba13e0",
+      "version": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1",
+      "architecture": "all"
+    }
+  ],
+  "full_image_promoted": false
+}

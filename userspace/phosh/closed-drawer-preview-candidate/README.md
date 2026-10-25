@@ -15,3 +15,9 @@ Operator build:
     sudo python3 /home/linuxagent/xiaomi-lmi-linux-port/userspace/phosh/closed-drawer-preview-candidate/build-packages.py --execute
 
 Normal package tests stay enabled. Marker CLOSED_DRAWER_PREVIEW_PACKAGES_BUILT. Manifest rootfs/build/lmi-closed-drawer-preview1-build-result.json. No automatic phone install or image/kernel build. Rescue packages are the currently accepted IRQ-name versions, not older fixed-number policies.
+
+## Accepted closed-drawer previews — 25 October 2026
+
+The incremental Phosh drawerpreview1 package is installed and operator-accepted: running previews are hidden on the closed home page and visible inside the open drawer; favorites remain at the bottom and gestures respond normally. All36 Phosh package tests passed. The actual running binary SHA256 is17f5cb077e08a1e93b13b6a828e69b225d7008e3c3db4faa03e26325b58ea159. Rescue rollback was cancelled after acceptance.
+
+The same temporary kernel/published j11 profile, GSD IRQ-name policy and accepted Phoc private-FBO thumbnail renderer are retained. This is an incremental userspace milestone, not a new full image. Natural gauge-resume/energy validation remains pending. Evidence: userspace/phosh/closed-drawer-preview-candidate/device-acceptance-20261025.json.
