@@ -1,0 +1,7 @@
+{
+  "rc": 0,
+  "stdout": "n=0 state=closed grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=1\nn=0 state=open grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=1\nn=0 state=closed-again grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=1\nn=1 state=closed grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=1\nn=1 state=open grid_y=0 grid_h=760 outer_h=760 carousel_mapped=1 preview_h=444\nn=1 state=closed-again grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=444\nn=2 state=closed grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=1\nn=2 state=open grid_y=0 grid_h=760 outer_h=760 carousel_mapped=1 preview_h=444\nn=2 state=closed-again grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=444\nn=3 state=closed grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=1\nn=3 state=open grid_y=0 grid_h=760 outer_h=760 carousel_mapped=1 preview_h=444\nn=3 state=closed-again grid_y=0 grid_h=760 outer_h=760 carousel_mapped=0 preview_h=444\n",
+  "stderr": "",
+  "scope": "GTK3+Handy actual UI structure; synthetic cards; not compositor/touch integration",
+  "assertions": "grid geometry stable in12 settled states; preview mapping follows open page; zero-app empty strip consumes<=1px"
+}

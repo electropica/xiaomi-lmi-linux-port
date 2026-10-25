@@ -1,0 +1,59 @@
+{
+  "patch_sha256": "414781a7cf9aa608e0ab30172ca461fb2b65c2e649e932997e65f19b71a14358",
+  "sources": [
+    {
+      "tree": "phosh-0.46.0",
+      "file": "src/overview.c",
+      "before": "e4009eae556b31caaead66dac08703d246a8b8d9c66c43da7423b2f0f39b74f3",
+      "after": "664328d2331375c0c7a1900a5cad691b6612dd0bddb019a0bf634206ce379fab",
+      "package": "phosh",
+      "old": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1",
+      "new": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1",
+      "rollback": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1"
+    },
+    {
+      "tree": "phosh-0.46.0",
+      "file": "src/ui/app-grid.ui",
+      "before": "00c6f5a8eafc368cd42ba880194a7d1a6ebd48d8f82e96a5903182cc8546abc3",
+      "after": "5030651a7791e68ecadc0b88387a947de7c2e9cd177dd48ee266aae6672eeab1",
+      "package": "phosh",
+      "old": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1",
+      "new": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1",
+      "rollback": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1"
+    },
+    {
+      "tree": "phosh-0.46.0",
+      "file": "src/app-grid.c",
+      "before": "ce8565d438a007ee05f30cbce39f7bcd588a47781372d1416ec3b0c3118cb9d2",
+      "after": "67bf7f88ff85b0c35ffc020a99138b7870c5dc609bf597212c23b407776f163a",
+      "package": "phosh",
+      "old": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1",
+      "new": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1",
+      "rollback": "0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1"
+    }
+  ],
+  "preserve_home8": {
+    "data/mobi.phosh.shell.gschema.xml": "d31101e8aff1c8cfea5c814daa1727b832121b9cf2021e8666a89378c52a538d",
+    "src/app-grid-button.c": "5ca2e2006b319e17e7f52569371f3d7be80c1d5122df1e90af4004bf88b29d1f",
+    "src/app-grid.h": "b0fcaa0dde1dea6554c993644b31e2eb0c18571a673a51ad8e5d8239e47caea5",
+    "src/home.c": "7bbcb4a57e06240453c54519577968e90a7733e837b3caecdcc950cda55cd893",
+    "src/home.h": "70000d33779b800e3aed212a4951a2ff655cb96d8384da3227e2fafdc584f420",
+    "src/lmi-home-dnd.h": "eb49e33a904ae29e994444302ac6896ef0c3f0dde3ca0799f01d2963f782fe16",
+    "src/lmi-home-grid.inc": "6a101abe16fb9c178f95257d7fbf42cb7c11893b30b84688fccf1f32ecd73e01",
+    "src/lmi-home-order.h": "1c7d8aadd7143c9828ad13e105b56b0db0b0d208245f6f9def75d07527e3641a",
+    "src/lmi-home-remove.inc": "2190b90df88bb774c5eae9bd324be36bf6ff465ebd5f3c8c62175970ecc4f062",
+    "src/overview.h": "b79580eaa50e14cee2336dbd6f30cb2b9625bfdc6195f739bacf4ddc2fafbcf1",
+    "src/power-menu-manager.c": "c921cf7e4dbaf7a1b12233e539a99295bac0020f281a7b7bb9b40efb391f9587",
+    "src/screen-saver-manager.c": "aa58b8e3bcb39fe1d49cc1a7cef30f524b2321d50e15097a364f8cfe2ff8ebdf",
+    "src/ui/app-grid-button.ui": "1a360e4e27fe1033a013a8f0d365600fe770414debd5e83ac951f118c3a2c195",
+    "src/ui/overview.ui": "3ac02b5d74523edb4dafbbc2d51911a2e0b6805d3e553b6684b5c7796c793338",
+    "src/ui/power-menu.ui": "b0646d4a92b5210c8032b52fba02e75ab7bf606ccc4b3d07105b64ce50da6d33",
+    "tests/test-app-grid-button.c": "ca0c5d66e060bef6b367482bc07ebe87ed55f7b1a7bbb039d5f972252f127792"
+  },
+  "preserve_extra": {
+    "gnome-settings-daemon-48.1/plugins/power/gsd-power-manager.c": "73f28230c13e3edf9dcd349064f223e151938e1cfdb4f64506b76dfae208783c",
+    "gnome-settings-daemon-48.1/plugins/power/gsd-power-constants.h": "2924763ccaaef30e7eb4b6eabf2a4a7b833f08d3a9f313ba145c18d1591b7d7a",
+    "phoc-lmi-shell-dnd1/src/render.c": "e46eff42a6353c4393c846d45f183f8ef817b4293ffb3b29eed489bb7a2b525b"
+  },
+  "hardware_validated": false
+}

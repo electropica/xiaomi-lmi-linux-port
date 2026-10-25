@@ -1,0 +1,53 @@
+--- a/src/overview.c
++++ b/src/overview.c
+@@ -518,0 +519 @@
++  GtkWidget *previews_box;
+@@ -537,0 +539,35 @@
++
++  /*
++   * The running-activity previews belong to the drawer's open page, not to
++   * the whole home surface: with the drawer closed the home page shows the
++   * shortcuts and the favourites alone.
++   *
++   * Reparenting the carousel into the drawer's "applications" page lets the
++   * HdyDeck map and unmap it together with that page. No page change has to
++   * toggle the visibility of a widget any more, so:
++   *   - the app grid keeps the same geometry in every drawer state,
++   *   - no visibility change can land in the middle of a deck transition and
++   *     move the grid under a finger that is still dragging,
++   *   - the deck's own swipe arbitration is not touched at all.
++   *
++   * The strip has to be reparented before the activities are added, because
++   * get_running_activities() fills the carousel.
++   */
++  previews_box = GTK_WIDGET (gtk_widget_get_template_child (
++    GTK_WIDGET (priv->app_grid), PHOSH_TYPE_APP_GRID, "lmi_drawer_previews"));
++  if (previews_box) {
++    GtkWidget *app_grid_box = gtk_widget_get_parent (GTK_WIDGET (priv->app_grid));
++
++    /* Let the drawer page use the whole home surface: the preview strip
++     * takes the room the carousel used to occupy above the app grid, the
++     * app list keeps its natural height. */
++    if (app_grid_box)
++      gtk_widget_set_vexpand (app_grid_box, TRUE);
++
++    g_object_ref (priv->carousel_running_activities);
++    gtk_container_remove (GTK_CONTAINER (self), priv->carousel_running_activities);
++    /* Expand in the preview box; retain the carousel's own vexpand. */
++    gtk_box_pack_start (GTK_BOX (previews_box), priv->carousel_running_activities,
++                        TRUE, TRUE, 0);
++    g_object_unref (priv->carousel_running_activities);
++  }
+--- a/src/ui/app-grid.ui
++++ b/src/ui/app-grid.ui
+@@ -84,0 +85,6 @@
++            <child>
++              <object class="GtkBox" id="lmi_drawer_previews">
++                <property name="visible">1</property>
++                <property name="hexpand">1</property>
++              </object>
++            </child>
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -757,0 +758 @@
++  gtk_widget_class_bind_template_child_full (widget_class, "lmi_drawer_previews", FALSE, 0);

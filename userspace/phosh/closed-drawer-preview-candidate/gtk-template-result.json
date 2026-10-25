@@ -1,0 +1,12 @@
+{
+  "unbound": {
+    "rc": 0,
+    "stdout": "bound=0 lookup_found=0 vexpand_after_pack_false=1\n",
+    "stderr": ""
+  },
+  "bound": {
+    "rc": 0,
+    "stdout": "bound=1 lookup_found=1 vexpand_after_pack_false=1\n",
+    "stderr": ""
+  }
+}
