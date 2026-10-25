@@ -1,0 +1,7 @@
+{
+  "policy_cases": "62 exact-source policy cases PASS",
+  "sanitizers": "ASan+UBSan",
+  "patch_replay": "both source hashes match",
+  "package_build": false,
+  "installed": false
+}

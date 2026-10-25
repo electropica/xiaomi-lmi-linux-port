@@ -1,0 +1,64 @@
+--- a/src/screen-saver-manager.c
++++ b/src/screen-saver-manager.c
+@@ -567 +567 @@
+-/* IRQ 441 and IRQ 445 are accepted only with a fresh, noncritical
++/* msoc-high and esr-delta are accepted only with a fresh, noncritical
+@@ -569,0 +570,18 @@
++/* Linux IRQ numbers can change across boots. Accept exactly one
++ * numeric IRQ and its complete event name; combined/unknown reasons reject. */
++static gboolean
++lmi_resume_reason_has_name (const char *reason, const char *name)
++{
++  const char *p = reason;
++
++  if (p == NULL || !g_ascii_isdigit (*p))
++    return FALSE;
++  while (g_ascii_isdigit (*p))
++    p++;
++  if (*p != ' ')
++    return FALSE;
++  while (*p == ' ')
++    p++;
++  return g_strcmp0 (p, name) == 0;
++}
++
+@@ -578 +596 @@
+-  if (g_strcmp0 (reason, "438 msoc-delta") == 0)
++  if (lmi_resume_reason_has_name (reason, "msoc-delta"))
+@@ -580,2 +598,2 @@
+-  if (g_strcmp0 (reason, "441 msoc-high") != 0 &&
+-      g_strcmp0 (reason, "445 esr-delta") != 0)
++  if (!lmi_resume_reason_has_name (reason, "msoc-high") &&
++      !lmi_resume_reason_has_name (reason, "esr-delta"))
+--- a/plugins/power/gsd-power-manager.c
++++ b/plugins/power/gsd-power-manager.c
+@@ -2913 +2913 @@
+-/* IRQ 441 and IRQ 445 are accepted only with a fresh, noncritical
++/* msoc-high and esr-delta are accepted only with a fresh, noncritical
+@@ -2915,0 +2916,18 @@
++/* Linux IRQ numbers can change across boots. Accept exactly one
++ * numeric IRQ and its complete event name; combined/unknown reasons reject. */
++static gboolean
++lmi_resume_reason_has_name (const char *reason, const char *name)
++{
++  const char *p = reason;
++
++  if (p == NULL || !g_ascii_isdigit (*p))
++    return FALSE;
++  while (g_ascii_isdigit (*p))
++    p++;
++  if (*p != ' ')
++    return FALSE;
++  while (*p == ' ')
++    p++;
++  return g_strcmp0 (p, name) == 0;
++}
++
+@@ -2924 +2942 @@
+-  if (g_strcmp0 (reason, "438 msoc-delta") == 0)
++  if (lmi_resume_reason_has_name (reason, "msoc-delta"))
+@@ -2926,2 +2944,2 @@
+-  if (g_strcmp0 (reason, "441 msoc-high") != 0 &&
+-      g_strcmp0 (reason, "445 esr-delta") != 0)
++  if (!lmi_resume_reason_has_name (reason, "msoc-high") &&
++      !lmi_resume_reason_has_name (reason, "esr-delta"))
