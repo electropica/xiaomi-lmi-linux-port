@@ -1,0 +1,2 @@
+# Unified-diff context intentionally contains a leading space before tabs.
+patches/*.patch -whitespace

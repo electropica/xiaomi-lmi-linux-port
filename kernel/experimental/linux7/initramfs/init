@@ -1,0 +1,174 @@
+#!/bin/sh
+# linux7 observer init for the lmi first trial.
+#
+# Contract:
+#   - stays entirely in RAM (tmpfs only); never mounts userdata or the Mobian
+#     rootfs, and never writes to them;
+#   - starts no firmware and no remoteproc service;
+#   - does not reboot in a loop: a failed USB attempt is logged and the
+#     observer keeps running (a reboot loop would destroy the evidence);
+#   - publishes a journal (file) locally and over the USB RNDIS link, and
+#     keeps /sys/fs/pstore mounted so a later crash record can be collected.
+#
+# Shell: busybox 1.38.0 (aarch64, musl) from the project's existing pmbootstrap
+# aarch64 chroot. Only applets that were verified present in that exact binary
+# are used (sh mount umount mkdir ls cat grep sleep ip nc dmesg uname date cut
+# printf echo basename dirname mknod).
+#
+# The USB gadget follows Documentation/usb/gadget_configfs.rst of the kernel
+# tree: idVendor / idProduct / UDC live at the GADGET ROOT, the function is
+# linked directly into configs/c.1, and the descriptors live under
+# strings/0x409 and configs/c.1/strings/0x409.
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export PATH
+
+RUNDIR=/run
+JOURNAL_DIR=$RUNDIR/journal
+JOURNAL=$JOURNAL_DIR/journal.log
+KMSG=$JOURNAL_DIR/kmsg.log
+export PATH JOURNAL_DIR JOURNAL KMSG
+
+log() {
+	echo "$*"
+	echo "[linux7-init] $*" >> "$JOURNAL" 2>/dev/null
+	printf '<6>[linux7-init] %s\n' "$*" > /dev/kmsg 2>/dev/null || :
+}
+
+# --- mounts -----------------------------------------------------------------
+mount -t proc     proc     /proc  2>/dev/null
+mount -t sysfs    sysfs    /sys   2>/dev/null
+mount -t devtmpfs devtmpfs /dev   2>/dev/null
+mount -t tmpfs    tmpfs    "$RUNDIR" 2>/dev/null
+mkdir -p "$JOURNAL_DIR" /sys/kernel/config /sys/fs/pstore 2>/dev/null
+: > "$JOURNAL"
+: > "$KMSG"
+mount -t configfs configfs /sys/kernel/config 2>/dev/null
+mount -t pstore   pstore   /sys/fs/pstore 2>/dev/null
+
+log "=== linux7 observer init starting ==="
+log "kernel: $(uname -a 2>/dev/null)"
+log "cmdline: $(cat /proc/cmdline 2>/dev/null)"
+
+# --- capture the kernel journal (bounded, no unbounded follower) -------------
+# The snapshot is refreshed on a timer; a dmesg -w follower is started only if
+# this busybox actually supports -w, and it is killed with the observer.
+dmesg 2>/dev/null | tail -c 1048576 > "$KMSG"
+
+{
+	echo "=== linux7 observer facts ==="
+	echo "--- reserved memory (from /proc/iomem) ---"
+	grep -i -E 'reserved' /proc/iomem 2>/dev/null | head -20
+	echo "--- ramoops backends present ---"
+	ls /sys/fs/pstore 2>/dev/null
+	echo "--- device tree model ---"
+	tr -d '\0' < /proc/device-tree/model 2>/dev/null
+	echo
+} >> "$JOURNAL"
+
+# --- USB gadget: RNDIS ------------------------------------------------------
+# A private, non-personal identifier pair. It is NOT a Microsoft-signed VID and
+# must not be presented as such: the Windows association of an RNDIS device is
+# driven by the INF, not by the IDs.
+USB_VID=0x1d6b
+USB_PID=0x0104
+USB_MANUFACTURER="linux7-lmi observer"
+USB_PRODUCT="linux7 observer"
+USB_SERIAL="lmi-observer"
+
+G=/sys/kernel/config/usb_gadget/linux7
+udc_wait() {
+	# bounded wait: 20 x 0.5 s
+	i=0
+	while [ "$i" -lt 20 ]; do
+		for u in /sys/class/udc/*; do
+			[ -e "$u" ] && { basename "$u"; return 0; }
+		done
+		i=$((i + 1))
+		sleep 1
+	done
+	return 1
+}
+
+configure_gadget() {
+    mkdir -p "$G" "$G/strings/0x409" "$G/configs/c.1/strings/0x409" &&
+    printf '%s\n' "$USB_VID" > "$G/idVendor" &&
+    printf '%s\n' "$USB_PID" > "$G/idProduct" &&
+    printf '%s\n' "$USB_SERIAL" > "$G/strings/0x409/serialnumber" &&
+    printf '%s\n' "$USB_MANUFACTURER" > "$G/strings/0x409/manufacturer" &&
+    printf '%s\n' "$USB_PRODUCT" > "$G/strings/0x409/product" &&
+    printf '%s\n' "$USB_PRODUCT" > "$G/configs/c.1/strings/0x409/configuration" &&
+    printf '120\n' > "$G/configs/c.1/MaxPower" &&
+    mkdir -p "$G/functions/rndis.rndis" &&
+    [ ! -e "$G/configs/c.1/rndis.rndis" ] &&
+    [ ! -L "$G/configs/c.1/rndis.rndis" ] &&
+    ln -s "$G/functions/rndis.rndis" "$G/configs/c.1/rndis.rndis" &&
+    printf '%s\n' "$UDC" > "$G/UDC"
+}
+
+UDC=$(udc_wait)
+if [ -z "$UDC" ]; then
+    log "USB: no UDC after 20 seconds; no bind attempted"
+elif configure_gadget; then
+    log "USB: configured and bound to $UDC"
+else
+    log "USB: setup failed; bind not attempted after a failed prerequisite"
+fi
+
+# --- minimal network on the gadget link -------------------------------------
+# The project already reaches the handset at 172.16.42.1 over USB RNDIS, so the
+# observer keeps that address and the host-side tooling is unchanged.
+netdev_wait() {
+	i=0
+	while [ "$i" -lt 20 ]; do
+		for d in usb0 rndis0 eth0; do
+			[ -d "/sys/class/net/$d" ] && { echo "$d"; return 0; }
+		done
+		i=$((i + 1))
+		sleep 1
+	done
+	return 1
+}
+
+NETDEV=$(netdev_wait)
+if [ -z "$NETDEV" ]; then
+	log "NET: no network device appeared within the bounded wait (20 s)"
+else
+	log "NET: device $NETDEV"
+	ip link set "$NETDEV" up 2>/dev/null
+	if ip addr add 172.16.42.1/24 dev "$NETDEV" 2>/dev/null; then
+		log "NET: 172.16.42.1/24 assigned to $NETDEV"
+	else
+		log "NET: could not assign 172.16.42.1/24 to $NETDEV"
+	fi
+	ip link show "$NETDEV" 2>/dev/null | head -3 >> "$JOURNAL" 2>/dev/null
+fi
+
+# --- publish the journal over the network ----------------------------------
+# One-shot listener per connection, with a sleep between attempts: if nc
+# rejects the options, the loop sleeps instead of spinning at full CPU.
+if nc --help 2>&1 | grep -q -- '-l' && nc --help 2>&1 | grep -q -- '-p'; then
+	(
+		while true; do
+			{ printf '=== observer journal ===\n'; tail -c 262144 "$JOURNAL";
+                printf '\n=== kernel journal ===\n'; tail -c 1048576 "$KMSG"; } |
+                nc -l -p 9000 -w 30 2>/dev/null
+			sleep 2
+		done
+	) &
+	echo $! > "$JOURNAL_DIR/listener.pid"
+	log "journal listener on TCP 9000 (one-shot per connection)"
+else
+	log "journal listener NOT started: this nc does not support -l/-p"
+fi
+
+# --- heartbeat, never a reboot loop ----------------------------------------
+log "observer ready; staying alive (no reboot, no userdata mount, no firmware)"
+i=0
+while true; do
+	i=$((i + 1))
+	dmesg 2>/dev/null | tail -c 1048576 > "$KMSG"
+	echo "[linux7-init] heartbeat $i uptime=$(cut -d' ' -f1 /proc/uptime 2>/dev/null)" \
+		>> "$JOURNAL" 2>/dev/null
+	sleep 30
+done

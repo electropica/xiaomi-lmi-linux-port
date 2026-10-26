@@ -1,3 +1,37 @@
+## Linux7 RAM observer and USB journal PASS — October26,2026
+
+Linux7.2.12 reaches /init and publishes its journal over USB. Restoring the
+lmi GPIO28-31/40-43 exclusions lets TLMM probe complete; captured heartbeats
+reach330.48s without the previous RCU stall. Display/touch/rootfs and autonomy
+are not qualified; CPUfreq still defers for missing interconnect paths.
+This is a temporary RAM observer, not an installed or usable graphical OS.
+See [evidence and limits](../validation/lmi-linux7-menu-host-check-2026-10-26.md).
+
+## Linux7 reset localized to TLMM binding path — October26,2026
+
+Probe markers name sm8250-pinctrl immediately before a stall; RCU later reports
+CPU0 stalled. The minimal tree omitted the lmi community GPIO28-31/40-43
+reservations. A one-property DTB candidate is prepared with the same diagnostic
+kernel; no successful boot or confirmed fix yet. See
+[the evidence and candidate](../validation/lmi-linux7-menu-host-check-2026-10-26.md).
+
+## Linux7 kernel entry confirmed; full boot fails — October26,2026
+
+The first rails1 trial reset after a white screen. Preserved pstore proves
+Linux7.2.12 entered and activated all eight CPUs, but not that initramfs or USB
+started. Installed Mobian recovered normally. A logging-only header candidate
+is prepared; no new kernel build, permanent install or power-policy change.
+See [the trial evidence](../validation/lmi-linux7-menu-host-check-2026-10-26.md).
+
+## Linux 7 observer menu — October 26, 2026
+
+Only default Mobian4.19 boot is accepted from the first temporary five-entry
+menu. Linux7.2.12 has not run on the handset. USB DT bindings and duplicated
+reservations were corrected offline; a revised operator menu build is ready,
+not compiled or installed. The first menu lacks the accepted FG profile-order
+fix and must not be used for autonomy measurement. See the
+[validation boundary](../validation/lmi-linux7-menu-host-check-2026-10-26.md).
+
 
 
 ## Snapshot51 and system-upgrade assessment — October 26, 2026

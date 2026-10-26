@@ -1,3 +1,31 @@
+## October26: temporary Linux7 RAM observer reaches USB
+
+The tlmm1 temporary menu launches7.2.12 /init and a read-only USB journal.
+The GPIO reservation correction crosses the earlier TLMM stall. No graphical
+OS or permanent-menu acceptance is implied. The four-entry installed baseline
+remains unchanged. See [the accepted scope](../../../docs/validation/lmi-linux7-menu-host-check-2026-10-26.md).
+
+## October26: TLMM GPIO reservation candidate
+
+The experimental7.x binding trace stops at sm8250-pinctrl with a later RCU stall.
+The separate tlmm1 recipe restores only the GPIO exclusions from the pinned lmi
+community board file. Kernel and observer are unchanged. No successful trial
+or permanent installer update is claimed. See the
+[validation note](../../../docs/validation/lmi-linux7-menu-host-check-2026-10-26.md).
+
+## October26: experimental Linux7 reaches kernel, then resets
+
+Rails1 pstore confirms7.2.12 and eight CPUs before reset, not complete OS boot.
+The permanent four-entry menu is unchanged; the temporary fifth entry disappears
+on reset as expected. See the [trial evidence](../../../docs/validation/lmi-linux7-menu-host-check-2026-10-26.md).
+
+## October26: separate Linux7 observer preparation
+
+The temporary five-entry experiment has passed default Mobian4.19 boot only.
+Linux7 runtime remains unqualified, and no installer pin changes. The corrected
+rails1 recipe is separate from this qualified four-entry baseline. See the
+[host checks and trial limits](../../../docs/validation/lmi-linux7-menu-host-check-2026-10-26.md).
+
 ## October 24: fuel-gauge profile lookup depends on board-tree order
 
 An independent battery diagnostic preserves the qualified menu and its kernel while changing only the passive FG profile-container order. Its built image (7425c00b...) is host-checked but hardware-unqualified; all diagnostic outputs are isolated under output/fg-dt-order-candidate/, and the reference packer refuses a different existing reference image. It is not the active recipe or an installation update. See [the diagnostic recipe](../../../kernel/diagnostics/power/fg-dt-order-candidate/README.md).

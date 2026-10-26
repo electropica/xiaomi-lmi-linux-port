@@ -1,0 +1,23 @@
+{
+  "source": {
+    "url": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git",
+    "revision": "cc9de5d4b5ab6459f5774946aa3195ad51236fa8",
+    "version": "7.2.12"
+  },
+  "accepted_scope": "temporary RAM observer /init plus read-only USB journal; no graphical OS or autonomy qualification",
+  "reference_artifacts": {
+    "diagnostic_Image_sha256": "c1bda374df607a7b7360b187bddfa9099ea2e29bcbcb56c595679919f6af7eee",
+    "deployed_dtb_sha256": "9eff6beac1e5178c74a0db064520cec2d4e9c5a755eed50a8db9e610cd920170",
+    "observer_cpio_sha256": "7b070dd08a7d542cba440fef814681a2a536b3d5a8f5f664e2a605abe07b7d2c",
+    "temporary_menu_sha256": "b953bb45b036020138b93dd89eae4aa268a6b8d40cbf16cf9ed2c57fd762b37e"
+  },
+  "files": {
+    "dts/sm8250-xiaomi-lmi-observer.dts": "87e0f8deb1d591e11b3507ea38e36ccb0a5d785b5f7d775c856346fe420d0042",
+    "initramfs/init": "69c6320de4fe9994bd659dc8eacfe1c0d8e4b8b5518fdf44329b9212613c6e36",
+    "patches/0001-probe-runtime-markers.patch": "f891ee0752dd74e14d2f9ccfa390781b795f14dbc28a1bcb49bb6153a021b7ff",
+    "configs/observer-tested.config": "4223b5d50414981b0f7d1ade2b74f82e685fc69187938ac62d665fd8d04b2259",
+    "configs/cpufreq-next.fragment": "5b9b2030dc1da7ec5110ee22c04a5ad03bf31ec2c95ee0106fbcbd1b971d0c03"
+  },
+  "cpufreq_next_fragment_hardware_tested": false,
+  "versioned_dts_semantically_recompiled_and_matched": true
+}

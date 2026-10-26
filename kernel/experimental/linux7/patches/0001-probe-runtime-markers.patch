@@ -1,0 +1,69 @@
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -665,9 +665,20 @@
+ 		return -EPROBE_DEFER;
+ 	}
+ 
++	if (initcall_debug) {
++		/* lmi7probe: the supplier check is the first step that can defer or
++		 * fail; name the pair before it runs. */
++		printk(KERN_DEBUG "lmi7probe: really_probe %s (driver %s) before supplier check\n",
++		       dev_name(dev), drv->name);
++	}
+ 	link_ret = device_links_check_suppliers(dev);
+-	if (link_ret == -EPROBE_DEFER)
++	if (link_ret == -EPROBE_DEFER) {
++		if (initcall_debug) {
++			printk(KERN_DEBUG "lmi7probe: really_probe %s (driver %s) deferred at supplier check\n",
++			       dev_name(dev), drv->name);
++		}
+ 		return link_ret;
++	}
+ 
+ 	dev_dbg(dev, "bus: '%s': %s: probing driver %s with device\n",
+ 		drv->bus->name, __func__, drv->name);
+@@ -857,6 +868,18 @@
+ 	dev_dbg(dev, "bus: '%s': %s: matched device with driver %s\n",
+ 		drv->bus->name, __func__, drv->name);
+ 
++	if (initcall_debug) {
++		/*
++		 * lmi7probe: name the device AND the driver BEFORE any runtime-PM
++		 * supplier/parent acquisition, before the barrier and before
++		 * really_probe(), so that a failure or a stall inside those steps is
++		 * attributable to a named pair. The dev_dbg() above is invisible
++		 * without CONFIG_DYNAMIC_DEBUG.
++		 */
++		printk(KERN_DEBUG "lmi7probe: attach %s (driver %s, bus %s) before pm_runtime_get_suppliers/parent/barrier\n",
++		       dev_name(dev), drv->name, drv->bus->name);
++	}
++
+ 	pm_runtime_get_suppliers(dev);
+ 	if (dev->parent)
+ 		pm_runtime_get_sync(dev->parent);
+@@ -866,6 +889,13 @@
+ 		ret = really_probe_debug(dev, drv);
+ 	else
+ 		ret = really_probe(dev, drv);
++	if (initcall_debug) {
++		/* lmi7probe: outcome of the attach attempt. ret is negative for
++		 * -EPROBE_DEFER, positive (inverted) for a probe failure, 0 on
++		 * success. */
++		printk(KERN_DEBUG "lmi7probe: attach %s (driver %s) -> %d\n",
++		       dev_name(dev), drv->name, ret);
++	}
+ 	pm_request_idle(dev);
+ 
+ 	if (dev->parent)
+@@ -897,6 +927,11 @@
+ 	atomic_inc(&probe_count);
+ 	ret = __driver_probe_device(drv, dev);
+ 	if (ret == -EPROBE_DEFER || ret == EPROBE_DEFER) {
++		if (initcall_debug) {
++			/* lmi7probe: the device is going back to the deferred list. */
++			printk(KERN_DEBUG "lmi7probe: %s (driver %s) queued for deferred probe (ret %d)\n",
++			       dev_name(dev), drv->name, ret);
++		}
+ 		driver_deferred_probe_add(dev);
+ 
+ 		/*

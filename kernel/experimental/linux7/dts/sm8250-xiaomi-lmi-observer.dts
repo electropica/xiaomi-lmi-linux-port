@@ -1,0 +1,325 @@
+// SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+/*
+ * Minimal explicit lmi tree for a Linux 7.x first-boot experiment.
+ *
+ * PROVENANCE OF EVERY FACT USED HERE
+ *   - SoC, PMIC, UART, USB, PHYs: upstream Linux v7.2.12
+ *     (arch/arm64/boot/dts/qcom/sm8250.dtsi, pm8150*.dtsi).
+ *   - lmi board identity (qcom,msm-id / qcom,board-id) and the STATIC vendor
+ *     reserved-memory map: retained 4.19 runtime tree
+ *     work/fg-installed-menu-input-20261024-private.dtb
+ *     sha256 6452f7bc7f12d25c1717ebfba9a5566a1001adc60b8f0652bef6309a15c0b56b
+ *     (bases/sizes/flags extracted with dtc; evidence/
+ *      vendor-reserved-memory-table.txt).
+ *   - ramoops base/size: archived first-hand kernel log of this handset
+ *     work/android-fg-success-boot-20261023T152732Z-private/kernel-log.bin
+ *     sha256 e6f94a9152938ddf42c2f0bd1fb3d45ebe09bab2d3ca740d4ae1712e08f5a4d0
+ *       [0.000000] ramoops: msm_reserve_ramoops_memory addr=b0000000,size=400000
+ *       [0.315750] ramoops: attached 0x400000@0xb0000000, ecc: 0/0
+ *   - USB PHY supplies: community board file sm8250-xiaomi-lmi.dts
+ *     (sha256 ca2dfa5282d023fb8d59895bc9fb192f0e4e4fc140c88d55b31bd08a2b911e01).
+ *
+ * Firmware reservations and verified PHY voltages are derived from the retained 4.19 tree; this is not a transplanted 4.19 DTB.
+ *
+ * MEMORY CLASSIFICATION (and why the dynamic pools are NOT reserved here)
+ *   1. STATIC FIRMWARE / SECURE-WORLD reservations (vendor map, fixed
+ *      addresses, no-map): carried below. They belong to the firmware, not to
+ *      a driver, so dropping one "because we have no driver for it" would let
+ *      the kernel allocate over firmware memory.
+ *   2. DYNAMIC KERNEL pools (adsp_region, sdsp_region, cdsp_region,
+ *      mem_dump_region, sp_region, user_contig_region, qseecom_region,
+ *      qseecom_ta_region, secure_display_region, cnss_wlan_region,
+ *      mailbox_region, extcon_usb1, bt_qca6390): these have NO reg in the
+ *      retained input tree NOR in the Lineage runtime tree, yet the 4.19 log
+ *      shows "Reserved memory: created CMA memory pool at 0x..., size N MiB"
+ *      for them. That message is printed by kernel/dma/contiguous.c:571
+ *      (dma_contiguous_reserve), so those addresses were allocated by the
+ *      DOWNSTREAM 4.19 kernel's own CMA code, not injected by the bootloader.
+ *      They are therefore dynamic KERNEL allocations of an old kernel, not
+ *      firmware reservations: this tree does NOT reserve them, and no window
+ *      is guessed from one old boot.
+ *   3. UNKNOWN: the bootloader's own DRAM usage is not described in any
+ *      readable source, and the runtime device tree the loader hands to the
+ *      kernel may carry regions this static tree does not. This is a stated
+ *      BLOCKER, not something to paper over with a guessed range.
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/arm/qcom,ids.h>
+#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+#include "sm8250.dtsi"
+#include "pm8150.dtsi"
+#include "pm8150b.dtsi"
+#include "pm8150l.dtsi"
+
+/*
+ * The upstream sm8250.dtsi reserved-memory values are not valid on this device.
+ * The upstream LABELS are reused (slpi_mem, adsp_mem, spss_mem, cdsp_secure_heap,
+ * xbl_aop_mem) because the upstream remoteproc nodes reference them by phandle.
+ */
+/delete-node/ &adsp_mem;
+/delete-node/ &cdsp_secure_heap;
+/delete-node/ &slpi_mem;
+/delete-node/ &spss_mem;
+/delete-node/ &xbl_aop_mem;
+
+/ {
+	model = "Xiaomi POCO F2 Pro (minimal mainline experiment)";
+	compatible = "xiaomi,lmi", "qcom,sm8250";
+	chassis-type = "handset";
+
+	qcom,msm-id = <QCOM_ID_SM8250 0x20001>; /* SM8250 v2.1 */
+	qcom,board-id = <37 0>;
+
+	aliases {
+		serial0 = &uart12;  /* qcom,geni-debug-uart in upstream sm8250.dtsi */
+		serial1 = &uart6;   /* qcom,geni-uart in upstream sm8250.dtsi */
+	};
+
+	chosen {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		stdout-path = "serial0:115200n8";
+		/*
+		 * No bootargs here on purpose: the loader appends its own command
+		 * line and the ABL memory information. The 4.19-era community
+		 * bootargs use "console=ttyS0", which is not the console name the
+		 * upstream GENI driver registers ("ttyMSM").
+		 */
+	};
+
+	reserved-memory {
+		/* ---- 1. STATIC firmware / secure-world reservations (vendor map) ---- */
+
+
+		xbl_aop_mem: xbl-aop@80600000 {
+			reg = <0x0 0x80600000 0x0 0x260000>;
+			no-map;
+		};
+
+		/* The cmd-db region is already declared upstream (pm8150.dtsi owns the
+		 * "cmd_db" label), so this copy only repeats the reservation with a
+		 * local label. */
+
+
+		res_xbl_uefi_log_region: res-xbl-uefi-log@80880000 {
+			reg = <0x0 0x80880000 0x0 0x14000>;
+			no-map;
+		};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		slpi_mem: slpi@88c00000 {
+			reg = <0x0 0x88c00000 0x0 0x2f00000>;
+			no-map;
+		};
+
+		adsp_mem: adsp@8bb00000 {
+			reg = <0x0 0x8bb00000 0x0 0x2500000>;
+			no-map;
+		};
+
+		spss_mem: spss@8e000000 {
+			reg = <0x0 0x8e000000 0x0 0x100000>;
+			no-map;
+		};
+
+		cdsp_secure_heap: cdsp-secure-heap@8e100000 {
+			reg = <0x0 0x8e100000 0x0 0x4600000>;
+			no-map;
+		};
+
+		cont_splash_region: splash@9c000000 {
+			reg = <0x0 0x9c000000 0x0 0x2300000>;
+			no-map;
+		};
+
+		dfps_data_region: dfps-data@9e300000 {
+			reg = <0x0 0x9e300000 0x0 0x100000>;
+			no-map;
+		};
+
+		disp_rdump_region: disp-rdump@b0400000 {
+			reg = <0x0 0xb0400000 0x0 0x1000000>;
+			no-map;
+		};
+
+		/*
+		 * Crash capture channel (pstore/ramoops) — CANDIDATE, not qualified.
+		 *
+		 * Provenance: base and size are NOT invented. The archived first-hand
+		 * kernel log of this handset records the 4.19 (downstream) ramoops
+		 * backend attaching:
+		 *   [0.000000] ramoops: msm_reserve_ramoops_memory addr=b0000000,size=400000
+		 *   [0.315747] pstore: Registered ramoops as persistent store backend
+		 *   [0.315750] ramoops: attached 0x400000@0xb0000000, ecc: 0/0
+		 * The downstream Qualcomm driver reserved a FIXED region at
+		 * 0xb0000000 of 4 MiB, the size coming from the kernel command line
+		 * "ramoops_memreserve=4M". Neither the parameter nor the driver
+		 * exists upstream, so upstream v7.x must attach the region itself.
+		 *
+		 * Collision check: the vendor static map spans 0x80000000..0xb1400000
+		 * and the candidate lies in the free hole 0x9e400000..0xb0400000,
+		 * ending exactly where disp_rdump_region begins. No overlap, and the
+		 * candidate is 4 MiB aligned.
+		 *
+		 * About "mem-type": upstream fs/pstore/ram.c:65 states
+		 *   "memory type: 0=write-combined (default), 1=unbuffered, 2=cached"
+		 * so mem-type only selects the mapping/cache attribute. It is NOT a
+		 * persistence flag, and 1 would mean "unbuffered". The property is
+		 * therefore omitted here (default 0, write-combined), matching the
+		 * 4.19 behaviour, where the region was ordinary cached RAM reserved
+		 * by the kernel. The retention-relevant properties are the FIXED reg
+		 * and no-map, which stop the region from being recycled or zeroed by
+		 * the kernel; whether the bootloader leaves it untouched across a
+		 * reboot is a runtime fact, not a source fact.
+		 *
+		 * Upstream requirement (Documentation/devicetree/bindings/reserved-
+		 * memory/ramoops.yaml): at least one of record-size / console-size /
+		 * ftrace-size / pmsg-size must be non-zero. The 4.19 backend had
+		 * record_size=0 and ftrace_size=0, so console-size and pmsg-size are
+		 * set here and the two others are zero.
+		 */
+		ramoops@b0000000 {
+			compatible = "ramoops";
+			reg = <0x0 0xb0000000 0x0 0x400000>;
+			record-size = <0x0>;
+			console-size = <0x30000>;
+			pmsg-size = <0x10000>;
+			ftrace-size = <0x0>;
+			ecc-size = <0x0>;
+			no-map;
+		};
+	};
+};
+
+/* Console UARTs. uart12 is the upstream "qcom,geni-debug-uart" node, the one
+ * the OF early console path looks for through chosen/stdout-path. */
+&uart12 {
+	status = "okay";
+};
+
+&uart6 {
+	status = "okay";
+};
+
+/*
+ * USB: the observation candidate for the first trial is a USB RNDIS gadget.
+ *
+ * The Type-C port role is switched by the PM8150B TCPM in the full vendor tree,
+ * but the community tree's "usb-c-connector" node has NO upstream driver, so
+ * this tree does NOT use it: the DWC3 is forced to peripheral mode and no role
+ * switch is performed. The HS OUT endpoint (OTG host mode) is therefore not
+ * wired either.
+ *
+ * The PHYs ARE enabled and ARE given their supply rails (from the community
+ * board file; the regulator labels come from upstream pm8150b.dtsi). Without
+ * them the controller cannot work: upstream ships both PHY nodes as
+ * "status = disabled".
+ *
+ * The PM8150B VBUS boost (ext_5v_boost / vdd_boost_vreg) is deliberately NOT
+ * enabled: a peripheral trial must not drive a host VBUS boost.
+ */
+&usb_1 {
+	qcom,select-utmi-as-pipe-clk;
+	status = "okay";
+};
+
+&usb_1_dwc3 {
+	dr_mode = "peripheral";
+	/* USB 2.0 only: the RNDIS observer does not need the USB3 QMP PHY, and
+	 * this avoids the additional rails it would require. */
+	maximum-speed = "high-speed";
+	phys = <&usb_1_hsphy>;
+	phy-names = "usb2-phy";
+};
+
+&usb_1_hsphy {
+	status = "okay";
+	vdda-pll-supply = <&vreg_l5a_0p88>;
+	vdda18-supply = <&vreg_l12a_1p8>;
+	vdda33-supply = <&vreg_l2a_3p1>;
+};
+
+/*
+ * The three LDOs the USB2 PHY needs are defined HERE, under the RPMh RSC
+ * regulator list, exactly as the upstream SM8250 boards do it
+ * (sm8250-xiaomi-elish-common.dtsi: vreg_l5a_0p88, vreg_l12a_1p8, vreg_l2a_3p1).
+ *
+ * The rail VALUES are the upstream ones of that reference board: the exact
+ * voltages of the corresponding lmi rails are not established by any source
+ * available here, so they are carried as a documented approximation, not as a
+ * measured fact.
+ */
+&apps_rsc {
+	regulators-0 {
+		compatible = "qcom,pm8150-rpmh-regulators";
+		qcom,pmic-id = "a";
+		vreg_l2a_3p1: ldo2 {
+			regulator-name = "vreg_l2a_3p1";
+			regulator-min-microvolt = <3072000>;
+			regulator-max-microvolt = <3072000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l5a_0p88: ldo5 {
+			regulator-name = "vreg_l5a_0p88";
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <880000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l12a_1p8: ldo12 {
+			regulator-name = "vreg_l12a_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+};
+
+/*
+ * Deliberately left disabled: no upstream driver exists for these lmi
+ * functions, and enabling them would only add unproven kernel paths to the
+ * first experiment. No remoteproc is started either, so no firmware is loaded.
+ */
+&mdss {
+	status = "disabled";
+};
+
+&camss {
+	status = "disabled";
+};
+
+/* Codex review: USB PHY requests use pm8150 L5=880mV, L12=1800mV,
+ * L2=3072mV, matching the actual lmi downstream PHY supply phandles.
+ * The parent driver/resource names are now matched to qcom-rpmh-regulator.c.
+ * Parent input rails are not newly modelled: the downstream node likewise
+ * has no supply-parent linkage. Runtime probing and AOP supply behavior remain
+ * unqualified. Do not enable a VBUS boost in peripheral mode.
+ */
+
+/* lmi community board exclusions; accepted on the RAM observer trial. */
+&tlmm { gpio-reserved-ranges = <28 4>, <40 4>; };
