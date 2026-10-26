@@ -1,5 +1,14 @@
 # Camera userspace status
 
+## Native popup cycle accepted — 2026-10-26
+
+One bounded native extension/retraction completed with Hall endpoint checks
+and explicit sensor shutdown; the operator confirmed normal motion. This is
+one supervised mechanical trial, not front-preview or in-app-switch support.
+The cleanup overwrote detailed motion samples; the final state and operator
+confirmation remain preserved. See the
+[validation record](../../docs/validation/lmi-front-camera-hall-only-2026-10-26.md).
+
 ## Front-camera bring-up checkpoint — 2026-10-26
 
 A bounded Hall-only trial obtained eight fresh poll-delivered samples with

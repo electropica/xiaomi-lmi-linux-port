@@ -1,4 +1,12 @@
 
+
+## Native front-camera mechanism accepted — October 26, 2026
+
+The operator confirmed normal extension/retraction in one supervised native
+cycle. Endpoint checks and independent sensor shutdown completed; no camera
+HAL was opened. Front images and the Snapshot switch remain pending. See the
+[scope and journal limitation](../validation/lmi-front-camera-hall-only-2026-10-26.md).
+
 ## Front-camera sensor checkpoint — October 26, 2026
 
 The Hall-only path delivered eight valid samples and was explicitly shut down;

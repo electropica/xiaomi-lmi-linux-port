@@ -88,3 +88,37 @@ The remaining mechanical gate is a bounded, supervised extension/retraction
 trial with independent cleanup and fresh Hall feedback. Do not replace that
 trial by a fabricated second PipeWire node or infer front-preview readiness
 from endpoint mathematics alone.
+
+## Supervised native extension/retraction — 2026-10-26
+
+The operator confirmed being present with the assembly unobstructed. A bounded
+native trial requested one extension and one retraction. The worker completed
+both endpoint checks (fresh valid Hall feedback plus driver STOP) and recorded
+`success=true`, `needs_retract=false`. The transient service completed in about
+1.6 seconds, became inactive/dead and ran independent sensor deactivation.
+The operator separately confirmed normal full extension and retraction without
+abnormal noise or blockage. No camera HAL, image, microphone or recording was
+opened. This qualifies one supervised mechanical cycle only.
+
+The actual deployed controller SHA256 was
+`e7003bfca06d053b35a181c2e57f2dbf8f3bd24d6168ef60b92062f1c55ecf99`.
+Host tests before the trial passed eleven injected cycle/recovery cases and
+five supervisor-contract cases. They are not eleven hardware trials.
+
+### Retained evidence limitation
+
+The independent cleanup instantiated a new event list and overwrote the
+worker's detailed event journal. The completed state, cleanup receipt and
+operator confirmation were preserved, but the raw movement trajectory and its
+per-sample timestamps were not. Do not claim a retained detailed trace.
+A local candidate now loads the previous journal before appending; its actual
+constructor/log path passes a synthetic-file regression check. That correction
+has not been installed or mechanically tested; no movement was repeated just
+to obtain logs.
+
+### Next integration boundary
+
+The selected Snapshot source remains rear-only. Front HAL identification,
+front images, foreground/lock motor lifecycle and in-app switching remain
+unqualified. Mechanical success alone does not provide front-camera support.
+Complete-image pins and installed packages are unchanged.
