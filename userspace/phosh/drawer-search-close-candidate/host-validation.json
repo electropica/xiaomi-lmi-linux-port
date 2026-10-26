@@ -1,0 +1,11 @@
+{
+  "actual_callback_extracted": true,
+  "checks": 7,
+  "result": "PASS",
+  "sanitizers": [
+    "ASan",
+    "UBSan"
+  ],
+  "limits": "GTK APIs stubbed. No real GTK gesture or ARM64 package execution.",
+  "source_after_sha256": "cd46f7391d75863924095ede2242080f30fb90fc42714f71adab21e75d8f77c4"
+}
