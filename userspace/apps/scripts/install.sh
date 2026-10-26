@@ -49,6 +49,9 @@ fi
 # the lmi-specific rendering and thumbnail-cache workaround.
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 apps_files=${LMI_APPS_FILES_DIR:-"$script_dir/../files"}
+# Maps 48 still launches the removed standalone location desktop ID.
+# Route that ID to Settings 48's Privacy -> Location page; do not enable it.
+install -Dm 0644 "$apps_files/gnome-location-panel.desktop" /usr/local/share/applications/gnome-location-panel.desktop
 install -m 0755 "$apps_files/lmi-photos" /usr/local/bin/lmi-photos
 install -m 0755 "$apps_files/lmi-photos-thumbnails" /usr/local/bin/lmi-photos-thumbnails
 install -Dm 0644 /usr/share/applications/org.kde.koko.desktop /usr/local/share/applications/org.kde.koko.desktop

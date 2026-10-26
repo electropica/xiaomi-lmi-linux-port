@@ -100,3 +100,17 @@ Phone-local UPower status and CPU-idle opt-ins are documented under
 app installer. A source fix or live-phone validation must not be described as
 automatically present in a newly built image before its activation path is
 included and that image is manually built and checked.
+
+
+## Maps location settings link — October 26, 2026
+
+Installed Maps 48.7 launches gnome-location-panel.desktop from its location
+toast. Settings 48.4 supplies only the combined Privacy panel, so the old ID
+is absent and Maps catches the null-launch error without opening a window.
+GeoClue running does not override org.gnome.system.location enabled=false.
+
+The compatibility desktop entry routes the old ID to
+gnome-control-center privacy location. It is hidden from the app drawer and
+does not change location permissions or enable GPS. The optional-app installer
+and M1 staging include it. Launching the Privacy/Location page succeeds on the
+current handset; physical position acquisition remains unvalidated.
