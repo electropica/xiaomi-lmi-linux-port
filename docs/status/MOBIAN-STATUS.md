@@ -1,5 +1,12 @@
 
 
+## Front HAL lifecycle checkpoint — October 26, 2026
+
+ID1 front/270 was confirmed by the HAL and yielded a1280x720 preview buffer
+in an isolated supervised cycle. Motion and cleanup succeeded, but the very
+dark image is not accepted as useful scene quality. No in-app switch is
+installed. See the [validation](../validation/lmi-front-camera-hall-only-2026-10-26.md).
+
 ## Native front-camera mechanism accepted — October 26, 2026
 
 The operator confirmed normal extension/retraction in one supervised native

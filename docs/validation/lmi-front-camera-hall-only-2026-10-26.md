@@ -122,3 +122,41 @@ The selected Snapshot source remains rear-only. Front HAL identification,
 front images, foreground/lock motor lifecycle and in-app switching remain
 unqualified. Mechanical success alone does not provide front-camera support.
 Complete-image pins and installed packages are unchanged.
+
+## Front HAL enumeration and first buffer — 2026-10-26
+
+The operator built the isolated native diagnostic tools. Checksums and AArch64
+ELF headers were verified before staging them separately from the rear runtime.
+The OEM module initialized successfully and enumerated eight camera IDs. ID1
+reports facing=front and orientation270; ID7 also reports front, but their
+relationship is not established. ID1 was selected consistently with the Android
+front-camera convention, then explicitly confirmed by its HAL information.
+
+The enumerator exited0 and removed its private runtime. A supplementary loop
+cleanup initially failed because losetup returned null fields for an already
+unconfigured device. A passive sysfs check confirmed no backing file and no
+private runtime directory. The helper was corrected and cleanup completed
+without rerunning enumeration or detaching an unrelated device.
+
+With explicit operator readiness and a neutral target requested, a bounded test
+extended the mechanism, opened front ID1, obtained15 preview results and wrote
+one 1280x720 RGB PPM. The HAL exited0 and the mechanism retracted. The worker
+and independent cleanup succeeded; the operator confirmed normal full motion.
+The raw motion record is preserved in this run (238 events,232 Hall rows,
+one up and one down command), unlike the earlier motor-only logging defect.
+No temporary firmware links or runtime directories remained; the owned loop
+was already detached. No microphone, recording or installed runtime replacement.
+
+The retrieved image is extremely dark and does not establish useful image
+quality or orientation. The operator reported cleaning the dirty lens with a
+finger possibly passing over it at acquisition time. This is a plausible
+explanation, not a demonstrated cause. A clean-lens scene check remains needed.
+Thus this milestone establishes front HAL buffer acquisition and lifecycle,
+not an accepted front-camera application or a working Snapshot switch.
+Images, factory calibration and vendor binary material remain private.
+
+Capture binary SHA256:
+`02184f8af4b17d964eb2423725c34b730f9862adf72b0bd888d889992e0c63c0`.
+Enumerator SHA256:
+`2708b53fbed5b31d199e19473f6d2bc0635d9511e785ad87447ea4b397c665dd`.
+No full-image pin changed.

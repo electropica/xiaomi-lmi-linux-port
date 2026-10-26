@@ -1,5 +1,13 @@
 # Camera userspace status
 
+## First front HAL buffer acquired — 2026-10-26
+
+The isolated ID1 trial produced one1280x720 buffer after15 results, then
+released the HAL and retracted normally. The operator confirmed normal motion.
+The image is too dark to qualify scene quality or orientation; clean-lens
+validation and the Snapshot switch remain pending. Rear installation unchanged.
+See the [record and limits](../../docs/validation/lmi-front-camera-hall-only-2026-10-26.md).
+
 ## Front HAL tools ready for operator compilation — 2026-10-26
 
 The [isolated native candidate](front-camera-candidate/README.md) passes its
