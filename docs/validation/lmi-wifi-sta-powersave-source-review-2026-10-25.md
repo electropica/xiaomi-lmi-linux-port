@@ -85,3 +85,15 @@ Primary references:
 - [NetworkManager property contract](https://networkmanager.dev/docs/api/latest/settings-802-11-wireless.html):
   0 global default,1 ignore,2 disable,3 enable. This is the property contract,
   not the handset's current setting.
+
+
+## October 26 read-only follow-up
+
+After preserving the complete night capture, the cached getter reported iw
+unavailable. The active NetworkManager profile's selected powersave field
+returned default; its printed global config contained no explicit powersave
+entry. Early numeric-only parsers returned unavailable because nmcli emitted
+the symbolic value, not a number. The selected-field follow-up resolved this
+without publishing connection names or identifiers. Neither observation proves
+actual host/firmware PS state during suspension. No setting, scan, reconnect or
+package install was performed. See the [night result](lmi-quiet-wake-night-2026-10-26.md).

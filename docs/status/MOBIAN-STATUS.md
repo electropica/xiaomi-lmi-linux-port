@@ -1,3 +1,14 @@
+## October 26: quiet gauge returns sustained overnight
+
+The preserved 9h48m42s marker interval contains 95.824% inferred suspension
+and 35 natural gauge return gaps around 15 seconds. Display changed 100 to82.
+The historical long awake dwell did not recur in those observed gaps. Raw
+counter progression is nearly stable early/late, while software/shadow rates
+slow by about33%; this is not a calibrated current reduction or a new peripheral
+cause. Current accepted runtime is unchanged and the combined search candidate
+is still uninstalled. See [night evidence and limits](../validation/lmi-quiet-wake-night-2026-10-26.md)
+and [current research decisions](BATTERY-RESEARCH-CURRENT.md).
+
 ## October 24: fuel-gauge profile lookup depends on board-tree order
 
 ## Thumbnail source localization, October 24

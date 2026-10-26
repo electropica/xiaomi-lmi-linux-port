@@ -1,4 +1,4 @@
-# Battery research checkpoint — evening 25 October 2026
+# Battery research checkpoint — 26 October 2026
 
 This checkpoint separates accepted behavior from hypotheses. Historical
 next-action files must not override it or the coordinator's latest private
@@ -8,8 +8,8 @@ state. No physical residual-current calibration or culprit is established.
 
 The IRQ-name userspace fixes return naturally from gauge wakes to suspension
 in about 15 s between D-Bus callbacks, about 16 s in retained kernel boundaries.
-Seven natural callback cycles are available across two current short/long
-windows. The historical ~1201s dwell has not recurred in those windows.
+Forty-two natural callback cycles are available across the accepted short,
+long and overnight windows. The historical ~1201s dwell has not recurred in those windows.
 This is a real behavior improvement, not proof of a particular mA reduction.
 
 The accepted handset remains on Phosh irqnames1+drawerpreview1, accepted
@@ -17,22 +17,25 @@ GSD IRQ-name handling and accepted private-target Phoc thumbnails.
 drawersearch1+draweremptysearch1 is built (36 package tests, none skipped)
 but NOT installed or touch-accepted. Full-image pins remain on accepted input.
 
-The current passive night preserves normal settings and Wi-Fi. While unplugged,
-do not contact the phone, including by Wi-Fi, install, restart or alter logging.
-On explicit return, preserve the existing capture before any other device work.
-The local coordinator records the exact fetch command and receipt identities.
+The overnight observation is now preserved and analyzed: 9h48m42s between
+USB markers, 95.824% inferred suspension, display 100 -> 82, and 35 natural
+gauge return gaps around 15 seconds. Its early/late raw progression differs
+by less than 1%, while software/shadow rates slow by about 33%. This is channel
+divergence, not established electrical-current improvement. See the
+[night validation](../validation/lmi-quiet-wake-night-2026-10-26.md).
 
 ## Next decisions, in order
 
-1. Analyze the preserved night: clock-paired sleep and natural wake accounting,
-   early/late reported-channel progression, USB/charging boundary exclusions.
-   Display change, learned capacity, raw/software/shadow counters and endpoint
-   ADC/filter readings must retain their different meanings.
-2. If useful afterward, read only the generic cached Wi-Fi PS policy. The source
-   review establishes why that request can matter, not that it is wrong on this
-   phone. No scan, reconnect, setter or repeated radio-off test is selected.
+1. Do not repeat an identical Mobian-only night to resolve the channel scale.
+   Existing Android rounded software history lacks matching continuous raw
+   endpoints. A future matched Android capture of all three channels and clocks
+   could compare divergence; it still would not be an external current meter.
+   No new observation or OS switch has been started.
+2. The cached Wi-Fi getter was unavailable (iw absent). NetworkManager's active
+   profile reads default, without an explicit powersave entry found in printed
+   global config. Actual firmware PS remains unknown; no policy is changed.
 3. Install the already-built empty-search UI candidate separately when the user
-   can test it, keeping accepted rollback and avoiding a battery-window restart.
+   can test it, keeping accepted rollback. Battery evidence is preserved first.
 
 ## Avoid rediscovering or over-closing these branches
 
