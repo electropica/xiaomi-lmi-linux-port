@@ -1,0 +1,18 @@
+{
+  "result": "PASS for requested search clearing",
+  "operator_confirmed": [
+    "Matching Calculatrice search cleared on downward close; complete list after reopening",
+    "Zero-result zzzz search cleared on downward close; complete list after reopening"
+  ],
+  "package_tests": {
+    "OK": 36,
+    "SKIP": 0
+  },
+  "running_binary_sha256": "782daf935977e42f28997f5b7971eb70d518f67471720d881853c038ab0a90ba",
+  "same_kernel_boot": true,
+  "accepted_phoc_gsd_preserved": true,
+  "owned_rescue_timer": "cancelled after acceptance",
+  "cancelled_swipe": "host checked; no separate operator confirmation",
+  "new_ui_unplugged_resume": "not requalified",
+  "complete_image_pins": "unchanged preview1"
+}

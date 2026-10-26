@@ -33,3 +33,11 @@ Host-only exact-callback checks (stubbed GTK, ASan/UBSan):
     python3 userspace/phosh/drawer-search-close-candidate/test-close-callback.py
 
 These seven checks passed; real package and gesture acceptance remain pending.
+
+## October 26 device acceptance
+
+The operator confirms clearing both matching and zero-result queries after
+completed downward close, with the full list restored on reopening. Runtime
+hashes, same boot, accepted Phoc/GSD and normal idle settings are verified;
+the owned rescue timer is cancelled. Cancelled gestures remain host-checked,
+not separately operator-confirmed. Complete-image pins stay on preview1.

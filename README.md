@@ -16,7 +16,7 @@ separately and must not be read as the current Mobian runtime.
 | --- | --- | --- |
 | Permanent dualboot | Installed menu, Mobian default after 15 seconds, direct Mobian/LineageOS entries and Fastboot/Recovery trials; installed boot-prefix readback verified | Build/flash only through the pinned, device-specific operator workflow |
 | Display and input | Phosh, touch, unlock, power button and GLES2 through Zink/Turnip on KGSL/Adreno 650 | This is the qualified downstream kernel stack, not a mainline hardware-support claim |
-| Home and drawer | Favorites at the bottom, up to five; home shortcuts; drag/reorder/move without duplicates; scrolling before downward close; previews hidden on closed home | Latest search-on-close change is a separate unbuilt candidate |
+| Home and drawer | Favorites at the bottom, up to five; home shortcuts; drag/reorder/move without duplicates; scrolling before downward close; previews hidden on closed home | Search clearing on completed close is operator-confirmed for matching and empty queries |
 | Application previews | Private-target Phoc thumbnails accepted clear and correctly oriented; application activation and favorite dragging remain responsive | Exact underlying Mesa/driver corruption mechanism is not established |
 | Power menu | Shutdown/restart menu usable while locked, with cancellable restart confirmation | No claim that every power-management issue is solved |
 | Automatic suspend | IRQ-name handling sustains approximately 15-second return gaps after 35 natural gauge wakes in the latest night | Remaining battery consumption and physical gauge calibration are unresolved |
@@ -41,20 +41,21 @@ and [overnight result and limits](docs/validation/lmi-quiet-wake-night-2026-10-2
 
 ### Installed system versus next build
 
-The accepted installed shell is Phosh `irqnames1+drawerpreview1`, with GSD
+The accepted installed shell now includes Phosh `irqnames1+drawerpreview1` plus
+`drawersearch1+draweremptysearch1+searchclose1`, with GSD
 IRQ-name handling and the accepted private-target Phoc renderer. The complete
-image recipe pins those accepted packages. Later search features are prepared
-separately and are not silently promoted into that qualified image.
+image recipe still pins the earlier preview1 shell; incremental search acceptance
+does not silently promote new packages into that qualified image.
 
 The intended `j11sun_4700mah` profile is published on the current temporary
 October 7 kernel through the reviewed DT-order diagnostic. That does not make
 the diagnostic a newly qualified permanent kernel or resolve gauge accuracy.
 
-Clearing every search after a completed downward drawer close is now prepared
+Clearing every search after a completed downward drawer close is now installed
 in [the search-close candidate](userspace/phosh/drawer-search-close-candidate/README.md).
-It supersedes the earlier empty-result-only requirement. Package build,
-guarded installation and tactile acceptance remain pending; cancelled gestures
-must preserve the query.
+It supersedes the earlier empty-result-only requirement. Both matching and
+zero-result closure cases pass operator testing; 36 package tests pass.
+Cancelled gestures are host-checked, not separately operator-confirmed.
 
 ## Build and installation entry points
 

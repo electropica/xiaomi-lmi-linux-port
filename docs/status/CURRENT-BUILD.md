@@ -1,3 +1,13 @@
+## Search-close runtime update — October 26, 2026
+
+The searchclose1 package is installed. The operator confirms clearing matching
+and empty-result queries on completed downward close and full-list restoration.
+36 package tests pass; running binary, same kernel and accepted renderer/power
+daemon are verified. Rescue timer is cancelled. Complete-image pins remain
+preview1; no fresh image or unplugged UI qualification is claimed.
+See [acceptance](../validation/lmi-search-clear-on-drawer-close-2026-10-26.md).
+Preparation entries below are historical.
+
 ## Current checkpoint — October 26, 2026
 
 The [root README](../../README.md) now summarizes current accepted behavior and

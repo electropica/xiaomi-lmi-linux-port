@@ -27,3 +27,12 @@ Source SHA256 after: cd46f7391d75863924095ede2242080f30fb90fc42714f71adab21e75d8
 Recipe: userspace/phosh/drawer-search-close-candidate/README.md.
 Operator build and normal package tests are next; installation must retain the
 accepted drawerpreview1 rollback. The complete-image pins are unchanged.
+
+## Installed acceptance, October 26
+
+Both requested matching and empty-result closure cases pass operator testing.
+The package suite has 36 OK and no skips. Installed/running binary identity
+782daf935977e42f28997f5b7971eb70d518f67471720d881853c038ab0a90ba is verified.
+Same kernel boot, accepted Phoc/GSD and normal 300/900-second settings remain.
+The automatic rescue timer is cancelled. Cancelled-swipe behavior has host
+coverage only. No fresh unplugged or complete-image qualification is claimed.

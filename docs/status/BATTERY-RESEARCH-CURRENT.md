@@ -1,3 +1,11 @@
+## UI follow-up, October 26
+
+searchclose1 is now installed and operator-confirmed for both matching and
+zero-result clearing after completed drawer close. Rescue timer cancelled;
+same kernel/profile and accepted Phoc/GSD preserved. New UI has not had a
+fresh unplugged validation and complete-image pins remain preview1.
+The pending-install references below describe the earlier preparation state.
+
 # Battery research checkpoint — 26 October 2026
 
 This checkpoint separates accepted behavior from hypotheses. Historical
