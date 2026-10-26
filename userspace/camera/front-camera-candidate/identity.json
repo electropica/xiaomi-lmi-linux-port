@@ -1,0 +1,33 @@
+{
+  "patch_sha256": "3d5c44bf0013cfaeb043be27c6d77c2c99c0621c1db0c1124c92a85ddcc58516",
+  "files": [
+    {
+      "path": "userspace/camera/diagnostics/native-pipewire-ppm-test.c",
+      "before_sha256": "5d28798a03660757cf49354a1e80aadb18daf1fd37558907eb905f287aef49ea",
+      "after_sha256": "5f2f6b086f6a2404d3f2d0447a514aa7c87b25a36dc28d95699302e180041a1d",
+      "before_bytes": 9380,
+      "after_bytes": 10256
+    },
+    {
+      "path": "userspace/camera/diagnostics/camera-module-capture.c",
+      "before_sha256": "8319bbeb6a196078d261bd468570b05d336672ffffac6c47576c5be9c64f70c8",
+      "after_sha256": "c74355ac3fb164ce6369f35818638d0d734357a8fc0c96befce1df8d7d97fce3",
+      "before_bytes": 43235,
+      "after_bytes": 43671
+    },
+    {
+      "path": "userspace/camera/diagnostics/camera-test-capture.py",
+      "before_sha256": "45899b8c8844c5b6604ffc6759783a09a21aca24d7efb84782d096074e33d4cf",
+      "after_sha256": "ccd4616bbc8b13ff3b6b2b3f3479a1fd7e2ac029c1c70a4299022585518a6aff",
+      "before_bytes": 15803,
+      "after_bytes": 16580
+    },
+    {
+      "path": "userspace/camera/diagnostics/camera-test-rear-preview.py",
+      "before_sha256": "253a99fcc55a8779afe42ae62a6999ddc623def2f181b134557a1005ae1c1a5a",
+      "after_sha256": "d069f8646fa1f527c6dc44afe221e657a1b1bd5c213f078d4b150af0be54d5b9",
+      "before_bytes": 2523,
+      "after_bytes": 3249
+    }
+  ]
+}

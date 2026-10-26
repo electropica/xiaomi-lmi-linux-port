@@ -1,5 +1,12 @@
 # Camera userspace status
 
+## Front HAL tools ready for operator compilation — 2026-10-26
+
+The [isolated native candidate](front-camera-candidate/README.md) passes its
+preflight with the retained NDK and camera dependencies. Compilation and all
+HAL access remain pending; the accepted rear runtime is untouched. This does
+not yet expose a front camera or qualify front images.
+
 ## Native popup cycle accepted — 2026-10-26
 
 One bounded native extension/retraction completed with Hall endpoint checks
