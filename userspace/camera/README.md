@@ -1,5 +1,13 @@
 # Camera userspace status
 
+## Front-camera bring-up checkpoint — 2026-10-26
+
+A bounded Hall-only trial obtained eight fresh poll-delivered samples with
+valid status, then deactivated the sensor with independent cleanup. No motor
+or camera HAL was opened. Front-camera selection remains unimplemented; the
+selected Snapshot bridge is rear-only. See the
+[validation and remaining boundaries](../../docs/validation/lmi-front-camera-hall-only-2026-10-26.md).
+
 ## Complete image built; hardware test pending — 2026-10-18
 
 The operator's `mobian-lmi-complete-20261018` image now includes Snapshot

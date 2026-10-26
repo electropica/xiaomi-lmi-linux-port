@@ -1,3 +1,11 @@
+
+## Front-camera sensor checkpoint — October 26, 2026
+
+The Hall-only path delivered eight valid samples and was explicitly shut down;
+independent cleanup and kernel power-down logs were checked. No motor motion,
+front preview or new package/image is qualified. See
+[scope and next boundary](../validation/lmi-front-camera-hall-only-2026-10-26.md).
+
 ## Search-close runtime update — October 26, 2026
 
 The searchclose1 package is installed. The operator confirms clearing matching
