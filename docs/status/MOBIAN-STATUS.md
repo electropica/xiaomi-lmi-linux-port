@@ -1,3 +1,18 @@
+## Current checkpoint — October 26, 2026
+
+The [root README](../../README.md) now summarizes current accepted behavior and
+pending work. Permanent dualboot and accepted private-target thumbnails remain
+qualified. The night record validates sustained quiet returns to suspension;
+it does not calibrate residual current. See the [battery checkpoint](BATTERY-RESEARCH-CURRENT.md)
+and [overnight validation](../validation/lmi-quiet-wake-night-2026-10-26.md).
+
+Installed Phosh remains irqnames1+drawerpreview1. Clearing every search on
+completed drawer close is a new, host-checked candidate, not built or installed;
+it supersedes the previous empty-result-only request. See the
+[candidate validation](../validation/lmi-search-clear-on-drawer-close-2026-10-26.md).
+Complete-image package pins, permanent menu and temporary kernel are unchanged.
+Older dated entries below retain their original milestone boundaries.
+
 ## October 26: quiet gauge returns sustained overnight
 
 The preserved 9h48m42s marker interval contains 95.824% inferred suspension

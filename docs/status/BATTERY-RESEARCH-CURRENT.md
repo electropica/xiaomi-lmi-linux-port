@@ -15,7 +15,9 @@ This is a real behavior improvement, not proof of a particular mA reduction.
 The accepted handset remains on Phosh irqnames1+drawerpreview1, accepted
 GSD IRQ-name handling and accepted private-target Phoc thumbnails.
 drawersearch1+draweremptysearch1 is built (36 package tests, none skipped)
-but NOT installed or touch-accepted. Full-image pins remain on accepted input.
+but NOT installed or touch-accepted. The operator now requests clearing every
+query on completed close; the superseding searchclose1 candidate is host-checked
+but NOT built or installed. Full-image pins remain on accepted input.
 
 The overnight observation is now preserved and analyzed: 9h48m42s between
 USB markers, 95.824% inferred suspension, display 100 -> 82, and 35 natural
@@ -34,8 +36,9 @@ divergence, not established electrical-current improvement. See the
 2. The cached Wi-Fi getter was unavailable (iw absent). NetworkManager's active
    profile reads default, without an explicit powersave entry found in printed
    global config. Actual firmware PS remains unknown; no policy is changed.
-3. Install the already-built empty-search UI candidate separately when the user
-   can test it, keeping accepted rollback. Battery evidence is preserved first.
+3. Build the superseding searchclose1 candidate for the new clear-every-query
+   request, then install separately when the user can test it. Keep accepted
+   preview1 rollback and complete-image pins. Battery evidence is preserved first.
 
 ## Avoid rediscovering or over-closing these branches
 

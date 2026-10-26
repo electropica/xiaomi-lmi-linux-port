@@ -1,190 +1,103 @@
 # Xiaomi lmi Linux port
 
-This repository unifies the kernel-side reconstruction records and the
-Mobian/Phosh userspace work for the Xiaomi Redmi K30 Pro / POCO F2 Pro
-(`lmi`, Qualcomm SM8250). It preserves historical D-v43/OpenRC and Weston
-experiments separately from the current Debian/Mobian userspace line.
+Mobian/Phosh and kernel reconstruction work for the Xiaomi Redmi K30 Pro /
+POCO F2 Pro (`lmi`, Snapdragon 865 / Qualcomm SM8250, Adreno 650).
+The active integration branch is `developpement`.
 
-## Current validated state
+## Current state — October 26, 2026
 
-Latest standby diagnosis (October 21): a complete same-kernel graphical /
-headless / graphical comparison showed no reduction in the gauge estimate.
-Residual standby demand remains unresolved; no new kernel fix is established.
-See the [result and limits](docs/validation/lmi-headless-aba-result-2026-10-21.md)
-and [current status](docs/status/MOBIAN-STATUS.md).
+Mobian is usable on the test handset, with working touch/unlock, GPU rendering,
+USB networking/SSH, Wi-Fi and a customized Phosh home screen. This remains an
+experimental port: battery autonomy, telephony and other hardware functions
+are not all qualified. Historical D-v43/OpenRC and Weston results are retained
+separately and must not be read as the current Mobian runtime.
 
-The external `archi-validation-02` Debian 13/Mobian userdata booted with the
-D-repro D-v43 boot. Phosh, touch/unlock, DSI-1, and GLES2 → Zink → Turnip →
-KGSL/Adreno 650 were observed working. Its `daily-base` derivative was also
-hardware-validated, including the time-seed clock floor and responsive
-lock/unlock with only Chatty daemon autostart disabled. The golden,
-`daily-base`, and experimental audio-profile images are external artifacts;
-none is stored in Git.
-GNOME Console and Calculator were also exercised on the golden userspace.
+| Area | Validated result | Remaining boundary |
+| --- | --- | --- |
+| Permanent dualboot | Installed menu, Mobian default after 15 seconds, direct Mobian/LineageOS entries and Fastboot/Recovery trials; installed boot-prefix readback verified | Build/flash only through the pinned, device-specific operator workflow |
+| Display and input | Phosh, touch, unlock, power button and GLES2 through Zink/Turnip on KGSL/Adreno 650 | This is the qualified downstream kernel stack, not a mainline hardware-support claim |
+| Home and drawer | Favorites at the bottom, up to five; home shortcuts; drag/reorder/move without duplicates; scrolling before downward close; previews hidden on closed home | Latest search-on-close change is a separate unbuilt candidate |
+| Application previews | Private-target Phoc thumbnails accepted clear and correctly oriented; application activation and favorite dragging remain responsive | Exact underlying Mesa/driver corruption mechanism is not established |
+| Power menu | Shutdown/restart menu usable while locked, with cancellable restart confirmation | No claim that every power-management issue is solved |
+| Automatic suspend | IRQ-name handling sustains approximately 15-second return gaps after 35 natural gauge wakes in the latest night | Remaining battery consumption and physical gauge calibration are unresolved |
+| Connectivity | USB networking/SSH and Wi-Fi exercised | GPS, automatic rotation, modem/SMS/MMS are not established as working by these validations |
+| Audio, torch and camera | Speaker playback and torch have dated device validations; camera integration has its own build/bundle workflow | Do not infer full microphone/headset/UCM2 or camera-mode qualification from package inclusion |
 
-The distinct `daily-base-audio-fw-test` profile loads a proprietary TFA9874
-container kept outside the repository. WCD938x/TFA9874 bind, ALSA registers,
-and clear speaker music was confirmed through both direct S32_LE ALSA and
-an installed opt-in PipeWire route on the temporary reset-GPIO diagnostic
-boot. Microphone/headset routing, UCM2 and durable boot deployment remain
-unvalidated. See the [installed battery, speaker and torch validation](docs/validation/lmi-battery-audio-torch-2026-10-03.md).
+### Battery: improvement and unresolved work
 
-The D-v43/OpenRC reconstruction separately validated USB networking, SSH,
-Wi-Fi scanning, and direct DRM/KMS test rectangles on DSI-1. Weston on that
-system remained black. This is not the successful Weston 14 display result
-from the separate historical M0 Mobian environment. The kernel and userdata
-are not claimed to be bit-for-bit reproducible from all sources.
-The dated [D-v43 reconstruction](docs/validation/d-v43-openrc-reconstruction-2026-09-23.md),
-[DRM/KMS validation](docs/validation/d-v43-drm-kms-validation-2026-09-25.md),
-and [Weston boundary record](docs/validation/d-v43-weston14-boundary-2026-09-26.md)
-keep those milestones and their evidence limits explicit.
+The latest preserved night spans 9h48m42s between USB markers, with 95.824%
+inferred suspension and displayed battery 100 -> 82 percent. The historical
+approximately 1201-second awake delay did not recur in the 35 observed natural
+gauge return gaps. This validates sustained return-to-suspend behavior.
 
-See [current build identities](docs/status/CURRENT-BUILD.md),
-[Mobian status](docs/status/MOBIAN-STATUS.md), and the dated
+It does **not** establish a calibrated standby current. Raw counter progression
+is nearly unchanged early/late, while software/SOC-model counters slow by about
+33%. Those channels use different state and cannot be treated as independent
+electrical meters. No physical residual consumer or battery-life solution is
+claimed. Older mA figures in dated notes are conditional gauge estimates.
+
+Read the [current battery checkpoint](docs/status/BATTERY-RESEARCH-CURRENT.md)
+and [overnight result and limits](docs/validation/lmi-quiet-wake-night-2026-10-26.md).
+
+### Installed system versus next build
+
+The accepted installed shell is Phosh `irqnames1+drawerpreview1`, with GSD
+IRQ-name handling and the accepted private-target Phoc renderer. The complete
+image recipe pins those accepted packages. Later search features are prepared
+separately and are not silently promoted into that qualified image.
+
+The intended `j11sun_4700mah` profile is published on the current temporary
+October 7 kernel through the reviewed DT-order diagnostic. That does not make
+the diagnostic a newly qualified permanent kernel or resolve gauge accuracy.
+
+Clearing every search after a completed downward drawer close is now prepared
+in [the search-close candidate](userspace/phosh/drawer-search-close-candidate/README.md).
+It supersedes the earlier empty-result-only requirement. Package build,
+guarded installation and tactile acceptance remain pending; cancelled gestures
+must preserve the query.
+
+## Build and installation entry points
+
+- [Current build identities and boundaries](docs/status/CURRENT-BUILD.md).
+- Complete Mobian image: `build/build-complete-lmi.sh`; follow the
+  [complete profile instructions](build/profiles/lmi-current/COMPLETE-BUILD.md).
+- Base Mobian orchestration: `build/build-mobian-image.sh`; Phosh builder:
+  `userspace/phosh/scripts/build-m1-phosh.sh`.
+- Permanent boot menu: [recipe](build/boot-menu/external-mobian/README.md) and
+  [guarded operator workflow](build/boot-menu/permanent/README.md).
+- Derived userdata without rebuilding the kernel:
+  [build/userdata/README.md](build/userdata/README.md).
+- Optional applications: `userspace/apps/scripts/install.sh`.
+
+Heavy kernel, package and image builds are run manually by the operator.
+Generated images, installable packages and required private/vendor inputs are
+external artifacts. An incremental package acceptance is not automatically a
+fresh complete-image validation. Follow the pinned recipe and rescue rules;
+historical commands are not the current installation procedure.
+
+## Repository map
+
+- `kernel/`: configurations, patches and diagnostics.
+- `userspace/`: Phosh, power, graphics, audio, camera, radios and applications.
+- `build/`: image/menu/userdata recipes, profiles and text-only input locks.
+- `docs/`: status, architecture, provenance and dated validation records.
+- `historical/`: superseded OpenRC, Weston and earlier porting work.
+- `tools/`: generic project utilities.
+
+Start with the [architecture guide](docs/architecture/ARCHITECTURE.md),
+[Mobian status](docs/status/MOBIAN-STATUS.md) and
 [hardware validation records](docs/validation/).
-
-## Repository layout
-
-- `kernel/` — tracked kernel config, patches, and kernel-side diagnostics or tools
-- `userspace/` — Phosh, GPU, display, audio, camera, Wi-Fi, Bluetooth, base, and app integration
-- `build/kernel/` — kernel build status and future entry points
-- `build/userdata/` — portable derived-userdata builder and profiles
-- `build/locks/userspace/` — the text-only archi-validation-02 userspace lock
-- `docs/` — current status, architecture, provenance, and dated validation
-- `historical/` — superseded D-v43/OpenRC, Weston, and earlier porting work
-- `tools/` — generic project utilities
-
-The canonical structure and active entry points are described in
-[the architecture guide](docs/architecture/ARCHITECTURE.md).
-
-## Build entry points
-
-The Mobian image orchestrator is `build/build-mobian-image.sh`; its Phosh
-builder is `userspace/phosh/scripts/build-m1-phosh.sh`. Optional apps are
-installed by `userspace/apps/scripts/install.sh`. The M0/base-rootfs scripts
-are under `userspace/base/scripts/`.
-
-The separate `build/userdata/build-derived-userdata.sh` derives userdata from
-the locked external golden and package cache without rebuilding the kernel.
-Its four profiles and required external inputs are documented in
-[`build/userdata/README.md`](build/userdata/README.md). Heavy image and kernel
-builds are run manually by the operator; this repository does not contain the
-generated images or private build state.
-
-The active Mobian builder requires `M1_MOBIAN_PASSWORD` to be supplied via
-the environment; credentials must never be stored in the repository or shell
-logs.
 
 ## Reproducibility and exclusions
 
-The text lock records exact package and persistent-file identities, external
-artifact hashes, and the boot/userspace compatibility boundary. Exact cloning
-from the validated sparse userdata is possible; functional derivation is
-specified by the builder. Rebuilding the full userspace bit-for-bit from
-source is not demonstrated. The boot/kernel is a separate layer and is not
-rebuilt by the userdata derivation workflow.
+Recipes, exact identities and text locks are tracked. Complete bit-for-bit
+source reconstruction of all kernel/userspace/vendor components is not
+demonstrated. Kernel/boot, rootfs, menu and incremental packages are distinct
+layers with separate validation boundaries.
 
-Do not add raw/sparse/boot images, root filesystems, `.deb`/APK payloads,
-package caches, proprietary firmware (including the TFA container), private
-inputs, build states, generated outputs, full device logs, credentials, PINs,
-machine IDs, or real device MAC addresses to Git. See `NOTICE` and `LICENSE`
-for licensing information.
-
-## Battery state correction
-
-Latest update (2026-10-10): the metadata-indexer failure and notification wake
-loop were corrected, and normal fifteen-minute automatic suspend was observed.
-A permanent, guarded sleep-only NPU bandwidth policy is now installed and
-included in the current build profile. Its attended cycle measured 49.593 mA
-from the gauge versus 86.561 mA in the immediate original-policy comparison,
-with original performance restored on wake. One combined-policy automatic cycle
-is now validated at the normal fifteen-minute delay. Multiple automatic cycles,
-night-long and fresh-image validation remain pending; residual consumption
-and gauge accuracy remain unresolved. A longer interval interrupted after
-22 minutes yielded 69.015 mA from the gauge; sustained consumption near 50 mA
-is not established. Details and evidence limits are in
-[the power notes](userspace/power/README.md#suspend-only-npu-bandwidth-policy-2026-10-10).
-
-
-The [UPower status opt-in](userspace/power/README.md) passed selected host
-tests and private hardware checks. The full Debian ARM64 package is now
-installed with a phone-local opt-in, and the installed service passed a real
-unplug/replug cycle. Profile recognition, capacity accuracy and autonomy
-remain unresolved. The graphical torch buttons are also hardware-confirmed;
-see the [installed battery, speaker and torch validation](docs/validation/lmi-battery-audio-torch-2026-10-03.md).
-
-## Additional operator confirmations — 2026-10-03
-
-MP3/MP4 playback, hardware volume buttons and Chinese filenames in Files
-are confirmed. Noto CJK fonts were installed and Files relaunched. A controlled
-RTC deep-suspend test succeeded, but the gauge-derived current remained about
-102 mA versus 218 mA awake idle; acceptable long-term autonomy is still not
-established. See the latest battery/audio/torch validation record.
-
-## Next-build language support — 2026-10-03
-
-The next M1 recipe includes broad Noto core/CJK/emoji font coverage and all
-Debian locales by default. Initial interface locale and XKB layout are build
-parameters; document scripts do not depend on the selected interface language.
-This is prepared recipe work, not a new image or phone deployment. Input
-methods and runtime language switching remain separate validation work.
-
-## CPU idle improvement — installed 2026-10-03
-
-A legacy `lpm_levels.sleep_disabled=1` boot parameter blocks deeper CPU idle
-between activities. A controlled test reported awake-idle current dropping
-from 208.4 to 100.8 mA with 831 C1 entries after a runtime opt-in. Touch,
-music, volume and USB remained functional. The phone-local opt-in service is
-installed and enabled; stopping it restores the original parameter. Boot
-images/cmdline and the historical golden are unchanged. Reboot and long-run
-validation remain pending. Deep-suspend current still reports about 97 mA;
-acceptable autonomy and fuel-gauge accuracy are not yet established. See
-`userspace/power/README.md` and the 2026-10-03 validation record.
-
-A subsequent private tracefs collection recorded 121.761 seconds of deep
-suspend without new failures, with APSS/ADSP asleep almost throughout
-and approximately 96.2 mA reported consumption. Static DDR counters
-do not identify a memory-power fault; the residual consumer remains
-unresolved. The trace instance was removed after reconnect. A subsequent
-unplugged inspection confirmed USB runtime suspend and its power domains
-disabled; an always-on boost/shared GPIO is a review lead, not a proven cause.
-
-
-## Application checklist and Chatty incident — 2026-10-03
-
-An inventory of 21 visible applications and one-at-a-time functional checks
-is recorded in `docs/validation/lmi-app-checklist-2026-10-03.md`. Chatty
-0.8.7-2 exhausted memory during camera enumeration through GStreamer and
-libpurple. An isolated test excluding two video plugins stayed active at
-approximately 108 MiB. The phone-local desktop/D-Bus helper was then installed
-with an isolated registry and a requested 384 MiB systemd-user memory limit;
-user memory delegation was checked after restart at 384 MiB and zero swap.
-The operator subsequently confirmed normal opening, menu access and relaunch;
-shortcut-window sizing remains defective. SMS/MMS remain unvalidated. SMS is not validated and no modem was detected. The new helper
-is not automatically installed by the generic image recipe.
-
-The restart interrupted the six-hour battery observer. CPU-idle and UPower
-were active after restart, but no ALSA card was detected; previous music
-confirmations apply to the temporary diagnostic boot, not this restart.
-
-
-## Application follow-up — 2026-10-03
-
-The operator's application and menu defects are preserved in the app checklist.
-Koko's missing Qt/QML dependencies were installed on the test phone and made
-explicit in the application recipe. Photos now has operator-confirmed image
-opening, working Back navigation and no unsolicited keyboard. A bounded
-standard-thumbnail-cache helper restores the gallery preview in a remote
-screenshot; the lmi launcher uses the tested Zink runtime when available.
-The bottom folder header, truncated labels and broader gallery functions remain
-open. Helpers and dependencies are recorded in the recipe.
-This is a live userspace repair, not a newly built or hardware-validated image.
-No automatic rotation sensor or usable GPS was established in this follow-up.
-See the [application checklist](docs/validation/lmi-app-checklist-2026-10-03.md).
-
-
-The text editor's off-screen GTK Save dialog was reproduced. GNOME file-chooser
-portal routing and a per-app launcher now give an accessible Save button.
-Remote tests passed create/save, reopen, Save As, edit/save and normal close;
-the operator also confirmed the Save As dialog usable by touch. Recipe and
-builder staging include these userspace fixes; no new image was built.
+Keep generated images/rootfs trees, package caches, proprietary firmware,
+credentials, device identifiers and full private logs outside Git. Supply build
+credentials externally; never commit them or expose them in shell logs. Keep
+one qualified build and compatible rescue according to the
+[artifact retention policy](docs/maintenance/ARTIFACT-RETENTION.md).
+See `NOTICE` and `LICENSE` for licensing information.
