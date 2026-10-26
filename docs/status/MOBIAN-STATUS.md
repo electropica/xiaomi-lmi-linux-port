@@ -1,5 +1,14 @@
 
 
+## Snapshot51 and system-upgrade assessment — October 26, 2026
+
+Snapshot48 remains installed. Flatpak and libostree were added for an isolated
+51.0 trial, but runtime deployment failed: the current kernel returns no statx
+mount ID required by the path-resolution helper. No security checks were
+bypassed. A Trixie full-upgrade simulation lists19 updates/0 removals, not
+applied; no switch to Forky or full-system upgrade has occurred. See the
+[assessment and retained changes](../validation/lmi-snapshot51-upgrade-assessment-2026-10-26.md).
+
 ## Front HAL lifecycle checkpoint — October 26, 2026
 
 ID1 front/270 was confirmed by the HAL and yielded a1280x720 preview buffer
