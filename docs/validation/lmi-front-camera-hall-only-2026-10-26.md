@@ -61,3 +61,30 @@ guarantee retraction after a whole-system failure.
 
 Snapshot still receives the selected rear-only source. Do not publish a dummy
 front source just to expose a switch button. No complete-image pin changed.
+
+## Factory calibration and vendor endpoint predicate — offline follow-up
+
+The actual factory Hall calibration file was found at an already mounted,
+read-only persist filesystem. It was read without mounting or remounting
+anything; its contents and the vendor libraries remain private, outside Git.
+
+Static inspection of the copied vendor code establishes that the three Hall
+words are signed big-endian values converted to floating point without a
+scale factor in the inspected endpoint path. The endpoint check uses
+`atan2(Z, Y) * 10000`, compared with the corresponding calibration reference
+angle plus the configured lower/upper offsets. The inspected bottom function
+uses calibration entry 0; the top function uses entry 8. This is not simply
+a threshold applied to a single axis, and no new angle wrapping was invented.
+
+An offline helper replayed that predicate on the eight retained Hall samples:
+all eight are inside the vendor bottom window and outside the top window.
+Nine focused decoding, sign, angle-order and invalid-status checks also pass.
+This supports the expected retracted initial state according to the inspected
+vendor predicate. It is not independent mechanical observation or qualification
+of the extended endpoint, a jam detector or a safe autonomous motor controller.
+No new sensor activation or motor/camera operation ran for this follow-up.
+
+The remaining mechanical gate is a bounded, supervised extension/retraction
+trial with independent cleanup and fresh Hall feedback. Do not replace that
+trial by a fabricated second PipeWire node or infer front-preview readiness
+from endpoint mathematics alone.

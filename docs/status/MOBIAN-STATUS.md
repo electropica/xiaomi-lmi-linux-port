@@ -2,7 +2,9 @@
 ## Front-camera sensor checkpoint — October 26, 2026
 
 The Hall-only path delivered eight valid samples and was explicitly shut down;
-independent cleanup and kernel power-down logs were checked. No motor motion,
+independent cleanup and kernel power-down logs were checked. Factory-calibration
+replay classifies all eight inside the vendor retracted-position window; no
+extended-position or jam trial has run. No motor motion,
 front preview or new package/image is qualified. See
 [scope and next boundary](../validation/lmi-front-camera-hall-only-2026-10-26.md).
 
