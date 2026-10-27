@@ -1,3 +1,128 @@
+## Linux 7.2.12 community base: display plus touch release PASS — October 27, 2026
+
+The combined display and touch candidate now passes on the handset. The RAM-only
+menu bdd18157d0e9f3e9a83e53c2d10d5f1ee3e2d187947f23937dbb21b187bc36ed carries
+kernel 703819e444e378d0de4a79523a7faed2066ada9d514dcabb249a96e1f11938d3, DTB
+306315e8288ea13c4dc10c017eda3c75aefe4a3a189c906c6567ed6b75b602db and the
+unchanged diagnostic initramfs. The uname stays 7.2.12-lmi-community-port1;
+the hashes are what distinguish this candidate from the display-only one.
+
+The bounded evdev capture holds 3131 event records over 75144 raw bytes: 46
+tracking-ID starts and 46 releases, 1211 XY updates, 484 synchronization
+reports, no SYN_DROPPED, no active slot left at the end and BTN_TOUCH=0, over a
+12.081312 s event span with X in 227..845 and Y in 801..1825. The capture is
+complete and stays below the raw byte cap. The journal shows the GPI, I2C and
+touch probes returning 0, the FT5452 touch device bound and the MSM
+framebuffer initialized, with no kernel panic, BUG or RCU-stall marker. Every
+published figure was recomputed independently from the retained raw capture
+before this entry was written.
+
+This combines the display-capable community port with the handset-validated
+GPIO72 main supply, PM8150L LDO1 1.8 V IO, FT5452 power ordering and snapshot
+release handling. It validates bounded raw touch and release sequences on the
+combined base. It does not establish GUI usability, full ten-finger behavior,
+coordinate calibration, GPU acceleration, suspend or battery consumption. No
+installed Mobian or Lineage partition was changed, and the raw captures stay
+private.
+
+The next milestone is a guarded boot of real userspace on this display and input
+base, reviewing the rootfs, initramfs and firmware dependencies first: the 4.19
+userspace hardware integration must not be assumed to be interchangeable.
+
+
+## Linux 7.2.12 community port: display and USB PASS — October 27, 2026
+
+The RAM-only 7.2.12-lmi-community-port1 trial reached DSI, DRM MSM and
+framebuffer console output on the handset, with the USB journal transport
+working. The operator saw a white screen followed by console text. DSI binds
+at 3.067957 s, DRM MSM initializes at 3.212974 s and the MSM framebuffer
+appears at 3.428206 s; USB and UFS probes complete successfully. Observer
+heartbeats cover uptime 4.34 through 94.38 s, and no kernel panic, BUG or
+RCU-stall marker appears in the capture. This is bounded evidence, not a
+long-term stability test.
+
+Scope: RAM-only diagnostic boot. Touch was deliberately disabled. The a650,
+ADSP, Bluetooth and WLAN firmware are absent from this small diagnostic
+initramfs, so GPU acceleration is not qualified, and audio still has pending
+probe dependencies. No root filesystem or Mobian GUI is mounted, so no battery
+or suspend result follows, and the permanent Mobian/Lineage installation was
+not flashed. The artifact identities are recorded in
+[CURRENT-BUILD.md](CURRENT-BUILD.md). Collecting the journal required a manual
+Windows Remote NDIS driver association; that host-side friction is still open.
+See [the validation record](../validation/lmi-linux7-community-port-display-2026-10-27.md).
+
+
+## Community Linux 7.1: display and USB PASS — October 27, 2026
+
+The RAM-only community 7.1.0-lmi-ccc-ram1 boot reached MSM/DSI/DRM framebuffer
+output and USB observer heartbeats through 304.74 s. The operator saw a white
+screen followed by console text. DSI binds at 3.425598 s, DRM MSM initializes
+at 3.588207 s and `fb0: msmdrmfb frame buffer device` appears at 3.808570 s,
+which establishes real MSM/DSI/DRM takeover rather than a bootloader
+framebuffer. UFS enumeration also succeeds.
+
+Scope: RAM-only diagnostic boot, no root filesystem mounted and no Mobian GUI
+tested. Touch was intentionally disabled for this first community trial. GPU
+acceleration, Wi-Fi, Bluetooth, audio, cameras and suspend/battery behavior are
+not qualified. The existing Mobian/Lineage installation is unchanged. The
+artifact identities are recorded in [CURRENT-BUILD.md](CURRENT-BUILD.md). See
+[the validation record](../validation/lmi-linux7-community-display-2026-10-27.md).
+
+
+
+
+## Linux7 first touch events — October 26, 2026
+
+The RAM observer now binds GPI1, I2C13 and the EDT touchscreen after a
+board-specific GPI offset candidate. The operator captured 591 input events
+with coordinates in range. Multi-touch release is NOT qualified: four
+contacts started, only one ended, despite all fingers being removed.
+A board-only release candidate is host-checked but not built or tested.
+Display and a graphical Linux7 system remain unqualified; no permanent
+installation occurred. See
+[the validation record](../validation/lmi-linux7-gpi-first-touch-2026-10-26.md).
+
+
+## Bounded touch release trial — October 26, 2026
+
+The operator booted the release candidate kernel
+a44101ed50e7eefea6c793cc477fefa492a01666774161f76d4c1077c8d1afc7.
+The captured interval contains 40 tracking-ID starts and 40 releases, empty final
+active slots and BTN_TOUCH=0, with no SYN_DROPPED. I2C/EDT bind and the previous
+GPI timeout is absent. This passes the release check in the captured interval.
+The raw byte cap was reached after 12.901885 seconds of events, before the
+30-second hands-off reminder; do not claim a complete minute or quiet final
+phase. GUI, display and ten-finger qualification remain pending.
+Evidence remains local/private under work/linux7-touch-20261026T223017387301Z-private.
+
+
+## Linux7 display1 preparation: DRM/DSI/panel sources and recipe — October 26, 2026
+
+The live observer journal was retrieved over USB from the handset: the device
+runs the Linux 7.2.12 RAM observer, not Mobian, and the running kernel carries
+no CONFIG_DRM at all, which is the measured cause of the white screen rather
+than a panel, rail or cable fault. A display1 candidate is prepared, not
+built: the DRM/MSM/DSI Kconfig fragment, the lmi AMOLED panel driver on the
+7.2 DRM API with vendor rails and vendor DCS sequence, the DSI wiring patch, a
+portable kit builder and a static validation tool. The Kconfig cap that
+silently demoted the whole display stack to modules is measured and fixed in
+the fragment.
+
+The host checks were reproduced independently on October 27 against the pinned
+tree cc9de5d4b5ab6459f5774946aa3195ad51236fa8: the three patches apply
+cleanly, the merged configuration resolves every display symbol as `=y`, the
+board DTB compiles to 115766 bytes carrying the expected panel, supply, reset,
+lane and PHY nodes, the panel driver compiles to a 11640-byte object, and the
+bundle self-test re-packs the accepted bundle with all nine components
+decoded-identical and valid crc32. That is host evidence only: no kernel Image
+was built, no image was packaged, and no flash or device write ever happened.
+
+This source line is superseded in direction by the community kernels above,
+which reached real DSI/DRM/USB output on the handset. It is retained as an
+auditable, never-built reference for the display path, not as a qualified
+milestone. See
+[the plan and evidence](../validation/lmi-linux7-display-plan-2026-10-26.md).
+
 ## Linux7 RAM observer and USB journal PASS — October26,2026
 
 Linux7.2.12 reaches /init and publishes its journal over USB. Restoring the

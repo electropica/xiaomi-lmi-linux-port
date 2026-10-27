@@ -1,3 +1,62 @@
+## Linux 7 community RAM references — October 27, 2026
+
+Two RAM-only community boots are hardware-qualified as display and USB
+milestones. They are diagnostic boots, not installable systems: no root
+filesystem is mounted, no GUI runs, touch is disabled and no battery or suspend
+result is implied. They are retained as reference artifacts for the Linux 7
+line and do not replace the installed Mobian 4.19 system.
+
+The qualified 7.2.12 community display and touch base, the current base of
+that line:
+
+- Menu image `bdd18157d0e9f3e9a83e53c2d10d5f1ee3e2d187947f23937dbb21b187bc36ed`,
+  71,907,328 bytes.
+- Outer bundle `2385a16dbc475111fd33a81b13146235dceab7342454ace735cbac3bd14ded24`,
+  45,908,049 bytes.
+- Kernel Image `703819e444e378d0de4a79523a7faed2066ada9d514dcabb249a96e1f11938d3`,
+  46,991,368 bytes, extent 48,758,784, version `7.2.12-lmi-community-port1`.
+- DTB `306315e8288ea13c4dc10c017eda3c75aefe4a3a189c906c6567ed6b75b602db`
+  (128,544 bytes) and initramfs
+  `feaac77aec44734d5ba4bd7ebb659f83f2bbc7fab6191472164a0554adb0eb19`.
+- Journal capture 128,947 bytes, SHA256
+  `2b6cb737ce7a8ad17a38ed862ffec77cb603af4ded059ce677bdf7aab6da8826`.
+- Bounded evdev capture 230,248 bytes, SHA256
+  `f69fccea869532d7e01f73c081148e94ed5e9bf32432b043ba0808a1461399fd`.
+
+The earlier display-only 7.2.12 community port, kept for comparison:
+
+- Menu image `99dcf5f303c6d412a3bb2e5cacc55a165a1262d605e5fc59fb34918177d7df9e`,
+  71,909,376 bytes.
+- Outer bundle `5cf5a7a1d23535cd716af519dfcd963caf59c628aceb445c48e8d9221818605b`,
+  45,912,145 bytes.
+- Kernel Image `0a41c82fcd1faf482c32d4d78d023ce293a39ce8357b9ff5eb0ceb6dd5644531`,
+  46,991,368 bytes, extent 48,758,784, version `7.2.12-lmi-community-port1`.
+- DTB `bff7bbf5ad525e5fa23a6afdf6c7660bfa3ad580c67319185ecd18b0aeba4150`
+  (128,472 bytes) and the same initramfs, on tree revision
+  `cc9de5d4b5ab6459f5774946aa3195ad51236fa8`.
+- Journal capture 129,425 bytes, SHA256
+  `ba5f473d989d602234e77201b24c26cc9425e1a92cd05242657e98ebfec2d604`.
+
+The earlier 7.1 community reference, kept for comparison:
+
+- Menu image `d96f21a0b80f129bc73b09d6b9eaa4d4ac9e99352f681a9a0a4aff53c8de6f11`,
+  72,943,616 bytes.
+- Outer bundle `14c940ee4d69b5f5a6b32d778991e859b85cc5fe45dcd3834fb23df184ecd54b`,
+  46,948,433 bytes.
+- Kernel Image `e40ecc5fecb149be8ad69afb8cf009d6ffab502bce8e91512bafc3ee6ccae3ad`,
+  49,190,920 bytes, extent 50,987,008, version `7.1.0-lmi-ccc-ram1`, from
+  community revision `3a8409fb1020b5952310072713ce97edea5e65d7`.
+- DTB `cf83edb68632917677dcd91e4268024f6f369599d6d53043cd7e71677cde0109`
+  (128,468 bytes) and the same initramfs.
+- Journal capture 129,701 bytes, SHA256
+  `ae822d8ebdcab772f3e263020aee0f8b4fbe434bcfcfe862727899994a2f9bfe`.
+
+Both menus were booted temporarily with `fastboot boot` only. Nothing was
+flashed to a partition, and the installed Mobian/Lineage system is unchanged.
+See [the combined display and touch record](../validation/lmi-linux7-community-display-touch-2026-10-27.md),
+[the 7.2.12 display record](../validation/lmi-linux7-community-port-display-2026-10-27.md)
+and [the 7.1 record](../validation/lmi-linux7-community-display-2026-10-27.md).
+
 ## Search-close runtime update — October 26, 2026
 
 The searchclose1 package is installed. The operator confirms clearing matching

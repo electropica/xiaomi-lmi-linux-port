@@ -4,7 +4,7 @@ Mobian/Phosh and kernel reconstruction work for the Xiaomi Redmi K30 Pro /
 POCO F2 Pro (`lmi`, Snapdragon 865 / Qualcomm SM8250, Adreno 650).
 The active integration branch is `developpement`.
 
-## Current state — October 26, 2026
+## Current state — October 27, 2026
 
 Mobian is usable on the test handset, with working touch/unlock, GPU rendering,
 USB networking/SSH, Wi-Fi and a customized Phosh home screen. This remains an
@@ -22,6 +22,29 @@ separately and must not be read as the current Mobian runtime.
 | Automatic suspend | IRQ-name handling sustains approximately 15-second return gaps after 35 natural gauge wakes in the latest night | Remaining battery consumption and physical gauge calibration are unresolved |
 | Connectivity | USB networking/SSH and Wi-Fi exercised | GPS, automatic rotation, modem/SMS/MMS are not established as working by these validations |
 | Audio, torch and camera | Speaker playback and torch have dated device validations; camera integration has its own build/bundle workflow | Do not infer full microphone/headset/UCM2 or camera-mode qualification from package inclusion |
+
+### Linux 7 community track
+
+A separate upstream line is being brought up in parallel on the `lmi-linux7`
+branch, while the qualified downstream 4.19 Mobian system above stays
+recoverable on `developpement`. Two RAM-only community boots have now produced
+real display and USB journal output on the handset: Linux 7.1.0-lmi-ccc-ram1
+and the 7.2.12-lmi-community-port1 port of that tree. Both reach DSI, DRM MSM
+and a framebuffer console, with the USB observer transport working and UFS
+probing successfully.
+
+On top of those, the combined display and touch candidate passes on the
+handset: 46 tracking-ID starts and 46 releases over 3131 event records, with no
+active slot left at the end, BTN_TOUCH=0 and no SYN_DROPPED.
+
+These are diagnostic RAM boots, not a usable system. No root filesystem is
+mounted, there is no Mobian GUI, the GPU and radio firmware are absent, and no
+battery or suspend result follows. The permanent Mobian/Lineage installation was
+not flashed. The combined display and touch base is the current base of that
+line; the next step is a guarded boot of real userspace, reviewing the rootfs
+and firmware dependencies first. See the
+[Linux 7 status](kernel/experimental/linux7/README.md) and the
+[hardware records](docs/validation/).
 
 ### Battery: improvement and unresolved work
 
