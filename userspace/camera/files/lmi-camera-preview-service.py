@@ -3,7 +3,12 @@
 import json,os,re,shutil,signal,socket,stat,subprocess,tempfile,threading,time
 from pathlib import Path
 assert os.getuid()==0 and len(__import__('sys').argv)==1
-assert os.uname().release=='4.19.325-cip128-st12-perf-ga5b3099017ae-dirty'
+# The privileged publisher only runs on the qualified kernel: the OEM HAL has no
+# frame source anywhere else. The launcher already gates it; this refusal keeps
+# the guarantee when the unit is started directly, with a legible reason.
+if os.uname().release!='4.19.325-cip128-st12-perf-ga5b3099017ae-dirty':
+    print('LMI_CAMERA_PREVIEW_UNSUPPORTED_KERNEL '+os.uname().release,flush=True)
+    raise SystemExit(1)
 os.umask(0o077)
 base=Path('/usr/local/lib/lmi-camera');dest=Path('/run/lmi-camera')
 assert dest.is_dir() and not dest.is_symlink() and dest.stat().st_uid==0 and not dest.stat().st_mode&0o022

@@ -1,3 +1,25 @@
+## Camera application on the permanent Linux 7 boot — October 27, 2026
+
+The "Camera" application of the app grid was dead on arrival on the permanent
+Linux 7.2.12 boot. The installed launcher raised an `AssertionError` on a
+kernel string check and exited before any window appeared, so the operator saw
+a dead application. The launcher now reports the missing camera engine in the
+session instead of dying, the privileged publisher refuses with a legible
+reason, and both changes are covered by off-handset guard tests.
+
+The rear camera itself still produces no image on this kernel, and this is a
+hardware and kernel fact, not an application defect: the vendor partition
+carries no camera blobs, the kernel has the CAMSS ISP but no Xiaomi camera
+techpack, and the rear sensor node is not bound. The only frame source in
+October was the OEM HAL on the Mobian 4.19 kernel, which the installed
+`system5` menu keeps as its fallback entry; the preview journal of
+October 26 (184 to 559 published frames per run) belongs to that entry.
+
+No partition was written, no bootloader entry was changed, no proprietary blob
+was committed, and the launcher was deployed on the running system with
+backups. See the [engine gate record](../validation/lmi-camera-app-linux7-engine-gate-2026-10-27.md)
+for the evidence, the deployed hashes and the next dependency.
+
 ## Permanent Linux 7 boot — October 27, 2026
 
 The operator installed the system5 menu in the boot partition. Its default

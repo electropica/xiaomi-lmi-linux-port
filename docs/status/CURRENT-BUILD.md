@@ -1,3 +1,19 @@
+## Camera application on the permanent Linux 7 boot — October 27, 2026
+
+The camera application of the permanent Linux 7.2.12 boot no longer dies on
+start. The launcher reports that the OEM capture engine is only qualified on
+the Mobian 4.19 kernel and points at the fallback boot entry that the
+installed `system5` menu keeps next to the Linux 7 entry. The privileged
+publisher refuses with a legible reason, and the launcher and publisher are
+deployed on the running system with backups.
+
+No image is produced on the Linux 7 entry. The vendor partition holds no
+camera blobs, the kernel has the CAMSS ISP but no Xiaomi camera techpack, and
+the rear sensor is not bound, so the application has no frame source and says
+so instead of failing silently. The rear preview recorded in the journal on
+October 26 belongs to the 4.19 entry, which remains the only system with a
+validated rear camera. See the [engine gate record](../validation/lmi-camera-app-linux7-engine-gate-2026-10-27.md).
+
 ## Permanent Linux 7 boot — October 27, 2026
 
 The operator installed the system5 menu in the boot partition. Its default

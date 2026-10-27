@@ -1,3 +1,36 @@
+## Camera application on the Linux 7.2.12 boot — 2026-10-27
+
+The permanent `system5` boot starts the Mobian root with Linux 7.2.12 and
+keeps the Mobian 4.19 entry as its fallback. On the Linux 7 entry the camera
+application was dead on arrival: `/usr/local/bin/lmi-snapshot` asserted the
+qualified kernel string and exited with an `AssertionError` before any window
+was mapped.
+
+The launcher now gates the capture engine explicitly. It accepts the engine
+only on the qualified kernel with the OEM vendor blob present, and otherwise
+opens a GTK 4 window that states the reason, names the running kernel and
+points at the fallback boot entry. The privileged publisher
+(`userspace/camera/files/lmi-camera-preview-service.py`) keeps the same
+protection, now with a legible reason instead of a traceback. The validated
+4.19 path is unchanged.
+
+On this kernel there is no frame source for the camera application, and the
+report says exactly that:
+
+- `/mnt/android-vendor` is empty; no `camera.qcom.so`, no sensor modules, no
+  camera firmware;
+- the kernel has `CONFIG_VIDEO_QCOM_CAMSS` but no
+  `CONFIG_TECHPACK_CAMERA_XIAOMI`;
+- the rear sensor node `soc@0/cci@ac4f000/i2c-bus@1/camera@10` describes the
+  four data lanes and the remote endpoint, but not `clock-names`, so the
+  `ov13b10` driver does not bind.
+
+The rear camera therefore stays a validated feature of the Mobian 4.19 entry
+only. The first concrete step towards Linux 7 is the `clock-names` property,
+followed by a confirmed sensor binding and a V4L2 source published on
+PipeWire. Full evidence, hashes and the on-device validation are in
+`docs/validation/lmi-camera-app-linux7-engine-gate-2026-10-27.md`.
+
 # Camera userspace status
 
 ## First front HAL buffer acquired — 2026-10-26

@@ -1,11 +1,64 @@
 #!/usr/bin/python3
 """Snapshot-owned rear camera lifetime. No capture starts at import or boot."""
-import ctypes,fcntl,json,os,selectors,signal,subprocess,time
+import ctypes,fcntl,json,os,selectors,signal,subprocess,sys,time
 from pathlib import Path
 from gi.repository import Gio
 
 BASE=Path('/usr/local/lib/lmi-camera')
 UNIT='lmi-camera-preview.service'
+# The rear capture engine is the OEM HAL: camera.qcom.so plus its sensor
+# modules, mounted from the handset vendor partition. That combination is only
+# qualified on the validated Mobian 4.19 kernel, so on every other kernel
+# there is no frame source at all. The launcher has to say so; it must never
+# die on an assertion, because the user only sees a dead application.
+ENGINE_KERNEL='4.19.325-cip128-st12-perf-ga5b3099017ae-dirty'
+ENGINE_VENDOR=Path('/mnt/android-vendor/lib64/hw/camera.qcom.so')
+
+def engine_state():
+    """Report the capture engine availability. Never raises."""
+    release=os.uname().release
+    if release!=ENGINE_KERNEL:return False,release,'kernel'
+    if not ENGINE_VENDOR.is_file():return False,release,'vendor'
+    return True,release,'none'
+
+def notice_body(release,reason):
+    if reason=='vendor':
+        return ('Les modules HAL de la caméra sont absents de la partition vendor.\n'
+                'Noyau actif : %s\n\n'
+                'Le moteur photo OEM n’est disponible que sur le noyau Mobian 4.19.' % release)
+    return ('Le moteur photo (HAL OEM) n’est validé que sur le noyau Mobian 4.19.\n'
+            'Noyau actif : %s\n\n'
+            'Démarrez l’entrée de secours « Mobian 4.19 » du menu de boot, conservée à côté du noyau Linux 7, pour utiliser la caméra arrière.' % release)
+
+def show_notice(title,body):
+    """Show the reason in the session; fall back to the journal without GTK."""
+    print('LMI_CAMERA_ENGINE_UNAVAILABLE '+body.replace('\n',' '),flush=True)
+    try:
+        import gi
+        gi.require_version('Gtk','4.0')
+        from gi.repository import Gtk
+    except Exception as error:
+        print('LMI_CAMERA_NOTICE_WITHOUT_GTK '+str(error),flush=True)
+        return 0
+    application=Gtk.Application(application_id='org.mobian.lmi.CameraEngineNotice')
+    def activate(app):
+        window=Gtk.ApplicationWindow(application=app,title=title)
+        window.set_default_size(460,240)
+        box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=12)
+        for side in ['top','bottom','start','end']:
+            getattr(box,'set_margin_'+side)(12)
+        label=Gtk.Label(label=body)
+        label.set_wrap(True)
+        label.set_xalign(0)
+        box.append(label)
+        button=Gtk.Button(label='Fermer')
+        button.connect('clicked',lambda *unused:app.quit())
+        box.append(button)
+        window.set_child(box)
+        window.present()
+    application.connect('activate',activate)
+    application.run([sys.argv[0]])
+    return 0
 
 def terminate(p):
     if p is not None and p.poll() is None:
@@ -14,8 +67,12 @@ def terminate(p):
         except subprocess.TimeoutExpired:p.kill();p.wait(timeout=3)
 
 def main():
-    assert os.getuid()==1000 and len(__import__('sys').argv)==1
-    assert os.uname().release=='4.19.325-cip128-st12-perf-ga5b3099017ae-dirty'
+    if os.getuid()!=1000 or len(sys.argv)!=1:
+        print('LMI_CAMERA_LAUNCHER_REFUSED uid='+str(os.getuid())+' argc='+str(len(sys.argv)),flush=True)
+        return 1
+    available,release,reason=engine_state()
+    if not available:
+        return show_notice('Appareil photo lmi',notice_body(release,reason))
     runtime=Path('/run/user/1000/lmi-snapshot');runtime.mkdir(mode=0o700,exist_ok=True)
     assert not runtime.is_symlink() and runtime.stat().st_uid==os.getuid()
     lock=(runtime/'launcher.lock').open('a')
@@ -94,4 +151,4 @@ def main():
                 except (OSError,subprocess.TimeoutExpired):pass
             lease.unlink(missing_ok=True)
 
-if __name__=='__main__':main()
+if __name__=='__main__':sys.exit(main())
