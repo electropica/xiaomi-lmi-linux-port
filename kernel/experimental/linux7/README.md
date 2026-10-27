@@ -5,12 +5,22 @@ The operator temporarily booted a RAM observer and recovered its live USB log.
 TLMM GPIO exclusions28-31/40-43 were required to cross the earlier binding
 stall in this trial. See the [hardware record](../../../docs/validation/lmi-linux7-menu-host-check-2026-10-26.md).
 
-## Accepted and unqualified layers
+## Current hardware qualification
 
-- Accepted: kernel entry, eight CPUs, observer /init, HS USB RNDIS, journal retrieval.
-- Not qualified: display, touch, rootfs boot, GPU, camera, radios or battery life.
-- CPUfreq still defers: its EPSS-L3 provider was modular, while this initramfs
-  carries no modules. configs/cpufreq-next.fragment is host-Kconfig checked only.
+The later community-derived 7.2.12 RAM trials qualify framebuffer display, USB
+journal transport and bounded raw touch/release sequences together, and the
+latest of them additionally runs the real Mobian userspace shell and compositor
+on a read-only rootfs. GPU acceleration, radios, camera, suspend and battery
+remain unqualified, and so does any autonomous or persistent boot. See the
+community milestones below for exact variant and evidence boundaries.
+
+### Earlier minimal observer checkpoint (historical)
+
+- Accepted then: kernel entry, eight CPUs, observer /init, HS USB RNDIS, journal retrieval.
+- Display and touch were not qualified on that earlier minimal variant.
+- Its EPSS-L3 provider was modular and CPUfreq deferred; this limitation must
+  not be attributed to the later community variant, where CPUfreq probes.
+- configs/cpufreq-next.fragment remains a host-Kconfig-only historical candidate.
 - initramfs/init is the tested observer source. It stays in RAM, serves a bounded
   journal on USB TCP9000 and offers no remote shell. It is not a graphical OS.
 
@@ -63,18 +73,58 @@ synchronization reports, no SYN_DROPPED, no active slot left at the end and
 BTN_TOUCH=0 over a 12.081312 s event span. Every published figure was
 recomputed independently from the retained raw capture before publication.
 
-All of these are diagnostic RAM boots: no root filesystem is mounted, there is no
-Mobian GUI, the GPU and radio firmware are absent, and no battery or suspend
-result follows. The permanent Mobian/Lineage installation was not flashed. The
-combined display and touch base is the current base of that line; the next step
-is a guarded boot of real userspace, reviewing the rootfs and firmware
-dependencies first rather than assuming the 4.19 userspace hardware integration
-is interchangeable. The artifact identities are recorded in
+These display and touch trials are diagnostic RAM boots: they mount no root
+filesystem and run no Mobian GUI, the GPU and radio firmware are absent, and no
+battery or suspend result follows. The permanent Mobian/Lineage installation was
+not flashed. The guarded userspace boot that came after them is recorded in the
+Phosh desktop section below. The artifact identities are recorded in
 [CURRENT-BUILD.md](../../../docs/status/CURRENT-BUILD.md).
 
 See [the 7.1 record](../../../docs/validation/lmi-linux7-community-display-2026-10-27.md),
 [the 7.2.12 display record](../../../docs/validation/lmi-linux7-community-port-display-2026-10-27.md)
 and [the combined display and touch record](../../../docs/validation/lmi-linux7-community-display-touch-2026-10-27.md).
+
+
+## Phosh desktop on Linux 7.2.12 (27 October 2026)
+
+The Mobian desktop appeared during the RAM-only trial and the operator exercised
+the drawer. This is a real Mobian userspace session rather than a console: the
+dedicated Mobian rootfs is mounted read-only with journal replay disabled, the
+home directory is a temporary one in RAM, the session uses a private session bus
+and no full systemd or login session is started.
+
+The graphics log is 26,648 bytes, SHA256
+5e29281a6ec773d676680144c8aa2ceaa82fe4a5bb787c84192341f6f31ed50a. It records
+ID_INPUT=1 and ID_INPUT_TOUCHSCREEN=1, so the touch device is classified for
+the compositor; Phoc on the builtin libseat with the MSM DRM backend on
+/dev/dri/card0; WLR_RENDERER=pixman with the pixman renderer created; and
+GRAPHICS_WINDOW_END elapsed=90 (maximum 90 seconds) followed by TRIAL_FINISHED.
+The journal confirms the strict identity of kernel 703819e4, DTB 306315e8 and
+diagnostic initramfs d3ec261b, with no kernel panic, BUG or internal error. The
+figures were re-checked directly against the retained log and journal before
+this entry was written.
+
+Two earlier attempts on the same base stopped before Phosh: the first because
+libinput saw no input device, the second because the touch device was not
+classified. They are historical failures of those two attempts, not the outcome
+of this one. What unlocked the third attempt is a scoped SYSTEMD_IN_CHROOT=0 on
+the temporary udevadm trigger and settle calls, so udevadm no longer skips the
+request inside the chroot.
+
+Scope: software rendering, a read-only rootfs, an empty RAM home and a session
+bounded to 90 seconds. This is not an accelerated GPU test, not a persistent or
+autonomous boot, and not a qualification of applications, normal services,
+suspend or battery. Portal, missing system-bus and application startup
+warnings occur, and an application startup timeout is not evidence that all
+installed applications work.
+
+Julien requests Linux 7 as the future default. That change is NOT applied: the
+session still exits at 90 seconds and cannot retain settings, and the permanent
+Mobian 4.19 and Lineage choices remain. An autonomous boot that keeps those
+fallbacks has to be prepared and qualified first. The operator returned to Mobian
+4.19 afterwards.
+
+See [the validation record](../../../docs/validation/lmi-linux7-phosh-desktop-2026-10-27.md).
 
 
 ## Linux7 first touch events (26 October 2026)
@@ -84,8 +134,8 @@ board-specific GPI offset candidate. The operator captured 591 input events
 with coordinates in range. Multi-touch release is NOT qualified: four
 contacts started, only one ended, despite all fingers being removed.
 A board-only release candidate is host-checked but not built or tested.
-Display and a graphical Linux7 system remain unqualified; no permanent
-installation occurred. See
+On that trial, display and a graphical Linux7 system were still unqualified; no
+permanent installation occurred. See
 [the validation record](../../../docs/validation/lmi-linux7-gpi-first-touch-2026-10-26.md).
 
 
@@ -98,7 +148,8 @@ active slots and BTN_TOUCH=0, with no SYN_DROPPED. I2C/EDT bind and the previous
 GPI timeout is absent. This passes the release check in the captured interval.
 The raw byte cap was reached after 12.901885 seconds of events, before the
 30-second hands-off reminder; do not claim a complete minute or quiet final
-phase. GUI, display and ten-finger qualification remain pending.
+phase. At that point, GUI, display and ten-finger qualification were still
+pending.
 Evidence remains local/private under work/linux7-touch-20261026T223017387301Z-private.
 
 

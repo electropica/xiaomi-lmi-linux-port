@@ -22,6 +22,7 @@ separately and must not be read as the current Mobian runtime.
 | Automatic suspend | IRQ-name handling sustains approximately 15-second return gaps after 35 natural gauge wakes in the latest night | Remaining battery consumption and physical gauge calibration are unresolved |
 | Connectivity | USB networking/SSH and Wi-Fi exercised | GPS, automatic rotation, modem/SMS/MMS are not established as working by these validations |
 | Audio, torch and camera | Speaker playback and torch have dated device validations; camera integration has its own build/bundle workflow | Do not infer full microphone/headset/UCM2 or camera-mode qualification from package inclusion |
+| Linux 7.2.12 session | Phosh desktop and working drawer on a read-only Mobian rootfs, pixman software rendering, RAM home | Diagnostic RAM session bounded to 90 seconds; no GPU acceleration, no autonomous boot, no suspend or battery qualification, permanent default unchanged |
 
 ### Linux 7 community track
 
@@ -35,15 +36,17 @@ probing successfully.
 
 On top of those, the combined display and touch candidate passes on the
 handset: 46 tracking-ID starts and 46 releases over 3131 event records, with no
-active slot left at the end, BTN_TOUCH=0 and no SYN_DROPPED.
+active slot left at the end, BTN_TOUCH=0 and no SYN_DROPPED. The latest trial
+goes further and runs the real Mobian userspace: the Phosh desktop appeared and
+the drawer worked, with pixman software rendering on a read-only rootfs and a
+temporary home in RAM.
 
-These are diagnostic RAM boots, not a usable system. No root filesystem is
-mounted, there is no Mobian GUI, the GPU and radio firmware are absent, and no
-battery or suspend result follows. The permanent Mobian/Lineage installation was
-not flashed. The combined display and touch base is the current base of that
-line; the next step is a guarded boot of real userspace, reviewing the rootfs
-and firmware dependencies first. See the
-[Linux 7 status](kernel/experimental/linux7/README.md) and the
+These are diagnostic RAM boots, not a usable system. Rendering is software only,
+the session is bounded to 90 seconds and cannot retain settings, the GPU and
+radio firmware are absent, and no autonomous boot, suspend or battery result
+follows. The permanent Mobian/Lineage installation was not flashed and its 4.19
+default is unchanged, even though Linux 7 is requested as the future default.
+See the [Linux 7 status](kernel/experimental/linux7/README.md) and the
 [hardware records](docs/validation/).
 
 ### Battery: improvement and unresolved work

@@ -1,13 +1,27 @@
 ## Linux 7 community RAM references — October 27, 2026
 
-Two RAM-only community boots are hardware-qualified as display and USB
-milestones. They are diagnostic boots, not installable systems: no root
-filesystem is mounted, no GUI runs, touch is disabled and no battery or suspend
-result is implied. They are retained as reference artifacts for the Linux 7
-line and do not replace the installed Mobian 4.19 system.
+Three RAM-only community boots are hardware-qualified on that line: two as
+display and USB milestones, the latest as a bounded Mobian userspace session.
+They are diagnostic boots, not installable systems: the sessions are bounded in
+time, they cannot retain settings, and no GPU acceleration, autonomous boot,
+suspend or battery result is implied. They are retained as reference artifacts
+for the Linux 7 line and do not replace the installed Mobian 4.19 system.
 
-The qualified 7.2.12 community display and touch base, the current base of
-that line:
+The qualified 7.2.12 Phosh desktop session, the current base of that line:
+
+- Menu image `43dccd8f5e8543ed5bae17bcdd7129a24fafde8534ba4874efec66176fc41cd6`,
+  71,909,376 bytes.
+- Outer bundle `39fc67b4c3c6b036730419489e4c4f7cd2b3bcbd6dd5876cbf3521c2eff3a3d8`,
+  45,912,145 bytes.
+- Kernel Image `703819e444e378d0de4a79523a7faed2066ada9d514dcabb249a96e1f11938d3`
+  and DTB `306315e8288ea13c4dc10c017eda3c75aefe4a3a189c906c6567ed6b75b602db`,
+  both unchanged from the display and touch base.
+- Diagnostic initramfs
+  `d3ec261b72b2a8c81485d5e01292d5a792fdaeef49147527e54990f6c2d9729a`.
+- Graphics log 26,648 bytes, SHA256
+  `5e29281a6ec773d676680144c8aa2ceaa82fe4a5bb787c84192341f6f31ed50a`.
+
+The qualified 7.2.12 community display and touch base it continues:
 
 - Menu image `bdd18157d0e9f3e9a83e53c2d10d5f1ee3e2d187947f23937dbb21b187bc36ed`,
   71,907,328 bytes.
@@ -51,9 +65,10 @@ The earlier 7.1 community reference, kept for comparison:
 - Journal capture 129,701 bytes, SHA256
   `ae822d8ebdcab772f3e263020aee0f8b4fbe434bcfcfe862727899994a2f9bfe`.
 
-Both menus were booted temporarily with `fastboot boot` only. Nothing was
+All three menus were booted temporarily with `fastboot boot` only. Nothing was
 flashed to a partition, and the installed Mobian/Lineage system is unchanged.
-See [the combined display and touch record](../validation/lmi-linux7-community-display-touch-2026-10-27.md),
+See [the Phosh desktop record](../validation/lmi-linux7-phosh-desktop-2026-10-27.md),
+[the combined display and touch record](../validation/lmi-linux7-community-display-touch-2026-10-27.md),
 [the 7.2.12 display record](../validation/lmi-linux7-community-port-display-2026-10-27.md)
 and [the 7.1 record](../validation/lmi-linux7-community-display-2026-10-27.md).
 
