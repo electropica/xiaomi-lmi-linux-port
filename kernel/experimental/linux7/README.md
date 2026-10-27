@@ -7,12 +7,40 @@ stall in this trial. See the [hardware record](../../../docs/validation/lmi-linu
 
 ## Current hardware qualification
 
+## Permanent Linux 7 boot — October 27, 2026
+
+The operator installed the system5 menu in the boot partition. Its default
+entry starts the existing Mobian root with Linux 7.2.12 after 15 seconds;
+the prior Mobian 4.19 entry is retained as a fallback. The operator confirmed
+that the desktop started, and the first 71,929,856 bytes read back from boot
+matched the installed image SHA-256
+`c9910703d146da7b98c08f7820f5c4e289c5630e8ba139dd185933a7ace78a61`.
+The running initramfs marker also matched
+`0e4464414a32df2df943042276ae9f67d77fee3373c9040f4ac3ca7762b88f16`.
+
+The fuel gauge is visible (99% in the captured session). The charger driver is
+disabled: plugged-in readings reported discharging, so charging is not
+qualified. A runtime logind power-key guard and a narrowly scoped polkit rule
+for the `mobian` account are staged by the Linux 7 initramfs; the rule also
+applies to non-local sessions of that account and is a workaround for the
+unresolved seat/session problem. A reboot worked with that policy in a prior
+temporary session; the installed variant's permissions were checked, but its
+shutdown action was not separately qualified. Wi-Fi, Bluetooth, camera, torch,
+GNSS, suspend and battery endurance require further work on this kernel.
+Other entries of this exact installed menu were not requalified after the flash.
+The 4.19 kernel/root and Android partitions were not flashed in this operation.
+
+The local build and install inputs are not yet a self-contained repository
+recipe. Do not remove the required local inputs on the strength of this note.
+No proprietary firmware, image, private device log or credential is committed.
+
+
 The later community-derived 7.2.12 RAM trials qualify framebuffer display, USB
 journal transport and bounded raw touch/release sequences together, and the
 latest of them additionally runs the real Mobian userspace shell and compositor
-on a read-only rootfs. GPU acceleration, radios, camera, suspend and battery
-remain unqualified, and so does any autonomous or persistent boot. See the
-community milestones below for exact variant and evidence boundaries.
+on a read-only rootfs. Those observations describe the historical trial, not the subsequently installed
+system5 boot. Radios, camera, suspend, charging and endurance remain unqualified.
+See the community milestones below for exact variant and evidence boundaries.
 
 ### Earlier minimal observer checkpoint (historical)
 
@@ -118,11 +146,8 @@ suspend or battery. Portal, missing system-bus and application startup
 warnings occur, and an application startup timeout is not evidence that all
 installed applications work.
 
-Julien requests Linux 7 as the future default. That change is NOT applied: the
-session still exits at 90 seconds and cannot retain settings, and the permanent
-Mobian 4.19 and Lineage choices remain. An autonomous boot that keeps those
-fallbacks has to be prepared and qualified first. The operator returned to Mobian
-4.19 afterwards.
+At this historical checkpoint, Linux 7 was not yet the permanent default.
+A later system5 boot was installed and verified, as described above.
 
 See [the validation record](../../../docs/validation/lmi-linux7-phosh-desktop-2026-10-27.md).
 

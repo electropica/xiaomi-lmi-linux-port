@@ -2,9 +2,37 @@
 
 Mobian/Phosh and kernel reconstruction work for the Xiaomi Redmi K30 Pro /
 POCO F2 Pro (`lmi`, Snapdragon 865 / Qualcomm SM8250, Adreno 650).
-The active integration branch is `developpement`.
+The Linux 7 integration branch is `lmi-linux7`; `developpement` retains the downstream 4.19 work.
 
 ## Current state — October 27, 2026
+
+## Permanent Linux 7 boot — October 27, 2026
+
+The operator installed the system5 menu in the boot partition. Its default
+entry starts the existing Mobian root with Linux 7.2.12 after 15 seconds;
+the prior Mobian 4.19 entry is retained as a fallback. The operator confirmed
+that the desktop started, and the first 71,929,856 bytes read back from boot
+matched the installed image SHA-256
+`c9910703d146da7b98c08f7820f5c4e289c5630e8ba139dd185933a7ace78a61`.
+The running initramfs marker also matched
+`0e4464414a32df2df943042276ae9f67d77fee3373c9040f4ac3ca7762b88f16`.
+
+The fuel gauge is visible (99% in the captured session). The charger driver is
+disabled: plugged-in readings reported discharging, so charging is not
+qualified. A runtime logind power-key guard and a narrowly scoped polkit rule
+for the `mobian` account are staged by the Linux 7 initramfs; the rule also
+applies to non-local sessions of that account and is a workaround for the
+unresolved seat/session problem. A reboot worked with that policy in a prior
+temporary session; the installed variant's permissions were checked, but its
+shutdown action was not separately qualified. Wi-Fi, Bluetooth, camera, torch,
+GNSS, suspend and battery endurance require further work on this kernel.
+Other entries of this exact installed menu were not requalified after the flash.
+The 4.19 kernel/root and Android partitions were not flashed in this operation.
+
+The local build and install inputs are not yet a self-contained repository
+recipe. Do not remove the required local inputs on the strength of this note.
+No proprietary firmware, image, private device log or credential is committed.
+
 
 Mobian is usable on the test handset, with working touch/unlock, GPU rendering,
 USB networking/SSH, Wi-Fi and a customized Phosh home screen. This remains an
@@ -22,7 +50,7 @@ separately and must not be read as the current Mobian runtime.
 | Automatic suspend | IRQ-name handling sustains approximately 15-second return gaps after 35 natural gauge wakes in the latest night | Remaining battery consumption and physical gauge calibration are unresolved |
 | Connectivity | USB networking/SSH and Wi-Fi exercised | GPS, automatic rotation, modem/SMS/MMS are not established as working by these validations |
 | Audio, torch and camera | Speaker playback and torch have dated device validations; camera integration has its own build/bundle workflow | Do not infer full microphone/headset/UCM2 or camera-mode qualification from package inclusion |
-| Linux 7.2.12 session | Phosh desktop and working drawer on a read-only Mobian rootfs, pixman software rendering, RAM home | Diagnostic RAM session bounded to 90 seconds; no GPU acceleration, no autonomous boot, no suspend or battery qualification, permanent default unchanged |
+| Linux 7.2.12 session | Permanent boot into the existing Mobian root; desktop, drawer, touch and battery percentage observed | Charging, radios, camera, suspend and endurance remain unqualified |
 
 ### Linux 7 community track
 
