@@ -1,0 +1,80 @@
+# Linux 7.2.12 display stack for the lmi (Xiaomi POCO F2 Pro) experiment.
+#
+# Scope: this fragment adds ONLY the display path that the observer kernel
+# config never carried. Everything else stays exactly as validated by
+# configs/observer-tested.config, which is the config that produced the
+# accepted observer boot (kernel entry, eight CPUs, observer /init, HS USB
+# RNDIS, journal retrieval).
+#
+# Why this fragment exists: the accepted observer config has no CONFIG_DRM at
+# all, so the kernel has no KMS/DRM device, no DSI host, no MSM display
+# controller and no panel driver. The white screen is the expected result of
+# that configuration, not a panel or rail fault.
+#
+# Dependencies checked against upstream v7.2.12 sources:
+#   CONFIG_DRM_MSM depends on DRM, ARCH_QCOM, COMMON_CLK, IOMMU_SUPPORT, OF,
+#   PM and selects IOMMU_IO_PGTABLE, REGULATOR, DRM_EXEC, DRM_GPUVM,
+#   DRM_SCHED, SHMEM, TMPFS, QCOM_SCM, QCOM_UBWC_CONFIG, PM_OPP, NVMEM,
+#   PM_GENERIC_DOMAINS, TRACE_GPU_MEM and QCOM_MDT_LOADER.
+#   The observer config already carries QCOM_SCM, IOMMU_SUPPORT,
+#   IOMMU_IO_PGTABLE, COMMON_CLK, OF, PM_OPP, NVMEM and
+#   REGULATOR_QCOM_RPMH, so no extra dependency has to be added here.
+#
+# DSI PHY: SM8250 is a 7 nm part, so CONFIG_DRM_MSM_DSI_7NM_PHY is the
+# matching PHY (drivers/gpu/drm/msm/dsi/phy/dsi_phy_7nm.c), which is what
+# upstream sm8250.dtsi binds through "qcom,dsi-phy-7nm".
+#
+# GPU: the same config brings up the Adreno 650 ("qcom,adreno-650.2" in
+# upstream sm8250.dtsi). Upstream requests "qcom/a650_sqe.fw",
+# "qcom/a650_gmu.bin" and "qcom/a650_zap.mdt" (a6xx_catalog.c); the matching
+# files are already in the project at userspace/gpu/files/firmware/a650/ and
+# must be placed under /lib/firmware/qcom/ in the initramfs. If they are
+# missing, the GPU probe fails and no DRM device is created, so the panel
+# stays dark even if the DSI wiring is correct.
+#
+# BUILT-IN, NOT MODULE: the observer initramfs carries no module payload, so
+# every symbol on the display path has to be compiled in. This is not
+# cosmetic: with CONFIG_DRM_MSM=m the kernel never creates a DRM device, the
+# panel stays dark, and the journal shows no msm_drm probe at all.
+#
+# WHY CONFIG_MODULES=n IS PART OF THIS FRAGMENT
+#
+# The display chain cannot be forced to "y" while modules are enabled.
+# CONFIG_DRM_MSM selects DRM_EXEC, DRM_GPUVM, DRM_SCHED, QCOM_UBWC_CONFIG
+# and QCOM_MDT_LOADER. Those five are invisible tristate symbols, so the
+# user cannot set them: with CONFIG_MODULES=y they take the value "m", and
+# Kconfig caps a "y" symbol that selects a "m" symbol at "m" as well. The
+# whole display stack therefore silently falls back to modules and never
+# loads, which reproduces exactly the white screen of the observer kernel
+# with nothing in the journal to explain it.
+#
+# Measured on this configuration: with CONFIG_MODULES=y every symbol of the
+# chain ends up "m" (five independent experiments), and with CONFIG_MODULES=n
+# they all end up "y". Disabling modules removes exactly one symbol from
+# this configuration, CONFIG_CRYPTO_BENCHMARK, which is a crypto self-test
+# module and is irrelevant to this handset. All other 925 modular symbols of
+# the observer configuration belong to other platforms and could never load
+# from an initramfs without a module payload anyway.
+#
+# Kconfig symbols added by the panel patch:
+#   CONFIG_DRM_PANEL_SAMSUNG_AMS667UU01
+
+CONFIG_MODULES=n
+
+CONFIG_DRM=y
+CONFIG_DRM_EXEC=y
+CONFIG_DRM_GPUVM=y
+CONFIG_DRM_SCHED=y
+CONFIG_DRM_KMS_HELPER=y
+CONFIG_DRM_MSM=y
+CONFIG_DRM_MSM_KMS=y
+CONFIG_DRM_MSM_DSI=y
+CONFIG_DRM_MSM_DSI_7NM_PHY=y
+CONFIG_DRM_PANEL_SAMSUNG_AMS667UU01=y
+CONFIG_QCOM_UBWC_CONFIG=y
+CONFIG_QCOM_MDT_LOADER=y
+
+# Panel driver prerequisites.
+CONFIG_BACKLIGHT_CLASS_DEVICE=y
+CONFIG_REGULATOR=y
+CONFIG_GPIOLIB=y
