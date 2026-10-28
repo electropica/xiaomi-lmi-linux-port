@@ -1,0 +1,61 @@
+# Linux 7.2.12 camera stack for the lmi (Xiaomi POCO F2 Pro) experiment.
+#
+# Scope: this fragment adds ONLY the camera path of the lmi board. Everything
+# else stays exactly as validated by configs/observer-tested.config, which is
+# the config that produced the accepted observer boot.
+#
+# Why this fragment exists: the observer config carries no media stack at all,
+# so the kernel has no V4L2 core, no media controller, no CSI-2 receiver, no
+# ISP and no sensor. On the permanent Linux 7.2.12 boot of the handset the
+# camera stack is present and probed: the camss platform device ac6a000.camss
+# registers and exposes fourteen msm_vfe*_video nodes, while the rear sensor
+# node does not bind. The symbols below are exactly the ones the running
+# handset configuration carries for that path, read from its own
+# /proc/config.gz, so the fragment reproduces a configuration that is already
+# proven on the device instead of a guessed one.
+#
+# THE CHAIN HAS TO BE ENABLED AS A WHOLE. The camera path is not a single
+# symbol: the sensor driver sits behind the camera sub-menu of the media
+# support, and the CAMSS driver additionally requires the V4L2 platform
+# driver layer, which itself requires VIDEO_DEV and the media controller. A
+# fragment that only sets the two driver symbols is silently dropped by
+# olddefconfig, because the symbols that make them reachable are missing.
+# That is the reason this fragment lists the whole chain.
+#
+# CONFIG_MEDIA_SUPPORT, CONFIG_MEDIA_CAMERA_SUPPORT, CONFIG_MEDIA_PLATFORM_SUPPORT:
+# the media support and its camera and platform sub-menus. The rear sensor
+# driver of this board is an Omnivision OV13B10 (48 MP main sensor), described
+# in the board device tree as compatible "ovti,ov13b10".
+# CONFIG_VIDEO_OV13B10: that sensor driver. It is built in on the handset and
+# registers, so the missing piece is not the driver but its matching, which is
+# what patches/0004-lmi-ov13b10-of-match.patch restores.
+# CONFIG_MEDIA_CONTROLLER: the media controller API, used by the sensor and by
+# the CAMSS driver to bind the sensor to the CSI-2 receiver through the device
+# tree graph.
+# CONFIG_VIDEO_DEV, CONFIG_V4L_PLATFORM_DRIVERS, CONFIG_V4L2_ASYNC,
+# CONFIG_V4L2_FWNODE, CONFIG_VIDEO_V4L2_SUBDEV_API, CONFIG_VIDEOBUF2_DMA_SG,
+# CONFIG_VIDEO_CAMERA_SENSOR: the V4L2 core and the subdev, asynchronous
+# notifier, fwnode graph and buffer allocator that the sensor subdev and the
+# CAMSS driver need.
+# CONFIG_VIDEO_QCOM_CAMSS: the camera subsystem of this board is the mainline
+# CAMSS driver with its SM8250 resource set, matched through the compatible
+# "qcom,sm8250-camss". It brings the CSI-2 receiver, the CSID and the VFE
+# ISP, and it is what creates the fourteen video nodes of the handset.
+#
+# BUILT-IN, NOT MODULE: the observer initramfs carries no module payload, so
+# every symbol on this path has to be compiled in. With CONFIG_VIDEO_OV13B10=m
+# the driver would never load from that initramfs and the sensor would never
+# bind, with no message to explain it.
+CONFIG_MEDIA_SUPPORT=y
+CONFIG_MEDIA_CAMERA_SUPPORT=y
+CONFIG_MEDIA_PLATFORM_SUPPORT=y
+CONFIG_MEDIA_CONTROLLER=y
+CONFIG_VIDEO_DEV=y
+CONFIG_V4L_PLATFORM_DRIVERS=y
+CONFIG_V4L2_ASYNC=y
+CONFIG_V4L2_FWNODE=y
+CONFIG_VIDEO_V4L2_SUBDEV_API=y
+CONFIG_VIDEOBUF2_DMA_SG=y
+CONFIG_VIDEO_CAMERA_SENSOR=y
+CONFIG_VIDEO_OV13B10=y
+CONFIG_VIDEO_QCOM_CAMSS=y

@@ -26,7 +26,7 @@ def prepare(repo,out):
     assert not out.is_symlink();out.mkdir(parents=True)
     src=out/'source/userspace/camera/diagnostics';src.mkdir(parents=True)
     original=repo/'userspace/camera/diagnostics'
-    for name in ['camera-module-capture.c','camera-module-enumerate.c','camera-qti-bridge.cpp','camera-qti-bridge.h','camera-yuv-neon.h','frame-pacing.h','native-pipewire-ppm-test.c','private-context-test.c','lmi-snapshot-tuning.c']:
+    for name in ['camera-module-capture.c','camera-module-enumerate.c','camera-qti-bridge.cpp','camera-qti-bridge.h','camera-yuv-neon.h','frame-pacing.h','native-pipewire-ppm-test.c','native-pipewire-v4l2-source.c','private-context-test.c','lmi-snapshot-tuning.c']:
         shutil.copy2(original/name,src/name)
     for name in ['camera-module-capture-timing.patch','camera-preview-fixed-fps-trial.patch','camera-qti-neon-trial.patch']:
         for dry in [True,False]:
@@ -87,16 +87,17 @@ def build(repo,root,out,libcxx,toolchain):
     assert scratch.is_dir()
     for name in ['native-pipewire-ppm-test.c','frame-pacing.h','lmi-snapshot-tuning.c','snapshot-focus.c','native-pipewire-source','snapshot-focus','lmi-snapshot-tuning.so']:
         assert not (scratch/name).is_symlink()
-    for name in ['native-pipewire-ppm-test.c','frame-pacing.h','lmi-snapshot-tuning.c']:shutil.copy2(src/name,scratch/name)
+    for name in ['native-pipewire-ppm-test.c','native-pipewire-v4l2-source.c','frame-pacing.h','lmi-snapshot-tuning.c']:shutil.copy2(src/name,scratch/name)
     shutil.copy2(out/'snapshot-focus.c',scratch/'snapshot-focus.c')
     protocol='/build/phosh-0.46.0/obj-aarch64-linux-gnu/protocol'
     commands=[
         ['cc','-O2','-Wall','-Wextra','-Werror','-I/usr/include/pipewire-0.3','-I/usr/include/spa-0.2','/build/lmi-complete-camera/native-pipewire-ppm-test.c','-lpipewire-0.3','-o','/build/lmi-complete-camera/native-pipewire-source'],
+        ['cc','-O2','-Wall','-Wextra','-Werror','-I/usr/include/pipewire-0.3','-I/usr/include/spa-0.2','/build/lmi-complete-camera/native-pipewire-v4l2-source.c','-lpipewire-0.3','-o','/build/lmi-complete-camera/native-pipewire-v4l2-source'],
         ['cc','-O2','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-I'+protocol,'/build/lmi-complete-camera/snapshot-focus.c',protocol+'/wlr-foreign-toplevel-management-unstable-v1-protocol.c','-lwayland-client','-o','/build/lmi-complete-camera/snapshot-focus'],
         ['cc','-shared','-fPIC','-nostdlib','-Wall','-Wextra','-Werror','/build/lmi-complete-camera/lmi-snapshot-tuning.c','-o','/build/lmi-complete-camera/lmi-snapshot-tuning.so']]
     for command in commands:subprocess.run(['chroot',str(root),*command],check=True)
-    for name in ['native-pipewire-source','snapshot-focus','lmi-snapshot-tuning.so']:shutil.copy2(scratch/name,out/name)
-    included=['camera-module-capture','liblmi_qti_bridge.so','lmi-camera-private-context-test.so','native-pipewire-source','snapshot-focus','lmi-snapshot-tuning.so','camera-test-capture.py','camera-test-rear-preview.py','preview-service.py','lmi-camera-super-metadata.py','lmi-snapshot','org.gnome.Snapshot.desktop','lmi-camera-preview.service','49-lmi-camera.rules','install.sh']
+    for name in ['native-pipewire-source','native-pipewire-v4l2-source','snapshot-focus','lmi-snapshot-tuning.so']:shutil.copy2(scratch/name,out/name)
+    included=['camera-module-capture','liblmi_qti_bridge.so','lmi-camera-private-context-test.so','native-pipewire-source','native-pipewire-v4l2-source','snapshot-focus','lmi-snapshot-tuning.so','camera-test-capture.py','camera-test-rear-preview.py','preview-service.py','lmi-camera-super-metadata.py','lmi-snapshot','org.gnome.Snapshot.desktop','lmi-camera-preview.service','49-lmi-camera.rules','install.sh']
     (out/'SHA256SUMS').write_text(''.join(hashlib.sha256((out/n).read_bytes()).hexdigest()+'  '+n+'\n' for n in included))
     (out/'BUILD-INPUTS.json').write_text(json.dumps({'android_libcxx_sha256':hashlib.sha256(libcxx.read_bytes()).hexdigest(),'capture_started':False,'kernel_built':False},indent=2)+'\n')
     print('CAMERA_BUNDLE_COMPILED_NO_ACQUISITION',out)

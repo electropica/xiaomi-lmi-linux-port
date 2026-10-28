@@ -1,0 +1,46 @@
+Subject: [PATCH 4/4] media: i2c: ov13b10: restore the OF match table
+
+The ov13b10 driver of this tree only carries an ACPI match table, so a
+sensor described in the device tree can never bind. The i2c core matches
+an OF device through the driver of_match_table, and there is none here.
+
+On the lmi board the rear sensor node (compatible "ovti,ov13b10") is
+therefore created by the core but never probed: the driver registers, the
+i2c client exists with the right modalias, and nothing happens. No probe
+message, no subdev, no /dev/v4l-subdev node, only the ISP outputs of the
+camss device.
+
+Restore the OF match table for the two upstream compatible strings and
+declare it in the driver. The ACPI table and the ACPI behaviour are left
+untouched, so the platforms this rework targeted keep working.
+
+No device tree change is needed for this board: the rear sensor node
+already carries one 19.2 MHz clock, which is OV13B10_EXT_CLK, the avdd,
+dovdd and dvdd supplies, a reset gpio, four CSI-2 data lanes and a
+560 MHz link frequency, which is what the driver checks.
+
+Generated for the lmi Linux 7.2.12 camera bring-up; the same patch
+applies to the pinned tree used by the observer kit, where the observer
+device tree describes no sensor and the change is inert.
+---
+--- a/drivers/media/i2c/ov13b10.c
++++ b/drivers/media/i2c/ov13b10.c
+@@ -1705,10 +1705,18 @@
+ MODULE_DEVICE_TABLE(acpi, ov13b10_acpi_ids);
+ #endif
+ 
++static const struct of_device_id ov13b10_of_match[] = {
++	{ .compatible = "ovti,ov13b10" },
++	{ .compatible = "ovti,ov13b10r" },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, ov13b10_of_match);
++
+ static struct i2c_driver ov13b10_i2c_driver = {
+ 	.driver = {
+ 		.name = "ov13b10",
+ 		.pm = pm_ptr(&ov13b10_pm_ops),
++		.of_match_table = ov13b10_of_match,
+ 		.acpi_match_table = ACPI_PTR(ov13b10_acpi_ids),
+ 	},
+ 	.probe = ov13b10_probe,

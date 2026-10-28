@@ -1,3 +1,24 @@
+## Rear camera sensor binding prepared on the Linux 7 port — October 28, 2026
+
+The rear sensor of the lmi board never binds on the permanent Linux 7.2.12
+boot, and the reason is now identified: the `ov13b10` driver of this kernel
+carries only an ACPI match table, with no `of_device_id`, so a sensor
+described in the device tree can never be matched. The driver is built in and
+registers, the i2c client exists with the right compatible string, and no
+probe happens at all. The board device tree is already complete for the
+driver, so the change is a kernel patch that restores the OF match table and
+not a device tree change.
+
+The patch, the camera configuration fragment and a host check are prepared and
+the check passes: the patch applies to the pinned tree and to the community
+tree that produced the handset kernel, the patched driver compiles, and the
+camera configuration resolves every symbol of the chain. A V4L2 to PipeWire
+producer is prepared for the userspace side, since the Linux 7 line has no OEM
+preview service to feed the camera application. Nothing has been flashed: the
+binding is proven at the source level only, and the camera application keeps
+reporting the missing engine until a kernel carrying the patch is installed.
+See the [validation record](../validation/lmi-linux7-camera-sensor-binding-2026-10-28.md).
+
 ## Camera application on the permanent Linux 7 boot — October 27, 2026
 
 The camera application of the permanent Linux 7.2.12 boot no longer dies on

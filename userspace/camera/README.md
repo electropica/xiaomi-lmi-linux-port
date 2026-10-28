@@ -1,3 +1,28 @@
+## Rear camera sensor binding prepared — 2026-10-28
+
+The application now says that the capture engine is missing instead of dying
+on the kernel assertion, but it still cannot show a picture on the Linux 7
+boot: the rear sensor never binds. The reason is identified and it is not the
+device tree: the `ov13b10` driver of this kernel carries only an ACPI match
+table, so a sensor described in the device tree is never matched, even though
+the driver is built in and registers and the i2c client exists with the right
+compatible string. The board device tree already carries everything the
+driver checks, including the 19.2 MHz clock, the three supplies, the reset
+gpio, four data lanes and the 560 MHz link.
+
+`kernel/experimental/linux7/patches/0004-lmi-ov13b10-of-match.patch` restores
+the OF match table, `kernel/experimental/linux7/configs/camera.fragment`
+enables the camera chain with the symbols the running handset carries, and
+`kernel/experimental/linux7/tools/check-camera-patch.sh` proves all of it on
+the host. For the userspace side,
+`diagnostics/native-pipewire-v4l2-source.c` publishes the V4L2 frames of the
+CAMSS output as a PipeWire camera node, so that the camera application of the
+session sees a camera; it is wired into the bundle build and the installer.
+
+Nothing has been flashed and no frame has been produced, so the application
+keeps reporting the missing engine. See
+`docs/validation/lmi-linux7-camera-sensor-binding-2026-10-28.md`.
+
 ## Camera application on the Linux 7.2.12 boot — 2026-10-27
 
 The permanent `system5` boot starts the Mobian root with Linux 7.2.12 and

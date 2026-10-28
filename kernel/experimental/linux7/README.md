@@ -7,6 +7,23 @@ stall in this trial. See the [hardware record](../../../docs/validation/lmi-linu
 
 ## Current hardware qualification
 
+## Rear camera sensor binding prepared — October 28, 2026
+
+The rear sensor of this board never binds on this kernel, and the cause is
+now known: the `ov13b10` driver of the 7.2.12 tree carries only an ACPI match
+table, so an OF-described sensor is never matched. The driver is built in and
+registers, the i2c client exists with the compatible string, and no probe
+happens. The board device tree already satisfies the driver, so the change is
+a driver patch.
+
+The deliverable is `patches/0004-lmi-ov13b10-of-match.patch`, together with
+`configs/camera.fragment` and `tools/check-camera-patch.sh`. The host check
+passes: the patch applies to the pinned tree and to the community tree that
+produced the handset kernel, the patched driver compiles, the configuration
+resolves, and the device tree needs no change. Nothing has been flashed, so
+no binding is claimed on the handset yet. See the
+[validation record](../../../docs/validation/lmi-linux7-camera-sensor-binding-2026-10-28.md).
+
 ## Permanent Linux 7 boot — October 27, 2026
 
 The operator installed the system5 menu in the boot partition. Its default

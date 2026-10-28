@@ -59,6 +59,7 @@ echo "tree revision $rev"
 for p in "$EXP/patches/0001-probe-runtime-markers.patch" \
          "$EXP/patches/0002-lmi-dsi-display.patch" \
          "$EXP/patches/0003-add-msm667uu01-panel.patch" \
+         "$EXP/patches/0004-lmi-ov13b10-of-match.patch" \
          "$EXP/configs/observer-tested.config" \
          "$EXP/configs/display1.fragment" \
          "$EXP/initramfs/init"; do

@@ -11,7 +11,7 @@ apt-get install -y --no-remove --no-install-recommends gnome-snapshot=48.0.1-1
 test "$(dpkg-query -W -f='${Version}' gnome-snapshot)" = 48.0.1-1
 test "$(dpkg-query -W -f='${Version}' libpipewire-0.3-0t64)" = 1.4.2-1
 base=/usr/local/lib/lmi-camera
-for name in camera-module-capture liblmi_qti_bridge.so lmi-camera-private-context-test.so native-pipewire-source snapshot-focus lmi-snapshot-tuning.so; do
+for name in camera-module-capture liblmi_qti_bridge.so lmi-camera-private-context-test.so native-pipewire-source native-pipewire-v4l2-source snapshot-focus lmi-snapshot-tuning.so; do
     install -Dm755 "$src/$name" "$base/$name"
 done
 for name in camera-test-capture.py camera-test-rear-preview.py preview-service.py lmi-camera-super-metadata.py; do
