@@ -1,3 +1,20 @@
+## Camera launcher in V4L2 mode on the Linux 7 line — October 28, 2026
+
+The camera launcher now has a second source. When the OEM capture engine is
+missing, it starts the V4L2 producer and waits for it to report a real frame
+before opening the camera application, so a node that never frames gives the
+explicit reason instead of a black viewfinder. The producer follows the
+foreground lease of the launcher, so the camera is powered only while the
+application is in the foreground. The OEM path is unchanged, and the notice of
+the previous record is shown as before when there is no producer.
+
+Measured on the handset with the current kernel, which has no bound sensor:
+the producer probes the fourteen video nodes in under a second and exits with
+status 3, the launcher reports the outcome, the notice names it, and no
+child process, no producer and no privileged service are left behind. The
+success path is not qualified yet, because it needs a kernel that carries the
+sensor patch. See the [validation record](../validation/lmi-linux7-camera-launcher-v4l2-2026-10-28.md).
+
 ## Rear camera sensor binding prepared on the Linux 7 port — October 28, 2026
 
 The rear sensor of the lmi board never binds on the permanent Linux 7.2.12

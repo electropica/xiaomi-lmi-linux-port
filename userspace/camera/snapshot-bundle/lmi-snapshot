@@ -13,6 +13,13 @@ UNIT='lmi-camera-preview.service'
 # die on an assertion, because the user only sees a dead application.
 ENGINE_KERNEL='4.19.325-cip128-st12-perf-ga5b3099017ae-dirty'
 ENGINE_VENDOR=Path('/mnt/android-vendor/lib64/hw/camera.qcom.so')
+# On the Linux 7 line the camera comes from the mainline sensor and the CAMSS
+# VFE instead of the OEM HAL. The producer publishes those frames on PipeWire,
+# and it only does it while this foreground lease says that the camera
+# application is in the foreground.
+V4L2_PRODUCER=BASE/'native-pipewire-v4l2-source'
+LEASE=Path('/run/user/1000/lmi-snapshot/foreground.json')
+READY_MARKER='V4L2_SOURCE_READY'
 
 def engine_state():
     """Report the capture engine availability. Never raises."""
@@ -21,14 +28,41 @@ def engine_state():
     if not ENGINE_VENDOR.is_file():return False,release,'vendor'
     return True,release,'none'
 
-def notice_body(release,reason):
+def video_nodes():
+    """The capture nodes of the handset, if any."""
+    try:return sorted(str(node) for node in Path('/dev').glob('video*'))
+    except Exception:return []
+
+def select_source(reason,producer_present,nodes):
+    """Choose the camera source. Pure decision: no process, no device access."""
+    if reason=='none':return 'oem','none'
+    if not producer_present:return 'none','missing_producer'
+    if not nodes:return 'none','no_video'
+    return 'v4l2','none'
+
+DETAIL_TEXT={
+    'missing_producer':'le producteur V4L2 n’est pas installé',
+    'no_video':'aucun nœud vidéo n’est disponible',
+    'no_frame':'aucun nœud vidéo n’a fourni d’image',
+}
+
+def notice_body(release,reason,detail='none'):
     if reason=='vendor':
         return ('Les modules HAL de la caméra sont absents de la partition vendor.\n'
                 'Noyau actif : %s\n\n'
                 'Le moteur photo OEM n’est disponible que sur le noyau Mobian 4.19.' % release)
+    if detail=='missing_producer':
+        # The V4L2 producer is not installed on this system, so there is
+        # nothing to report about it: the OEM engine is the whole story.
+        return ('Le moteur photo (HAL OEM) n’est validé que sur le noyau Mobian 4.19.\n'
+                'Noyau actif : %s\n\n'
+                'Démarrez l’entrée de secours « Mobian 4.19 » du menu de boot, conservée à côté du noyau Linux 7, pour utiliser la caméra arrière.'
+                % release)
     return ('Le moteur photo (HAL OEM) n’est validé que sur le noyau Mobian 4.19.\n'
             'Noyau actif : %s\n\n'
-            'Démarrez l’entrée de secours « Mobian 4.19 » du menu de boot, conservée à côté du noyau Linux 7, pour utiliser la caméra arrière.' % release)
+            'Source V4L2 indisponible : %s.\n\n'
+            'Démarrez l’entrée de secours « Mobian 4.19 » du menu de boot, conservée à côté du noyau Linux 7, pour utiliser la caméra arrière.'
+            % (release,DETAIL_TEXT.get(detail,detail)))
 
 def show_notice(title,body):
     """Show the reason in the session; fall back to the journal without GTK."""
@@ -57,6 +91,19 @@ def show_notice(title,body):
         window.set_child(box)
         window.present()
     application.connect('activate',activate)
+    # The launcher installs its own terminal handling before it reaches the
+    # notice, and that handler only arms a flag the notice loop never reads.
+    # GLib handles the signal inside the main loop instead, so the notice
+    # really closes when the session asks the launcher to stop.
+    try:
+        from gi.repository import GLib
+        def on_terminal(user_data):
+            application.quit()
+            return False
+        GLib.unix_signal_add(GLib.PRIORITY_HIGH,signal.SIGTERM,on_terminal,None)
+        GLib.unix_signal_add(GLib.PRIORITY_HIGH,signal.SIGINT,on_terminal,None)
+    except Exception as error:
+        print('LMI_CAMERA_NOTICE_SIGNAL_FAILED '+str(error),flush=True)
     application.run([sys.argv[0]])
     return 0
 
@@ -71,14 +118,21 @@ def main():
         print('LMI_CAMERA_LAUNCHER_REFUSED uid='+str(os.getuid())+' argc='+str(len(sys.argv)),flush=True)
         return 1
     available,release,reason=engine_state()
-    if not available:
-        return show_notice('Appareil photo lmi',notice_body(release,reason))
+    mode,detail=select_source(reason,V4L2_PRODUCER.exists(),video_nodes())
+    if mode=='none':
+        return show_notice('Appareil photo lmi',notice_body(release,reason,detail))
     runtime=Path('/run/user/1000/lmi-snapshot');runtime.mkdir(mode=0o700,exist_ok=True)
     assert not runtime.is_symlink() and runtime.stat().st_uid==os.getuid()
     lock=(runtime/'launcher.lock').open('a')
     try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     except BlockingIOError:
-        subprocess.run(['gdbus','call','--session','--dest','org.gnome.Snapshot','--object-path','/org/gnome/Snapshot','--method','org.freedesktop.Application.Activate','{}'],timeout=10)
+        # Another instance already runs: raise its window instead of starting a
+        # second camera application.
+        for target,path in (('org.gnome.Snapshot','/org/gnome/Snapshot'),
+                            ('org.mobian.lmi.CameraEngineNotice','/org/mobian/lmi/CameraEngineNotice')):
+            result=subprocess.run(['gdbus','call','--session','--dest',target,'--object-path',path,'--method','org.freedesktop.Application.Activate','{}'],timeout=10,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            if result.returncode==0:return
+        print('LMI_CAMERA_ALREADY_RUNNING',flush=True)
         return
     start_ticks=Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]
     lease=runtime/'foreground.json'
@@ -96,6 +150,37 @@ def main():
     def child_setup():
         # A killed launcher must not leave its producer polling indefinitely.
         if libc.prctl(1,signal.SIGTERM,0,0,0)!=0 or os.getppid()!=parent:os._exit(1)
+    def start_v4l2_producer():
+        """Start the V4L2 producer and wait until it reports a real frame.
+
+        The producer prints READY_MARKER only after a frame arrived, so a
+        producer that cannot reach the sensor is reported as such instead of
+        opening an empty viewfinder.
+        """
+        process=subprocess.Popen([str(V4L2_PRODUCER),'auto','0',str(LEASE)],
+                                 stdout=subprocess.PIPE,preexec_fn=child_setup)
+        ready=False
+        pending=b''
+        reader=selectors.DefaultSelector()
+        reader.register(process.stdout,selectors.EVENT_READ)
+        deadline=time.monotonic()+30
+        while time.monotonic()<deadline and not ready:
+            for key,_ in reader.select(.5):
+                chunk=os.read(key.fileobj.fileno(),4096)
+                if not chunk:break
+                pending+=chunk
+                while b'\n' in pending:
+                    value,pending=pending.split(b'\n',1)
+                    text=value.decode('utf-8','replace').strip()
+                    print('LMI_CAMERA_V4L2 '+text,flush=True)
+                    if text.startswith(READY_MARKER):ready=True
+            if not ready and process.poll() is not None:break
+        reader.close()
+        if not ready:
+            print('LMI_CAMERA_V4L2_NO_FRAME',flush=True)
+            terminate(process)
+            return None
+        return process
     focus=producer=app=inhibit=None
     active=False;focused=False;previous=False;started=False
     screen=Gio.DBusProxy.new_for_bus_sync(Gio.BusType.SESSION,
@@ -104,8 +189,16 @@ def main():
     locked=True;lock_check=0
     try:
         publish(False)
-        focus=subprocess.Popen([str(BASE/'snapshot-focus')],stdout=subprocess.PIPE,bufsize=0,preexec_fn=child_setup)
-        producer=subprocess.Popen([str(BASE/'native-pipewire-source'),'/run/lmi-camera/live.ppm','0'],preexec_fn=child_setup)
+        if mode=='oem':
+            focus=subprocess.Popen([str(BASE/'snapshot-focus')],stdout=subprocess.PIPE,bufsize=0,preexec_fn=child_setup)
+            producer=subprocess.Popen([str(BASE/'native-pipewire-source'),'/run/lmi-camera/live.ppm','0'],preexec_fn=child_setup)
+        else:
+            producer=start_v4l2_producer()
+            if producer is None:
+                # No camera on this system: the notice takes the place of the
+                # application, and no child is left behind.
+                return show_notice('Appareil photo lmi',notice_body(release,reason,'no_frame'))
+            focus=subprocess.Popen([str(BASE/'snapshot-focus')],stdout=subprocess.PIPE,bufsize=0,preexec_fn=child_setup)
         env=os.environ.copy();env.update({'GSK_RENDERER':'cairo','GDK_DISABLE':'gl,vulkan,dmabuf','LMI_SNAPSHOT_TUNING':'1','LD_PRELOAD':str(BASE/'lmi-snapshot-tuning.so')})
         app=subprocess.Popen(['/usr/bin/snapshot'],env=env,preexec_fn=child_setup)
         selector=selectors.DefaultSelector();selector.register(focus.stdout,selectors.EVENT_READ)
@@ -129,21 +222,23 @@ def main():
             if now-last>=.5 or active!=previous:
                 publish(active);last=now
             if active and not previous:
-                os.kill(producer.pid,signal.SIGCONT)
-                subprocess.run(['systemctl','start',UNIT],check=True,timeout=15)
+                if mode=='oem':
+                    os.kill(producer.pid,signal.SIGCONT)
+                    subprocess.run(['systemctl','start',UNIT],check=True,timeout=15)
                 started=True
                 inhibit=subprocess.Popen(['systemd-inhibit','--what=idle:sleep','--mode=block','--why=Foreground camera','sleep','infinity'],preexec_fn=child_setup)
             elif not active and previous:
-                subprocess.run(['systemctl','stop',UNIT],check=True,timeout=18)
+                if mode=='oem':
+                    subprocess.run(['systemctl','stop',UNIT],check=True,timeout=18)
                 started=False;terminate(inhibit);inhibit=None
-                os.kill(producer.pid,signal.SIGSTOP)
+                if mode=='oem':os.kill(producer.pid,signal.SIGSTOP)
             previous=active
     finally:
         try:
             publish(False)
-            subprocess.run(['systemctl','stop',UNIT],timeout=18)
+            if mode=='oem':subprocess.run(['systemctl','stop',UNIT],timeout=18)
         finally:
-            if producer is not None and producer.poll() is None:
+            if mode=='oem' and producer is not None and producer.poll() is None:
                 try:os.kill(producer.pid,signal.SIGCONT)
                 except ProcessLookupError:pass
             for p in [app,inhibit,producer,focus]:

@@ -1,3 +1,26 @@
+## Camera launcher in V4L2 mode — 2026-10-28
+
+The launcher owns the camera for the whole life of the application, and it now
+has a second source. When the OEM capture engine is missing, it starts the
+V4L2 producer, which publishes the frames of the CAMSS output on PipeWire, and
+waits for the producer to report a real frame before the camera application
+opens. A video node that never frames therefore gives the explicit reason
+instead of an empty viewfinder. The producer follows the foreground lease of
+the launcher, so the sensor is powered only while the application is in the
+foreground, and the PipeWire node stays alive so the application keeps its
+camera across focus changes.
+
+The OEM path is untouched. The notice of 2026-10-27 is shown as before when no
+producer is installed, and two behaviours were corrected: the notice no longer
+leaves the focus monitor behind, and it now closes on a terminal signal.
+
+The producer was measured on the handset with the current kernel: it probes
+the fourteen video nodes in under a second and exits with status 3 when
+nothing frames, which is what the launcher reports. The success path is not
+qualified yet: it needs a kernel that carries the sensor patch of
+`kernel/experimental/linux7/patches/0004-lmi-ov13b10-of-match.patch`. See
+`docs/validation/lmi-linux7-camera-launcher-v4l2-2026-10-28.md`.
+
 ## Rear camera sensor binding prepared — 2026-10-28
 
 The application now says that the capture engine is missing instead of dying
