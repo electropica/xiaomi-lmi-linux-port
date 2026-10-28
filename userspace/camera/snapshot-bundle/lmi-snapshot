@@ -20,6 +20,10 @@ ENGINE_VENDOR=Path('/mnt/android-vendor/lib64/hw/camera.qcom.so')
 V4L2_PRODUCER=BASE/'native-pipewire-v4l2-source'
 LEASE=Path('/run/user/1000/lmi-snapshot/foreground.json')
 READY_MARKER='V4L2_SOURCE_READY'
+# The Flatpak candidate of the application carries the newer release. It is
+# preferred when it is installed and when the document portal can work, which
+# needs the FUSE device of the kernel.
+FLATPAK_APP='org.gnome.Snapshot'
 
 def engine_state():
     """Report the capture engine availability. Never raises."""
@@ -113,6 +117,33 @@ def terminate(p):
         try:p.wait(timeout=8)
         except subprocess.TimeoutExpired:p.kill();p.wait(timeout=3)
 
+def flatpak_candidate_usable():
+    """True when the Flatpak candidate can be driven.
+
+    The candidate needs the document portal of the session, and that portal
+    needs the FUSE device of the kernel: without it the candidate stops at
+    startup with "Can't get document portal". The native application stays
+    the one to drive in that case.
+    """
+    try:
+        if not Path('/dev/fuse').exists():return False
+        home=Path.home()
+        return (home/'.local/share/flatpak/app'/FLATPAK_APP/'current/active').exists()
+    except Exception:
+        return False
+
+def application_command():
+    """The application to drive, with the environment it needs.
+
+    The preloaded tuning library belongs to the native build and cannot be
+    loaded inside the sandbox of the candidate.
+    """
+    if flatpak_candidate_usable():
+        return ['flatpak','run',FLATPAK_APP],os.environ.copy()
+    env=os.environ.copy()
+    env.update({'GSK_RENDERER':'cairo','GDK_DISABLE':'gl,vulkan,dmabuf','LMI_SNAPSHOT_TUNING':'1','LD_PRELOAD':str(BASE/'lmi-snapshot-tuning.so')})
+    return ['/usr/bin/snapshot'],env
+
 def main():
     if os.getuid()!=1000 or len(sys.argv)!=1:
         print('LMI_CAMERA_LAUNCHER_REFUSED uid='+str(os.getuid())+' argc='+str(len(sys.argv)),flush=True)
@@ -199,8 +230,8 @@ def main():
                 # application, and no child is left behind.
                 return show_notice('Appareil photo lmi',notice_body(release,reason,'no_frame'))
             focus=subprocess.Popen([str(BASE/'snapshot-focus')],stdout=subprocess.PIPE,bufsize=0,preexec_fn=child_setup)
-        env=os.environ.copy();env.update({'GSK_RENDERER':'cairo','GDK_DISABLE':'gl,vulkan,dmabuf','LMI_SNAPSHOT_TUNING':'1','LD_PRELOAD':str(BASE/'lmi-snapshot-tuning.so')})
-        app=subprocess.Popen(['/usr/bin/snapshot'],env=env,preexec_fn=child_setup)
+        command,env=application_command()
+        app=subprocess.Popen(command,env=env,preexec_fn=child_setup)
         selector=selectors.DefaultSelector();selector.register(focus.stdout,selectors.EVENT_READ)
         last=time.monotonic();pending=b''
         while not stopped and app.poll() is None:

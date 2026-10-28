@@ -59,3 +59,22 @@ CONFIG_VIDEOBUF2_DMA_SG=y
 CONFIG_VIDEO_CAMERA_SENSOR=y
 CONFIG_VIDEO_OV13B10=y
 CONFIG_VIDEO_QCOM_CAMSS=y
+
+#
+# FUSE, FOR THE FLATPAK CANDIDATE OF THE CAMERA APPLICATION
+#
+# CONFIG_FUSE_FS is the third kernel facility that the Snapshot 51 candidate
+# needs, and the only one that is missing on this kernel for a simple reason:
+# the symbol is a module, and that module is not installed on the handset, so
+# /dev/fuse never appears. The document portal then dies with
+# "fuse: device not found" and "Can't mount path /run/user/1000/doc", and the
+# application of the candidate stops at startup with "Can't get document
+# portal". The kernel already carries the rest of the support
+# (CONFIG_FUSE_PASSTHROUGH and CONFIG_FUSE_IO_URING are built in), so the
+# change is to build the file system in instead of leaving it as a module that
+# is never shipped.
+#
+# The two facilities belong to the same build: the rear camera of the Linux 7
+# line and the Flatpak candidate of the camera application are both served by
+# one kernel.
+CONFIG_FUSE_FS=y

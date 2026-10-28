@@ -15,6 +15,38 @@ child process, no producer and no privileged service are left behind. The
 success path is not qualified yet, because it needs a kernel that carries the
 sensor patch. See the [validation record](../validation/lmi-linux7-camera-launcher-v4l2-2026-10-28.md).
 
+## Snapshot 51 deployed, and the third kernel facility identified — October 28, 2026
+
+The Flatpak deployment of the Snapshot 51 candidate, which failed on the
+downstream 4.19 kernel because it did not provide `STATX_MNT_ID`, now
+succeeds on the kernel of the permanent boot: the measured `statx` mask is
+`0x17ff` with a mount identifier present, the retained objects were reused,
+and `org.gnome.Snapshot 51.0` is installed for the session account.
+
+The candidate reaches its own start and stops on the next facility. The
+document portal of the session cannot mount its export directory because
+`/dev/fuse` does not exist: the kernel carries `CONFIG_FUSE_FS=m`, but the
+module is not shipped, so the device node is never created. The candidate
+therefore stops at startup with `Can't get document portal`.
+
+The camera side of the upgrade stays compatible with the producer of this
+branch: Snapshot 51.0 still captures the camera with GStreamer `camerabin`,
+which the session already carries, and the camera is still enumerated through
+the PipeWire device provider, which is what the producer publishes. The
+launcher now knows both versions: it drives the candidate when it is
+installed and when the FUSE device exists, and the native application
+otherwise, with the tuning preload that belongs to it.
+
+The convergence is the point: the rear camera of the Linux 7 line and the
+newer application of the camera need **one kernel build**. The sensor patch
+and the camera configuration bind the rear sensor, and `CONFIG_FUSE_FS=y`
+creates the FUSE device that lets the document portal mount. Both are
+expressed in the same configuration fragment, and the recipe
+`kernel/experimental/linux7/tools/build-community-camera-kernel.sh` builds
+them together; its preparation step is validated on the community tree. See
+the [validation record](../validation/lmi-snapshot51-linux7-preconditions-2026-10-28.md)
+and the [recipe record](../validation/lmi-linux7-camera-kernel-recipe-2026-10-28.md).
+
 ## Rear camera sensor binding prepared on the Linux 7 port — October 28, 2026
 
 The rear sensor of the lmi board never binds on the permanent Linux 7.2.12

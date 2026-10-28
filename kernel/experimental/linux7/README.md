@@ -24,6 +24,31 @@ resolves, and the device tree needs no change. Nothing has been flashed, so
 no binding is claimed on the handset yet. See the
 [validation record](../../../docs/validation/lmi-linux7-camera-sensor-binding-2026-10-28.md).
 
+## Camera kernel recipe for the community tree — October 28, 2026
+
+The kernel of the permanent boot is built from the community tree, not from
+the pinned tree of the observer kit, so the camera work needed its own recipe:
+`kernel/experimental/linux7/tools/build-community-camera-kernel.sh` takes that
+tree, applies the sensor patch, merges the camera configuration, builds the
+kernel and its device tree, and checks that the produced device tree carries
+the rear sensor. The input tree is copied to a scratch directory by default,
+so the operator can run the recipe twice and compare two results, and
+`--prepare-only` stops after the configuration merge, which is what makes the
+recipe testable without an hour of build time.
+
+The preparation step is validated on the community tree: the patch applies,
+the thirteen camera symbols and `CONFIG_FUSE_FS=y` resolve, and the camera
+stack of that tree compiles with the patch and the configuration. The FUSE
+symbol belongs to the same fragment as the camera, because the candidate of
+the camera application needs the document portal, and the document portal
+needs the FUSE device of the kernel.
+
+The operator installs the two artifacts as the permanent `system5` entry,
+keeping the Mobian 4.19 entry as the fallback, and checks after the boot that
+the sensor is bound, that the subdev appears, that `/dev/fuse` exists and
+that the producer reports a frame. See
+`docs/validation/lmi-linux7-camera-kernel-recipe-2026-10-28.md`.
+
 ## Permanent Linux 7 boot — October 27, 2026
 
 The operator installed the system5 menu in the boot partition. Its default
