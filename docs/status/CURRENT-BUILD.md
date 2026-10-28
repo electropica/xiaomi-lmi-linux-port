@@ -1,3 +1,26 @@
+## Snapshot 51 preconditions on the Linux 7 boot — October 28, 2026
+
+The deployment blocker of the Snapshot 51 candidate is gone on the kernel of
+the permanent boot. The 2026-10-26 assessment recorded that the Flatpak
+deployment failed because the kernel of that moment did not provide
+`STATX_MNT_ID`, which the runtime guard requires. Measured on the running
+Linux 7.2.12 kernel, the `statx` mask is `0x17ff` with a mount identifier
+present on every path, including the user directory the deployment writes to.
+No security check is relaxed and no identifier is invented: this kernel really
+provides the facility. The `flathub` remote and 1.7 GB of runtime objects are
+still on the handset, so a retry does not download the world again.
+
+The camera side of the upgrade stays compatible with the producer of this
+branch: Snapshot 51.0 still captures the camera with GStreamer `camerabin`,
+which the session already carries, and the camera is still enumerated through
+the PipeWire device provider, which is what the producer publishes. Three
+adaptations remain: the launcher has to know which application it drives, the
+Flatpak desktop entry would otherwise open the application without the
+launcher and therefore without the camera, and the preloaded tuning library
+hooks the C internals of Snapshot 48 while Snapshot 51 is a Rust rewrite.
+Nothing was deployed on the handset. See the
+[validation record](../validation/lmi-snapshot51-linux7-preconditions-2026-10-28.md).
+
 ## Camera launcher in V4L2 mode on the Linux 7 line — October 28, 2026
 
 The camera launcher now has a second source. When the OEM capture engine is
