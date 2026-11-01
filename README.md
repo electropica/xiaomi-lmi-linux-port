@@ -1,158 +1,80 @@
 # Xiaomi lmi Linux port
 
-Mobian/Phosh and kernel reconstruction work for the Xiaomi Redmi K30 Pro /
-POCO F2 Pro (`lmi`, Snapdragon 865 / Qualcomm SM8250, Adreno 650).
-The Linux 7 integration branch is `lmi-linux7`; `developpement` retains the downstream 4.19 work.
+Mobian/Phosh and Linux kernel development for the Xiaomi Redmi K30 Pro / POCO
+F2 Pro (`lmi`, Qualcomm SM8250, Adreno 650).
 
-## Current state — October 27, 2026
+**Branches:** `main` contains the downstream Linux 4.19 work;
+`developpement` contains the Linux 7 port and is the active development branch.
 
-## Permanent Linux 7 boot — October 27, 2026
+## Current status — 1 November 2026
 
-The operator installed the system5 menu in the boot partition. Its default
-entry starts the existing Mobian root with Linux 7.2.12 after 15 seconds;
-the prior Mobian 4.19 entry is retained as a fallback. The operator confirmed
-that the desktop started, and the first 71,929,856 bytes read back from boot
-matched the installed image SHA-256
-`c9910703d146da7b98c08f7820f5c4e289c5630e8ba139dd185933a7ace78a61`.
-The running initramfs marker also matched
-`0e4464414a32df2df943042276ae9f67d77fee3373c9040f4ac3ca7762b88f16`.
+Mobian 7.2.12 starts from the permanent boot menu on the test handset. The
+menu also retains Mobian 4.19 and LineageOS rescue entries. The same Mobian
+installation carries the user's settings and customized Phosh interface.
+Hardware support is incomplete: this is a development system, not a claim
+that every phone function is ready for daily use.
 
-The fuel gauge is visible (99% in the captured session). The charger driver is
-disabled: plugged-in readings reported discharging, so charging is not
-qualified. A runtime logind power-key guard and a narrowly scoped polkit rule
-for the `mobian` account are staged by the Linux 7 initramfs; the rule also
-applies to non-local sessions of that account and is a workaround for the
-unresolved seat/session problem. A reboot worked with that policy in a prior
-temporary session; the installed variant's permissions were checked, but its
-shutdown action was not separately qualified. Wi-Fi, Bluetooth, camera, torch,
-GNSS, suspend and battery endurance require further work on this kernel.
-Other entries of this exact installed menu were not requalified after the flash.
-The 4.19 kernel/root and Android partitions were not flashed in this operation.
-
-The local build and install inputs are not yet a self-contained repository
-recipe. Do not remove the required local inputs on the strength of this note.
-No proprietary firmware, image, private device log or credential is committed.
-
-
-Mobian is usable on the test handset, with working touch/unlock, GPU rendering,
-USB networking/SSH, Wi-Fi and a customized Phosh home screen. This remains an
-experimental port: battery autonomy, telephony and other hardware functions
-are not all qualified. Historical D-v43/OpenRC and Weston results are retained
-separately and must not be read as the current Mobian runtime.
-
-| Area | Validated result | Remaining boundary |
+| Area | Latest reported result | Remaining work |
 | --- | --- | --- |
-| Permanent dualboot | Installed menu, Mobian default after 15 seconds, direct Mobian/LineageOS entries and Fastboot/Recovery trials; installed boot-prefix readback verified | Build/flash only through the pinned, device-specific operator workflow |
-| Display and input | Phosh, touch, unlock, power button and GLES2 through Zink/Turnip on KGSL/Adreno 650 | This is the qualified downstream kernel stack, not a mainline hardware-support claim |
-| Home and drawer | Favorites at the bottom, up to five; home shortcuts; drag/reorder/move without duplicates; scrolling before downward close; previews hidden on closed home | Search clearing on completed close is operator-confirmed for matching and empty queries |
-| Application previews | Private-target Phoc thumbnails accepted clear and correctly oriented; application activation and favorite dragging remain responsive | Exact underlying Mesa/driver corruption mechanism is not established |
-| Power menu | Shutdown/restart menu usable while locked, with cancellable restart confirmation | No claim that every power-management issue is solved |
-| Automatic suspend | IRQ-name handling sustains approximately 15-second return gaps after 35 natural gauge wakes in the latest night | Remaining battery consumption and physical gauge calibration are unresolved |
-| Connectivity | USB networking/SSH and Wi-Fi exercised | GPS, automatic rotation, modem/SMS/MMS are not established as working by these validations |
-| Audio, torch and camera | Speaker playback and torch have dated device validations; camera integration has its own build/bundle workflow | Do not infer full microphone/headset/UCM2 or camera-mode qualification from package inclusion |
-| Linux 7.2.12 session | Permanent boot into the existing Mobian root; desktop, drawer, touch and battery percentage observed | Charging, radios, camera, suspend and endurance remain unqualified |
+| Display and touch | Phosh desktop, touch, unlock, application drawer and GPU rendering have been exercised. The image configuration specifies 300% scale. | Further hardware and power-management qualification. |
+| Home and drawer | Scrolling, search clearing, thumbnail visibility and gestures were accepted in handset tests. | Keep these customizations when updating the shell or building a new image. |
+| Rear camera | Preview works. The operator confirmed upright, non-mirrored text with the installed lmi4 libcamera correction. | Full photo and video recording, image quality and other modes are not comprehensively qualified. |
+| Flashlight | Detected and operated successfully through the application. | Further long-duration and mode qualification. |
+| Wi-Fi and USB | Wi-Fi and USB networking have been exercised. USB Type-C reconnection woke the handset and restored the USB network in dated suspend tests. | Confirm repeatability across longer sleeps and other connection scenarios. |
+| Audio | A combined test kernel bound the TFA9874 speaker driver and loaded its tuning container. | Audible speaker playback remains unresolved; routing, DSP and mixer behavior need further investigation. Bluetooth and microphone are not fully qualified. |
+| Battery and charging | Battery percentage is exposed; charging has been observed. | USB input-current policy, gauge interpretation, standby consumption and endurance remain open. |
+| Modem and location | Modem/MHI and GNSS have diagnostic work in progress. | A reliable GPS fix and cellular operation are not established. |
+| Front camera | The pop-up mechanism was exercised under Linux 4.19. | Motor and front sensor support still require Linux 7 integration and testing. |
 
-### Linux 7 community track
+The latest reported status and its evidence boundaries are recorded in the
+[Linux 7 handset checkpoint](docs/status/LINUX7-CHECKPOINT-2026-11-01.md).
+Older dated notes preserve their historical context; they do not necessarily
+describe the currently installed kernel or userspace. In particular, a
+successful driver probe or software test does not establish audible output,
+a GPS fix, a calibrated current, or a complete hardware validation.
 
-A separate upstream line is being brought up in parallel on the `lmi-linux7`
-branch, while the qualified downstream 4.19 Mobian system above stays
-recoverable on `developpement`. Two RAM-only community boots have now produced
-real display and USB journal output on the handset: Linux 7.1.0-lmi-ccc-ram1
-and the 7.2.12-lmi-community-port1 port of that tree. Both reach DSI, DRM MSM
-and a framebuffer console, with the USB observer transport working and UFS
-probing successfully.
+## Power and suspend
 
-On top of those, the combined display and touch candidate passes on the
-handset: 46 tracking-ID starts and 46 releases over 3131 event records, with no
-active slot left at the end, BTN_TOUCH=0 and no SYN_DROPPED. The latest trial
-goes further and runs the real Mobian userspace: the Phosh desktop appeared and
-the drawer worked, with pixman software rendering on a read-only rootfs and a
-temporary home in RAM.
+An overnight Linux 7 capture from 31 October to 1 November recorded a displayed
+battery change from 95% to 58% over about 7 h 22 min, while the suspend-success
+counter did not increase. It is not a measurement of suspended drain. The
+display state and collector's effect on sleep need independent verification;
+`bl_power=4` must not be treated by itself as proof that the screen was lit.
+An earlier `s2idle` interval was observed, but s2idle alone does not establish
+deep hardware residency or calibrated electrical consumption.
 
-These are diagnostic RAM boots, not a usable system. Rendering is software only,
-the session is bounded to 90 seconds and cannot retain settings, the GPU and
-radio firmware are absent, and no autonomous boot, suspend or battery result
-follows. The permanent Mobian/Lineage installation was not flashed and its 4.19
-default is unchanged, even though Linux 7 is requested as the future default.
-See the [Linux 7 status](kernel/experimental/linux7/README.md) and the
-[hardware records](docs/validation/).
-
-### Battery: improvement and unresolved work
-
-The latest preserved night spans 9h48m42s between USB markers, with 95.824%
-inferred suspension and displayed battery 100 -> 82 percent. The historical
-approximately 1201-second awake delay did not recur in the 35 observed natural
-gauge return gaps. This validates sustained return-to-suspend behavior.
-
-It does **not** establish a calibrated standby current. Raw counter progression
-is nearly unchanged early/late, while software/SOC-model counters slow by about
-33%. Those channels use different state and cannot be treated as independent
-electrical meters. No physical residual consumer or battery-life solution is
-claimed. Older mA figures in dated notes are conditional gauge estimates.
-
-Read the [current battery checkpoint](docs/status/BATTERY-RESEARCH-CURRENT.md)
-and [overnight result and limits](docs/validation/lmi-quiet-wake-night-2026-10-26.md).
-
-### Installed system versus next build
-
-The accepted installed shell now includes Phosh `irqnames1+drawerpreview1` plus
-`drawersearch1+draweremptysearch1+searchclose1`, with GSD
-IRQ-name handling and the accepted private-target Phoc renderer. The complete
-image recipe still pins the earlier preview1 shell; incremental search acceptance
-does not silently promote new packages into that qualified image.
-
-The intended `j11sun_4700mah` profile is published on the current temporary
-October 7 kernel through the reviewed DT-order diagnostic. That does not make
-the diagnostic a newly qualified permanent kernel or resolve gauge accuracy.
-
-Clearing every search after a completed downward drawer close is now installed
-in [the search-close candidate](userspace/phosh/drawer-search-close-candidate/README.md).
-It supersedes the earlier empty-result-only requirement. Both matching and
-zero-result closure cases pass operator testing; 36 package tests pass.
-Cancelled gestures are host-checked, not separately operator-confirmed.
-
-## Build and installation entry points
-
-- [Current build identities and boundaries](docs/status/CURRENT-BUILD.md).
-- Complete Mobian image: `build/build-complete-lmi.sh`; follow the
-  [complete profile instructions](build/profiles/lmi-current/COMPLETE-BUILD.md).
-- Base Mobian orchestration: `build/build-mobian-image.sh`; Phosh builder:
-  `userspace/phosh/scripts/build-m1-phosh.sh`.
-- Permanent boot menu: [recipe](build/boot-menu/external-mobian/README.md) and
-  [guarded operator workflow](build/boot-menu/permanent/README.md).
-- Derived userdata without rebuilding the kernel:
-  [build/userdata/README.md](build/userdata/README.md).
-- Optional applications: `userspace/apps/scripts/install.sh`.
+## Build and installation
 
 Heavy kernel, package and image builds are run manually by the operator.
-Generated images, installable packages and required private/vendor inputs are
-external artifacts. An incremental package acceptance is not automatically a
-fresh complete-image validation. Follow the pinned recipe and rescue rules;
-historical commands are not the current installation procedure.
+Kernel, boot menu, root filesystem and incremental userspace packages are
+separate layers: a successful build or an accepted incremental change does not
+automatically qualify a complete image. Verify the current device, artifact
+identities, input availability and retained rescue paths before installation.
+
+- [Linux 7 kernel and experimental work](kernel/experimental/linux7/README.md)
+- [Complete Mobian image profile](build/profiles/lmi-current/COMPLETE-BUILD.md)
+- [Permanent boot menu workflow](build/boot-menu/permanent/README.md)
+- [Derived userdata builder](build/userdata/README.md)
+- [Build and validation status](docs/status/CURRENT-BUILD.md)
+- [Linux 7 handset checkpoint](docs/status/LINUX7-CHECKPOINT-2026-11-01.md)
+
+Some build inputs and firmware are retained externally. Complete bit-for-bit
+reconstruction of every kernel, userspace and vendor component has not been
+demonstrated. Do not infer that an old local recipe is complete or current
+without checking it against the installed build and available inputs.
 
 ## Repository map
 
 - `kernel/`: configurations, patches and diagnostics.
 - `userspace/`: Phosh, power, graphics, audio, camera, radios and applications.
-- `build/`: image/menu/userdata recipes, profiles and text-only input locks.
+- `build/`: image, menu and userdata recipes and profiles.
 - `docs/`: status, architecture, provenance and dated validation records.
-- `historical/`: superseded OpenRC, Weston and earlier porting work.
-- `tools/`: generic project utilities.
+- `historical/`: earlier postmarketOS, OpenRC and Weston work.
+- `tools/`: project utilities.
 
-Start with the [architecture guide](docs/architecture/ARCHITECTURE.md),
-[Mobian status](docs/status/MOBIAN-STATUS.md) and
-[hardware validation records](docs/validation/).
-
-## Reproducibility and exclusions
-
-Recipes, exact identities and text locks are tracked. Complete bit-for-bit
-source reconstruction of all kernel/userspace/vendor components is not
-demonstrated. Kernel/boot, rootfs, menu and incremental packages are distinct
-layers with separate validation boundaries.
-
-Keep generated images/rootfs trees, package caches, proprietary firmware,
-credentials, device identifiers and full private logs outside Git. Supply build
-credentials externally; never commit them or expose them in shell logs. Keep
-one qualified build and compatible rescue according to the
+See the [architecture guide](docs/architecture/ARCHITECTURE.md),
+[hardware validation records](docs/validation/), [NOTICE](NOTICE) and
+[LICENSE](LICENSE). Generated images, package caches, proprietary firmware,
+credentials, device identifiers and private logs stay outside Git. Retain one
+qualified build and compatible rescue according to the
 [artifact retention policy](docs/maintenance/ARTIFACT-RETENTION.md).
-See `NOTICE` and `LICENSE` for licensing information.
