@@ -374,6 +374,7 @@ test -L "$tree/opt/mobian-gpu/lib/libEGL.so"
 test -L "$tree/opt/mobian-gpu/lib/libGLESv2.so.2"
 test -L "$tree/opt/mobian-gpu/lib/libGLESv2.so"
 
+grep -qx 'scale = 3' "$tree/etc/phosh/phoc.ini"
 grep -qx 'enable = false' "$tree/etc/phosh/phoc.ini"
 grep -qx 'ExecStartPost=/bin/sh -ec '\''chown 1000:1000 /run/user/1000; chmod 0700 /run/user/1000; \[ "$(/usr/bin/stat -c %%u:%%g:%%a /run/user/1000)" = 1000:1000:700 \]'\''' "$tree/etc/systemd/system/user-runtime-dir@1000.service.d/m1-runtime-fix.conf"
 grep -qx "ExecStartPre=/usr/bin/timeout 10 /bin/sh -ec 'until \[ -c /dev/dri/card0 \]; do sleep 0.1; done'" "$tree/etc/systemd/system/lmi-splash-release.service.d/m1-device-wait.conf"
