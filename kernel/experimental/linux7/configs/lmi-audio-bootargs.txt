@@ -1,0 +1,1 @@
+tfa98xx.pcm_sample_format=3
