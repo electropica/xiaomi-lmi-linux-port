@@ -1,0 +1,50 @@
+# Linux 7.2.12 PM8150B charger for the lmi (Xiaomi POCO F2 Pro) experiment.
+#
+# Scope: this fragment adds ONLY the PM8150B charger driver. Everything else
+# stays exactly as validated by the running handset configuration.
+#
+# Why this fragment exists:
+#
+# The charger of this board runs entirely on the ROM defaults, because
+# CONFIG_CHARGER_QCOM_SMB5 is not set in the running configuration. The
+# measured consequences are visible in the captures of 2026-10-28 and
+# 2026-11-01:
+#
+#   - 0x1370 (USBIN_CURRENT_LIMIT_CFG) = 10, that is a 500 mA input limit,
+#     while the USB-C connector of the board advertises 5000 mV / 3000 mA and
+#     the port TCPM negotiated 5 V / 3 A (tcpm event log of the port);
+#   - 0x1308 (APSD_RESULT_STATUS) = 0x01, that is SDP: the D+/D- detection of
+#     the charger block does not see a Type-C source at all;
+#   - 0x1365 bit 4 (ICL_OVERRIDE_AFTER_APSD) is set, so the 500 mA result of
+#     that detection is imposed on the input;
+#   - 0x1108 (AICL_ICL_STATUS) = 10, the effective input limit is 500 mA, and
+#     0x110a bit 6 (SOFT_ILIMIT) is set, so the input voltage collapses at
+#     that limit: the system load is drawn from the battery instead of USB,
+#     which is what the "99 % then 96 % with the cable plugged in" capture
+#     shows.
+#
+# CONFIG_CHARGER_QCOM_SMB5: the PM8150B charger driver
+# (drivers/power/supply/qcom_pm8150b_charger.c). It is only safe on this tree
+# together with the patch
+# patches/0005-lmi-pm8150b-charger-input-current.patch, which corrects:
+#
+#   - the float voltage scale (the upstream formula uses the 7.5 mV scale of
+#     another PMIC and would command 4.90 V for this cell);
+#   - the interrupt name (the driver asks for "usbin-plugin", the board names
+#     it "usb-plugin": without the correction the probe fails);
+#   - the writes to the Type-C block (0x1544 and neighbours), which belong to
+#     the qcom,pm8150b-typec driver of this board and carry the Type-C attach
+#     and detach detection of the port;
+#   - the selection of the input current limit, which must follow the
+#     capability the source advertises on CC and not the D+/D- detection;
+#   - the re-charge threshold, which must stay driven by the battery voltage
+#     because the community fuel gauge never publishes its SOC to the charger.
+#
+# The driver publishes the "pm8150b-charger" power supply, which the fuel
+# gauge driver of this board already looks up by name, so the reported
+# charging status becomes the charger state instead of a guess based on the
+# sign of the current.
+#
+# The driver is built in (=y), like every other symbol of this tree.
+
+CONFIG_CHARGER_QCOM_SMB5=y

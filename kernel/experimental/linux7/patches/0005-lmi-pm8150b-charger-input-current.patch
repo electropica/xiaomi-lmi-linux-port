@@ -1,0 +1,334 @@
+From: electropica <552299+electropica@users.noreply.github.com>
+Subject: [PATCH] lmi: let the PM8150B charger follow the USB source
+
+The charger of this board runs on the ROM defaults: the input current
+limit stays at the 500 mA of 0x1370 while the USB-C connector
+advertises 5000 mV / 3000 mA. The handset therefore draws its system
+load from the battery as soon as the load passes 500 mA, which is
+what the 2026-10-28 and 2026-11-01 captures show: the phone reaches
+99 % then slides down to 96 % with the cable plugged in.
+
+The upstream community driver cannot be used as it is on this tree:
+
+- it programs the float voltage with the 7.5 mV scale of another
+  PMIC, which would command 4.90 V for this cell;
+- it asks for an interrupt named "usbin-plugin" while the board
+  names it "usb-plugin", so it would never probe;
+- it writes the Type-C block (0x1544 and neighbours), which the
+  qcom,pm8150b-typec driver of this board owns, and the Type-C
+  attach and detach detection of the port depends on it;
+- it selects the input current limit from the D+/D- detection,
+  which says nothing about a Type-C source;
+- it enables a SOC based re-charge threshold, but the community fuel
+  gauge never publishes its SOC to the charger.
+
+This patch keeps the driver and corrects those points: the input
+current limit follows the capability the source advertises on CC,
+capped at the 3000 mA of the connector, the automatic re-charge stays
+driven by the battery voltage, the Type-C block is left alone, the
+float voltage keeps the value the ROM programmed, and the input is
+never suspended on a collapse of the input voltage.
+
+Signed-off-by: electropica <552299+electropica@users.noreply.github.com>
+---
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -75,6 +75,14 @@
+ 
+ #define FLOAT_VOLTAGE_CFG			0x70
+ #define FLOAT_VOLTAGE_SETTING_MASK		GENMASK(7, 0)
++/*
++ * The PM8150B encodes the float voltage as 3.6 V + code * 10 mV,
++ * 4.79 V maximum (CAF qpnp-smb5.c, smb5_pm8150b_params). The upstream
++ * community driver used a 7.5 mV step over a 3487.5 mV base, which is
++ * the scale of another PMIC: with it, the 4460 mV design voltage of
++ * this cell would have been programmed as 4.90 V. Nothing writes this
++ * register in this driver, see smb5_probe().
++ */
+ 
+ #define CHARGE_RCHG_SOC_THRESHOLD_CFG_REG	0x7D
+ #define CHARGE_RCHG_SOC_THRESHOLD_CFG_MASK	GENMASK(7, 0)
+@@ -255,6 +263,14 @@
+ #define CDP_CURRENT_UA			3000000
+ #define DCP_CURRENT_UA			3300000
+ #define CURRENT_MAX_UA			DCP_CURRENT_UA
++/*
++ * Input current ceiling of this board: the USB-C connector advertises a
++ * 5000 mV / 3000 mA source PDO and the port TCPM negotiated 5 V / 3 A
++ * (the tcpm event log of the port). The limit is never raised above it.
++ */
++#define USB_ICL_MAX_UA			3000000
++#define TYPE_C_RP_1P5_CURRENT_UA	1500000
++#define TYPE_C_RP_DEFAULT_CURRENT_UA	500000
+ 
+ /* pmi8150b registers represent current in increments of 1/40th of an amp */
+ #define CURRENT_SCALE_FACTOR		50000
+@@ -504,9 +520,37 @@
+ 				  enable ? CHARGING_ENABLE_CMD_BIT : 0);
+ }
+ 
++/*
++ * Current the attached source can deliver, as advertised on CC by the
++ * Type-C block of the same PMIC: Rp 3.0 A, Rp 1.5 A or the USB 2.0
++ * default. Returns -ENODATA when no source capability is visible.
++ */
++static int smb5_get_typec_input_current(struct smb5_chip *chip,
++					 unsigned int *ua)
++{
++	unsigned int status;
++	int rc;
++
++	rc = regmap_read(chip->regmap, chip->base + TYPE_C_SNK_STATUS,
++			   &status);
++	if (rc < 0)
++		return rc;
++
++	if (status & SNK_RP_3P0_BIT)
++		*ua = USB_ICL_MAX_UA;
++	else if (status & SNK_RP_1P5_BIT)
++		*ua = TYPE_C_RP_1P5_CURRENT_UA;
++	else if (status & SNK_RP_STD_BIT)
++		*ua = TYPE_C_RP_DEFAULT_CURRENT_UA;
++	else
++		return -ENODATA;
++
++	return 0;
++}
++
+ static void smb5_status_change_work(struct work_struct *work)
+ {
+-	unsigned int charger_type, current_ua;
++	unsigned int charger_type, current_ua = 0;
+ 	int usb_online = 0;
+ 	int count, rc;
+ 	struct smb5_chip *chip;
+@@ -517,47 +561,68 @@
+ 	if (!usb_online)
+ 		return;
+ 
+-	for (count = 0; count < 3; count++) {
+-		dev_dbg(chip->dev, "get charger type retry %d\n", count);
+-		rc = smb5_apsd_get_charger_type(chip, &charger_type);
+-		if (rc != -EAGAIN)
++	/*
++	 * The input current limit follows the capability the source
++	 * advertises on CC. This board negotiates its power delivery with
++	 * the port TCPM, so the Rp seen by the PMIC Type-C block is the
++	 * only contract the kernel can see: the D+/D- detection of the
++	 * charger block says nothing about a Type-C source and used to
++	 * leave the limit at the 500 mA ROM default.
++	 */
++	rc = smb5_get_typec_input_current(chip, &current_ua);
++	if (rc) {
++		/*
++		 * No Type-C source: fall back to the D+/D- detection for
++		 * USB-A style sources.
++		 */
++		for (count = 0; count < 3; count++) {
++			dev_dbg(chip->dev, "get charger type retry %d\n", count);
++			rc = smb5_apsd_get_charger_type(chip, &charger_type);
++			if (rc != -EAGAIN)
++				break;
++			msleep(100);
++		}
++
++		if (rc < 0) {
++			/*
++			 * Unknown source: keep the programmed limit and look again
++			 * later instead of guessing a higher one.
++			 */
++			dev_dbg(chip->dev,
++				 "no source capability, keeping the input current limit\n");
++			if (rc == -EAGAIN)
++				schedule_delayed_work(&chip->status_change_work,
++					msecs_to_jiffies(1000));
++			return;
++		}
++
++		switch (charger_type) {
++		case POWER_SUPPLY_USB_TYPE_CDP:
++			current_ua = CDP_CURRENT_UA;
++			break;
++		case POWER_SUPPLY_USB_TYPE_DCP:
++			current_ua = DCP_CURRENT_UA;
+ 			break;
+-		msleep(100);
++		case POWER_SUPPLY_USB_TYPE_SDP:
++		default:
++			current_ua = SDP_CURRENT_UA;
++			break;
++		}
+ 	}
+ 
+-	if (rc < 0 && rc != -EAGAIN) {
+-		dev_err(chip->dev, "get charger type failed: %d\n", rc);
+-		return;
+-	}
++	/* Never above the current the connector advertises. */
++	if (current_ua > USB_ICL_MAX_UA)
++		current_ua = USB_ICL_MAX_UA;
+ 
+-	if (rc < 0) {
+-		/*
+-		 * APSD not done yet — set a conservative DCP interim limit so
+-		 * we charge at ≥1.5 A while waiting, then re-check after 1 s.
+-		 */
+-		smb5_set_current_limit(chip, DCP_CURRENT_UA);
+-		rc = regmap_update_bits(chip->regmap, chip->base + CMD_APSD,
+-					APSD_RERUN_BIT, APSD_RERUN_BIT);
+-		schedule_delayed_work(&chip->status_change_work,
+-				      msecs_to_jiffies(1000));
+-		dev_dbg(chip->dev, "get charger type failed, rerun apsd\n");
++	rc = smb5_set_current_limit(chip, current_ua);
++	if (rc) {
++		dev_err(chip->dev,
++			 "Couldn't set the input current limit: %d\n", rc);
+ 		return;
+ 	}
+ 
+-	switch (charger_type) {
+-	case POWER_SUPPLY_USB_TYPE_CDP:
+-		current_ua = CDP_CURRENT_UA;
+-		break;
+-	case POWER_SUPPLY_USB_TYPE_DCP:
+-		current_ua = DCP_CURRENT_UA;
+-		break;
+-	case POWER_SUPPLY_USB_TYPE_SDP:
+-	default:
+-		current_ua = SDP_CURRENT_UA;
+-		break;
+-	}
+-
+-	smb5_set_current_limit(chip, current_ua);
++	dev_info(chip->dev, "input current limit set to %u uA\n",
++		 current_ua);
+ 	power_supply_changed(chip->chg_psy);
+ }
+ 
+@@ -730,7 +795,7 @@
+ 
+ 	power_supply_changed(chip->chg_psy);
+ 
+-	rc = regmap_write(chip->regmap, BARK_BITE_WDOG_PET,
++	rc = regmap_write(chip->regmap, chip->base + BARK_BITE_WDOG_PET,
+ 			  BARK_BITE_WDOG_PET_BIT);
+ 	if (rc < 0)
+ 		dev_err(chip->dev, "Couldn't pet the dog rc=%d\n", rc);
+@@ -756,58 +821,20 @@
+ static const struct smb5_register smb5_init_seq[] = {
+ 	{ .addr = USBIN_CMD_IL, .mask = USBIN_SUSPEND_BIT, .val = 0 },
+ 	{ .addr = AICL_RERUN_TIME_CFG, .mask = AICL_RERUN_TIME_MASK, .val = 3 },
+-	/* Enable auto-recharge using SOC threshold (set to 98% separately) */
+-	{ .addr = CHGR_CFG2,
+-	  .mask = AUTO_RECHG_BIT | SOC_BASED_RECHG_BIT | CHARGER_INHIBIT_BIT,
+-	  .val = AUTO_RECHG_BIT | SOC_BASED_RECHG_BIT },
+ 	/*
+-	 * By default configure us as an upstream facing port
+-	 * FIXME: This will be handled by the type-c driver
++	 * Auto-recharge stays enabled, but it is driven by the battery voltage
++	 * and not by the state of charge: the community fuel gauge never
++	 * publishes its SOC to the charger, so a SOC based re-charge threshold
++	 * would never be reached. The threshold itself is left at the ROM
++	 * default (0x107e / 0x107f).
+ 	 */
+-	{ .addr = TYPE_C_MODE_CFG,
+-	  .mask = EN_TRY_SNK_BIT | EN_SNK_ONLY_BIT,
+-	  .val = EN_TRY_SNK_BIT },
+-	{ .addr = TYPEC_TYPE_C_VCONN_CONTROL,
+-	  .mask = VCONN_EN_ORIENTATION_BIT | VCONN_EN_SRC_BIT |
+-		  VCONN_EN_VALUE_BIT,
+-	  .val = VCONN_EN_SRC_BIT },
+-	{ .addr = DEBUG_ACCESS_SRC_CFG,
+-	  .mask = EN_UNORIENTED_DEBUG_ACCESS_SRC_BIT,
+-	  .val = EN_UNORIENTED_DEBUG_ACCESS_SRC_BIT },
+-	{ .addr = TYPE_C_EXIT_STATE_CFG,
+-	  .mask = SEL_SRC_UPPER_REF_BIT,
+-	  .val = SEL_SRC_UPPER_REF_BIT },
+-	/*
+-	 * Disable Type-C factory mode and stay in Attached.SRC state when VCONN
+-	 * over-current happens
+-	 */
+-	{ .addr = TYPE_C_CFG,
+-	  .mask = BC1P2_START_ON_CC_BIT,
+-	  .val = 0 },
+-	{ .addr = TYPE_C_DEBUG_ACCESS_SINK,
+-	  .mask = TYPEC_DEBUG_ACCESS_SINK_MASK,
+-	  .val = 0x17 },
+-	/* Configure VBUS for software control */
+-	{ .addr = OTG_CFG, .mask = OTG_EN_SRC_CFG_BIT, .val = 0 },
+-	/*
+-	 * Use VBAT to determine the recharge threshold when battery is full
+-	 * rather than the state of charge.
+-	 */
+-	{ .addr = CHARGE_RCHG_SOC_THRESHOLD_CFG_REG,
+-	  .mask = CHARGE_RCHG_SOC_THRESHOLD_CFG_MASK,
+-	  .val = 98 },
++	{ .addr = CHGR_CFG2,
++	  .mask = AUTO_RECHG_BIT | SOC_BASED_RECHG_BIT | CHARGER_INHIBIT_BIT,
++	  .val = AUTO_RECHG_BIT },
+ 	/* Enable charging */
+ 	{ .addr = CHARGING_ENABLE_CMD,
+ 	  .mask = CHARGING_ENABLE_CMD_BIT,
+ 	  .val = CHARGING_ENABLE_CMD_BIT },
+-	/* Enable BC1P2 Src detect */
+-	{ .addr = USBIN_OPTIONS_1_CFG,
+-	  .mask = BC1P2_SRC_DETECT_BIT,
+-	  .val = BC1P2_SRC_DETECT_BIT },
+-	/* Set the default SDP charger type to a 500ma USB 2.0 port */
+-	{ .addr = USBIN_ICL_OPTIONS,
+-	  .mask = USBIN_MODE_CHG_BIT,
+-	  .val = USBIN_MODE_CHG_BIT },
+ 	{ .addr = CMD_ICL_OVERRIDE,
+ 	  .mask = ICL_OVERRIDE_BIT,
+ 	  .val = 0 },
+@@ -824,12 +851,19 @@
+ 	 * Enable Automatic Input Current Limit, this will slowly ramp up the current
+ 	 * When connected to a wall charger, and automatically stop when it detects
+ 	 * the charger current limit (voltage drop?) or it reaches the programmed limit.
++	 *
++	 * The suspend on collapse bit stays clear: a collapse of the input must
++	 * not stop the USB input, the handset is only reachable over that link.
++	 *
++	 * The Type-C block (0x1544 and neighbours) is deliberately not written
++	 * here: the qcom,pm8150b-typec driver of this board owns it, and the
++	 * Type-C attach and detach detection of the port depends on it.
+ 	 */
+ 	{ .addr = USBIN_AICL_OPTIONS_CFG,
+ 	  .mask = USBIN_AICL_PERIODIC_RERUN_EN_BIT | USBIN_AICL_ADC_EN_BIT
+ 			| USBIN_AICL_EN_BIT | SUSPEND_ON_COLLAPSE_USBIN_BIT,
+ 	  .val = USBIN_AICL_PERIODIC_RERUN_EN_BIT | USBIN_AICL_ADC_EN_BIT
+-			| USBIN_AICL_EN_BIT | SUSPEND_ON_COLLAPSE_USBIN_BIT },
++			| USBIN_AICL_EN_BIT },
+ };
+ 
+ static int smb5_init_hw(struct smb5_chip *chip)
+@@ -945,12 +979,14 @@
+ 		return dev_err_probe(chip->dev, rc,
+ 				     "Failed to init status change work\n");
+ 
+-	/* Float voltage: same 7.5 mV / 3487.5 mV-base register as pmi8998 */
+-	rc = (chip->batt_info->voltage_max_design_uv - 3487500) / 7500 + 1;
+-	rc = regmap_update_bits(chip->regmap, chip->base + FLOAT_VOLTAGE_CFG,
+-				FLOAT_VOLTAGE_SETTING_MASK, rc);
+-	if (rc < 0)
+-		return dev_err_probe(chip->dev, rc, "Couldn't set vbat max\n");
++	/*
++	 * Float voltage: left as the ROM programmed it (0x1070 = 0x50, 4.40 V
++	 * on this board, and the charge did terminate there on 2026-10-28).
++	 * The upstream community driver wrote the cell design voltage with the
++	 * 7.5 mV step of another PMIC, which would have commanded 4.90 V here.
++	 * Raising the float to the 4460 mV design voltage of the cell is a
++	 * charging policy decision that is not taken in this patch.
++	 */
+ 
+ 	/* Fast charge current: step size is 50 mA, same scale as ICL */
+ 	if (chip->batt_info->constant_charge_current_max_ua > 0) {
+@@ -968,7 +1004,7 @@
+ 	if (rc < 0)
+ 		return rc;
+ 
+-	rc = smb5_init_irq(chip, &chip->cable_irq, "usbin-plugin",
++	rc = smb5_init_irq(chip, &chip->cable_irq, "usb-plugin",
+ 			   smb5_handle_usb_plugin);
+ 	if (rc < 0)
+ 		return rc;

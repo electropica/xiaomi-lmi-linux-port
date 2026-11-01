@@ -5,7 +5,62 @@ The operator temporarily booted a RAM observer and recovered its live USB log.
 TLMM GPIO exclusions28-31/40-43 were required to cross the earlier binding
 stall in this trial. See the [hardware record](../../../docs/validation/lmi-linux7-menu-host-check-2026-10-26.md).
 
+## PM8150B charger input current candidate prepared — November 1, 2026
+
+The charger of this board runs on the ROM defaults: no charger driver is bound
+and the input current limit stays at the 500 mA of 0x1370, while the USB-C
+connector advertises 5000 mV / 3000 mA and the port TCPM negotiated 5 V / 3 A.
+The system load of the running handset is above 500 mA, so the battery supplies
+the difference and the percentage slides down with the cable plugged in, which
+is what the 2026-11-01 capture shows. The termination at 99 % is normal: the
+float register keeps the ROM value of 4.40 V and the charge did terminate there
+on 2026-10-28, after which the automatic re-charge did resume.
+
+The deliverable is `patches/0005-lmi-pm8150b-charger-input-current.patch`,
+`configs/charger-smb5.fragment`, the operator recipe
+`tools/build-community-charger-kernel.sh`, the host check
+`tools/check-charger-patch.sh` and the read-only probe
+`tools/pm8150b-charger-targeted-read.py`. The community charger driver cannot
+be enabled as it is on this tree: it programs the float voltage with the scale
+of another PMIC (4.90 V for this cell), it asks for an interrupt name the
+board does not use, it writes the Type-C block that the `qcom,pm8150b-typec`
+driver of this board owns, it takes the input current limit from the D+/D-
+detection, which sees SDP, and it enables a SOC based re-charge threshold that
+the community fuel gauge can never feed. The patch corrects those points and
+changes nothing else: the camera, GNSS, audio and MHI work of the tree that
+carries the Type-C detach fix of commit 1553aee is left as it is.
+
+The host check passes (`CHARGER_CANDIDATE_HOST_CHECK_OK`) and the recipe was
+run up to the configuration merge. Nothing was compiled, nothing was flashed and
+no setting of the handset was changed, so no charging behaviour is claimed on
+the device yet. See the
+[validation record](../../../docs/validation/lmi-linux7-pm8150b-charger-input-current-2026-11-01.md).
+
 ## Current hardware qualification
+
+## Unplugged battery check prepared — October 28, 2026
+
+A read-only device-side battery check now exists for this branch, and it is
+armed on the handset. The gauge semantics on this build are pinned down: with
+no `pm8150b-charger` bound, the community fuel gauge driver computes the
+status itself from the current sign and the capacity, so `BAT_status` is not an
+independent plug indicator, and the exported `current_now` follows the usual
+convention, negative being a discharge.
+
+Three observations follow from the first connected-side captures. The current
+channel changes sign inside a single 119 s window, immediately after a cable
+re-attach, so it is not a stable discharge measurement on this build. The
+Type-C source supply reports no source while the cable is connected, so it is
+not usable as the plug detector. Between the last capture with the cable in
+and the first capture after the reconnection, the capacity fell from 99% to 58%
+over 9 h 40 min of continuous uptime: an endpoint observation between two
+captures, not a rate.
+
+The check was designed around the transport. The handset is only reachable over
+the USB RNDIS link, so the collector runs on the device, waits for the cable to
+disappear and writes its capture there. The unplugged capture is armed and
+pending. Charging, endurance and suspend remain unqualified on this kernel.
+See the [validation record](../../../docs/validation/lmi-linux7-unplugged-battery-check-2026-10-28.md).
 
 ## Rear camera sensor binding prepared — October 28, 2026
 
