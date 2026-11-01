@@ -78,3 +78,28 @@ CONFIG_VIDEO_QCOM_CAMSS=y
 # line and the Flatpak candidate of the camera application are both served by
 # one kernel.
 CONFIG_FUSE_FS=y
+
+#
+# DMA-BUF HEAPS, FOR THE CAMERA APPLICATION
+#
+# The camera application of the handset is a libcamera one, and libcamera
+# allocates the buffers of the pipeline through a dma-buf allocator. Without
+# a dma-buf provider it cannot create its software image processing
+# processor, so it announces "Failed to create software ISP, disabling
+# software debayering" and "Could not open any dma-buf provider", and the
+# camera is then declared unsupported.
+#
+# The running handset configuration carries CONFIG_DMABUF_HEAPS_SYSTEM and
+# CONFIG_DMABUF_HEAPS_CMA as modules, and this kernel ships no module
+# payload at all: there is no /lib/modules directory on the device, so a
+# symbol built as a module can never load. The same reasoning as for the
+# FUSE file system therefore applies: the providers have to be built in, or
+# the camera application has no way to obtain a buffer.
+#
+# CONFIG_DMABUF_HEAPS: the dma-buf heap framework itself.
+# CONFIG_DMABUF_HEAPS_SYSTEM: the system heap, the one libcamera opens.
+# CONFIG_DMABUF_HEAPS_CMA: the contiguous memory heap, used by the
+# camera and the display pipelines for the large buffers.
+CONFIG_DMABUF_HEAPS=y
+CONFIG_DMABUF_HEAPS_SYSTEM=y
+CONFIG_DMABUF_HEAPS_CMA=y
