@@ -1,3 +1,5 @@
+> Superseded on the handset after the USB detach fix passed an awake test; the AC idle policy and image defaults were restored. See [the subsequent validation](lmi-linux7-typec-detach-2026-11-01.md).
+
 # Linux 7 idle suspend with stale USB power state
 
 On 1 November 2026, a handset-local observer recorded input VBUS at zero while

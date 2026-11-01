@@ -1,0 +1,277 @@
+From: MCode <mcode@localhost>
+Subject: [PATCH] usb: typec: qcom-pmic: wake the system on USB cable change
+
+The PMIC Type-C interrupts (attach-detach, vbus-change, cc-state-change)
+are routed through the always-on PMI line, but nothing armed them as
+wakeup sources: the device had no wakeup source and the interrupts were
+masked by suspend_device_irqs() during s2idle.  A cable plug therefore
+could not resume the application processor; only the power key could.
+
+Register a wakeup source for the Type-C device, arm those three
+interrupts for the duration of the suspend (the same pattern as
+pm8941-pwrkey.c, which is the wakeup source that works on this platform)
+and report the wakeup event from the hard IRQ handler so that the PM
+core credits it.
+
+A cable change that happens while the system sleeps is only reported to
+the driver when the interrupts are serviced again, and the CC debounce
+may have been frozen by the suspend.  The port state machine then loses
+the attachment: the gadget is not bound again and the handset stops
+charging although the cable is still connected.  Re-read the port state
+from the PMIC on resume so that the attachment is taken into account.
+
+IRQF_WAKEUP, which the previous attempt used, does not exist in this
+kernel and would not have compiled; enable_irq_wake() is the current
+upstream mechanism.
+
+Signed-off-by: MCode <mcode@localhost>
+---
+--- a/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_port.c
++++ b/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_port.c
+@@ -10,6 +10,8 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm.h>
++#include <linux/pm_wakeup.h>
+ #include <linux/regmap.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/slab.h>
+@@ -161,6 +163,7 @@
+ struct pmic_typec_port_irq_data {
+ 	int				virq;
+ 	int				irq;
++	bool				wakeup;
+ 	struct pmic_typec_port		*pmic_typec_port;
+ };
+ 
+@@ -232,6 +235,39 @@
+ 	dev_dbg(pmic_typec_port->dev, "Debounce cc complete\n");
+ }
+ 
++/*
++ * These interrupts are routed through the PMI line, which stays powered while
++ * the SoC is suspended, so they remain valid wakeup sources.  They are the
++ * only way the PMIC can tell the application processor that the cable state
++ * changed.
++ */
++static bool pmic_typec_port_irq_is_wakeup(int virq)
++{
++	switch (virq) {
++	case PMIC_TYPEC_ATTACH_DETACH_IRQ:
++	case PMIC_TYPEC_VBUS_IRQ:
++	case PMIC_TYPEC_CC_STATE_IRQ:
++		return true;
++	default:
++		return false;
++	}
++}
++
++static irqreturn_t pmic_typec_port_hard_isr(int irq, void *dev_id)
++{
++	struct pmic_typec_port_irq_data *irq_data = dev_id;
++
++	/*
++	 * Report the wakeup event from the hard IRQ handler, so that the system
++	 * is resumed as soon as the cable is plugged in or out.  The register
++	 * accesses stay in the threaded part, which runs in process context.
++	 */
++	if (irq_data->wakeup)
++		pm_wakeup_event(irq_data->pmic_typec_port->dev, 0);
++
++	return IRQ_HANDLED;
++}
++
+ static irqreturn_t pmic_typec_port_isr(int irq, void *dev_id)
+ {
+ 	struct pmic_typec_port_irq_data *irq_data = dev_id;
+@@ -710,6 +746,7 @@
+ 	struct pmic_typec_port_irq_data *irq_data;
+ 	struct pmic_typec_port *pmic_typec_port;
+ 	struct fwnode_handle *connector;
++	bool wakeup;
+ 	int i, ret, irq;
+ 
+ 	pmic_typec_port = devm_kzalloc(dev, sizeof(*pmic_typec_port), GFP_KERNEL);
+@@ -726,6 +763,14 @@
+ 
+ 	mutex_init(&pmic_typec_port->vbus_lock);
+ 
++	/*
++	 * The Type-C interrupts are routed through the always-on PMI line, so
++	 * the PMIC can wake the application processor while the SoC is
++	 * suspended.  Honour the DT "wakeup-source" property to arm them.
++	 */
++	wakeup = of_property_read_bool(dev->of_node, "wakeup-source");
++	device_init_wakeup(dev, wakeup);
++
+ 	connector = device_get_named_child_node(dev, "connector");
+ 	if (!connector)
+ 		return -EINVAL;
+@@ -760,7 +805,10 @@
+ 		irq_data->pmic_typec_port = pmic_typec_port;
+ 		irq_data->irq = irq;
+ 		irq_data->virq = res->irq_params[i].virq;
+-		ret = devm_request_threaded_irq(dev, irq, NULL, pmic_typec_port_isr,
++		irq_data->wakeup =
++			pmic_typec_port_irq_is_wakeup(res->irq_params[i].virq);
++		ret = devm_request_threaded_irq(dev, irq, pmic_typec_port_hard_isr,
++						pmic_typec_port_isr,
+ 						IRQF_ONESHOT | IRQF_NO_AUTOEN,
+ 						res->irq_params[i].irq_name,
+ 						irq_data);
+@@ -784,6 +832,61 @@
+ 	return 0;
+ }
+ 
++/**
++ * qcom_pmic_typec_port_set_wakeup() - arm or disarm the wakeup interrupts
++ * @pmic_typec_port: PMIC Type-C port
++ * @enable: true to arm the interrupts as wakeup sources, false to disarm
++ *
++ * The interrupts are routed through the PMI line, which stays powered while
++ * the SoC is suspended.  Arming them keeps them enabled across a suspend, so
++ * that the PMIC can resume the system when the cable state changes.
++ */
++void qcom_pmic_typec_port_set_wakeup(struct pmic_typec_port *pmic_typec_port,
++				     bool enable)
++{
++	unsigned int i;
++
++	for (i = 0; i < pmic_typec_port->nr_irqs; i++) {
++		struct pmic_typec_port_irq_data *irq_data =
++			&pmic_typec_port->irq_data[i];
++
++		if (!irq_data->wakeup)
++			continue;
++
++		if (enable)
++			enable_irq_wake(irq_data->irq);
++		else
++			disable_irq_wake(irq_data->irq);
++	}
++}
++
++/**
++ * qcom_pmic_typec_port_resync() - re-read the PMIC port state
++ * @pmic_typec_port: PMIC Type-C port
++ *
++ * A cable that is plugged in or out while the system sleeps is only reported
++ * to the driver when the interrupts are serviced again.  The CC debounce may
++ * also have been frozen by the suspend, in which case the driver would drop
++ * the change.  Clear the debounce and ask the TCPM core to evaluate the port
++ * again: it reads the CC and VBUS state back from the hardware through the
++ * get_cc / get_vbus operations of this driver.
++ */
++void qcom_pmic_typec_port_resync(struct pmic_typec_port *pmic_typec_port)
++{
++	struct tcpm_port *tcpm_port = pmic_typec_port->tcpm_port;
++	unsigned long flags;
++
++	spin_lock_irqsave(&pmic_typec_port->lock, flags);
++	pmic_typec_port->debouncing_cc = false;
++	spin_unlock_irqrestore(&pmic_typec_port->lock, flags);
++
++	if (!tcpm_port)
++		return;
++
++	tcpm_vbus_change(tcpm_port);
++	tcpm_cc_change(tcpm_port);
++}
++
+ const struct pmic_typec_port_resources pm8150b_port_res = {
+ 	.irq_params = {
+ 		{
+--- a/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_port.h
++++ b/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_port.h
+@@ -24,8 +24,15 @@
+ 
+ /* API */
+ 
++struct pmic_typec_port;
++
+ extern const struct pmic_typec_port_resources pm8150b_port_res;
+ 
++void qcom_pmic_typec_port_set_wakeup(struct pmic_typec_port *pmic_typec_port,
++				     bool enable);
++
++void qcom_pmic_typec_port_resync(struct pmic_typec_port *pmic_typec_port);
++
+ int qcom_pmic_typec_port_probe(struct platform_device *pdev,
+ 			       struct pmic_typec *tcpm,
+ 			       const struct pmic_typec_port_resources *res,
+--- a/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec.c
++++ b/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec.c
+@@ -8,6 +8,8 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm.h>
++#include <linux/pm_wakeup.h>
+ #include <linux/regmap.h>
+ #include <linux/slab.h>
+ #include <linux/usb/tcpm.h>
+@@ -124,10 +126,45 @@
+ 	return ret;
+ }
+ 
++static int qcom_pmic_typec_suspend(struct device *dev)
++{
++	struct pmic_typec *tcpm = dev_get_drvdata(dev);
++
++	/*
++	 * Keep the Type-C interrupts enabled across the suspend, so that the
++	 * PMIC can resume the system when the cable is plugged in or out.
++	 */
++	if (device_may_wakeup(dev))
++		qcom_pmic_typec_port_set_wakeup(tcpm->pmic_typec_port, true);
++
++	return 0;
++}
++
++static int qcom_pmic_typec_resume(struct device *dev)
++{
++	struct pmic_typec *tcpm = dev_get_drvdata(dev);
++
++	qcom_pmic_typec_port_set_wakeup(tcpm->pmic_typec_port, false);
++
++	/*
++	 * The cable may have been plugged in or out while we were suspended: make
++	 * the port read its state back from the PMIC, otherwise the attachment can
++	 * be lost and the USB link stays down.
++	 */
++	qcom_pmic_typec_port_resync(tcpm->pmic_typec_port);
++
++	return 0;
++}
++
++static DEFINE_SIMPLE_DEV_PM_OPS(qcom_pmic_typec_pm_ops,
++				qcom_pmic_typec_suspend,
++				qcom_pmic_typec_resume);
++
+ static void qcom_pmic_typec_remove(struct platform_device *pdev)
+ {
+ 	struct pmic_typec *tcpm = platform_get_drvdata(pdev);
+ 
++	device_init_wakeup(&pdev->dev, false);
+ 	tcpm->pdphy_stop(tcpm);
+ 	tcpm->port_stop(tcpm);
+ 	tcpm_unregister_port(tcpm->tcpm_port);
+@@ -154,6 +191,7 @@
+ static struct platform_driver qcom_pmic_typec_driver = {
+ 	.driver = {
+ 		.name = "qcom,pmic-typec",
++		.pm = &qcom_pmic_typec_pm_ops,
+ 		.of_match_table = qcom_pmic_typec_table,
+ 	},
+ 	.probe = qcom_pmic_typec_probe,
+--- a/arch/arm64/boot/dts/qcom/sm8250-xiaomi-lmi.dts
++++ b/arch/arm64/boot/dts/qcom/sm8250-xiaomi-lmi.dts
+@@ -632,6 +632,7 @@
+ };
+ 
+ &pm8150b_typec {
++	wakeup-source;
+ 	vdd-pdphy-supply = <&vreg_l2a_3p1>;
+ 	status = "okay";
+ 

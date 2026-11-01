@@ -1,0 +1,11 @@
+--- a/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_port.c
++++ b/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_port.c
+@@ -265,7 +265,7 @@
+ 	if (irq_data->wakeup)
+ 		pm_wakeup_event(irq_data->pmic_typec_port->dev, 0);
+ 
+-	return IRQ_HANDLED;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ static irqreturn_t pmic_typec_port_isr(int irq, void *dev_id)
