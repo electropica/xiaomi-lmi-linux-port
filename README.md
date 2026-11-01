@@ -3,8 +3,8 @@
 Mobian/Phosh and Linux kernel development for the Xiaomi Redmi K30 Pro / POCO
 F2 Pro (`lmi`, Qualcomm SM8250, Adreno 650).
 
-**Branches:** `main` contains the downstream Linux 4.19 work;
-`developpement` contains the Linux 7 port and is the active development branch.
+**Branches:** `main` and `developpement` contain the Linux 7 port. The historical
+downstream Linux 4.19 work is retained on `archive/linux-4.19`.
 
 ## Current status — 1 November 2026
 
