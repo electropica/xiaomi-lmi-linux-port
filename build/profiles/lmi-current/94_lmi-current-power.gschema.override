@@ -1,5 +1,7 @@
 [org.gnome.settings-daemon.plugins.power]
-sleep-inactive-ac-type='nothing'
+# Linux 7 may report stale AC state after unplug; keep idle sleep on AC.
+sleep-inactive-ac-type='suspend'
+sleep-inactive-ac-timeout=900
 sleep-inactive-battery-type='suspend'
 sleep-inactive-battery-timeout=900
 

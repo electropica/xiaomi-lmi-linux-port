@@ -82,7 +82,8 @@ install -Dm644 "$src/power/94_lmi-current-power.gschema.override" \
 glib-compile-schemas --strict /usr/share/glib-2.0/schemas
 test "$(env GSETTINGS_BACKEND=memory gsettings get sm.puri.phosh app-filter-mode)" = "@as []"
 test "$(env GSETTINGS_BACKEND=memory gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type)" = "'suspend'"
-test "$(env GSETTINGS_BACKEND=memory gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type)" = "'nothing'"
+test "$(env GSETTINGS_BACKEND=memory gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type)" = "'suspend'"
+test "$(env GSETTINGS_BACKEND=memory gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-ac-timeout)" = "900"
 test "$(env GSETTINGS_BACKEND=memory gsettings get sm.puri.phosh.notifications wakeup-screen-triggers)" = "@as []"
 test -f "/usr/share/zoneinfo/${M1_TIMEZONE:-Europe/Paris}"
 ln -sf "/usr/share/zoneinfo/${M1_TIMEZONE:-Europe/Paris}" /etc/localtime
