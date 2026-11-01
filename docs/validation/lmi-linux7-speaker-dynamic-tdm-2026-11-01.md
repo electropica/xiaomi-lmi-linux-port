@@ -18,7 +18,8 @@ not a measurement of physical I2S signals.
 The phone retains the existing permanent menu and rescue entries. Do not assume
 all audio features, capture, headset, suspend/resume or charging are validated
 by this speaker playback test. Future Linux 7 menu bundles must retain the
-argument in `kernel/experimental/linux7/configs/lmi-audio-bootargs.txt`; that
-file records the requirement and does not automatically modify a bundle. The
+argument in `kernel/experimental/linux7/configs/lmi-audio-bootargs.txt`.
+The repository bundle builder adds it automatically and rejects conflicts;
+other menu builders must preserve it explicitly. The
 community driver warns that container TDM settings may override dynamic mode,
 so changes to the installed TFA container require revalidation.

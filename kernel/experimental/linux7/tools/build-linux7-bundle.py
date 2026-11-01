@@ -141,6 +141,16 @@ def kit_components(kit: Path) -> dict[str, bytes]:
     raw_cmdline = cmdline.read_bytes().rstrip(b"\0")
     if not raw_cmdline.endswith(CMDLINE_SUFFIX):
         raw_cmdline += CMDLINE_SUFFIX
+    # Preserve the working lmi speaker framing in newly assembled bundles.
+    audio_config = Path(__file__).resolve().parent.parent / "configs/lmi-audio-bootargs.txt"
+    audio_arg = audio_config.read_bytes().strip()
+    if audio_arg != b"tfa98xx.pcm_sample_format=3":
+        raise ValueError("invalid lmi audio boot argument")
+    audio_options = [x for x in raw_cmdline.split() if x.startswith(b"tfa98xx.pcm_sample_format=")]
+    if audio_options and audio_options != [audio_arg]:
+        raise ValueError("conflicting or duplicate TFA audio boot arguments")
+    if not audio_options:
+        raw_cmdline += b" " + audio_arg
     return {
         "linux7/kernel": image.read_bytes(),
         "linux7/dtb": dtb.read_bytes(),
