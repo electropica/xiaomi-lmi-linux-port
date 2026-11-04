@@ -9,9 +9,7 @@ actions:
     description: Install base packages
     packages:
       - mobian-base
-{{ if $ssh }}
       - openssh-server
-{{ end }}
       # systemd-repart is deliberately absent. This image is installed into an
       # existing fixed-size partition; an image able to repartition itself
       # could destroy the Android userdata partition.

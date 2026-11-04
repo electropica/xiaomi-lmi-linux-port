@@ -55,6 +55,11 @@ systemctl --root=/ enable lmi-linux7-wifi-reprobe.service
 systemctl --root=/ enable lmi-geoclue-bss-reseed.service
 systemctl --root=/ enable phosh-m0.service
 
+# Current lmi kernel does not provide CONFIG_ZRAM. Prevent generated swap
+# dependencies and the separate zramswap service from delaying boot.
+install -m 0644 /dev/null /etc/systemd/zram-generator.conf
+systemctl --root=/ mask zramswap.service
+
 echo "== 4.19 era units =="
 # The old install carried these units. None of them is packaged and none of
 # them is copied into the clean image, so there is nothing to disable: the
