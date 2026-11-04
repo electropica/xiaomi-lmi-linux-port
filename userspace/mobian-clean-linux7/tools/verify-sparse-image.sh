@@ -15,7 +15,8 @@ got=$(sha256sum "$image" | cut -d' ' -f1)
 want_region=$(python3 -c 'import json,sys; x=json.load(open(sys.argv[1])); v=x["boot_region_sha256"]; assert isinstance(v,str) and len(v)==64 and all(c in "0123456789abcdef" for c in v); print(v)' "$manifest")
 got_region=$(sha256sum "$region" | cut -d' ' -f1)
 [ "$got_region" = "$want_region" ] || { echo 'boot region hash mismatch' >&2; exit 1; }
-tmp=$(mktemp -d)
+image_dir=$(CDPATH= cd -- "$(dirname -- "$image")" && pwd)
+tmp=$(mktemp -d "${LMI_VERIFY_TMPDIR:-$image_dir}/.lmi-verify.XXXXXXXX")
 trap 'rm -rf "$tmp"' EXIT HUP INT TERM
 simg2img "$image" "$tmp/decoded.img"
 sh "$here/verify-partition-image.sh" "$tmp/decoded.img" "$region"

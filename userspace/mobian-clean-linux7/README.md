@@ -16,3 +16,11 @@ holds and pinned versions need a security update strategy. Post-boot account
 provisioning, selective user-data restoration and full device verification
 remain open. The sparse verifier has negative synthetic tests only. No flash
 or partition replacement is authorized by this recipe.
+
+The November 4 operator run successfully produced an experimental rootfs.
+For WSL, build on the Linux filesystem: `/mnt/c` may conflate case-distinct
+filenames. Debos runtime staging uses `/var/lib/lmi-image-staging`, whose
+parent is created first, and executable scripts retain their modes. The image
+verifier uses a read-only loop rather than copying a 16 GiB filesystem to
+WSL's small `/tmp` tmpfs. Rootfs and raw image checks passed off device; the
+new rootfs has not yet been qualified through a real boot.

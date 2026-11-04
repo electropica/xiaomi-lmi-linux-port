@@ -41,20 +41,20 @@ printf '%s\n' "$r" | grep -Fq 'TYPE="ext4"' || fail "the root filesystem is not 
 ok "root ext4 $ROOT_UUID"
 
 echo "== the root filesystem is consistent =="
-# Extract the root region and check it on its own.
-TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
-dd if="$IMG" of="$TMP/root.ext4" bs=4096 skip=$((ROOT_OFFSET / 4096)) count=$((ROOT_BYTES / 4096)) conv=notrunc status=none
-e2fsck -fn "$TMP/root.ext4" || fail "root filesystem check failed"
-dumpe2fs -h "$TMP/root.ext4" 2>/dev/null | grep -E 'Filesystem UUID|Filesystem volume name|Filesystem state' || true
-ok "root filesystem inspected"
+# Read-only loop avoids copying the 16 GiB root into /tmp (a small tmpfs on
+# WSL). This check requires root and an available loop device.
+loop=$(losetup --find --show --read-only --offset "$ROOT_OFFSET" --sizelimit "$ROOT_BYTES" "$IMG") || fail "cannot create read-only loop"
+trap 'losetup -d "$loop"' EXIT HUP INT TERM
+e2fsck -fn "$loop" || fail "root filesystem check failed"
+dumpe2fs -h "$loop" 2>/dev/null | grep -E 'Filesystem UUID|Filesystem volume name|Filesystem state' || true
+losetup -d "$loop"
+trap - EXIT HUP INT TERM
+ok "root filesystem checked read-only"
 
 echo "== the boot region is preserved byte for byte =="
 if [ -n "$REGION" ] && [ -f "$REGION" ]; then
-    dd if="$IMG" of="$TMP/region.bin" bs=1M count=$((ROOT_OFFSET / 1024 / 1024)) conv=notrunc status=none
-    a=$(sha256sum "$TMP/region.bin" | cut -d' ' -f1)
-    b2=$(sha256sum "$REGION" | cut -d' ' -f1)
-    [ "$a" = "$b2" ] || fail "the boot region differs from the capture"
+    [ "$(stat -c %s "$REGION")" = "$ROOT_OFFSET" ] || fail "unexpected boot region size"
+    cmp -n "$ROOT_OFFSET" "$IMG" "$REGION" || fail "the boot region differs from the capture"
     ok "boot region identical to the device capture"
 else
     echo "  --  skipped: no boot region capture given"
