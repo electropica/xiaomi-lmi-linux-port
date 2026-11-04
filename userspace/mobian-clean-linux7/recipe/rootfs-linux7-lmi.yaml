@@ -1,0 +1,173 @@
+{{- /*
+  Mobian Linux 7 "clean" rootfs for POCO F2 Pro (lmi), ARM64, Phosh.
+
+  This is the ONLY rootfs recipe for the clean image. It replaces the four
+  divergent drafts rootfs-linux7-{clean,selected,updated,no-repart}.yaml that
+  existed under work/linux7-clean-rootfs-20261104/.
+
+  Design rules enforced here:
+   * Debian 13 "trixie" for the Debian suite and the Mobian suite, with
+     trixie-updates and trixie-security. The working handset uses exactly:
+       deb http://deb.debian.org/debian trixie main
+       deb http://deb.debian.org/debian trixie-updates main
+       deb http://security.debian.org/debian-security trixie-security main
+       https://repo.mobian.org/ trixie main  (Pin-Priority 700)
+     trixie-updates is not optional: tzdata 2026f-0+deb13u1 exists only
+     there, and the verification step requires it.
+   * No systemd-repart, no resize overlay: this image is written into an
+     existing fixed-size partition, it must never touch the partition table.
+   * The Mobian metapackages are installed FIRST, then the seven custom .deb
+     are force-installed and held. With Pin-Priority 700 the Mobian
+     repository would otherwise replace Julien's patched phosh, phoc, GSD
+     and libcamera with the repository builds.
+   * The flatpak applications are NOT installed here: "flatpak --system
+     install" needs the flatpak-system-helper D-Bus service, which does not
+     exist inside a debootstrap chroot. They are installed on the target
+     instead, by RECIPE/scripts/install-flatpaks-target.sh.
+   * The account is created LOCKED. Credentials are provisioned by the
+     operator on the target device, never through a command line argument.
+   * The proprietary firmware and the GPU stack are overlaid from
+     overlays/lmi-private-* and are never published.
+*/ -}}
+
+{{- $architecture := or .architecture "arm64" -}}
+{{- $username := or .username "mobian" -}}
+{{- $hostname := or .hostname "mobian" -}}
+{{- $environment := or .environment "phosh" -}}
+{{- $contrib := or .contrib "false" -}}
+{{- $nonfree := or .nonfree "true" -}}
+{{- $ssh := or .ssh "" -}}
+{{- $debian_suite := or .debian_suite "trixie" -}}
+{{- $suite := or .suite $debian_suite -}}
+{{- $rootfs := or .rootfs "rootfs-arm64-phosh-linux7.tar.xz" -}}
+{{- $mirror := or .mirror "http://deb.debian.org/debian" -}}
+
+architecture: {{ $architecture }}
+
+actions:
+  - action: debootstrap
+    suite: {{ $debian_suite }}
+    components:
+      - main
+{{ if eq $contrib "true" }}
+      - contrib
+{{ end }}
+{{ if eq $nonfree "true" }}
+      - non-free-firmware
+{{ end }}
+    mirror: {{ $mirror }}
+    variant: minbase
+
+  - action: apt
+    recommends: true
+    description: Install mobian-archive-keyring
+    packages:
+      - ca-certificates
+      - mobian-archive-keyring
+
+  - action: run
+    description: Configure the Debian and Mobian repositories with the Mobian priority
+    chroot: true
+    script: scripts/setup-apt-linux7.sh {{ $debian_suite }} {{ $suite }}
+
+{{ if eq $nonfree "true" }}
+  - action: run
+    description: Enable non-free-firmware repos
+    chroot: true
+    script: scripts/setup-apt-nonfree.sh true
+{{ end }}
+
+  # Base metapackage. include/packages-base-linux7.yaml deliberately omits
+  # systemd-repart: this image must never be able to repartition anything.
+  - action: recipe
+    recipe: include/packages-base-linux7.yaml
+    variables:
+      ssh: {{ $ssh }}
+
+  # Desktop metapackage, installed BEFORE the custom packages so the
+  # dependency graph is satisfied before the custom phosh is force-installed.
+  - action: recipe
+    recipe: include/packages-{{ $environment }}-linux7.yaml
+
+  - action: run
+    description: Create the persistent staging parent
+    chroot: true
+    command: mkdir -p /var/lib/lmi-image-staging
+
+  - action: overlay
+    description: Stage the seven custom lmi Debian packages
+    source: overlays/lmi-debs/
+    destination: /var/lib/lmi-image-staging/lmi-debs/
+
+  - action: run
+    description: Install the base runtime packages, the five pinned Debian updates and the custom lmi packages
+    chroot: true
+    script: scripts/install-lmi-debs-linux7.sh
+
+  # The user is created before anything is written into the home directory.
+  - action: run
+    description: Set up the default user (intentionally locked)
+    chroot: true
+    script: scripts/setup-user-locked-linux7.sh {{ $username }}
+
+  - action: overlay
+    description: Stage the lmi audio routing configuration
+    source: overlays/lmi-audio/
+    destination: /var/lib/lmi-image-staging/lmi-audio/
+
+  - action: run
+    description: Install the lmi audio routing in its real locations
+    chroot: true
+    script: scripts/setup-lmi-audio.sh {{ $username }}
+
+  - action: overlay
+    description: Add the reviewed lmi Linux 7 device services and the Phosh session unit
+    source: overlays/lmi-services/
+    destination: /
+
+  - action: overlay
+    description: Add the camera launcher
+    source: overlays/lmi-camera-launcher/
+    destination: /
+
+  - action: overlay
+    description: Add the GPU stack (local, never published)
+    source: overlays/lmi-private-gpu/
+    destination: /
+
+  - action: run
+    description: Install the GPU stack, the service permissions and enable the Linux 7 services
+    chroot: true
+    script: scripts/setup-lmi-hardware-linux7.sh {{ $username }}
+
+  # The firmware layer is proprietary and is never published. It is applied
+  # only when the operator has staged it locally; the verification step
+  # refuses an image without it.
+  - action: overlay
+    description: Add the proprietary firmware layer (local, never published)
+    source: overlays/lmi-private-firmware/
+    destination: /
+
+  - action: run
+    description: Set the firmware permissions
+    chroot: true
+    script: scripts/setup-lmi-firmware-linux7.sh
+
+  - action: run
+    description: Set up the system
+    chroot: true
+    script: scripts/setup-system-linux7.sh {{ $hostname }}
+
+  - action: run
+    description: Verify the finished image
+    chroot: true
+    script: scripts/verify-lmi-image-linux7.sh
+
+  - action: run
+    description: Clean the image
+    chroot: true
+    script: scripts/rootfs-cleanup-linux7.sh
+
+  - action: pack
+    file: {{ $rootfs }}
+    compression: xz

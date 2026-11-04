@@ -1,0 +1,54 @@
+#!/bin/sh
+set -eu
+case "$(uname -r)" in 7.2.12-lmi-community-port1*) ;; *) echo 'Unsupported kernel' >&2; exit 1;; esac
+sha256sum -c <<'LMI_ADSP_SHA256'
+fc38a882a23d3ae78976299a88f76e828a2a0e2851dbc9327c1cfe22d2119a4c  /usr/lib/firmware/qcom/sm8250/adsp.b00
+fec87b32e8209328abb8d7d2f116c31330ccc3f6b3f271e282a875ef997aa9bd  /usr/lib/firmware/qcom/sm8250/adsp.b01
+44ae69d50b8cf1fdfd643b299dd80c7a63ce64b76366d8bac9f0ac73213febfe  /usr/lib/firmware/qcom/sm8250/adsp.b02
+b4659e26eaae5d41eb6559410d88e758bb9fc9b598234fd4c55a849168b9aa45  /usr/lib/firmware/qcom/sm8250/adsp.b03
+8b52a3362be2e14ec5d18c344d369ca12d5be2ab4d7857f638d9d67b32241124  /usr/lib/firmware/qcom/sm8250/adsp.b04
+1a24e81181138f1830eb4c406d64c29fad7c2e15e4b12462fd8325c004dd52a7  /usr/lib/firmware/qcom/sm8250/adsp.b05
+6330322efc9e7ceb48f9c2c75db0e38f6f546f04f11a96b2da4695ad0ca8277b  /usr/lib/firmware/qcom/sm8250/adsp.b06
+a6a8d8806e1aa4c55eb1b0a27bca2970a1c065384d89e7f8ad2062e335ed2eac  /usr/lib/firmware/qcom/sm8250/adsp.b07
+a86bae6370d990950ea4b5f59cc63d88756dabf8cf9714e8287484bd081e66ce  /usr/lib/firmware/qcom/sm8250/adsp.b08
+9ac7cfd298486be684abd4277d42857ec6a9b07f34c48616b8d819df1d7828de  /usr/lib/firmware/qcom/sm8250/adsp.b09
+3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4  /usr/lib/firmware/qcom/sm8250/adsp.b10
+afc6e4b71b807540ecf55b04b7c4eb5fdd3e34b5fceb8e45062b4abe8b436d9a  /usr/lib/firmware/qcom/sm8250/adsp.b11
+c8cf40764939100ee21d69f8b7f91bbce80811fa3072fe1a3e7d208d36e89a2e  /usr/lib/firmware/qcom/sm8250/adsp.b12
+c936a7e0c6304ac229c04f18eaab727c7ff9f734b0aa23512c72d2d5b228ca3a  /usr/lib/firmware/qcom/sm8250/adsp.b13
+ae4f77d1af002d23d567bfbf1b959a6512b26c782970e37840d1713f605c31c9  /usr/lib/firmware/qcom/sm8250/adsp.b14
+db6059663511600fa2542c38546bb261019b6869879e54d9102979c79bb08b0f  /usr/lib/firmware/qcom/sm8250/adsp.b15
+a18b3446a4bb1901ec0a81df890f8c165275f869db7ab5ad1a747344895efa88  /usr/lib/firmware/qcom/sm8250/adsp.b16
+f1c441de591e5d9d4dc045f6f1a2d90da15f8433c6ad295023ccf4d688bd31ec  /usr/lib/firmware/qcom/sm8250/adsp.b17
+34d4c09a35a4aca82be8d2f23fc38d7c03b8e963da510e29a3cbb22fa49d76d4  /usr/lib/firmware/qcom/sm8250/adsp.b18
+f74e3358b40a4e8009a74b3235b4b1b66eb61823d7a1db17acaa141230eb6601  /usr/lib/firmware/qcom/sm8250/adsp.mdt
+f74e3358b40a4e8009a74b3235b4b1b66eb61823d7a1db17acaa141230eb6601  /usr/lib/firmware/qcom/sm8250/adsp.mbn
+LMI_ADSP_SHA256
+attempt=0
+while [ "$attempt" -lt 20 ]; do
+    found=
+    for p in /sys/class/remoteproc/remoteproc*; do
+        [ -r "$p/name" ] || continue
+        [ "$(cat "$p/name")" = adsp ] || continue
+        [ -z "$found" ] || { echo 'Multiple ADSP devices' >&2; exit 1; }
+        found=$p
+    done
+    [ -z "$found" ] || break
+    attempt=$((attempt + 1))
+    sleep 1
+done
+[ -n "$found" ] && [ -r "$found/state" ] || { echo 'ADSP not found' >&2; exit 1; }
+state=$(cat "$found/state")
+case "$state" in
+    running) exit 0;;
+    offline) printf '%s\n' start > "$found/state";;
+    *) echo "Unexpected ADSP state: $state" >&2; exit 1;;
+esac
+attempt=0
+while [ "$attempt" -lt 15 ]; do
+    [ "$(cat "$found/state")" != running ] || exit 0
+    attempt=$((attempt + 1))
+    sleep 1
+done
+echo 'ADSP did not reach running state' >&2
+exit 1

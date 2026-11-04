@@ -1,0 +1,45 @@
+#!/bin/sh
+# Retry the lmi Linux 7 Wi-Fi probe when the ath11k firmware is available.
+#
+# The ath11k module probes the QCA6390 PCIe device at module load time. If
+# the firmware is not in the firmware search path at that moment the device
+# stays unbound and no wireless interface appears. With the firmware shipped
+# inside the image this should not happen; this helper is the safety net for
+# the case where the module is loaded before the root filesystem is in place.
+#
+# It never touches an unknown device: the PCI vendor and device identifiers
+# are checked before anything is bound.
+set -eu
+
+case "$(uname -r)" in
+    7.2.12-lmi-community-port1*) ;;
+    *) exit 0 ;;
+esac
+
+PCI=0000:01:00.0
+DEV=/sys/bus/pci/devices/$PCI
+FW=/lib/firmware/ath11k/QCA6390/hw2.0/amss.bin
+
+[ -d "$DEV" ] || exit 0
+[ "$(cat "$DEV/vendor" 2>/dev/null || echo)" = 0x17cb ] || exit 0
+[ "$(cat "$DEV/device" 2>/dev/null || echo)" = 0x1101 ] || exit 0
+[ -e "$DEV/driver" ] && exit 0
+[ -f "$FW" ] || exit 0
+[ -e /sys/bus/pci/drivers/ath11k_pci/bind ] || exit 0
+
+printf %s "$PCI" > /sys/bus/pci/drivers/ath11k_pci/bind || exit 1
+
+# Give the driver a bounded amount of time to create the network device so
+# that NetworkManager, which is ordered after this unit, sees it.
+i=0
+while [ "$i" -lt 30 ]; do
+    if [ -d /sys/class/net/wlan0 ] || ls /sys/class/net/ 2>/dev/null | grep -q '^wl'; then
+        echo "lmi-wifi-reprobe: interface ready after ${i}s"
+        exit 0
+    fi
+    i=$((i + 1))
+    sleep 1
+done
+
+echo "lmi-wifi-reprobe: bound $PCI but no wireless interface appeared" >&2
+exit 1

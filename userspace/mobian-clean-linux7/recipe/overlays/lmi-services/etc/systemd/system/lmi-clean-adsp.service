@@ -1,0 +1,20 @@
+[Unit]
+Description=Start the lmi Linux 7 ADSP remoteproc from the image firmware
+Documentation=man:remoteproc(7)
+# The firmware is part of the image, so it is available as soon as the root
+# filesystem is. The remoteproc device itself is created by the kernel probe
+# and may appear slightly later, which the helper tolerates for 20 s.
+After=local-fs.target systemd-remount-fs.service
+# The speaker route in ~/.asoundrc drives the ADSP through PRI_MI2S_RX, so
+# the ADSP has to be running before any consumer of the lmi ALSA card.
+Before=sound.target pipewire.service
+Wants=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/lmi-clean-adsp-start
+RemainAfterExit=yes
+TimeoutStartSec=60
+
+[Install]
+WantedBy=multi-user.target

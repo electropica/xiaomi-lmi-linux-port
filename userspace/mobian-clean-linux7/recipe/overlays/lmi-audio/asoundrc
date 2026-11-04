@@ -1,0 +1,39 @@
+# lmi - 2026-11-01 (communautaire 7.2.12-lmi-community-port1)
+#
+# Correction du routage : le DAI de lecture MI2S porte l'identifiant
+# PRI_MI2S_RX (0x10). Le routeur lit les parametres du flux dans
+# port_data[<id du DAI AFE>], donc il faut le controle qui porte CET
+# identifiant : 'PRI_MI2S_RX Audio Mixer MultiMedia1'.
+# Le controle 'MultiMedia1 Mixer PRI_MI2S_TX' (identifiant PRIMARY_MI2S_TX)
+# designe un autre emplacement, jamais rempli -> canaux = 0 -> la commande
+# d'ouverture du COPP n'est pas envoyee au DSP ("stream reg failed ret:-22").
+#
+# Ce PCM n'est utilise que par le sink explicite 'alsa-sink-lmi-speaker'.
+# La voie casque (WCD938x, RX_CODEC_DMA_RX_0) n'est pas touchee.
+pcm.lmi_speaker {
+    type hooks
+    slave.pcm {
+        type plug
+        slave {
+            pcm "hw:0,0"
+            format S16_LE
+            rate 48000
+            channels 2
+        }
+    }
+    hooks.0 {
+        type ctl_elems
+        hook_args [
+            { name "PRI_MI2S_RX Audio Mixer MultiMedia1" value 1 preserve true lock true }
+        ]
+    }
+}
+pcm.lmi_microphone {
+    type plug
+    slave.pcm {
+        pcm "hw:0,0"
+        format S16_LE
+        rate 48000
+        channels 1
+    }
+}

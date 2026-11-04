@@ -1,0 +1,72 @@
+#!/bin/sh
+# Reload GeoClue once, after wpa_supplicant holds Wi-Fi BSS.
+#
+# Why: GeoClue seeds its wpa_supplicant BSS table only when it creates its
+# wpa_supplicant interface proxy (gclue-wifi.c connect_bss_signals).  If it
+# starts before any scan result exists, the table stays empty and every Wi-Fi
+# geolocation query fails with "No WiFi networks found", leaving GeoClue with
+# no usable source and pushing the app onto a pure GeoIP estimate (wrong
+# place).
+#
+# Ordering matters: the journal check must WAIT for the failure to appear.
+# Sampling the journal the instant the BSS show up races GeoClue's own start
+# (observed 28/10: helper ran 10:17:52, GeoClue started 10:17:58, failed
+# 10:17:59) and used to conclude "no failure" and never act.
+#
+# This helper never loops: it refuses to act twice per boot.
+set -u
+
+STAMP=/run/lmi-geoclue-bss-reseed.stamp
+BSS_WAIT=90
+FAIL_WAIT=90
+IFACE=""
+LOG_TAG=lmi-geoclue-bss-reseed
+
+if [ -e "$STAMP" ]; then
+    echo "$LOG_TAG: already done this boot, nothing to do"
+    exit 0
+fi
+
+i=0
+while [ $i -lt 20 ]; do
+    IFACE=$(ls /run/wpa_supplicant 2>/dev/null | grep -v '^p2p-' | head -1)
+    [ -n "$IFACE" ] && break
+    i=$((i + 1)); sleep 2
+done
+[ -z "$IFACE" ] && { echo "$LOG_TAG: no wpa_supplicant interface yet, skipping"; exit 0; }
+
+i=0
+while [ $i -lt $BSS_WAIT ]; do
+    n=$(busctl --system tree fi.w1.wpa_supplicant1 2>/dev/null | grep -c 'BSSs/' || true)
+    [ "${n:-0}" -gt 0 ] && break
+    i=$((i + 1)); sleep 2
+done
+n=$(busctl --system tree fi.w1.wpa_supplicant1 2>/dev/null | grep -c 'BSSs/' || true)
+if [ "${n:-0}" -eq 0 ]; then
+    echo "$LOG_TAG: no BSS available after ${BSS_WAIT}s, skipping"
+    exit 0
+fi
+echo "$LOG_TAG: wpa_supplicant exposes $n BSS on $IFACE"
+
+failed=0
+i=0
+while [ $i -lt $FAIL_WAIT ]; do
+    if journalctl -b -u geoclue.service --no-pager 2>/dev/null \
+         | grep -q 'No WiFi networks found'; then
+        failed=1
+        break
+    fi
+    i=$((i + 1)); sleep 2
+done
+
+if [ "$failed" = "1" ]; then
+    echo "$LOG_TAG: GeoClue reported an empty BSS table, reloading it once"
+    systemctl reload-or-restart geoclue.service 2>&1 || true
+    sleep 3
+    echo "$LOG_TAG: remaining empty-BSS failures after reload: $(journalctl -b -u geoclue.service --no-pager 2>/dev/null | grep -c 'No WiFi networks found' || true)"
+else
+    echo "$LOG_TAG: GeoClue never reported an empty BSS table within ${FAIL_WAIT}s, leaving it alone"
+fi
+
+: > "$STAMP"
+exit 0

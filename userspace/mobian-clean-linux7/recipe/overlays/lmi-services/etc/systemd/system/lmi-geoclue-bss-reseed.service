@@ -1,0 +1,13 @@
+[Unit]
+Description=Reload GeoClue once after wpa_supplicant holds a Wi-Fi BSS
+Documentation=man:geoclue(5)
+After=NetworkManager.service network-online.target geoclue.service
+Wants=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lmi-geoclue-bss-reseed
+TimeoutStartSec=180
+
+[Install]
+WantedBy=multi-user.target

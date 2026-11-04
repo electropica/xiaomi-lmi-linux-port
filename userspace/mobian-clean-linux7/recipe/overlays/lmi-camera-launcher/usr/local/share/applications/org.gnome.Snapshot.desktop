@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Camera
+Name[fr]=Appareil photo
+Exec=/usr/local/bin/lmi-snapshot
+Icon=org.gnome.Snapshot
+Terminal=false
+DBusActivatable=false
+Categories=GNOME;GTK;AudioVideo;Video;Photography;
+StartupNotify=true
+X-Purism-FormFactor=Workstation;Mobile;

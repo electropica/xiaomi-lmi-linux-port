@@ -1,0 +1,52 @@
+{{- $architecture := or .architecture "arm64" -}}
+
+architecture: {{ $architecture }}
+
+actions:
+  - action: apt
+    recommends: true
+    description: Install the Phosh desktop stack
+    packages:
+      - mobian-phosh
+      # Additional software we don't want metapackages to depend on
+      - firefox-esr
+      - gnome-sound-recorder
+      - loupe
+      - powersupply-gtk
+      - webext-ublock-origin-firefox
+
+  # Runtime services the clean image needs and that the metapackages do not
+  # guarantee. The list is derived from the packages actually present on the
+  # working handset (STATE/phone-dpkg-packages.tsv) minus the ones provided
+  # by the metapackages.
+  - action: apt
+    recommends: true
+    description: Install the lmi session, audio and network runtime
+    packages:
+      - seatd
+      - dbus
+      - systemd-sysv
+      - pipewire
+      - pipewire-audio
+      - pipewire-alsa
+      - pipewire-pulse
+      - wireplumber
+      - alsa-utils
+      - alsa-ucm-conf
+      - network-manager
+      - upower
+      - gnome-clocks
+      - squeekboard
+      - xdg-desktop-portal
+      - xdg-desktop-portal-gtk
+      - xdg-desktop-portal-gnome
+      - geoclue-2.0
+      - plymouth
+      - plymouth-theme-mobian
+      - zram-tools
+      - flatpak
+
+  - action: run
+    description: Disable getty in the Phosh environment
+    chroot: true
+    command: systemctl disable getty@.service

@@ -1,0 +1,69 @@
+{
+  "status": "verified against the running handset on 2026-11-04, read only",
+  "method": "sha256sum on the handset compared with sha256sum of the exported copy, and byte length compared with ls -l",
+  "files": [
+    {
+      "source_on_phone": "/etc/pipewire/pipewire.conf.d/99-lmi-audio.conf",
+      "staged_as": "99-lmi-audio.conf",
+      "bytes": 957,
+      "sha256": "56f17ba988324efdff83647b10d775af17a27fa57f1405b8730611656eb113ac",
+      "owner": "root:root",
+      "mode": "0644",
+      "identical": true
+    },
+    {
+      "source_on_phone": "/home/mobian/.asoundrc",
+      "staged_as": "asoundrc",
+      "bytes": 1194,
+      "sha256": "112ca7741652dc5a485df91c1bf9b9d97f9be8d35a88591d186997a520a15538",
+      "owner": "mobian:mobian",
+      "mode": "0644",
+      "identical": true
+    },
+    {
+      "source_on_phone": "/usr/share/alsa/ucm2/Xiaomi/lmi/HiFi.conf",
+      "staged_as": "HiFi.conf",
+      "bytes": 699,
+      "sha256": "04fa58b25babff5d59159018049df786c21570a623cb4b8e298744c767f422af",
+      "owner": "root:root",
+      "mode": "0644",
+      "identical": true
+    },
+    {
+      "source_on_phone": "/usr/share/alsa/ucm2/conf.d/sm8250/Xiaomi lmi.conf",
+      "staged_as": "Xiaomi lmi.conf",
+      "bytes": 501,
+      "sha256": "efe94a53f16a564fc8cc62f270b0d0d46122e8181bc644c5b1de098ee9bc51f3",
+      "owner": "root:root",
+      "mode": "0644",
+      "identical": true
+    },
+    {
+      "source_on_phone": "/home/mobian/.config/pipewire/pipewire.conf.d/90-lmi-speaker.conf",
+      "staged_as": "90-lmi-speaker.conf",
+      "bytes": 565,
+      "owner": "mobian:mobian",
+      "mode": "0644",
+      "identical": "length only",
+      "note": "reconstructed from the live file content; the byte length matches the phone exactly, the digest was not recomputed because the SSH link dropped before the second read"
+    },
+    {
+      "source_on_phone": "/home/mobian/.config/pipewire/pipewire.conf.d/91-lmi-microphone.conf",
+      "staged_as": "91-lmi-microphone.conf",
+      "bytes": 596,
+      "owner": "mobian:mobian",
+      "mode": "0644",
+      "identical": "length only",
+      "note": "reconstructed from the live file content; the byte length matches the phone exactly, the digest was not recomputed because the SSH link dropped before the second read"
+    }
+  ],
+  "speaker_route": {
+    "kernel_argument": "tfa98xx.pcm_sample_format=3",
+    "present_in_running_cmdline": true,
+    "alsa_card": "lmi, sm8250 - Xiaomi lmi",
+    "sink": "alsa-sink-lmi-speaker, S16, 48000, stereo",
+    "pcm": "lmi_speaker, type hooks over plug hw:0,0, hook PRI_MI2S_RX Audio Mixer MultiMedia1",
+    "microphone_source": "lmi-microphone, S16LE, 48000, mono, pcm lmi_microphone"
+  },
+  "note": "90-lmi-speaker.conf asks for S32LE, which the AFE does not expose; it is inert. The working system wide sink is 99-lmi-audio.conf with S16. Both are shipped so the configuration matches the handset exactly."
+}

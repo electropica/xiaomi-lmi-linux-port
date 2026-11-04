@@ -1,0 +1,16 @@
+[Unit]
+Description=Retry the lmi Linux 7 Wi-Fi probe once the image firmware is available
+Documentation=man:modprobe(8)
+After=local-fs.target systemd-remount-fs.service
+Before=NetworkManager.service
+ConditionPathExists=/sys/bus/pci/devices/0000:01:00.0
+Wants=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/lmi-linux7-wifi-reprobe
+# The helper waits for the netdev to appear; give it room.
+TimeoutStartSec=60
+
+[Install]
+WantedBy=multi-user.target
