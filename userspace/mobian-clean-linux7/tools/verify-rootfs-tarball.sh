@@ -108,7 +108,10 @@ for l in \
     "$R/etc/systemd/system/multi-user.target.wants/lmi-linux7-wifi-reprobe.service" \
     "$R/etc/systemd/system/multi-user.target.wants/lmi-geoclue-bss-reseed.service" \
     "$R/etc/systemd/system/graphical.target.wants/phosh-m0.service"; do
-    [ -e "$l" ] || fail "not enabled: ${l#$R/}"
+    [ -L "$l" ] || fail "not enabled: ${l#$R/}"
+    expected="/etc/systemd/system/$(basename "$l")"
+    [ "$(readlink "$l")" = "$expected" ] || fail "unexpected service link: ${l#$R/}"
+    [ -f "$R$expected" ] || fail "missing service target: $expected"
     ok "enabled ${l#$R/}"
 done
 
