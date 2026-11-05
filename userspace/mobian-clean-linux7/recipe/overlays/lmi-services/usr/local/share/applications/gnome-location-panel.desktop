@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Location Services
+Name[fr]=Services de localisation
+Comment=Open the location page in Privacy settings
+Exec=/usr/bin/gnome-control-center privacy location
+TryExec=/usr/bin/gnome-control-center
+Icon=preferences-system-privacy-symbolic
+Terminal=false
+NoDisplay=true
+DBusActivatable=false
+Categories=Settings;

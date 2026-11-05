@@ -1,0 +1,1 @@
+SUBSYSTEM=="dma_heap", KERNEL=="system|default_cma_region|reserved", GROUP="video", MODE="0660"

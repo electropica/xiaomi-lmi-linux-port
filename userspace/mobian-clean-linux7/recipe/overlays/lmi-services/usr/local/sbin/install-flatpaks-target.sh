@@ -36,16 +36,17 @@ fi
 
 echo "== recording the installed commits =="
 install -d -m 0755 /var/lib/lmi-image
-: > "$RECORD"
+temp=$(mktemp /var/lib/lmi-image/.flatpak-commits.XXXXXXXX)
+trap 'rm -f "$temp"' EXIT HUP INT TERM
 for a in $APPS; do
-    c=$(flatpak --system info --show-commit "app/$a/aarch64/stable" 2>/dev/null \
-        | sed -n 's/.*commit: *//p' | head -1)
-    if [ -z "$c" ]; then
+    c=$(flatpak --system info --show-commit "app/$a/aarch64/stable" 2>/dev/null || true)
+    if ! printf '%s\n' "$c" | grep -Eq '^[0-9a-f]{64}$'; then
         echo "not installed: $a" >&2
         exit 1
     fi
-    printf '%s %s\n' "$a" "$c" >> "$RECORD"
+    printf '%s %s\n' "$a" "$c" >> "$temp"
     echo "  $a $c"
 done
+mv "$temp" "$RECORD"
 
 echo "FLATPAKS_READY record=$RECORD"

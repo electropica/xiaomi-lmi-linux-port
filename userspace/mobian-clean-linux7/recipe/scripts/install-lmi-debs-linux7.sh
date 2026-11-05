@@ -45,6 +45,8 @@ xdg-desktop-portal-gtk
 xdg-desktop-portal-gnome
 geoclue-2.0
 flatpak
+gnome-calls
+grim
 '
 
 # Never start services while the image is being assembled.

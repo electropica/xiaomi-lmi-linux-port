@@ -39,6 +39,12 @@ chmod 0755 /usr/local/libexec/lmi-linux7-wifi-reprobe
 chmod 0755 /usr/local/sbin/lmi-geoclue-bss-reseed
 chmod 0755 /usr/local/sbin/provision-account-target.sh
 chmod 0755 /usr/local/sbin/install-flatpaks-target.sh
+chmod 0755 /usr/local/bin/lmi-snapshot
+chmod 0644 /usr/local/share/applications/org.gnome.Snapshot.desktop
+chmod 0644 /usr/local/share/applications/gnome-location-panel.desktop
+chmod 0644 /etc/udev/rules.d/70-lmi-dma-heap.rules
+chmod 0644 /usr/share/glib-2.0/schemas/95_lmi-home-drawer.gschema.override
+glib-compile-schemas --strict /usr/share/glib-2.0/schemas
 chmod 0644 /etc/systemd/system/lmi-clean-adsp.service
 chmod 0644 /etc/systemd/system/lmi-linux7-wifi-reprobe.service
 chmod 0644 /etc/systemd/system/lmi-geoclue-bss-reseed.service
@@ -59,6 +65,8 @@ systemctl --root=/ enable phosh-m0.service
 # dependencies and the separate zramswap service from delaying boot.
 install -m 0644 /dev/null /etc/systemd/zram-generator.conf
 systemctl --root=/ mask zramswap.service
+# phosh-m0 is the intended session; do not start a second GDM greeter.
+systemctl --root=/ mask gdm.service
 
 echo "== 4.19 era units =="
 # The old install carried these units. None of them is packaged and none of
@@ -82,6 +90,7 @@ echo "== user session prerequisites =="
 install -d -m 0700 -o "$USER_NAME" -g "$USER_NAME" "/home/$USER_NAME/.config"
 install -d -m 0700 -o "$USER_NAME" -g "$USER_NAME" "/home/$USER_NAME/.config/pipewire"
 install -d -m 0700 -o "$USER_NAME" -g "$USER_NAME" "/home/$USER_NAME/.config/pipewire/pipewire.conf.d"
+install -d -m 0755 -o "$USER_NAME" -g "$USER_NAME" "/home/$USER_NAME/.local"
 install -d -m 0700 -o "$USER_NAME" -g "$USER_NAME" "/home/$USER_NAME/.local/share"
 
 echo "LMI_HARDWARE_INSTALLED user=$USER_NAME"
