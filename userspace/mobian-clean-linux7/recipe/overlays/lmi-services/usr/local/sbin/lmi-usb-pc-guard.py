@@ -45,14 +45,19 @@ def qualifies(values):
             and vbus >= MIN_VBUS_UV)
 
 
-def snapshot(root=SYS):
-    return {
+def snapshot(root=SYS, held=False):
+    values = {
         'online': read(root / 'class/power_supply/pm8150b-charger/online'),
-        'vbus': read(root / 'bus/iio/devices/iio:device1/in_voltage_usbin_v_input'),
         'udc': read(root / 'class/udc/a600000.usb/state'),
         'carrier': read(root / 'class/net/usb0/carrier'),
         'partner': (root / 'class/typec/port0-partner').exists(),
     }
+    candidate = (values['online'] == '1' and values['udc'] == 'configured'
+                 and values['carrier'] == '1' and values['partner'])
+    values['vbus'] = (read(root / 'bus/iio/devices/iio:device1/in_voltage_usbin_v_input')
+                      if candidate or held else None)
+    values['vbus_skipped'] = not (candidate or held)
+    return values
 
 
 class Guard:
@@ -105,7 +110,7 @@ def main():
     ready = False
     try:
         while not stopping:
-            values = snapshot()
+            values = snapshot(held=guard.child is not None)
             valid = qualifies(values)
             if guard.child is not None and not valid:
                 logging.info('USB signals at release: %s', values)

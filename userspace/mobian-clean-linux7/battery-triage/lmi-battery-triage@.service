@@ -1,0 +1,16 @@
+[Unit]
+Description=Relevé ponctuel de batterie et veille Mobian (%i)
+After=systemd-logind.service dbus.service
+Requires=systemd-logind.service dbus.service
+
+[Service]
+Type=simple
+StateDirectory=lmi-battery-triage
+StateDirectoryMode=0700
+ExecStart=/usr/bin/python3 /usr/local/lib/lmi-battery-triage/collector.py /var/lib/lmi-battery-triage/%i.jsonl --interval 300 --duration 28800
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/lmi-battery-triage
+Restart=no

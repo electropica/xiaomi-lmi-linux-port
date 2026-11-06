@@ -1,0 +1,11 @@
+# Optional systemd-sleep boundary hook
+
+`sleep_hook.py` is a separate, read-only hook candidate. It is not installed, enabled, or invoked by the collector. If an operator later chooses to wire it into systemd, the executable must receive systemd-sleep's `pre|post` phase and verb arguments. It ignores other phases and returns successfully on ordinary I/O errors. A stalled kernel read could still delay a transition; an installation must have an independent timeout and be tested.
+
+Each invocation performs one snapshot and appends one JSON object to `/var/tmp/mobian-battery-triage-sleep-hook.jsonl`, created with mode `0600`. It records UTC time, boot ID, `/proc/uptime`, available `/sys/power/suspend_stats` fields, `aosd`, `cxsd`, `ddr`, `ddr_stats`, and `adsp` under `/sys/kernel/debug/qcom_stats`, useful backlight state, and device-level power-supply fields. The debugfs paths are read only when they are already available. The hook never mounts debugfs, polls, starts another service, requests sleep/wake, or writes to sysfs.
+
+Missing files appear as an `unavailable` value. A reported zero can mean an unsupported or unmaintained counter, a reset/initialization behavior, or a genuine zero in that counter's own units; it does not show that a domain used zero energy or consumed zero current. `suspend_stats` counts or durations describe kernel suspend outcomes, not battery drain. QCOM firmware residency values are diagnostic counters, not electrical measurements. Compare pre/post values only after establishing the kernel/firmware counter semantics and reset lifetime.
+
+The hook runs once before and once after the transition. It cannot observe activity during suspend, and the order of other system-sleep hooks may affect what each boundary sees. Power-supply values are gauge snapshots and can lag or quantize. Treat the JSONL as private operational data; boot IDs and supply readings are retained.
+
+Synthetic tests use temporary fake sysfs/proc trees: `python -m unittest -v test_sleep_hook.py`. They verify pre/post append, private permissions, present and absent counter paths, battery/backlight reads, and that invalid phases are ignored. They do not call systemd or access a device.
