@@ -20,7 +20,9 @@ actual package headers.
 
 The context menu gets a checkable “Tap to Select Multiple Files” action. While it is
 checked, a touchscreen tap toggles that item in the current selection, preserving all
-other selected entries. The click path snapshots selected `NautilusViewItem` identities
+other selected entries. Touch is detected from the GDK event sequence; the current
+mouse-button value is not used for touch because touch sequences have no mouse button.
+The click path snapshots selected `NautilusViewItem` identities
 before GTK handles the ordinary primary tap and applies the toggled set in the next idle
 turn, resolving current model positions by item identity. This avoids relying on stale
 list positions if the model reorders between press and idle. The action is limited to
@@ -42,7 +44,9 @@ off.
 - Source review confirmed the target's existing selection model already supports
   `gtk_selection_model_get_selection()` and `gtk_selection_model_set_selection()`.
 - GTK4 docs were checked for touch event sequence detection, event-controller behavior,
-  and gesture arbitration. No code was compiled and no runtime suite was run.
+  and gesture arbitration. The touch-selection gate requires a non-NULL event sequence
+  and does not additionally require a primary mouse-button value. No code was compiled
+  and no runtime suite was run.
 - No phone interaction or user-file access was performed.
 
 This is not yet a validated fix. Compile-time API/type compatibility remains unverified.

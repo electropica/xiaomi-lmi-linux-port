@@ -35,7 +35,7 @@ index 10a29a2..d62dc53 100644
      { .name = "copy-current-location", .activate = action_copy_current_location },
      { .name = "paste_accel", .activate = action_paste_files_accel },
 diff --git a/src/nautilus-list-base.c b/src/nautilus-list-base.c
-index ebcf78b..d5b794a 100644
+index ebcf78b..57465a2 100644
 --- a/src/nautilus-list-base.c
 +++ b/src/nautilus-list-base.c
 @@ -52,6 +52,9 @@ struct _NautilusListBasePrivate
@@ -74,14 +74,13 @@ index ebcf78b..d5b794a 100644
      guint button;
      GdkModifierType modifiers;
      gboolean selection_mode;
-@@ -253,6 +268,64 @@ on_item_click_pressed (GtkGestureClick *gesture,
+@@ -253,6 +268,63 @@ on_item_click_pressed (GtkGestureClick *gesture,
      button = gtk_gesture_single_get_current_button (GTK_GESTURE_SINGLE (gesture));
      modifiers = gtk_event_controller_get_current_event_state (GTK_EVENT_CONTROLLER (gesture));
      selection_mode = (modifiers & (GDK_CONTROL_MASK | GDK_SHIFT_MASK));
 +    event = gtk_event_controller_get_current_event (GTK_EVENT_CONTROLLER (gesture));
 +
 +    if (priv->touch_selection_mode &&
-+        button == GDK_BUTTON_PRIMARY &&
 +        !selection_mode &&
 +        event != NULL &&
 +        gdk_event_get_event_sequence (event) != NULL)
@@ -139,7 +138,7 @@ index ebcf78b..d5b794a 100644
  
      /* Before anything else, store event state to be read by other handlers. */
      priv->deny_background_click = TRUE;
-@@ -290,6 +363,60 @@ on_item_click_pressed (GtkGestureClick *gesture,
+@@ -290,6 +362,60 @@ on_item_click_pressed (GtkGestureClick *gesture,
      }
  }
  
@@ -200,7 +199,7 @@ index ebcf78b..d5b794a 100644
  static void
  on_item_click_released (GtkGestureClick *gesture,
                          gint             n_press,
-@@ -301,6 +428,19 @@ on_item_click_released (GtkGestureClick *gesture,
+@@ -301,6 +427,19 @@ on_item_click_released (GtkGestureClick *gesture,
      NautilusListBase *self = nautilus_view_cell_get_view (cell);
      NautilusListBasePrivate *priv = nautilus_list_base_get_instance_private (self);
  
@@ -220,7 +219,7 @@ index ebcf78b..d5b794a 100644
      if (priv->activate_on_release)
      {
          NautilusViewModel *model;
-@@ -333,6 +473,9 @@ on_item_click_stopped (GtkGestureClick *gesture,
+@@ -333,6 +472,9 @@ on_item_click_stopped (GtkGestureClick *gesture,
          return;
      }
  
@@ -230,7 +229,7 @@ index ebcf78b..d5b794a 100644
      rubberband_set_state (self, TRUE);
      priv->activate_on_release = FALSE;
      priv->deny_background_click = FALSE;
-@@ -387,6 +530,10 @@ on_item_longpress_pressed (GtkGestureLongPress *gesture,
+@@ -387,6 +529,10 @@ on_item_longpress_pressed (GtkGestureLongPress *gesture,
      NautilusViewCell *cell = user_data;
      NautilusListBase *self = nautilus_view_cell_get_view (cell);
  
@@ -241,7 +240,7 @@ index ebcf78b..d5b794a 100644
      open_context_menu_on_press (self, cell, x, y);
      gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
  }
-@@ -1048,6 +1195,8 @@ nautilus_list_base_dispose (GObject *object)
+@@ -1048,6 +1194,8 @@ nautilus_list_base_dispose (GObject *object)
  
      g_clear_object (&priv->directory_as_file);
      g_clear_object (&priv->model);
