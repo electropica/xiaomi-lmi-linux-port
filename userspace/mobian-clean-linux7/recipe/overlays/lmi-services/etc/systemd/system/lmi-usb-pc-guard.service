@@ -1,0 +1,16 @@
+[Unit]
+Description=Keep USB maintenance available while a PC is connected
+After=systemd-logind.service NetworkManager.service
+Wants=systemd-logind.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=/usr/local/sbin/lmi-usb-pc-guard.py
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+WatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target

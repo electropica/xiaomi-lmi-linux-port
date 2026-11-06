@@ -39,6 +39,7 @@ chmod 0755 /usr/local/libexec/lmi-linux7-wifi-reprobe
 chmod 0755 /usr/local/sbin/lmi-geoclue-bss-reseed
 chmod 0755 /usr/local/sbin/provision-account-target.sh
 chmod 0755 /usr/local/sbin/install-flatpaks-target.sh
+chmod 0755 /usr/local/sbin/lmi-usb-pc-guard.py
 chmod 0755 /usr/local/bin/lmi-snapshot
 chmod 0644 /usr/local/share/applications/org.gnome.Snapshot.desktop
 chmod 0644 /usr/local/share/applications/gnome-location-panel.desktop
@@ -48,6 +49,7 @@ glib-compile-schemas --strict /usr/share/glib-2.0/schemas
 chmod 0644 /etc/systemd/system/lmi-clean-adsp.service
 chmod 0644 /etc/systemd/system/lmi-linux7-wifi-reprobe.service
 chmod 0644 /etc/systemd/system/lmi-geoclue-bss-reseed.service
+chmod 0644 /etc/systemd/system/lmi-usb-pc-guard.service
 chmod 0644 /etc/systemd/system/phosh-m0.service
 chmod 0644 /etc/phosh/phoc.ini
 chmod 0644 /etc/systemd/system/phosh-m0.service.d/50-lmi-seat-vtnr.conf
@@ -59,6 +61,7 @@ echo "== enabling units offline =="
 systemctl --root=/ enable lmi-clean-adsp.service
 systemctl --root=/ enable lmi-linux7-wifi-reprobe.service
 systemctl --root=/ enable lmi-geoclue-bss-reseed.service
+systemctl --root=/ enable lmi-usb-pc-guard.service
 systemctl --root=/ enable phosh-m0.service
 systemctl --root=/ enable ssh.service
 

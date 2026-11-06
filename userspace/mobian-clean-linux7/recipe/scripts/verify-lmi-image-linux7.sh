@@ -110,8 +110,10 @@ grep -qx 'method=disabled' /etc/NetworkManager/system-connections/lmi-usb-mainte
 ok "USB profile uses 172.16.42.1/16 and cannot replace the Wi-Fi default route"
 
 echo "== 8. the Linux 7 device services are enabled =="
+check_file /usr/local/sbin/lmi-usb-pc-guard.py 755
+check_file /etc/systemd/system/lmi-usb-pc-guard.service 644
 for u in lmi-clean-adsp.service lmi-linux7-wifi-reprobe.service \
-         lmi-geoclue-bss-reseed.service phosh-m0.service; do
+         lmi-geoclue-bss-reseed.service lmi-usb-pc-guard.service phosh-m0.service; do
     systemctl --root=/ is-enabled "$u" >/dev/null 2>&1 || fail "$u is not enabled"
     ok "$u enabled"
 done
