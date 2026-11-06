@@ -1,0 +1,17 @@
+[connection]
+id=lmi-usb-maintenance
+uuid=6f2fd0fc-6b09-4e50-a76c-91f193a098db
+type=ethernet
+interface-name=usb0
+autoconnect=true
+autoconnect-priority=100
+
+[ethernet]
+
+[ipv4]
+address1=172.16.42.1/16
+method=manual
+never-default=true
+
+[ipv6]
+method=disabled

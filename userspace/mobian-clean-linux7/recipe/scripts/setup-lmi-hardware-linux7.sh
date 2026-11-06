@@ -60,6 +60,7 @@ systemctl --root=/ enable lmi-clean-adsp.service
 systemctl --root=/ enable lmi-linux7-wifi-reprobe.service
 systemctl --root=/ enable lmi-geoclue-bss-reseed.service
 systemctl --root=/ enable phosh-m0.service
+systemctl --root=/ enable ssh.service
 
 # Current lmi kernel does not provide CONFIG_ZRAM. Prevent generated swap
 # dependencies and the separate zramswap service from delaying boot.

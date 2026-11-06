@@ -18,6 +18,14 @@ fi
 # handset.
 systemctl --root=/ mask systemd-firstboot.service
 
+# The Linux 7 rootfs uses NetworkManager for the handset's Wi-Fi, so give the
+# USB gadget its own explicit profile. The factory-generated Ethernet profile
+# waits for DHCP from the PC and leaves usb0 without the maintenance address.
+# Bind this profile to usb0 only and keep its keyfile private as required by NM.
+install -d -o root -g root -m 0700 /etc/NetworkManager/system-connections
+chown root:root /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection
+chmod 0600 /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection
+
 # The image boots through an initramfs that hands over to the real root, so
 # /etc/fstab stays empty on purpose: the live handset also has an unconfigured
 # fstab and its mounts come from the initramfs.

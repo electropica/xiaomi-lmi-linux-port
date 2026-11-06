@@ -89,6 +89,26 @@ check_file /etc/systemd/system/phosh-m0.service.d/51-lmi-restart-guard.conf 644
 [ -f /opt/mobian-gpu/lib/libvulkan_freedreno.so ] || fail "missing the freedreno Vulkan driver"
 ok "GPU stack present"
 
+echo "== 7a. the USB maintenance profile is isolated to usb0 =="
+check_file /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection 600
+[ "$(stat -c '%U:%G' /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection)" = root:root ] \
+    || fail "USB profile owner is not root:root"
+grep -qx 'interface-name=usb0' /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection \
+    || fail "USB profile is not bound to usb0"
+grep -qx 'autoconnect=true' /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection \
+    || fail "USB profile must autoconnect"
+grep -qx 'autoconnect-priority=100' /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection \
+    || fail "USB profile must beat NetworkManager's DHCP fallback"
+grep -qx 'address1=172.16.42.1/16' /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection \
+    || fail "USB maintenance address is missing"
+grep -qx 'method=manual' /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection \
+    || fail "USB profile must use its fixed IPv4 address"
+grep -qx 'never-default=true' /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection \
+    || fail "USB must not become the default route"
+grep -qx 'method=disabled' /etc/NetworkManager/system-connections/lmi-usb-maintenance.nmconnection \
+    || fail "USB IPv6 must remain disabled"
+ok "USB profile uses 172.16.42.1/16 and cannot replace the Wi-Fi default route"
+
 echo "== 8. the Linux 7 device services are enabled =="
 for u in lmi-clean-adsp.service lmi-linux7-wifi-reprobe.service \
          lmi-geoclue-bss-reseed.service phosh-m0.service; do
@@ -135,6 +155,18 @@ ok "repositories configured like the working handset"
 echo "== 13. flatpak is available for post-install configuration =="
 command -v flatpak >/dev/null || fail "flatpak is missing"
 ok "flatpak available; the remote and applications remain a post-install step"
+
+echo "== 14. first-boot fixes =="
+command -v /usr/sbin/sshd >/dev/null || fail "openssh-server is missing"
+command -v grim >/dev/null || fail "screenshot tool is missing"
+dpkg-query -W -f='${db:Status-Status}' gnome-calls 2>/dev/null | grep -qx installed || fail "gnome-calls is missing"
+[ -f /etc/systemd/zram-generator.conf ] && [ ! -s /etc/systemd/zram-generator.conf ] || fail "zram override is missing"
+[ "$(systemctl --root=/ is-enabled zramswap.service 2>/dev/null || :)" = masked ] || fail "zramswap is not masked"
+[ "$(systemctl --root=/ is-enabled gdm.service 2>/dev/null || :)" = masked ] || fail "duplicate GDM is not masked"
+[ "$(stat -c '%U:%G' /home/mobian/.local)" = mobian:mobian ] || fail "the local user directory is not owned by mobian"
+[ -f /etc/udev/rules.d/70-lmi-dma-heap.rules ] || fail "camera DMA rule missing"
+[ -f /usr/local/share/applications/gnome-location-panel.desktop ] || fail "location settings launcher missing"
+ok "SSH, calls, camera permissions and session defaults present"
 
 echo
 echo "LMI_IMAGE_VERIFIED"

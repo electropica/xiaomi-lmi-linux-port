@@ -1,0 +1,293 @@
+diff --git a/src/nautilus-files-view.c b/src/nautilus-files-view.c
+index 10a29a2..d62dc53 100644
+--- a/src/nautilus-files-view.c
++++ b/src/nautilus-files-view.c
+@@ -1823,6 +1823,19 @@ action_select_all (GSimpleAction *action,
+     nautilus_files_view_select_all (view);
+ }
+ 
++static void
++action_touch_selection_mode_changed (GSimpleAction *action,
++                                     GVariant      *state,
++                                     gpointer       user_data)
++{
++    NautilusFilesView *view = NAUTILUS_FILES_VIEW (user_data);
++    NautilusFilesViewPrivate *priv = nautilus_files_view_get_instance_private (view);
++    gboolean enabled = g_variant_get_boolean (state);
++
++    nautilus_list_base_set_touch_selection_mode (priv->list_base, enabled);
++    g_simple_action_set_state (action, state);
++}
++
+ static void
+ action_invert_selection (GSimpleAction *action,
+                          GVariant      *state,
+@@ -7177,6 +7190,11 @@ const GActionEntry view_entries[] =
+     { .name = "empty-trash", .activate = action_empty_trash },
+     { .name = "new-folder", .activate = action_new_folder },
+     { .name = "select-all", .activate = action_select_all },
++    {
++        .name = "touch-selection-mode",
++        .state = "false",
++        .change_state = action_touch_selection_mode_changed
++    },
+     { .name = "paste", .activate = action_paste_files },
+     { .name = "copy-current-location", .activate = action_copy_current_location },
+     { .name = "paste_accel", .activate = action_paste_files_accel },
+diff --git a/src/nautilus-list-base.c b/src/nautilus-list-base.c
+index ebcf78b..d5b794a 100644
+--- a/src/nautilus-list-base.c
++++ b/src/nautilus-list-base.c
+@@ -52,6 +52,9 @@ struct _NautilusListBasePrivate
+ 
+     gboolean activate_on_release;
+     gboolean deny_background_click;
++    gboolean touch_selection_mode;
++    GHashTable *touch_selection_before_press;
++    NautilusViewItem *touch_selection_target;
+ 
+     GdkDragAction drag_item_action;
+     GdkDragAction drag_view_action;
+@@ -151,6 +154,17 @@ nautilus_list_base_set_cursor (NautilusListBase *self,
+     internal_scroll_to (self, position, flags, info);
+ }
+ 
++void
++nautilus_list_base_set_touch_selection_mode (NautilusListBase *self,
++                                             gboolean          enabled)
++{
++    NautilusListBasePrivate *priv = nautilus_list_base_get_instance_private (self);
++
++    priv->touch_selection_mode = !!enabled;
++    g_clear_pointer (&priv->touch_selection_before_press, g_hash_table_unref);
++    g_clear_object (&priv->touch_selection_target);
++}
++
+ /* GtkListBase changes selection only with the primary button, and only after
+  * release. But we need to anticipate selection earlier if we are to activate it
+  * or open its context menu. This helper should be used in these situations if
+@@ -246,6 +260,7 @@ on_item_click_pressed (GtkGestureClick *gesture,
+     NautilusViewCell *cell = user_data;
+     NautilusListBase *self = nautilus_view_cell_get_view (cell);
+     NautilusListBasePrivate *priv = nautilus_list_base_get_instance_private (self);
++    GdkEvent *event;
+     guint button;
+     GdkModifierType modifiers;
+     gboolean selection_mode;
+@@ -253,6 +268,64 @@ on_item_click_pressed (GtkGestureClick *gesture,
+     button = gtk_gesture_single_get_current_button (GTK_GESTURE_SINGLE (gesture));
+     modifiers = gtk_event_controller_get_current_event_state (GTK_EVENT_CONTROLLER (gesture));
+     selection_mode = (modifiers & (GDK_CONTROL_MASK | GDK_SHIFT_MASK));
++    event = gtk_event_controller_get_current_event (GTK_EVENT_CONTROLLER (gesture));
++
++    if (priv->touch_selection_mode &&
++        button == GDK_BUTTON_PRIMARY &&
++        !selection_mode &&
++        event != NULL &&
++        gdk_event_get_event_sequence (event) != NULL)
++    {
++        NautilusViewModel *model;
++        g_autoptr (GtkBitset) selected = NULL;
++        g_autoptr (NautilusViewItem) target = NULL;
++        GtkBitsetIter iter;
++        guint position;
++
++        model = nautilus_list_base_get_model (self);
++        if (model == NULL)
++        {
++            return;
++        }
++
++        /* A double tap must not activate the item while selection mode is on.
++         * The first tap already applies the requested selection change. */
++        if (n_press > 1)
++        {
++            g_clear_pointer (&priv->touch_selection_before_press, g_hash_table_unref);
++            g_clear_object (&priv->touch_selection_target);
++            priv->activate_on_release = FALSE;
++            priv->deny_background_click = TRUE;
++            gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
++            return;
++        }
++
++        g_clear_pointer (&priv->touch_selection_before_press, g_hash_table_unref);
++        g_clear_object (&priv->touch_selection_target);
++        priv->touch_selection_before_press = g_hash_table_new_full (g_direct_hash,
++                                                                   g_direct_equal,
++                                                                   g_object_unref,
++                                                                   NULL);
++        selected = gtk_selection_model_get_selection (GTK_SELECTION_MODEL (model));
++        for (gtk_bitset_iter_init_first (&iter, selected, &position);
++             gtk_bitset_iter_is_valid (&iter);
++             gtk_bitset_iter_next (&iter, &position))
++        {
++            g_autoptr (NautilusViewItem) item = get_view_item (G_LIST_MODEL (model), position);
++            g_hash_table_add (priv->touch_selection_before_press, g_steal_pointer (&item));
++        }
++
++        target = nautilus_view_cell_get_item (cell);
++        if (target == NULL)
++        {
++            g_clear_pointer (&priv->touch_selection_before_press, g_hash_table_unref);
++            return;
++        }
++        priv->touch_selection_target = g_object_ref (target);
++        priv->activate_on_release = FALSE;
++        priv->deny_background_click = TRUE;
++        return;
++    }
+ 
+     /* Before anything else, store event state to be read by other handlers. */
+     priv->deny_background_click = TRUE;
+@@ -290,6 +363,60 @@ on_item_click_pressed (GtkGestureClick *gesture,
+     }
+ }
+ 
++typedef struct
++{
++    NautilusListBase *view;
++    GHashTable *selection;
++    NautilusViewItem *target;
++} TouchSelectionChange;
++
++static gboolean
++apply_touch_selection_change (gpointer user_data)
++{
++    TouchSelectionChange *change = user_data;
++    NautilusListBasePrivate *priv = nautilus_list_base_get_instance_private (change->view);
++    NautilusViewModel *model = nautilus_list_base_get_model (change->view);
++
++    if (priv->touch_selection_mode && model != NULL && change->target != NULL)
++    {
++        GtkSelectionModel *selection_model = GTK_SELECTION_MODEL (model);
++        g_autoptr (GtkBitset) desired = gtk_bitset_new_empty ();
++        g_autoptr (GtkBitset) update = NULL;
++        gboolean target_was_selected = g_hash_table_contains (change->selection,
++                                                               change->target);
++        guint n_items = g_list_model_get_n_items (G_LIST_MODEL (model));
++
++        for (guint position = 0; position < n_items; position++)
++        {
++            g_autoptr (NautilusViewItem) item = get_view_item (G_LIST_MODEL (model),
++                                                               position);
++            gboolean was_selected = g_hash_table_contains (change->selection, item);
++
++            if ((was_selected && item != change->target) ||
++                (!target_was_selected && item == change->target))
++            {
++                gtk_bitset_add (desired, position);
++            }
++        }
++
++        update = gtk_bitset_new_range (0, n_items);
++        gtk_selection_model_set_selection (selection_model, desired, update);
++    }
++
++    return G_SOURCE_REMOVE;
++}
++
++static void
++free_touch_selection_change (gpointer user_data)
++{
++    TouchSelectionChange *change = user_data;
++
++    g_object_unref (change->view);
++    g_hash_table_unref (change->selection);
++    g_object_unref (change->target);
++    g_free (change);
++}
++
+ static void
+ on_item_click_released (GtkGestureClick *gesture,
+                         gint             n_press,
+@@ -301,6 +428,19 @@ on_item_click_released (GtkGestureClick *gesture,
+     NautilusListBase *self = nautilus_view_cell_get_view (cell);
+     NautilusListBasePrivate *priv = nautilus_list_base_get_instance_private (self);
+ 
++    if (priv->touch_selection_before_press != NULL)
++    {
++        TouchSelectionChange *change = g_new0 (TouchSelectionChange, 1);
++        change->view = g_object_ref (self);
++        change->selection = g_steal_pointer (&priv->touch_selection_before_press);
++        change->target = g_steal_pointer (&priv->touch_selection_target);
++
++        g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
++                         apply_touch_selection_change,
++                         change,
++                         free_touch_selection_change);
++    }
++
+     if (priv->activate_on_release)
+     {
+         NautilusViewModel *model;
+@@ -333,6 +473,9 @@ on_item_click_stopped (GtkGestureClick *gesture,
+         return;
+     }
+ 
++    g_clear_pointer (&priv->touch_selection_before_press, g_hash_table_unref);
++    g_clear_object (&priv->touch_selection_target);
++
+     rubberband_set_state (self, TRUE);
+     priv->activate_on_release = FALSE;
+     priv->deny_background_click = FALSE;
+@@ -387,6 +530,10 @@ on_item_longpress_pressed (GtkGestureLongPress *gesture,
+     NautilusViewCell *cell = user_data;
+     NautilusListBase *self = nautilus_view_cell_get_view (cell);
+ 
++    NautilusListBasePrivate *priv = nautilus_list_base_get_instance_private (self);
++    g_clear_pointer (&priv->touch_selection_before_press, g_hash_table_unref);
++    g_clear_object (&priv->touch_selection_target);
++
+     open_context_menu_on_press (self, cell, x, y);
+     gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+ }
+@@ -1048,6 +1195,8 @@ nautilus_list_base_dispose (GObject *object)
+ 
+     g_clear_object (&priv->directory_as_file);
+     g_clear_object (&priv->model);
++    g_clear_pointer (&priv->touch_selection_before_press, g_hash_table_unref);
++    g_clear_object (&priv->touch_selection_target);
+     g_clear_handle_id (&priv->hover_timer_id, g_source_remove);
+     g_clear_handle_id (&priv->scroll_timeout_id, g_source_remove);
+ 
+diff --git a/src/nautilus-list-base.h b/src/nautilus-list-base.h
+index c8a6022..5972238 100644
+--- a/src/nautilus-list-base.h
++++ b/src/nautilus-list-base.h
+@@ -63,6 +63,8 @@ void nautilus_list_base_set_cursor (NautilusListBase *self,
+                                     guint             position,
+                                     gboolean          select,
+                                     gboolean          scroll_to);
++void nautilus_list_base_set_touch_selection_mode (NautilusListBase *self,
++                                                  gboolean          enabled);
+ void    nautilus_list_base_set_model               (NautilusListBase  *self,
+                                                     NautilusViewModel *model);
+ void    nautilus_list_base_add_overlay             (NautilusListBase  *self,
+diff --git a/src/resources/ui/nautilus-files-view-context-menus.ui b/src/resources/ui/nautilus-files-view-context-menus.ui
+index bef4138..fa9504d 100644
+--- a/src/resources/ui/nautilus-files-view-context-menus.ui
++++ b/src/resources/ui/nautilus-files-view-context-menus.ui
+@@ -37,6 +37,10 @@
+         <attribute name="label" translatable="yes">Select _All</attribute>
+         <attribute name="action">view.select-all</attribute>
+       </item>
++      <item>
++        <attribute name="label" translatable="yes">Tap to Select Multiple Files</attribute>
++        <attribute name="action">view.touch-selection-mode</attribute>
++      </item>
+       <item>
+         <attribute name="label" translatable="yes">_Visible Columns</attribute>
+         <attribute name="action">view.visible-columns</attribute>
+@@ -60,6 +64,12 @@
+     </section>
+   </menu>
+   <menu id="selection-menu">
++    <section>
++      <item>
++        <attribute name="label" translatable="yes">Tap to Select Multiple Files</attribute>
++        <attribute name="action">view.touch-selection-mode</attribute>
++      </item>
++    </section>
+     <section id="new-folder-with-selection-section"/>
+     <section id="open-with-application-section">
+       <item>
