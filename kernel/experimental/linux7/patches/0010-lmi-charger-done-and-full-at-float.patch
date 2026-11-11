@@ -1,0 +1,112 @@
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -322,6 +322,14 @@
+ 	struct iio_channel *usb_in_v_chan;
+ 
+ 	struct power_supply *chg_psy;
++
++	/*
++	 * True when the charge went through the taper phase, which is the
++	 * moment the cell reaches the float voltage.  A charge that stops
++	 * before that never reached the float and must not be reported as a
++	 * finished charge.
++	 */
++	bool reached_taper;
+ };
+ 
+ static enum power_supply_property smb5_properties[] = {
+@@ -420,6 +428,32 @@
+ 	return 0;
+ }
+ 
++/*
++ * Remember whether the charge of this cycle reached the taper phase.
++ *
++ * The taper phase is the one where the charger reduces the current because
++ * the cell has reached the float voltage.  A charge that never entered it
++ * stopped before the float, which is what a too small input limit causes:
++ * such a charge is not a finished charge.
++ */
++static void smb5_track_charge_state(struct smb5_chip *chip, int state)
++{
++	switch (state) {
++	case TRICKLE_CHARGE:
++	case PRE_CHARGE:
++	case FAST_CHARGE:
++	case FULLON_CHARGE:
++		/* A new charge cycle starts here. */
++		chip->reached_taper = false;
++		break;
++	case TAPER_CHARGE:
++		chip->reached_taper = true;
++		break;
++	default:
++		break;
++	}
++}
++
+ static int smb5_get_prop_status(struct smb5_chip *chip, int *val)
+ {
+ 	unsigned char stat[2];
+@@ -428,6 +462,8 @@
+ 
+ 	rc = smb5_get_prop_usb_online(chip, &usb_online);
+ 	if (!usb_online) {
++		/* A new attachment starts a new charge cycle. */
++		chip->reached_taper = false;
+ 		*val = POWER_SUPPLY_STATUS_DISCHARGING;
+ 		return rc;
+ 	}
+@@ -441,6 +477,7 @@
+ 	}
+ 
+ 	stat[0] = stat[0] & BATTERY_CHARGER_STATUS_MASK;
++	smb5_track_charge_state(chip, stat[0]);
+ 
+ 	/*
+ 	 * Check the active charge state first. VBATT_GTET_INHIBIT_BIT in
+@@ -849,7 +886,16 @@
+ 		return rc;
+ 	}
+ 
+-	*val = ((stat[0] & BATTERY_CHARGER_STATUS_MASK) == TERMINATE_CHARGE);
++	smb5_track_charge_state(chip, stat[0] & BATTERY_CHARGER_STATUS_MASK);
++
++	/*
++	 * The charge is done when the hardware ended it AND the charge went
++	 * through the taper phase, that is when the cell reached the float
++	 * voltage.  A charge that stopped before the float is not reported
++	 * as done.
++	 */
++	*val = ((stat[0] & BATTERY_CHARGER_STATUS_MASK) == TERMINATE_CHARGE) &&
++	       chip->reached_taper;
+ 
+ 	return 0;
+ }
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -482,11 +482,19 @@
+ #define FG_MSOC_SHADOW_TRIES	5
+ 
+ /*
+- * Lowest raw code the vendor driver reports as 100 % when the charger
+- * reports that the charge is done (the "report_full" band of CAF
+- * fg_get_msoc).  CAF uses 252 for the codes just below the full code.
+- */
+-#define FG_MSOC_FULL_BAND_MIN	252
++ * Lowest raw code reported as 100 % when the charger reports that the charge
++ * is done (the "report_full" band of CAF fg_get_msoc).
++ *
++ * CAF uses 252, the codes just below the full code of a healthy cell.  The
++ * counter of this board stops near 246 because the cell was learned at about
++ * 2710 mAh against 4700 mAh of design, so the CAF threshold is never
++ * reached and a full cell would be reported as 96 %.
++ *
++ * The floor of 240 is safe here because the CHARGE_DONE of this board is
++ * only published when the charge went through the taper phase, that is when
++ * the cell reached the float voltage: the charge is physically over.
++ */
++#define FG_MSOC_FULL_BAND_MIN	240
+ 
+ /**
+  * @brief qcom_fg_msoc_to_percent() - Convert the raw MSOC byte to a percentage

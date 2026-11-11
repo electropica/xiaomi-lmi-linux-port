@@ -1,0 +1,30 @@
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -29,6 +29,11 @@
+ MODULE_PARM_DESC(lmi_full_voltage_mv,
+ 		 "Cell voltage in mV at or above which the battery is reported as full. 0 disables the rule. Default 4400, the float voltage of this board.");
+ 
++/* An opt-in diagnostic: do not promote the gauge reading to 100%. */
++static bool lmi_native_soc;
++module_param(lmi_native_soc, bool, 0644);
++MODULE_PARM_DESC(lmi_native_soc, "Report the native MSOC percentage without the full latch");
++
+ /* SOC */
+ #define BATT_MONOTONIC_SOC		0x009
+ 
+@@ -620,5 +625,15 @@
+ 	*val = qcom_fg_msoc_to_percent(cap[0]);
+ 
++	/*
++	 * Use the gauge's native mapping when requested. Clear any previous
++	 * latch so that switching back cannot resurrect an old full state.
++	 * This affects the reported percentage, not charging controls.
++	 */
++	if (READ_ONCE(lmi_native_soc)) {
++		chip->full_latched = false;
++		return 0;
++	}
++
+ 	/*
+ 	 * The vendor driver has a second band: when the charger reports that
+ 	 * the charge is done, the codes just below the full code are reported

@@ -1,0 +1,206 @@
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -53,6 +53,7 @@
+   GtkWidget *lmi_home_slots;
+   GtkWidget *lmi_favorites_drawer;
+   GtkWidget *lmi_no_results;
++  GtkWidget *lmi_back_button;
+   GtkWidget *scrolled_window;
+   GtkWidget *btn_adaptive;
+   GtkWidget *btn_adaptive_img;
+@@ -451,15 +452,40 @@
+ }
+ 
+ 
+-/* The app list consumes downward scrolling until its first row is reached. */
+-static void
+-lmi_drawer_update_swipe_back (PhoshAppGrid *self, GtkAdjustment *adjustment)
+-{
+-  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
+-  gboolean at_top = gtk_adjustment_get_value (adjustment) <=
+-                    gtk_adjustment_get_lower (adjustment);
+-
+-  hdy_deck_set_can_swipe_back (HDY_DECK (priv->lmi_favorites_drawer), at_top);
++/* The drawer deck must not own a swipe gesture while the app list is visible.
++ *
++ * libhandy drives a deck swipe from a capture-phase drag gesture
++ * (hdy-swipe-tracker.c). A drag that starts on a GtkButton - and every app
++ * icon is one - is force-dragged by that tracker, and 16 px into the drag the
++ * tracker claims the touch sequence (GTK_EVENT_SEQUENCE_CLAIMED) and grabs
++ * the deck. The GtkScrolledWindow underneath then never receives the touch:
++ * the list neither scrolls nor hands the release to the icon that was
++ * pressed, and the page moves instead.
++ *
++ * The deck therefore owns no gesture while the applications page is visible.
++ * The home page has no scroller, so its upward swipe stays enabled and still
++ * opens the app list. Going back to the home page is done with the back
++ * button, not with a gesture over the list. */
++static void
++lmi_drawer_update_swipe_allowance (PhoshAppGrid *self)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++  gboolean on_home = g_strcmp0 (
++    hdy_deck_get_visible_child_name (HDY_DECK (priv->lmi_favorites_drawer)),
++    "home") == 0;
++
++  hdy_deck_set_can_swipe_forward (HDY_DECK (priv->lmi_favorites_drawer), on_home);
++  hdy_deck_set_can_swipe_back (HDY_DECK (priv->lmi_favorites_drawer), FALSE);
++}
++
++
++static void
++on_lmi_back_clicked (PhoshAppGrid *self,
++                     GtkButton   *button)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++
++  hdy_deck_set_visible_child_name (HDY_DECK (priv->lmi_favorites_drawer), "home");
+ }
+ 
+ 
+@@ -532,13 +558,7 @@
+   toggle_favorites_revealer (self);
+   lmi_home_setup (self);
+ 
+-  GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
+-    GTK_SCROLLED_WINDOW (priv->scrolled_window));
+-  g_signal_connect_object (adjustment, "value-changed",
+-                           G_CALLBACK (lmi_drawer_update_swipe_back), self, G_CONNECT_SWAPPED);
+-  g_signal_connect_object (adjustment, "changed",
+-                           G_CALLBACK (lmi_drawer_update_swipe_back), self, G_CONNECT_SWAPPED);
+-  lmi_drawer_update_swipe_back (self, adjustment);
++  lmi_drawer_update_swipe_allowance (self);
+   g_signal_connect_object (priv->lmi_favorites_drawer, "notify::transition-running",
+                            G_CALLBACK (on_lmi_drawer_transition_running), self, 0);
+ 
+@@ -626,6 +646,13 @@
+   PhoshAppGridPrivate *priv;
+ 
+   g_return_if_fail (PHOSH_IS_APP_GRID (self));
++
++  /* libhandy's swipe tracker must only be reconfigured while it is idle:
++   * disabling it while it is scrolling leaves it in a state where the next
++   * gesture is swallowed. The transition is over at this point, so the
++   * tracker is idle and resets itself cleanly. */
++  if (!hdy_deck_get_transition_running (HDY_DECK (object)))
++    lmi_drawer_update_swipe_allowance (self);
+ 
+   if (hdy_deck_get_transition_running (HDY_DECK (object)) ||
+       g_strcmp0 (hdy_deck_get_visible_child_name (HDY_DECK (object)), "home") != 0)
+@@ -823,6 +850,7 @@
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_favorites_drawer);
+   gtk_widget_class_bind_template_child_full (widget_class, "lmi_drawer_previews", FALSE, 0);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_no_results);
++  gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, lmi_back_button);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, favs);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, favs_revealer);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, folder_apps);
+@@ -834,6 +862,7 @@
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, scrolled_window);
+   gtk_widget_class_bind_template_child_private (widget_class, PhoshAppGrid, search);
+ 
++  gtk_widget_class_bind_template_callback (widget_class, on_lmi_back_clicked);
+   gtk_widget_class_bind_template_callback (widget_class, on_folder_edit_toggled);
+   gtk_widget_class_bind_template_callback (widget_class, on_folder_entry_activated);
+   gtk_widget_class_bind_template_callback (widget_class, on_search_changed);
+--- a/src/overview.c
++++ b/src/overview.c
+@@ -63,6 +63,7 @@
+   PhoshActivity *activity;
+ 
+   int       has_activities;
++  int       lmi_previews_reserved_height;
+ } PhoshOverviewPrivate;
+ 
+ 
+@@ -389,6 +390,40 @@
+ }
+ 
+ 
++/* The preview strip must not change the height of the app list.
++ *
++ * The strip holds the running-activity carousel, so its height follows the
++ * number of open windows. Without a reservation, every miniature that appears
++ * or disappears moves the whole app list, and the icon under a finger is then
++ * a different icon than the one that was drawn. Reserving the height of a
++ * populated strip keeps the app list at a constant position and a constant
++ * viewport, whatever happens to be running. */
++static void
++lmi_previews_update_reserved_height (PhoshOverview *self)
++{
++  PhoshOverviewPrivate *priv = phosh_overview_get_instance_private (self);
++  GtkWidget *previews_box;
++
++  g_return_if_fail (PHOSH_IS_OVERVIEW (self));
++
++  previews_box = GTK_WIDGET (gtk_widget_get_template_child (
++    GTK_WIDGET (priv->app_grid), PHOSH_TYPE_APP_GRID, "lmi_drawer_previews"));
++  if (previews_box == NULL)
++    return;
++
++  if (priv->carousel_running_activities != NULL &&
++      gtk_widget_get_visible (priv->carousel_running_activities)) {
++    gint height = 0;
++
++    gtk_widget_get_preferred_height (priv->carousel_running_activities, NULL, &height);
++    if (height > 0)
++      priv->lmi_previews_reserved_height = height;
++  }
++
++  gtk_widget_set_size_request (previews_box, -1, priv->lmi_previews_reserved_height);
++}
++
++
+ static void
+ toplevel_added_cb (PhoshOverview        *self,
+                    PhoshToplevel        *toplevel,
+@@ -398,6 +433,7 @@
+   g_return_if_fail (PHOSH_IS_TOPLEVEL (toplevel));
+   g_return_if_fail (PHOSH_IS_TOPLEVEL_MANAGER (manager));
+   add_activity (self, toplevel);
++  lmi_previews_update_reserved_height (self);
+ }
+ 
+ 
+@@ -440,6 +476,7 @@
+ 
+   priv->has_activities = has_activities;
+   gtk_widget_set_visible (priv->carousel_running_activities, has_activities);
++  lmi_previews_update_reserved_height (self);
+   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_HAS_ACTIVITIES]);
+ }
+ 
+--- a/src/ui/app-grid.ui
++++ b/src/ui/app-grid.ui
+@@ -86,6 +86,7 @@
+               <object class="GtkBox" id="lmi_drawer_previews">
+                 <property name="visible">1</property>
+                 <property name="hexpand">1</property>
++                <property name="valign">start</property>
+               </object>
+             </child>
+             <child>
+@@ -100,6 +101,23 @@
+                     <child>
+                       <object class="GtkBox">
+                         <property name="visible">1</property>
++                        <child>
++                          <object class="GtkButton" id="lmi_back_button">
++                            <property name="visible">1</property>
++                            <property name="valign">center</property>
++                            <child>
++                              <object class="GtkImage">
++                                <property name="visible">1</property>
++                                <property name="icon-name">go-previous-symbolic</property>
++                              </object>
++                            </child>
++                            <property name="tooltip-text" translatable="yes">Back to the shortcuts</property>
++                            <signal name="clicked" handler="on_lmi_back_clicked" object="PhoshAppGrid" swapped="yes" />
++                            <style>
++                              <class name="phosh-gear-button" />
++                            </style>
++                          </object>
++                        </child>
+                         <child>
+                           <object class="GtkSearchEntry" id="search">
+                             <property name="visible">1</property>

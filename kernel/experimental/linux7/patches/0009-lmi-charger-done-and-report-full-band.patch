@@ -1,0 +1,142 @@
+--- a/include/linux/power_supply.h
++++ b/include/linux/power_supply.h
+@@ -178,6 +178,10 @@
+ 	POWER_SUPPLY_PROP_MANUFACTURE_DAY,
+ 	POWER_SUPPLY_PROP_INTERNAL_RESISTANCE,
+ 	POWER_SUPPLY_PROP_STATE_OF_HEALTH,
++	/* The charger of a PMIC can report that the charge is done; the
++	 * vendor driver of Qualcomm publishes it under this name and the
++	 * vendor fuel gauge reads it to decide that the battery is full. */
++	POWER_SUPPLY_PROP_CHARGE_DONE,
+ 	/* Properties of type `const char *' */
+ 	POWER_SUPPLY_PROP_MODEL_NAME,
+ 	POWER_SUPPLY_PROP_MANUFACTURER,
+--- a/drivers/power/supply/power_supply_sysfs.c
++++ b/drivers/power/supply/power_supply_sysfs.c
+@@ -227,6 +227,7 @@
+ 	POWER_SUPPLY_ATTR(MANUFACTURE_DAY),
+ 	POWER_SUPPLY_ATTR(INTERNAL_RESISTANCE),
+ 	POWER_SUPPLY_ATTR(STATE_OF_HEALTH),
++	POWER_SUPPLY_ATTR(CHARGE_DONE),
+ 	/* Properties of type `const char *' */
+ 	POWER_SUPPLY_ATTR(MODEL_NAME),
+ 	POWER_SUPPLY_ATTR(MANUFACTURER),
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -335,6 +335,7 @@
+ 	POWER_SUPPLY_PROP_ONLINE,
+ 	POWER_SUPPLY_PROP_USB_TYPE,
+ 	POWER_SUPPLY_PROP_CHARGE_BEHAVIOUR,
++	POWER_SUPPLY_PROP_CHARGE_DONE,
+ };
+ 
+ static int smb5_get_prop_usb_online(struct smb5_chip *chip, int *val)
+@@ -811,6 +812,38 @@
+ 	return 0;
+ }
+ 
++/*
++ * The state of the end of the charge, as the hardware reports it.
++ *
++ * The vendor fuel gauge decides that the battery is full from the state of
++ * the charger, not from the counter of the gauge alone: the "report_full"
++ * band of CAF fg_get_msoc promotes the codes just below the full code to
++ * 100 % when the charger reports that the charge is done.  That state is
++ * CHG_STATUS_1 of the charger block (BATTERY_CHARGER_STATUS_1), whose bits
++ * [2:0] hold the charge state; TERMINATE means the hardware ended the
++ * charge.
++ *
++ * The charger driver of this board is bound to the fuel gauge, so the state
++ * is published here for the gauge to read.
++ */
++static int smb5_get_prop_charge_done(struct smb5_chip *chip, int *val)
++{
++	unsigned char stat[2];
++	int rc;
++
++	rc = regmap_bulk_read(chip->regmap,
++			      chip->base + BATTERY_CHARGER_STATUS_1, &stat, 2);
++	if (rc < 0) {
++		dev_err(chip->dev, "Failed to read charging status ret=%d\n",
++			rc);
++		return rc;
++	}
++
++	*val = ((stat[0] & BATTERY_CHARGER_STATUS_MASK) == TERMINATE_CHARGE);
++
++	return 0;
++}
++
+ static int smb5_get_property(struct power_supply *psy,
+ 			     enum power_supply_property psp,
+ 			     union power_supply_propval *val)
+@@ -842,6 +875,8 @@
+ 		return smb5_apsd_get_charger_type(chip, &val->intval);
+ 	case POWER_SUPPLY_PROP_CHARGE_BEHAVIOUR:
+ 		return smb5_get_prop_charge_behaviour(chip, &val->intval);
++	case POWER_SUPPLY_PROP_CHARGE_DONE:
++		return smb5_get_prop_charge_done(chip, &val->intval);
+ 	default:
+ 		dev_err(chip->dev, "invalid property: %d\n", psp);
+ 		return -EINVAL;
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -93,6 +93,7 @@
+ 	struct power_supply *chg_psy;
+ 	bool chg_psy_owned;  /* true if chg_psy was obtained via get_by_name */
+ 	int status;
++	bool charge_done;
+ 	struct delayed_work status_changed_work;
+ 
+ 	struct completion sram_access_granted;
+@@ -480,6 +481,13 @@
+ 
+ #define FG_MSOC_SHADOW_TRIES	5
+ 
++/*
++ * Lowest raw code the vendor driver reports as 100 % when the charger
++ * reports that the charge is done (the "report_full" band of CAF
++ * fg_get_msoc).  CAF uses 252 for the codes just below the full code.
++ */
++#define FG_MSOC_FULL_BAND_MIN	252
++
+ /**
+  * @brief qcom_fg_msoc_to_percent() - Convert the raw MSOC byte to a percentage
+  * @param raw Raw MSOC value as stored by the fuel gauge (0..255)
+@@ -526,6 +534,7 @@
+ static int qcom_fg_get_capacity(struct qcom_fg_chip *chip, int *val)
+ {
+ 	u8 cap[2];
++	union power_supply_propval propval;
+ 	int ret;
+ 	int tries = 0;
+ 
+@@ -559,6 +568,28 @@
+ 
+ 	*val = qcom_fg_msoc_to_percent(cap[0]);
+ 
++	/*
++	 * The vendor driver has a second band: when the charger reports that
++	 * the charge is done, the codes just below the full code are reported
++	 * as 100 % (the "report_full" band of CAF fg_get_msoc, which needs
++	 * CHARGE_DONE from the charger).  The charger of this board is bound
++	 * to the gauge and publishes that state, so the band is reachable
++	 * here: the gauge says 253 and the hardware ended the charge, the
++	 * battery is full.
++	 *
++	 * The state is read with the counter, so it is the state of the
++	 * moment and not a value left over from an earlier reading.
++	 */
++	chip->charge_done = false;
++	if (chip->chg_psy &&
++	    !power_supply_get_property(chip->chg_psy,
++				       POWER_SUPPLY_PROP_CHARGE_DONE, &propval))
++		chip->charge_done = propval.intval > 0;
++
++	if (*val < 100 && chip->charge_done &&
++	    cap[0] >= FG_MSOC_FULL_BAND_MIN)
++		*val = 100;
++
+ 	return 0;
+ }
+ 

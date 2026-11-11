@@ -1,0 +1,45 @@
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -1377,13 +1377,35 @@
+ 				     "Failed to init status change work\n");
+ 
+ 	/*
+-	 * Float voltage: left as the ROM programmed it (0x1070 = 0x50, 4.40 V
+-	 * on this board, and the charge did terminate there on 2026-10-28).
+-	 * The upstream community driver wrote the cell design voltage with the
+-	 * 7.5 mV step of another PMIC, which would have commanded 4.90 V here.
+-	 * Raising the float to the 4460 mV design voltage of the cell is a
+-	 * charging policy decision that is not taken in this patch.
+-	 */
++	 * Float voltage: raised from the value left by the ROM (0x1070 = 0x50,
++	 * 4.40 V) to the 4460 mV rated voltage of the cell.
++	 *
++	 * A charge regulated at 4400 mV can never reach the state the 100 %
++	 * latch of the gauge requires. Measured on 2026-11-09, with the cell
++	 * at 4384 mV to 4418 mV and the charge terminated (0x1006 = 0x45), the
++	 * gauge reported MSOC 247 and 96 %: one unit below the band of 248
++	 * the latch needs, and the load sags the cell below the float between
++	 * two charge cycles, so the latch never engaged and the battery was
++	 * never reported as genuinely full.
++	 *
++	 * Charging to the rated voltage of the cell is what makes the
++	 * displayed percentage match the real state of charge. The cell
++	 * reports 4460 mV as its maximum design voltage, and the PMIC keeps
++	 * its own battery over-voltage protection, so this stays inside the
++	 * rating of the pack.
++	 *
++	 * PM8150B encoding: 3.6 V + code * 10 mV, 4.79 V maximum, so
++	 * 4460 mV is code 0x56. The upstream community driver used a 7.5 mV
++	 * step over a 3487.5 mV base, which is the scale of another PMIC:
++	 * with it, the 4460 mV rated voltage of this cell would have been
++	 * programmed as 4.90 V.
++	 */
++	rc = regmap_update_bits(chip->regmap,
++				chip->base + FLOAT_VOLTAGE_CFG,
++				FLOAT_VOLTAGE_SETTING_MASK, 0x56);
++	if (rc < 0)
++		return dev_err_probe(chip->dev, rc,
++				     "Couldn't set float voltage\n");
+ 
+ 	/* Fast charge current: step size is 50 mA, same scale as ICL */
+ 	if (chip->batt_info->constant_charge_current_max_ua > 0) {

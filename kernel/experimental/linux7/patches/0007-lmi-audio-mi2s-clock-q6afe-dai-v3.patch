@@ -1,0 +1,167 @@
+From: MCode <mcode@localhost>
+Subject: [PATCH] asoc: q6afe: arm the MI2S bit clock for the speaker port of lmi
+
+The TFA9874 amplifier of this board is driven by a back end link ("no-pcm")
+whose platform component is q6routing.  The sm8250 machine driver resolves
+the CPU DAI of the runtime with snd_soc_rtd_to_cpu(), which returns the
+front end (q6asmdai) and not the q6afedai that owns the MI2S port, so its
+PRIMARY_MI2S_RX case is never reached: the MI2S bit clock is never
+programmed, its enable counter stays at 0, the amplifier never locks its
+PLL and the speaker stays mute.
+
+The clock is armed in the DAI, after the port configuration has been
+applied and the port has been started, which is the position the machine
+driver uses.  It is armed on every start and not only on the first one:
+the port is stopped when the stream ends and the AFE can lose its clock
+configuration, a system suspend for instance.  Arming it again is
+idempotent.
+
+The expected bit clock is computed from the parameters of the stream:
+params_width() already returns a number of bits, so it is the rate times
+the width times the number of channels, 48000 x 16 x 2 = 1536000 Hz, which
+is the value the machine driver programs.  The value of the machine driver
+is the one that is programmed, a difference is only reported.
+
+When the clock cannot be armed, the port that was started just before is
+stopped again and the port state is cleared, so the DAI and the AFE stay
+in agreement.
+
+Only the MI2S receive ports are concerned: the WCD938x codec, the
+headset, the microphone and the USB audio keep the clock handling they
+have.
+
+Signed-off-by: MCode <mcode@localhost>
+---
+ sound/soc/qcom/qdsp6/q6afe-dai.c | 106 ++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 100 insertions(+), 6 deletions(-)
+---
+--- a/sound/soc/qcom/qdsp6/q6afe-dai.c
++++ b/sound/soc/qcom/qdsp6/q6afe-dai.c
+@@ -17,6 +17,15 @@
+ #include "q6afe.h"
+ 
+ 
++/*
++ * Bit clock of the MI2S ports of this board.  It is the value the sm8250
++ * machine driver programs for those ports (MI2S_BCLK_RATE in
++ * sound/soc/qcom/sm8250.c): the back end links are forced to 48 kHz,
++ * 16 bit and two channels by sm8250_be_hw_params_fixup(), that is
++ * 48000 x 16 x 2 = 1536000 Hz.
++ */
++#define Q6AFE_LMI_MI2S_BCLK_RATE	1536000
++
+ struct q6afe_dai_priv_data {
+ 	uint32_t sd_line_mask;
+ 	uint32_t sync_mode;
+@@ -384,11 +393,33 @@
+ 
+ }
+ 
++/*
++ * Clock id of the bit clock of an MI2S receive port, -1 for the other ports.
++ * The transmit ports have no bit clock of their own: they are fed by the
++ * clock of the port they are coupled to.
++ */
++static int q6afe_dai_mi2s_clk_id(unsigned int dai_id)
++{
++	switch (dai_id) {
++	case PRIMARY_MI2S_RX:
++		return Q6AFE_LPASS_CLK_ID_PRI_MI2S_IBIT;
++	case SECONDARY_MI2S_RX:
++		return Q6AFE_LPASS_CLK_ID_SEC_MI2S_IBIT;
++	case TERTIARY_MI2S_RX:
++		return Q6AFE_LPASS_CLK_ID_TER_MI2S_IBIT;
++	case QUATERNARY_MI2S_RX:
++		return Q6AFE_LPASS_CLK_ID_QUAD_MI2S_IBIT;
++	default:
++		return -1;
++	}
++}
++
+ static int q6afe_dai_prepare(struct snd_pcm_substream *substream,
+ 		struct snd_soc_dai *dai)
+ {
+ 	struct q6afe_dai_data *dai_data = dev_get_drvdata(dai->dev);
+ 	int rc;
++	int clk_id;
+ 
+ 	if (dai_data->is_port_started[dai->id]) {
+ 		/* stop the port and restart with new port config */
+@@ -443,6 +474,77 @@
+ 	}
+ 	dai_data->is_port_started[dai->id] = true;
+ 
++	/*
++	 * lmi: the back end link of the TFA9874 amplifier is a "no-pcm" link
++	 * whose platform component is q6routing, so the sm8250 machine driver
++	 * never reaches its PRIMARY_MI2S_RX case: it resolves the CPU DAI of
++	 * the runtime with snd_soc_rtd_to_cpu(), which returns the front end
++	 * (q6asmdai) and not the q6afedai that owns the port.  The MI2S bit
++	 * clock is therefore never programmed (its enable counter stays at 0),
++	 * the TFA9874 never locks its PLL (PLLS = 0, CLKS falls back to 0) and
++	 * the speaker stays mute.
++	 *
++	 * The clock is armed here, that is after the port configuration has
++	 * been applied and the port has been started: this is the position
++	 * the machine driver uses (sm8250_snd_startup()), and the AFE derives
++	 * the bit clock from the port configuration.
++	 *
++	 * It is armed on every start, not only on the first one: the port is
++	 * stopped again when the stream ends, and the AFE can lose its clock
++	 * configuration, a system suspend for instance.  Arming the clock
++	 * again is idempotent.
++	 *
++	 * Only the MI2S receive ports are concerned: the other links of the
++	 * card (the WCD938x codec on the DMA ports, the headset, the
++	 * microphone, the USB audio) keep the clock handling they have.
++	 */
++	clk_id = q6afe_dai_mi2s_clk_id(dai->id);
++	if (clk_id >= 0) {
++		struct q6afe_i2s_cfg *i2s =
++			&dai_data->port_config[dai->id].i2s_cfg;
++		unsigned int bclk = Q6AFE_LMI_MI2S_BCLK_RATE;
++		unsigned int expected;
++
++		/*
++		 * The bit clock has to match the stream.  params_width() is
++		 * already a number of bits, so the expected bit clock is
++		 * rate x width x channels: 48000 x 16 x 2 = 1536000 Hz.
++		 * The machine driver forces those parameters on the back
++		 * end links, so the two agree; a difference is worth a
++		 * warning, but the value of the machine driver is the one
++		 * that is programmed.
++		 */
++		expected = i2s->sample_rate * i2s->bit_width *
++			   i2s->num_channels;
++		if (expected && expected != bclk)
++			dev_warn(dai->dev,
++				 "MI2S port %x: the stream asks for %u Hz, the machine driver programs %u Hz\n",
++				 dai->id, expected, bclk);
++
++		rc = q6afe_port_set_sysclk(dai_data->port[dai->id], clk_id,
++					   Q6AFE_LPASS_CLK_ATTRIBUTE_COUPLE_NO,
++					   Q6AFE_LPASS_CLK_ROOT_DEFAULT,
++					   bclk, substream->stream);
++		if (rc) {
++			dev_err(dai->dev,
++				"Couldn't set the MI2S clock on port %x: %d\n",
++				dai->id, rc);
++			/*
++			 * The port has been started already: leave it in the
++			 * state it had before, otherwise the AFE keeps a
++			 * running port that the DAI does not know about.
++			 */
++			if (q6afe_port_stop(dai_data->port[dai->id]) < 0)
++				dev_err(dai->dev,
++					"fail to close AFE port %x\n", dai->id);
++			dai_data->is_port_started[dai->id] = false;
++			return rc;
++		}
++		dev_info(dai->dev,
++			 "MI2S port %x: bit clock %u Hz armed by the DAI\n",
++			 dai->id, bclk);
++	}
++
+ 	return 0;
+ }
+ 

@@ -1,0 +1,60 @@
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -665,6 +665,39 @@
+  * Program the input current limit and select the mode of the hardware that
+  * applies it.
+  */
++/*
++ * Whether the source was detected as a standard downstream port (SDP).
++ *
++ * The D+/D- detection of the PMIC gives the type of the source in
++ * APSD_RESULT_STATUS: bit 0 is SDP, that is a USB device such as a
++ * computer, bit 2 is CDP and bit 3 is DCP, the other bits are the
++ * proprietary chargers.  A source detected as SDP announces on CC a
++ * capability it does not necessarily hold: a USB 2.0 port of a computer
++ * announces Rp 3,0 A and delivers 500 mA.  Asking 3 A to such a source
++ * makes the input collapse, and in the override mode the collapse
++ * suspends the USB link.
++ *
++ * So the override is only applied when the source is not detected as SDP.
++ * When the detection has not finished, the source is treated as SDP: the
++ * conservative choice, the hardware keeps its own protection.
++ */
++static int smb5_source_detected_as_sdp(struct smb5_chip *chip, bool *is_sdp)
++{
++	unsigned int stat;
++	int rc;
++
++	rc = regmap_read(chip->regmap, chip->base + APSD_RESULT_STATUS, &stat);
++	if (rc < 0) {
++		dev_err(chip->dev, "Failed to read apsd result, rc = %d\n",
++			rc);
++		*is_sdp = true;
++		return rc;
++	}
++
++	*is_sdp = !!(stat & SDP_CHARGER_BIT);
++	return 0;
++}
++
+ static int smb5_apply_current_limit(struct smb5_chip *chip, unsigned int current_ua)
+ {
+ 	unsigned int typec_ua = 0;
+@@ -692,6 +725,17 @@
+ 	 */
+ 	high_current = lmi_icl_hc_enable && typec_capable &&
+ 		       current_ua > SDP_CURRENT_UA && typec_ua == current_ua;
++
++	/*
++	 * A source detected as SDP cannot be trusted with the requested
++	 * current, even when it announces it on CC.
++	 */
++	if (high_current) {
++		bool is_sdp = true;
++
++		if (smb5_source_detected_as_sdp(chip, &is_sdp) || is_sdp)
++			high_current = false;
++	}
+ 
+ 	rc = smb5_select_icl_mode(chip, high_current);
+ 	if (rc)

@@ -1,0 +1,84 @@
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -525,7 +525,34 @@
+  * only published when the charge went through the taper phase, that is when
+  * the cell reached the float voltage: the charge is physically over.
+  */
+-#define FG_MSOC_FULL_BAND_MIN	240
++/*
++ * Lowest raw code that is reported as 100 % when the charge is done.
++ *
++ * The counter of this board does not reach 255: it was learned for a cell
++ * that holds far less than the design capacity, so it settles around 250
++ * when the cell is full.  Measured on 2026-11-09, it read 250 under the
++ * load of the charger and 248 once the cable was pulled, and the native
++ * formula of the vendor driver maps those codes to 97 %.
++ *
++ * The floor is therefore 248, the lowest code the counter holds while the
++ * cell is full, and the value for which the native formula already gives
++ * 97 %.  A lower floor would report 100 % for a cell that is not full: with
++ * 240 the display showed 100 % while the counter still said 94 %, which is
++ * the difference between a full battery and a battery that is missing a
++ * few percents of its charge.
++ */
++#define FG_MSOC_FULL_BAND_MIN	248
++
++/*
++ * Highest raw code at which the full state is still held.
++ *
++ * The counter of this gauge follows the voltage of the cell: it loses a
++ * couple of units when the cell sags under the load of the board, which
++ * happens as soon as the cable is pulled.  The full state is therefore kept
++ * until the counter falls clearly below the promotion floor, that is until
++ * the battery has really been used.
++ */
++#define FG_MSOC_FULL_RELEASE_MAX	240
+ 
+ /*
+  * Margin in mV below the float voltage at which the full state is
+@@ -535,6 +562,21 @@
+  */
+ #define FG_FULL_RELEASE_MARGIN_MV	100
+ 
++/*
++ * Voltage below which the full state is released whatever the counter says.
++ *
++ * The cell is under the load of the board again once it is unplugged, and
++ * that load makes its voltage fall: on 2026-11-09 it went from 4421 mV
++ * under the charger to 4170 mV at the moment the cable was pulled.  A
++ * release decided on the voltage alone would therefore drop the full state
++ * at the unplug itself, which is exactly what it did.
++ *
++ * This floor is well below the float voltage, so that the state survives
++ * the pull of the cable and the load of the board, and is only crossed
++ * when the battery is really discharged.
++ */
++#define FG_FULL_RELEASE_FLOOR_MV	4100
++
+ /**
+  * @brief qcom_fg_msoc_to_percent() - Convert the raw MSOC byte to a percentage
+  * @param raw Raw MSOC value as stored by the fuel gauge (0..255)
+@@ -641,8 +683,21 @@
+ 	if (chip->full_latched) {
+ 		int vbat = 0;
+ 
+-		if (!chip->ops->get_voltage(chip, &vbat) &&
+-		    vbat < (lmi_full_voltage_mv - FG_FULL_RELEASE_MARGIN_MV) * 1000)
++		/*
++		 * The counter of the gauge is the state of charge itself,
++		 * and it does not move with the load of the board: it is
++		 * the value that says how much charge is left.  The full
++		 * state is therefore kept while the counter stays above
++		 * the release code, and released when it falls below it,
++		 * that is when the battery has really been used.
++		 */
++		if (cap[0] < FG_MSOC_FULL_RELEASE_MAX)
++			chip->full_latched = false;
++
++		if (chip->full_latched &&
++		    !chip->ops->get_voltage(chip, &vbat) &&
++		    (vbat < (lmi_full_voltage_mv - FG_FULL_RELEASE_MARGIN_MV) * 1000 ||
++		     vbat < FG_FULL_RELEASE_FLOOR_MV * 1000))
+ 			chip->full_latched = false;
+ 	}
+ 

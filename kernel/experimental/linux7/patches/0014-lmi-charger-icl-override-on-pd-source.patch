@@ -1,0 +1,141 @@
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -698,6 +698,105 @@
+ 	return 0;
+ }
+ 
++/*
++ * The name of the power supply that the port TCPM publishes for the source
++ * it is plugged into.
++ *
++ * The TCPM driver of this board registers one source power supply, whose
++ * name is built from the name of the Type-C device: "tcpm-source-psy-" plus
++ * the device name, for example
++ * "tcpm-source-psy-c440000.spmi:pmic@2:typec@1500".
++ *
++ * The name is therefore not known at compile time and the supply is looked
++ * up by iterating over the supplies, looking for the prefix.
++ */
++#define TCPM_SOURCE_psy_PREFIX	"tcpm-source-psy-"
++
++/*
++ * State of the search for the source power supply of the port TCPM.
++ */
++struct smb5_pd_source {
++	unsigned int ua;
++	bool found;
++	bool is_pd;
++};
++
++/*
++ * Read the contract that the port TCPM negotiated with the source.
++ *
++ * On a USB-C link the source announces on CC the current it can deliver with
++ * its Rp resistor, and the charger block of this board reads that register
++ * directly.  A source that does power delivery negotiates the real current
++ * over the PD link instead, and announces only the default Rp on CC: the
++ * charger block then reads 1,5 A for a source that delivers 3 A.
++ *
++ * The TCPM driver knows the negotiated contract and publishes it as the
++ * current of its source power supply.  This function reads it.
++ */
++static int smb5_find_pd_source(struct power_supply *psy, void *data)
++{
++	struct smb5_pd_source *state = data;
++	union power_supply_propval val;
++
++	if (strncmp(psy->desc->name, TCPM_SOURCE_psy_PREFIX,
++		    strlen(TCPM_SOURCE_psy_PREFIX)))
++		return 0;
++
++	if (power_supply_get_property(psy, POWER_SUPPLY_PROP_USB_TYPE, &val))
++		return 0;
++
++	/*
++	 * The type of the connection tells whether the source negotiated its
++	 * power delivery: the USB type of a PD source contains "PD".
++	 */
++	/*
++	 * The USB type is an enumeration, not a string: the TCPM driver
++	 * publishes the type of the connection as the integer
++	 * enum power_supply_usb_type.  A source that negotiated its power
++	 * delivery is one of the PD types.
++	 */
++	switch (val.intval) {
++	case POWER_SUPPLY_USB_TYPE_PD:
++	case POWER_SUPPLY_USB_TYPE_PD_DRP:
++	case POWER_SUPPLY_USB_TYPE_PD_PPS:
++	case POWER_SUPPLY_USB_TYPE_PD_SPR_AVS:
++	case POWER_SUPPLY_USB_TYPE_PD_PPS_SPR_AVS:
++		break;
++	default:
++		return 0;
++	}
++
++	if (power_supply_get_property(psy, POWER_SUPPLY_PROP_CURRENT_MAX,
++					&val))
++		return 0;
++
++	state->ua = val.intval;
++	state->is_pd = true;
++	state->found = true;
++
++	return 1;
++}
++
++/*
++ * Read the current that the port TCPM negotiated with the source.
++ *
++ * Returns 0 and the announced current in ua when the source is a PD source,
++ * and a negative errno otherwise.
++ */
++static int smb5_get_pd_source_current(struct smb5_chip *chip,
++				       unsigned int *ua)
++{
++	struct smb5_pd_source state = { 0 };
++
++	power_supply_for_each_psy(&state, smb5_find_pd_source);
++
++	if (!state.found)
++		return -ENODATA;
++
++	*ua = state.ua;
++	return 0;
++}
++
+ static int smb5_apply_current_limit(struct smb5_chip *chip, unsigned int current_ua)
+ {
+ 	unsigned int typec_ua = 0;
+@@ -732,9 +831,31 @@
+ 	 */
+ 	if (high_current) {
+ 		bool is_sdp = true;
++		unsigned int pd_ua = 0;
+ 
+-		if (smb5_source_detected_as_sdp(chip, &is_sdp) || is_sdp)
++		if (!smb5_get_pd_source_current(chip, &pd_ua)) {
++			/*
++			 * The source is a PD source: the current it
++			 * negotiated is its real capability, and the
++			 * detection of the charger block says nothing
++			 * about it because the D+/D- lines are not used
++			 * on such a link.
++			 */
++			if (pd_ua > current_ua)
++				current_ua = pd_ua;
++			if (current_ua > USB_ICL_MAX_UA)
++				current_ua = USB_ICL_MAX_UA;
++
++			rc = smb5_set_current_limit(chip, current_ua);
++			if (rc)
++				return rc;
++		} else if (smb5_source_detected_as_sdp(chip, &is_sdp) || is_sdp) {
++			/*
++			 * A source that is not a PD source and is detected
++			 * as SDP cannot be trusted with the requested current.
++			 */
+ 			high_current = false;
++		}
+ 	}
+ 
+ 	rc = smb5_select_icl_mode(chip, high_current);

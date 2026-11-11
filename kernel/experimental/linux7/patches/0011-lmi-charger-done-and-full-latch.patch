@@ -1,0 +1,126 @@
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -889,13 +889,22 @@
+ 	smb5_track_charge_state(chip, stat[0] & BATTERY_CHARGER_STATUS_MASK);
+ 
+ 	/*
+-	 * The charge is done when the hardware ended it AND the charge went
+-	 * through the taper phase, that is when the cell reached the float
+-	 * voltage.  A charge that stopped before the float is not reported
+-	 * as done.
+-	 */
+-	*val = ((stat[0] & BATTERY_CHARGER_STATUS_MASK) == TERMINATE_CHARGE) &&
+-	       chip->reached_taper;
++	 * The cell has reached the float voltage when the charge is in the
++	 * taper phase, or when the hardware ended a charge that went through
++	 * it.  A charge that stopped before the float (what a too small input
++	 * limit causes) is not reported as done.
++	 */
++	switch (stat[0] & BATTERY_CHARGER_STATUS_MASK) {
++	case TAPER_CHARGE:
++		*val = 1;
++		break;
++	case TERMINATE_CHARGE:
++		*val = chip->reached_taper;
++		break;
++	default:
++		*val = 0;
++		break;
++	}
+ 
+ 	return 0;
+ }
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -14,6 +14,28 @@
+ #include <linux/regmap.h>
+ #include <linux/types.h>
+ #include <linux/workqueue.h>
++
++/*
++ * Cell voltage at or above which the battery is reported as full.
++ *
++ * The raw MSOC counter of this board is scaled to the capacity the cell had
++ * when the phone left the factory.  This cell was learned at about 2710 mAh
++ * against 4700 mAh of design, so the counter stops near 246 when the cell is
++ * full: the percentage formula, which is calibrated for a healthy cell,
++ * then reports 96 % for a battery that sits at the float voltage.
++ *
++ * The vendor driver has the same kind of band (the "report_full" band of
++ * CAF fg_get_msoc, which promotes the codes just below the full code to
++ * 100 % when the charger reports CHARGE_DONE), but its threshold assumes a
++ * healthy cell.  Here the band is completed with the float voltage of this
++ * board: the charge is reported as finished only when the charger says the
++ * charge reached the float voltage AND the cell is at or above it.  A charge
++ * that stops below the float keeps reporting its real percentage.
++ */
++static int lmi_full_voltage_mv = 4400;
++module_param(lmi_full_voltage_mv, int, 0644);
++MODULE_PARM_DESC(lmi_full_voltage_mv,
++		 "Cell voltage in mV at or above which the battery is reported as full. 0 disables the rule. Default 4400, the float voltage of this board.");
+ 
+ /* SOC */
+ #define BATT_MONOTONIC_SOC		0x009
+@@ -94,6 +116,15 @@
+ 	bool chg_psy_owned;  /* true if chg_psy was obtained via get_by_name */
+ 	int status;
+ 	bool charge_done;
++
++	/*
++	 * True when the gauge has seen a charge that reached the float
++	 * voltage.  The battery is then full until it is used again: the
++	 * state is kept so that the percentage stays at 100 % while the
++	 * phone is unplugged, and until the cell drops clearly below the
++	 * float.
++	 */
++	bool full_latched;
+ 	struct delayed_work status_changed_work;
+ 
+ 	struct completion sram_access_granted;
+@@ -495,6 +526,14 @@
+  * the cell reached the float voltage: the charge is physically over.
+  */
+ #define FG_MSOC_FULL_BAND_MIN	240
++
++/*
++ * Margin in mV below the float voltage at which the full state is
++ * released.  The cell relaxes by a few tens of mV when the charge stops,
++ * so the margin keeps the full state while the battery is simply unplugged,
++ * and releases it once the battery is really used.
++ */
++#define FG_FULL_RELEASE_MARGIN_MV	100
+ 
+ /**
+  * @brief qcom_fg_msoc_to_percent() - Convert the raw MSOC byte to a percentage
+@@ -594,8 +633,29 @@
+ 				       POWER_SUPPLY_PROP_CHARGE_DONE, &propval))
+ 		chip->charge_done = propval.intval > 0;
+ 
+-	if (*val < 100 && chip->charge_done &&
+-	    cap[0] >= FG_MSOC_FULL_BAND_MIN)
++	/*
++	 * The state is verified with the cell voltage: a charge that reached
++	 * the float latches the full state, and the latch is released only
++	 * when the cell drops clearly below the float voltage.
++	 */
++	if (chip->full_latched) {
++		int vbat = 0;
++
++		if (!chip->ops->get_voltage(chip, &vbat) &&
++		    vbat < (lmi_full_voltage_mv - FG_FULL_RELEASE_MARGIN_MV) * 1000)
++			chip->full_latched = false;
++	}
++
++	if (!chip->full_latched && chip->charge_done &&
++	    cap[0] >= FG_MSOC_FULL_BAND_MIN) {
++		int vbat = 0;
++
++		if (!chip->ops->get_voltage(chip, &vbat) &&
++		    vbat >= lmi_full_voltage_mv * 1000)
++			chip->full_latched = true;
++	}
++
++	if (chip->full_latched)
+ 		*val = 100;
+ 
+ 	return 0;

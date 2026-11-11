@@ -1,0 +1,189 @@
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -548,6 +548,135 @@
+ 	return 0;
+ }
+ 
++/*
++ * Let the driver take the input current limit it programmed.
++ *
++ * The hardware only applies the limit programmed in USBIN_CURRENT_LIMIT_CFG
++ * in its high current override. In the automatic mode the AICL of the
++ * charger decides alone and the programmed limit is only its ceiling. On
++ * this board the D+/D- detection reports a standard port, so the automatic
++ * mode settles on the 500 mA of the ROM default even when the source
++ * advertises more on CC: on 2026-11-01 the charger held 0x1370 = 0x3c
++ * (3000 mA) while 0x1107 and 0x1108 both read 0x0a (500 mA).
++ *
++ * The high current override removes that protection, so it is only used
++ * when the operator asked for it and the source advertises on CC exactly
++ * the capability that is requested.
++ */
++static bool lmi_icl_hc_enable;
++module_param(lmi_icl_hc_enable, bool, 0644);
++MODULE_PARM_DESC(lmi_icl_hc_enable,
++		 "Let the driver apply the input current limit it programmed instead of leaving the automatic mode of the hardware. Default off: the automatic mode and its AICL protection are kept.");
++
++/*
++ * Select the mode the hardware uses to decide the input current limit.
++ *
++ * The vendor driver names them HW_AUTO_MODE, where the AICL decides alone,
++ * and SW_OVERRIDE_HC_MODE, where the programmed limit is the one that
++ * applies.
++ */
++static int smb5_select_icl_mode(struct smb5_chip *chip, bool high_current)
++{
++	int rc;
++
++	/*
++	 * In the automatic mode the hardware decides alone, and the registers
++	 * written below belong to the block that the Type-C driver of this
++	 * board owns.  Writing them on every status change disturbs the port,
++	 * so nothing is written unless the high current override is really
++	 * requested by the operator.
++	 */
++	if (!high_current)
++		return 0;
++
++	/* The charger mode is selected by the command register. */
++	rc = regmap_update_bits(chip->regmap, chip->base + USBIN_ICL_OPTIONS,
++				USBIN_MODE_CHG_BIT, USBIN_MODE_CHG_BIT);
++	if (rc < 0)
++		return rc;
++
++	rc = regmap_update_bits(chip->regmap, chip->base + CMD_ICL_OVERRIDE,
++				ICL_OVERRIDE_BIT, 0);
++	if (rc < 0)
++		return rc;
++
++	/*
++	 * ICL_OVERRIDE_AFTER_APSD is the bit that separates the automatic
++	 * mode from the high current override.
++	 */
++	rc = regmap_update_bits(chip->regmap, chip->base + USBIN_LOAD_CFG,
++				ICL_OVERRIDE_AFTER_APSD_BIT,
++				high_current ? ICL_OVERRIDE_AFTER_APSD_BIT : 0);
++	if (rc < 0)
++		return rc;
++
++	/*
++	 * In the high current override the AICL no longer protects the
++	 * board against a source that collapses under the requested
++	 * current, so the input is suspended on a collapse instead. The
++	 * price is that the USB link drops in that case and the handset
++	 * runs on the battery.
++	 */
++	return regmap_update_bits(chip->regmap,
++				  chip->base + USBIN_AICL_OPTIONS_CFG,
++				  SUSPEND_ON_COLLAPSE_USBIN_BIT,
++				  high_current ? SUSPEND_ON_COLLAPSE_USBIN_BIT : 0);
++}
++
++/*
++ * Program the input current limit and select the mode of the hardware that
++ * applies it.
++ */
++static int smb5_apply_current_limit(struct smb5_chip *chip, unsigned int current_ua)
++{
++	unsigned int typec_ua = 0;
++	bool typec_capable;
++	bool high_current;
++	int rc;
++
++	/*
++	 * The source never delivers more than what it advertises on CC:
++	 * asking for more only risks a collapse of the input.
++	 */
++	typec_capable = !smb5_get_typec_input_current(chip, &typec_ua);
++	if (typec_capable && current_ua > typec_ua)
++		current_ua = typec_ua;
++
++	rc = smb5_set_current_limit(chip, current_ua);
++	if (rc)
++		return rc;
++
++	/*
++	 * The high current override is only selected when the source
++	 * advertises on CC exactly the capability that is requested: for
++	 * any other source the automatic mode of the hardware and its AICL
++	 * protection are kept.
++	 */
++	high_current = lmi_icl_hc_enable && typec_capable &&
++		       current_ua > SDP_CURRENT_UA && typec_ua == current_ua;
++
++	rc = smb5_select_icl_mode(chip, high_current);
++	if (rc)
++		return rc;
++
++	dev_info(chip->dev,
++		 "input current limit set to %u uA, %s mode\n",
++		 current_ua,
++		 high_current ? "high current" : "automatic");
++
++	/*
++	 * The source can renegotiate without a physical plug event, so the
++	 * contract is checked again periodically while the override is in
++	 * use. Without it the override would survive a renegotiation the
++	 * driver never sees.
++	 */
++	if (high_current)
++		schedule_delayed_work(&chip->status_change_work,
++				      msecs_to_jiffies(30000));
++
++	return 0;
++}
++
+ static void smb5_status_change_work(struct work_struct *work)
+ {
+ 	unsigned int charger_type, current_ua = 0;
+@@ -558,8 +687,18 @@
+ 	chip = container_of(work, struct smb5_chip, status_change_work.work);
+ 
+ 	smb5_get_prop_usb_online(chip, &usb_online);
+-	if (!usb_online)
++	if (!usb_online) {
++		/*
++		 * The source is gone: drop the high current override, so the
++		 * board is back in the automatic mode with the protection of
++		 * the AICL before the next source is attached. The limit that
++		 * is programmed is left as it is: in the automatic mode it is
++		 * only the ceiling of the AICL, and lowering it would keep
++		 * the next source below what it can deliver.
++		 */
++		smb5_select_icl_mode(chip, false);
+ 		return;
++	}
+ 
+ 	/*
+ 	 * The input current limit follows the capability the source
+@@ -614,15 +753,13 @@
+ 	if (current_ua > USB_ICL_MAX_UA)
+ 		current_ua = USB_ICL_MAX_UA;
+ 
+-	rc = smb5_set_current_limit(chip, current_ua);
++	rc = smb5_apply_current_limit(chip, current_ua);
+ 	if (rc) {
+ 		dev_err(chip->dev,
+ 			 "Couldn't set the input current limit: %d\n", rc);
+ 		return;
+ 	}
+ 
+-	dev_info(chip->dev, "input current limit set to %u uA\n",
+-		 current_ua);
+ 	power_supply_changed(chip->chg_psy);
+ }
+ 
+@@ -729,7 +866,12 @@
+ 
+ 	switch (psp) {
+ 	case POWER_SUPPLY_PROP_CURRENT_MAX:
+-		return smb5_set_current_limit(chip, val->intval);
++		/*
++		 * The operator writes the limit here: apply it and select the
++		 * mode of the hardware that applies it, so the limit that is
++		 * written is the limit that is enforced.
++		 */
++		return smb5_apply_current_limit(chip, val->intval);
+ 	case POWER_SUPPLY_PROP_CHARGE_BEHAVIOUR:
+ 		return smb5_set_prop_charge_behaviour(chip, val->intval);
+ 	default:

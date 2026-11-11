@@ -1,0 +1,121 @@
+From: MCode <mcode@localhost>
+Subject: [PATCH] power: qcom_fg: read the MSOC shadow again and fix the two end points
+
+The community fuel gauge reads the state of charge with the formula
+DIV_ROUND_CLOSEST((raw - 1) * 98, 0xff - 2) + 1, which is the default
+branch of the vendor driver (CAF fg-util.c, fg_get_msoc).  Two end points
+are wrong and one read is not checked:
+
+- the raw byte and its shadow register are read again until they agree,
+  the way the vendor driver does (CAF fg-util.c, fg_get_msoc_raw, with
+  MAX_READ_TRIES = 5), instead of silently keeping the smaller of the two
+  bytes when a read is torn;
+- raw 0 gives 0 % and raw 255 gives 100 %, which are the two rules of the
+  vendor driver that depend on nothing else.
+
+The rules of the vendor driver that are guarded by smooth_batt_flag (the
+device tree property "qcom,fg-increase-100soc-time-2", absent from this
+tree) or by report_full (which the vendor driver raises when the charger
+reports CHARGE_DONE) are deliberately not applied: this driver has neither
+state, and forcing them would report a state of charge that was never
+measured.
+
+No gauge register is written and no current is touched by this patch: it
+only changes the way the state of charge is read and displayed.
+
+Signed-off-by: MCode <mcode@localhost>
+---
+ drivers/power/supply/qcom_fg.c | 78 +++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 68 insertions(+), 10 deletions(-)
+---
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -478,6 +478,44 @@
+  * BATTERY STATUS
+  * ***********************/
+ 
++#define FG_MSOC_SHADOW_TRIES	5
++
++/**
++ * @brief qcom_fg_msoc_to_percent() - Convert the raw MSOC byte to a percentage
++ * @param raw Raw MSOC value as stored by the fuel gauge (0..255)
++ * @return int percentage of charge
++ *
++ * The raw MSOC is a monotonic counter, not a percentage.  The vendor driver
++ * (CAF fg-util.c, fg_get_msoc) applies three rules that depend on nothing
++ * else and that this driver applies too:
++ *
++ *   raw 0   -> 0 %
++ *   raw 255 -> 100 %
++ *   otherwise the raw byte is scaled over 1..99:
++ *       DIV_ROUND_CLOSEST((raw - 1) * (FULL_CAPACITY - 2),
++ *                          FULL_SOC_RAW - 2) + 1
++ *
++ * The scaling is the one this driver already used, with FULL_CAPACITY = 100
++ * and FULL_SOC_RAW = 255: the community formula is the default branch of the
++ * vendor driver.
++ *
++ * The other rules of the vendor driver are deliberately NOT applied: they
++ * are guarded by smooth_batt_flag, which comes from the device tree
++ * property "qcom,fg-increase-100soc-time-2" and is absent from this tree,
++ * or by report_full, which the vendor driver raises when the charger
++ * reports CHARGE_DONE.  This driver has neither state, so those branches
++ * would report a state of charge that was never measured.
++ */
++static int qcom_fg_msoc_to_percent(u8 raw)
++{
++	if (raw == 0)
++		return 0;
++	if (raw == 0xff)
++		return 100;
++
++	return DIV_ROUND_CLOSEST((raw - 1) * 98, 0xff - 2) + 1;
++}
++
+ /**
+  * @brief qcom_fg_get_capacity() - Get remaining capacity of battery
+  *
+@@ -489,18 +527,37 @@
+ {
+ 	u8 cap[2];
+ 	int ret;
++	int tries = 0;
+ 
+-	ret = qcom_fg_read(chip, cap, BATT_MONOTONIC_SOC, 2);
+-	if (ret) {
+-		dev_err(chip->dev, "Failed to read capacity: %d", ret);
+-		return ret;
+-	}
++	/*
++	 * 0x009 holds the raw MSOC (0..255) and 0x00a is its shadow
++	 * register, not the second byte of a 16 bit value.  A read can be
++	 * torn, so the two bytes are read again until they agree, the way
++	 * the vendor driver does (CAF fg-util.c, fg_get_msoc_raw, with
++	 * MAX_READ_TRIES = 5).
++	 */
++	do {
++		ret = qcom_fg_read(chip, cap, BATT_MONOTONIC_SOC, 2);
++		if (ret) {
++			dev_err(chip->dev, "Failed to read capacity: %d", ret);
++			return ret;
++		}
++	} while (cap[0] != cap[1] && ++tries < FG_MSOC_SHADOW_TRIES);
+ 
+ 	if (cap[0] != cap[1]) {
++		/*
++		 * The vendor driver fails the read in that case.  It is not
++		 * proven on this PMIC that 0x00a is the mirror of 0x009, so
++		 * the smallest of the two is kept, which is what this driver
++		 * always did, and the situation is reported.
++		 */
++		dev_warn(chip->dev,
++			 "MSOC shadow mismatch after %d reads: %02x/%02x, keeping the smallest\n",
++			 FG_MSOC_SHADOW_TRIES, cap[0], cap[1]);
+ 		cap[0] = cap[0] < cap[1] ? cap[0] : cap[1];
+ 	}
+ 
+-	*val = DIV_ROUND_CLOSEST((cap[0] - 1) * 98, 0xff - 2) + 1;
++	*val = qcom_fg_msoc_to_percent(cap[0]);
+ 
+ 	return 0;
+ }
