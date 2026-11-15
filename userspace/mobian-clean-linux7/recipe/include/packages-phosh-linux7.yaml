@@ -11,6 +11,9 @@ actions:
       # Additional software we don't want metapackages to depend on
       - firefox-esr
       - gnome-sound-recorder
+      - gnome-snapshot
+      - gstreamer1.0-gtk4
+      - gstreamer1.0-libcamera
       - loupe
       - powersupply-gtk
       - webext-ublock-origin-firefox

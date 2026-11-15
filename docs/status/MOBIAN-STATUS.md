@@ -1,3 +1,21 @@
+## Fresh Mobian installation and camera recovery — November 15, 2026
+
+A fresh Linux 7 Mobian installation boots from the rebuilt permanent menu on a
+169.6 GiB Mobian partition. The previous Mobian installation was backed up
+before repartitioning. The menu was tested on the handset and its written boot
+region was checked against the built image. The separate Android userdata area
+was resized; LineageOS still needs to be reinstalled.
+
+Wi-Fi reconnects, and the user confirmed the rear-camera preview after
+installing GNOME Snapshot and its GTK4 and libcamera GStreamer plugins. The
+clean-image recipe now explicitly installs and checks these packages. The
+custom Phosh and camera packages remained held after the system updates.
+
+Speaker audio had previously worked, but the fresh installation currently shows
+no ALSA sound card; LPASS/SoundWire deferred probes remain under investigation.
+The front pop-up camera is not yet qualified on Linux 7. A drawer layout
+candidate has been built; its touch behaviour still needs on-device validation.
+
 ## Camera launcher in V4L2 mode on the Linux 7 line — October 28, 2026
 
 The camera launcher now has a second source. When the OEM capture engine is

@@ -144,7 +144,11 @@ ok "firmware layer complete"
 echo "== 11. the camera launcher =="
 [ -x /usr/local/bin/lmi-snapshot ] || fail "missing the camera launcher"
 [ -f /usr/local/share/applications/org.gnome.Snapshot.desktop ] || fail "missing the camera desktop entry"
-ok "camera launcher present"
+[ -x /usr/bin/snapshot ] || fail "missing GNOME Snapshot executable"
+for package in gnome-snapshot gstreamer1.0-gtk4 gstreamer1.0-libcamera; do
+    dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -qx 'install ok installed' || fail "camera package missing: $package"
+done
+ok "camera launcher, Snapshot and GStreamer plugins present"
 
 echo "== 12. repositories =="
 grep -Eq '^deb .* trixie main( .*)?$' /etc/apt/sources.list || fail "the Debian trixie suite is missing"

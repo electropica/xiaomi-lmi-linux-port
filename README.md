@@ -6,12 +6,17 @@ From early boot experiments to an interactive mobile desktop, each improvement i
 
 ## The phone today
 
+The latest clean Mobian installation uses a larger dedicated partition and a
+rebuilt persistent boot menu. Its rear-camera preview and Wi-Fi have been
+confirmed on the phone; recent desktop improvements continue to be tested.
+
+
 The Linux 7 port boots Mobian from a persistent menu and runs a personalized Phosh desktop. Recent handset tests have demonstrated:
 
 - **A touch-friendly desktop:** display, touchscreen, unlock, gestures, application drawer and GPU rendering.
 - **A tailored home screen:** favorites, drawer scrolling, search and the requested 300% display scale.
 - **Rear camera and flashlight:** a working camera preview with corrected orientation, plus flashlight control through its app.
-- **Sound and media:** audible speaker playback, including two consecutive tracks in Amberol.
+- **Sound and media:** speaker playback, including consecutive tracks in Amberol, has been demonstrated on an earlier build; audio on the latest installation is under investigation.
 - **Connectivity and power:** Wi-Fi and USB networking, battery reporting, charging and observed `s2idle` suspend.
 - **Recovery choices:** a boot menu with Android/LineageOS and recovery paths alongside Mobian.
 
