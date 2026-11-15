@@ -39,7 +39,7 @@ i=0
 while [ $i -lt $BSS_WAIT ]; do
     n=$(busctl --system tree fi.w1.wpa_supplicant1 2>/dev/null | grep -c 'BSSs/' || true)
     [ "${n:-0}" -gt 0 ] && break
-    i=$((i + 1)); sleep 2
+    i=$((i + 2)); sleep 2
 done
 n=$(busctl --system tree fi.w1.wpa_supplicant1 2>/dev/null | grep -c 'BSSs/' || true)
 if [ "${n:-0}" -eq 0 ]; then
@@ -56,7 +56,7 @@ while [ $i -lt $FAIL_WAIT ]; do
         failed=1
         break
     fi
-    i=$((i + 1)); sleep 2
+    i=$((i + 2)); sleep 2
 done
 
 if [ "$failed" = "1" ]; then
