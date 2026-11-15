@@ -45,6 +45,7 @@ chmod 0644 /usr/local/share/applications/org.gnome.Snapshot.desktop
 chmod 0644 /usr/local/share/applications/gnome-location-panel.desktop
 chmod 0644 /etc/udev/rules.d/70-lmi-dma-heap.rules
 chmod 0644 /usr/share/glib-2.0/schemas/95_lmi-home-drawer.gschema.override
+chmod 0644 /usr/share/glib-2.0/schemas/96_lmi-power.gschema.override
 glib-compile-schemas --strict /usr/share/glib-2.0/schemas
 chmod 0644 /etc/systemd/system/lmi-clean-adsp.service
 chmod 0644 /etc/systemd/system/lmi-linux7-wifi-reprobe.service

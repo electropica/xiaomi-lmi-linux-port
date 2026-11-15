@@ -13,6 +13,7 @@ ok()   { echo "  ok  $*"; }
 # GNOME uses chassis type to suppress desktop suspend warnings on a handset.
 grep -qx 'CHASSIS=handset' /etc/machine-info || fail 'handset chassis is not configured'
 ok 'handset chassis configured'
+[ -f /usr/share/glib-2.0/schemas/96_lmi-power.gschema.override ] || fail 'power policy override missing'
 echo "== 1. custom lmi packages are the patched builds =="
 while IFS='|' read -r package expected; do
     actual=$(dpkg-query -W -f='${Version}' "$package" 2>/dev/null || true)
