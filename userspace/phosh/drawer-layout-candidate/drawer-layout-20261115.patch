@@ -1,0 +1,153 @@
+--- a/src/app-grid.h
++++ b/src/app-grid.h
+@@ -29,6 +29,7 @@
+ void       phosh_app_grid_focus_search (PhoshAppGrid *self);
+ gboolean   phosh_app_grid_handle_search (PhoshAppGrid *self, GdkEvent *event);
+ void       phosh_app_grid_set_filter_adaptive (PhoshAppGrid *self, gboolean enable);
++void       phosh_app_grid_set_deck_height (PhoshAppGrid *self, int height);
+ 
+ 
+ G_END_DECLS
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -180,6 +180,42 @@
+                  GAppInfo     *info,
+                  PhoshAppGrid *self)
+ {
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++  const char *source = "unknown";
++  GtkAllocation allocation = { 0, 0, 0, 0 };
++  int width = 0, height = 0;
++  gboolean drawer_open;
++
++  /* Trace where a launch came from.
++   *
++   * A tap on the home screen can reach an application in three different
++   * places: a shortcut of the home grid, a favourite of the bottom row, or an
++   * icon of the application list when the drawer is open.  Which of them
++   * launched an application is not visible afterwards, so it is recorded here
++   * with the position of the widget that was pressed.  This is what makes the
++   * "a tap on the desktop opened an application" report diagnosable instead of
++   * guesswork. */
++  if (gtk_widget_get_ancestor (widget, GTK_TYPE_FLOW_BOX) == priv->lmi_home_slots)
++    source = "home-slot";
++  else if (gtk_widget_get_ancestor (widget, GTK_TYPE_FLOW_BOX) == priv->favs)
++    source = "favorite";
++  else if (gtk_widget_get_ancestor (widget, GTK_TYPE_FLOW_BOX) == priv->apps)
++    source = "app-list";
++  else
++    source = "other";
++
++  drawer_open = g_strcmp0 (hdy_deck_get_visible_child_name (
++                             HDY_DECK (priv->lmi_favorites_drawer)),
++                           "home") != 0;
++  gtk_widget_get_allocation (widget, &allocation);
++  phosh_shell_get_usable_area (phosh_shell_get_default (), NULL, NULL, &width, &height);
++  g_debug ("app-launched: %s from %s at %d,%d %dx%d (drawer %s, usable %dx%d)",
++           info ? g_app_info_get_id (info) : "(null)",
++           source,
++           allocation.x, allocation.y, allocation.width, allocation.height,
++           drawer_open ? "open" : "closed",
++           width, height);
++
+   g_signal_emit (self, signals[APP_LAUNCHED], 0, info);
+ }
+ 
+@@ -482,6 +518,29 @@
+   hdy_deck_set_can_swipe_back (HDY_DECK (priv->lmi_favorites_drawer), FALSE);
+ }
+ 
++/* Give the application deck the height it needs.
++ *
++ * The deck is an HdyDeck whose natural height is the sum of the minimum
++ * heights of the search row and of the application list.  GTK gives an
++ * expanding child at most its natural height and leaves the rest of the drawer
++ * empty, so as long as the preview strip takes half of the drawer, the band
++ * between the window previews and the search bar stayed empty and the
++ * application list was squeezed into a fifth of the drawer.
++ *
++ * An explicit height request removes that dead band: the deck then takes
++ * exactly what the strip leaves over and the list fills the drawer.
++ */
++void
++phosh_app_grid_set_deck_height (PhoshAppGrid *self,
++                                 int          height)
++{
++  PhoshAppGridPrivate *priv = phosh_app_grid_get_instance_private (self);
++
++  g_return_if_fail (PHOSH_IS_APP_GRID (self));
++
++  gtk_widget_set_size_request (GTK_WIDGET (priv->deck), -1, MAX (height, 0));
++}
++
+ 
+ static void
+ on_lmi_back_clicked (PhoshAppGrid *self,
+--- a/src/overview.c
++++ b/src/overview.c
+@@ -413,6 +413,12 @@
+ #define LMI_PREVIEW_STRIP_MIN_HEIGHT 240
+ #define LMI_PREVIEW_STRIP_MAX_HEIGHT 640
+ 
++/* Space the drawer takes for its own chrome: the gap between the preview strip
++ * and the application deck, and the margin below the deck.  Both are layout
++ * constants of the drawer's style sheet, measured on the 360x800 screen of
++ * this handset with tools/probe-drawer-geometry.py. */
++#define LMI_DRAWER_CHROME_HEIGHT 52
++
+ static int
+ lmi_preview_strip_height (void)
+ {
+@@ -427,6 +433,29 @@
+                 LMI_PREVIEW_STRIP_MIN_HEIGHT, LMI_PREVIEW_STRIP_MAX_HEIGHT);
+ }
+ 
++/* Height of the application deck, i.e. of everything the drawer shows below
++ * the preview strip.
++ *
++ * The strip is measured with the usable area of the screen, but the strip box
++ * is taller than the carousel it holds: the carousel keeps a bottom margin.
++ * The deck then gets what is left of the usable area, minus the chrome the
++ * drawer takes for itself. */
++static int
++lmi_drawer_deck_height (int strip_height)
++{
++  int usable = 0;
++  int height;
++
++  phosh_shell_get_usable_area (phosh_shell_get_default (), NULL, NULL,
++                                NULL, &usable);
++  if (usable <= 0)
++    return 0;
++
++  height = usable - strip_height - LMI_DRAWER_CHROME_HEIGHT;
++
++  return MAX (height, 0);
++}
++
+ static void
+ lmi_previews_update_reserved_height (PhoshOverview *self)
+ {
+@@ -453,6 +482,22 @@
+   if (priv->carousel_running_activities != NULL)
+     gtk_widget_set_size_request (priv->carousel_running_activities, -1, height);
+   gtk_widget_set_size_request (previews_box, -1, height);
++
++  /* The application deck takes the rest of the drawer.  Without an explicit
++   * height the deck only gets its natural height and the drawer keeps an empty
++   * band between the window previews and the search bar. */
++  {
++    int strip = height;
++    int deck_height;
++
++    /* The strip box is taller than the carousel it holds. */
++    if (priv->carousel_running_activities != NULL)
++      strip += gtk_widget_get_margin_bottom (priv->carousel_running_activities);
++    strip += gtk_widget_get_margin_bottom (previews_box);
++
++    deck_height = lmi_drawer_deck_height (strip);
++    phosh_app_grid_set_deck_height (PHOSH_APP_GRID (priv->app_grid), deck_height);
++  }
+ }
+ 
+ 

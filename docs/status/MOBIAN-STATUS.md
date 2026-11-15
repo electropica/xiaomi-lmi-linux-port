@@ -1,3 +1,11 @@
+## Drawer layout validated on the handset — November 15, 2026
+
+The `+drawerlayout1` Phosh candidate is installed and the user confirmed that
+the drawer opens completely with a running application preview, the spacing is
+correct, and a scrolled icon opens the selected application. The separate
+unexpected launch reported around the sleep notification remains under
+investigation. See the [candidate patch](../../userspace/phosh/drawer-layout-candidate/README.md).
+
 ## Fresh Mobian installation and camera recovery — November 15, 2026
 
 A fresh Linux 7 Mobian installation boots from the rebuilt permanent menu on a
