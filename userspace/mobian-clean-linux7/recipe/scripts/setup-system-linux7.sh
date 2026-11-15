@@ -6,6 +6,15 @@ HOSTNAME_NAME=${1:?hostname required}
 
 echo "$HOSTNAME_NAME" > /etc/hostname
 
+# Identify the handset so GNOME does not wake the display for the desktop
+# automatic-suspend warning. Preserve any other machine-info settings.
+if [ -f /etc/machine-info ] && grep -q '^CHASSIS=' /etc/machine-info; then
+    sed -i 's/^CHASSIS=.*/CHASSIS=handset/' /etc/machine-info
+else
+    printf '\nCHASSIS=handset\n' >> /etc/machine-info
+fi
+chmod 0644 /etc/machine-info
+
 # The plymouth theme is provided by plymouth-theme-mobian, which the recipe
 # installs. Fail loudly rather than leaving a broken theme behind.
 if command -v plymouth-set-default-theme >/dev/null 2>&1; then

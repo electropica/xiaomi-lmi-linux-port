@@ -10,6 +10,9 @@ set -eu
 fail() { echo "VERIFY_FAILED: $*" >&2; exit 1; }
 ok()   { echo "  ok  $*"; }
 
+# GNOME uses chassis type to suppress desktop suspend warnings on a handset.
+grep -qx 'CHASSIS=handset' /etc/machine-info || fail 'handset chassis is not configured'
+ok 'handset chassis configured'
 echo "== 1. custom lmi packages are the patched builds =="
 while IFS='|' read -r package expected; do
     actual=$(dpkg-query -W -f='${Version}' "$package" 2>/dev/null || true)
