@@ -16,8 +16,8 @@ while IFS='|' read -r package expected; do
     [ "$actual" = "$expected" ] || fail "$package is $actual, expected $expected"
     ok "$package = $actual"
 done <<'LMI_EXACT_PACKAGES'
-gnome-settings-daemon|48.1-1+lmiquietgauge3+esrquiet1+irqnames1
-gnome-settings-daemon-common|48.1-1+lmiquietgauge3+esrquiet1+irqnames1
+gnome-settings-daemon|48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1
+gnome-settings-daemon-common|48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1
 libcamera-ipa|0.4.0-7+lmi4
 libcamera0.4|0.4.0-7+lmi4
 phoc|0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1

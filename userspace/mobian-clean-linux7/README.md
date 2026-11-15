@@ -24,3 +24,11 @@ parent is created first, and executable scripts retain their modes. The image
 verifier uses a read-only loop rather than copying a 16 GiB filesystem to
 WSL's small `/tmp` tmpfs. Rootfs and raw image checks passed off device; the
 new rootfs has not yet been qualified through a real boot.
+
+## Suspend refusal fix and USB guard
+
+The clean Linux 7 recipe requires the `+sleeprefusal1` GSD runtime and common packages. Stage the two matching Debian packages alongside the other custom packages and regenerate the staging `SHA256SUMS` before building. The image installer and verifier reject older GSD versions. The package payloads are external build inputs and must not be committed to Git.
+
+The image includes and enables `lmi-usb-pc-guard`; its overlay matches the guard observed on the handset on 15 November (SHA-256 `5b1e50e75f6692ac8e2d3d9b291ab310d09a7d1dfd9b3bb8d7ec29d576495a9f`). It blocks system suspend while the maintenance USB connection is detected; verify inhibitor release and automatic suspend on battery in a supervised test. The GSD refusal callback was observed, but the full retry sequence after a refusal remains unvalidated.
+
+The historical quiet-gauge wake filters are not enabled by this change. The current kernel does not expose the expected `last_resume_reason` interface and the relevant opt-ins were absent in the observed processes. Their package names alone do not establish active wake filtering. Do not suppress unrelated input or calls as a substitute.
