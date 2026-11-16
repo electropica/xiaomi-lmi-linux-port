@@ -18,6 +18,10 @@ Comparison of archived project notes, the clean-image recipe, and read-only insp
 
 For a new build, stage the eight exact custom Debian packages and the three battery packages with their respective SHA256SUMS. The staged firmware and GPU stack remain local inputs. The recipe verification and syntax checks do not replace a full ARM64 image build, boot test, or preservation of the user's data.
 
+## Rootfs build on 16 November
+
+The operator built the staged rootfs after updating the unavailable linux-perf pin to `6.12.117-1`. Debos reported `LMI_IMAGE_VERIFIED`, `LMI_IMAGE_CLEANED` and `Recipe done`; a subsequent `xz -t` passed. The resulting `rootfs-arm64-phosh-linux7.tar.xz` has SHA-256 `614d507d2cf4f960bccb711d24443b075ce61bfa44204f4e507cb778da7dbd99`. This is a compressed root filesystem, not a bootable partition image; it has not been installed or boot-tested. Package staging, credentials, userdata, firmware and the built archive are local/private inputs or outputs.
+
 ## GPU and firmware spot check
 
 The preserved private overlay under `work/storage-resize-20261114/clean-recipe-candidate/overlays/` was compared to the handset on 16 November. All 37 firmware files and all 9 GPU files present in that overlay matched the SHA-256 of the corresponding handset paths. This checks file contents, not whether the overlay includes every file required by the system, symbolic-link topology, permissions or compatibility with another kernel. The private files are not published in Git.
