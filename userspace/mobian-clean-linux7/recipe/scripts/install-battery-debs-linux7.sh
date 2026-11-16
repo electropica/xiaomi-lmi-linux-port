@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-cd /var/lib/lmi-image-staging/lmi-battery-debs
+cd "${LMI_BATTERY_STAGE_DIR:-/var/lib/lmi-image-staging/lmi-battery-debs}"
 set -- ./battery-logger_0.1.1_arm64.deb ./battery-viewer_0.1.10_arm64.deb ./battery-sleep-boundaries_0.1.0_all.deb
 for package do
     [ -f "$package" ] || { echo "Missing $package" >&2; exit 1; }
