@@ -1,0 +1,6 @@
+#!/bin/sh
+# Do not fail or delay a suspend indefinitely if a read or write fails.
+case "$1" in
+  pre|post) /usr/bin/timeout 3s /usr/bin/python3 /usr/libexec/battery-sleep-boundaries.py "$1" || : ;;
+esac
+exit 0

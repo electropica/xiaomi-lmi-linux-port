@@ -1,6 +1,6 @@
 [package]
 name = "battery-viewer"
-version = "0.1.6"
+version = "0.1.10"
 edition = "2021"
 description = "GTK viewer for local battery diagnostic logs"
 license = "MIT"
@@ -9,6 +9,7 @@ license = "MIT"
 gtk = { package = "gtk4", version = "0.9" }
 adw = { package = "libadwaita", version = "0.7" }
 csv = "1"
+libc = "0.2"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 
 [dev-dependencies]
