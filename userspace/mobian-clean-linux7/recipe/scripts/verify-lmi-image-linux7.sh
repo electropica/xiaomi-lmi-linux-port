@@ -199,5 +199,11 @@ echo "== 17. audio probe retry =="
 systemctl --root=/ is-enabled lmi-audio-probe-retry.service >/dev/null || fail "audio retry service not enabled"
 ok "bounded audio probe retry enabled"
 
+echo "== 18. music and timezone =="
+dpkg-query -W -f='${db:Status-Status}' lollypop 2>/dev/null | grep -qx installed || fail "Lollypop missing"
+grep -qx 'import-playlists=true' /usr/share/glib-2.0/schemas/98_lmi-lollypop.gschema.override || fail "playlist import default missing"
+[ "$(cat /etc/timezone)" = Europe/Paris ] || fail "timezone does not match handset"
+ok "Lollypop and Europe/Paris timezone configured"
+
 echo
 echo "LMI_IMAGE_VERIFIED"

@@ -1,0 +1,19 @@
+# Image recipe reconciliation — 16 November 2026
+
+Comparison of archived project notes, the clean-image recipe, and read-only inspection of the running handset. This is not a complete image qualification or a claim that every historical change was ported.
+
+| Area | Evidence and recipe decision | Remaining validation |
+| --- | --- | --- |
+| Boot and kernel | The running 7.2.12 menu image was matched to its archived image; the full boot partition was separately saved and hashed. The rootfs recipe does not replace the kernel. | Recovery has not been exercised. The candidate lot9g kernel lacks the current TFA98xx audio driver; it is not a replacement. |
+| Phosh drawer | The handset runs the `+drawerlayout1` versions of phosh, phosh-common and libphosh. The recipe requires all three matching packages and holds them; the user confirmed drawer operation. | Exact package files and checksums must be staged by the operator. Full image build and boot not retested. |
+| Suspend and unwanted screen wakes | `CHASSIS=handset`, battery timeout configuration and the GSD `+sleeprefusal1` packages are included. USB PC guard in the recipe hashes identically to the handset. | No proof that every wake source is fixed; guard intentionally blocks suspend while the PC connection is active. |
+| Audio | The ALSA routing, PipeWire speaker config and ADSP helper have the same hashes as the handset. A bounded VA codec probe retry is enabled in the recipe and on the handset; the user confirmed sound after manual reprobe. | Retry recovery at a fresh boot has not been tested. Audio kernel driver and firmware are separate external inputs. |
+| Rear camera | Snapshot launcher and DMA heap udev rule match the handset; the required camera packages are included. The user confirmed a live preview. | Front pop-up camera remains research only; no candidate DTB or driver is included. |
+| Keyboard | French input-source default, manual hide button and layer-shell dependency are included. The hide service is installed on the handset. | Existing per-user GSettings override image defaults; physical interaction with the restored button still needs confirmation. |
+| Battery | Logger 0.1.1, viewer 0.1.10 and pre/post suspend boundary package are staged as separate local build inputs; a real s2idle pair was recorded. | No samples are claimed during suspend; the post sample in the supervised test was already charging. A complete new image build remains untested. |
+| Music | Lollypop and its playlist import default are included. Existing sample playlists were restored on the handset, and the user confirmed the six-track playlist works. | Personal music, playlists, databases and other user files are not packaged in the rootfs; back up and restore them separately. Opening individual files need not append to the queue. |
+| First-boot services | SSH, calls, camera permissions, zram and duplicate-GDM masks are checked. The recipe now sets Europe/Paris, matching the handset. | Calls and connection recovery are not requalified by this audit. |
+| Wi-Fi and location | Wi-Fi reprobe and GeoClue helper are present and enabled. No profile credentials are included. | GPS functionality and Wi-Fi behaviour through sleep are not established by service status. |
+| Orientation | No accelerometer is exposed in the current IIO inventory. | Automatic rotation is not a verified feature; do not claim it works. |
+
+For a new build, stage the eight exact custom Debian packages and the three battery packages with their respective SHA256SUMS. The staged firmware and GPU stack remain local inputs. The recipe verification and syntax checks do not replace a full ARM64 image build, boot test, or preservation of the user's data.

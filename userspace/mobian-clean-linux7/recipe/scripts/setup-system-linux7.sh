@@ -6,6 +6,11 @@ HOSTNAME_NAME=${1:?hostname required}
 
 echo "$HOSTNAME_NAME" > /etc/hostname
 
+# Match the handset's confirmed local timezone without relying on first boot.
+[ -f /usr/share/zoneinfo/Europe/Paris ] || { echo 'Europe/Paris timezone missing' >&2; exit 1; }
+ln -snf /usr/share/zoneinfo/Europe/Paris /etc/localtime
+printf 'Europe/Paris\n' > /etc/timezone
+
 # Identify the handset so GNOME does not wake the display for the desktop
 # automatic-suspend warning. Preserve any other machine-info settings.
 if [ -f /etc/machine-info ] && grep -q '^CHASSIS=' /etc/machine-info; then

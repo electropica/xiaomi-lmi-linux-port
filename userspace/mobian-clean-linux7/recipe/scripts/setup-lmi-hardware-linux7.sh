@@ -51,6 +51,7 @@ chmod 0644 /etc/udev/rules.d/70-lmi-dma-heap.rules
 chmod 0644 /usr/share/glib-2.0/schemas/95_lmi-home-drawer.gschema.override
 chmod 0644 /usr/share/glib-2.0/schemas/96_lmi-power.gschema.override
 chmod 0644 /usr/share/glib-2.0/schemas/97_lmi-keyboard.gschema.override
+chmod 0644 /usr/share/glib-2.0/schemas/98_lmi-lollypop.gschema.override
 glib-compile-schemas --strict /usr/share/glib-2.0/schemas
 chmod 0644 /etc/systemd/system/lmi-clean-adsp.service
 chmod 0644 /etc/systemd/system/lmi-linux7-wifi-reprobe.service

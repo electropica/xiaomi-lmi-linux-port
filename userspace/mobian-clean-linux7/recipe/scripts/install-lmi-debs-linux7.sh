@@ -47,6 +47,7 @@ xdg-desktop-portal-gnome
 geoclue-2.0
 flatpak
 gnome-calls
+lollypop
 grim
 '
 
