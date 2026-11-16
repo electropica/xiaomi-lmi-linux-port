@@ -43,6 +43,8 @@ The custom package staging directory now requires the three matching `+drawerlay
 
 Before building, prepare `recipe/overlays/lmi-battery-debs/` with the three packages produced by `userspace/apps/battery-packaging/build-debs.sh` and a `SHA256SUMS` covering them. The image installs battery-logger 0.1.1, battery-viewer 0.1.10 and battery-sleep-boundaries 0.1.0 and enables the logger. The optional sleep hook records only suspend boundaries, not continuous measurements while suspended.
 
+Run `sh tools/preflight-packages.sh CUSTOM_DIR BATTERY_DIR` before a build. It verifies package counts, every manifest entry and checksum, package names, versions and architectures. Version equality does not establish binary identity or functional equivalence; in particular, two logger 0.1.1 packages were observed with different payload hashes. The preflight does not validate proprietary firmware, GPU inputs, package repository availability or the finished image.
+
 The recipe sets the French keyboard as the system default and enables the manual keyboard-hide button. Existing user preferences override the default. `tools/test-keyboard-recipe.sh` checks unit installation and script syntax, but the updated full image recipe has not yet been built or boot-tested.
 
 On 16 November the sound card was absent because the `3370000.codec` VA macro probe timed out at boot; manually requesting one new probe restored the card and the user confirmed audio after restarting PipeWire. The recipe includes a one-shot retry after ADSP startup, only if that codec is still unbound. Its no-op path was checked on the running phone; recovery at the next boot has not been tested.
