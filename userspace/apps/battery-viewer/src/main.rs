@@ -175,7 +175,7 @@ fn human_duration(seconds: f64) -> String {
     if total < 60 {
         format!("{total} s")
     } else if total < 3600 {
-        format!("{} min", total / 60)
+        format!("{} min {:02} s", total / 60, total % 60)
     } else if total < 86400 {
         format!("{} h {:02}", total / 3600, (total % 3600) / 60)
     } else {
@@ -284,6 +284,11 @@ fn draw_frame(
     }
 }
 
+// Avoid inventing values across suspend or collector downtime.
+fn continuous_samples(previous: i64, current: i64) -> bool {
+    current >= previous && current - previous <= 360
+}
+
 fn polyline(cr: &cairo::Context, p: &Plot, pts: &[(i64, f64)], lo: f64, hi: f64, color: Rgb) {
     if pts.len() < 2 {
         return;
@@ -293,7 +298,7 @@ fn polyline(cr: &cairo::Context, p: &Plot, pts: &[(i64, f64)], lo: f64, hi: f64,
     cr.set_line_join(cairo::LineJoin::Round);
     for (i, (t, v)) in pts.iter().enumerate() {
         let (x, y) = (p.px(*t), p.py(*v, lo, hi));
-        if i == 0 { cr.move_to(x, y) } else { cr.line_to(x, y) }
+        if i == 0 || !continuous_samples(pts[i - 1].0, *t) { cr.move_to(x, y) } else { cr.line_to(x, y) }
     }
     let _ = cr.stroke();
 }
@@ -348,13 +353,13 @@ fn draw_sleep_chart(cr: &cairo::Context, w: i32, h: i32, data: &[Sample], dark: 
         .max(1.0);
     draw_frame(cr, &p, fg, (0.0, max_s, C_SUSPEND), None);
     legend(cr, p.x0, 16.0,
-           &[("Temps de suspension (s)", C_SUSPEND)],
+           &[("Suspension (s)", C_SUSPEND), ("Écran allumé", C_SCREEN)],
            fg);
 
     // Bandes « écran allumé » : de ce relevé jusqu'au suivant.
     cr.set_source_rgba(C_SCREEN.0, C_SCREEN.1, C_SCREEN.2, 0.35);
     for pair in data.windows(2) {
-        if pair[0].screen_on == Some(true) {
+        if pair[0].screen_on == Some(true) && continuous_samples(pair[0].t, pair[1].t) {
             let (xa, xb) = (p.px(pair[0].t), p.px(pair[1].t));
             cr.rectangle(xa, p.y0, (xb - xa).max(1.0), p.y1 - p.y0);
             let _ = cr.fill();
@@ -394,6 +399,7 @@ struct Ui {
     view: Rc<RefCell<Vec<Sample>>>,
     hours: Cell<Option<i64>>,
     info: gtk::Label,
+    latest: gtk::Label,
     v_power: gtk::Label,
     v_suspend: gtk::Label,
     v_proof: gtk::Label,
@@ -435,6 +441,19 @@ impl Ui {
             .cloned()
             .collect();
 
+        if let Some(last) = view.last() {
+            let level = last.capacity.map(|v| format!("{v:.0} %")).unwrap_or_else(|| "– %".into());
+            let state = match last.status.as_str() {
+                "Charging" => "En charge",
+                "Discharging" => "Sur batterie",
+                "Full" => "Charge terminée",
+                "Not charging" => "Charge arrêtée",
+                _ => "État indisponible",
+            };
+            self.latest.set_text(&format!("{level} · {state}"));
+        } else {
+            self.latest.set_text("Aucun relevé sur cette période");
+        }
         if !view.is_empty() {
             let suspensions = view.iter().filter_map(|s| s.suspend_count).fold(0.0_f64, f64::max);
             self.info.set_text(&format!(
@@ -582,6 +601,10 @@ fn build_ui(app: &adw::Application) {
     list.add_css_class("boxed-list");
     list.set_selection_mode(gtk::SelectionMode::None);
 
+    let latest = gtk::Label::new(None);
+    latest.add_css_class("title-2");
+    latest.set_wrap(true);
+    latest.set_xalign(0.0);
     let info = gtk::Label::new(None);
     info.add_css_class("caption");
     info.add_css_class("dim-label");
@@ -592,6 +615,7 @@ fn build_ui(app: &adw::Application) {
         view,
         hours: Cell::new(Some(24)),
         info: info.clone(),
+        latest: latest.clone(),
         v_power,
         v_suspend,
         v_proof,
@@ -628,10 +652,11 @@ fn build_ui(app: &adw::Application) {
     content.set_margin_start(12);
     content.set_margin_end(12);
     content.append(&seg);
+    content.append(&latest);
     content.append(&info);
     content.append(&cards);
     content.append(&section("Batterie et puissance", &chart1));
-    let power_note = gtk::Label::new(Some("Puissance estimée à la batterie : tension × courant. En charge, elle ne représente pas la consommation totale du téléphone."));
+    let power_note = gtk::Label::new(Some("Puissance estimée à la batterie : tension × courant. En charge, elle ne représente pas la consommation totale. Les courbes s'interrompent sans relevé."));
     power_note.add_css_class("caption");
     power_note.add_css_class("dim-label");
     power_note.set_wrap(true);
@@ -742,9 +767,18 @@ mod tests {
     }
 
     #[test]
+    fn graph_does_not_bridge_missing_intervals() {
+        assert!(continuous_samples(1000, 1120));
+        assert!(continuous_samples(1000, 1360));
+        assert!(!continuous_samples(1000, 1361));
+        assert!(!continuous_samples(1000, 999));
+    }
+
+    #[test]
     fn human_duration_reads_well() {
         assert_eq!(human_duration(30.0), "30 s");
-        assert_eq!(human_duration(600.0), "10 min");
+        assert_eq!(human_duration(600.0), "10 min 00 s");
+        assert_eq!(human_duration(231.6), "3 min 52 s");
         assert_eq!(human_duration(7200.0), "2 h 00");
         assert_eq!(human_duration(90000.0), "1 j 01 h");
     }

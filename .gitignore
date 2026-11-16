@@ -112,3 +112,7 @@ Thumbs.db
 !userspace/gpu/files/gpu72/lib/libgallium-25.0.7.so
 !userspace/gpu/files/gpu72/lib/libvulkan_freedreno.so
 !userspace/gpu/files/firmware/a650/a650_zap.elf
+
+# Local Rust build products for the battery applications
+/userspace/apps/battery-logger/target/
+/userspace/apps/battery-viewer/target/
