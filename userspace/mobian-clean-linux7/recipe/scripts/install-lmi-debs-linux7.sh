@@ -20,7 +20,7 @@ export DEBIAN_FRONTEND=noninteractive
 PIN_APT=3.0.4
 PIN_LIBAPT=3.0.4
 PIN_LIBNSS3=2:3.110-1+deb13u5
-PIN_LINUXPERF=6.12.115-2
+PIN_LINUXPERF=6.12.117-1
 PIN_TZDATA=2026f-0+deb13u1
 
 CUSTOM_PACKAGES='phosh phosh-common libphosh-0.45-0 phoc gnome-settings-daemon gnome-settings-daemon-common libcamera0.4 libcamera-ipa'

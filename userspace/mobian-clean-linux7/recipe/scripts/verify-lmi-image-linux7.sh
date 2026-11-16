@@ -47,7 +47,7 @@ done <<'LMI_MINIMUM_UPDATES'
 apt|3.0.4
 libapt-pkg7.0|3.0.4
 libnss3|2:3.110-1+deb13u5
-linux-perf|6.12.115-2
+linux-perf|6.12.117-1
 tzdata|2026f-0+deb13u1
 LMI_MINIMUM_UPDATES
 
