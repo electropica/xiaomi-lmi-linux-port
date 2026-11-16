@@ -20,4 +20,4 @@ For a new build, stage the eight exact custom Debian packages and the three batt
 
 ## GPU and firmware spot check
 
-The preserved private overlay under `work/storage-resize-20261114/clean-recipe-candidate/overlays/` was compared to the handset on 16 November. SHA-256 matches were obtained for `tfa98xx.cnt`, `adsp.mdt`, `adsp.mbn`, `libgallium-25.0.7.so` and `freedreno_icd.aarch64.json`. These are five selected files, not a full firmware or GPU audit; their presence does not prove kernel compatibility. The private files are not published in Git.
+The preserved private overlay under `work/storage-resize-20261114/clean-recipe-candidate/overlays/` was compared to the handset on 16 November. All 37 firmware files and all 9 GPU files present in that overlay matched the SHA-256 of the corresponding handset paths. This checks file contents, not whether the overlay includes every file required by the system, symbolic-link topology, permissions or compatibility with another kernel. The private files are not published in Git.
