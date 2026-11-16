@@ -2,7 +2,7 @@
 # Install, in one APT transaction group:
 #   1. the five Debian point updates the image requires, at pinned versions;
 #   2. the base runtime packages the lmi session needs;
-#   3. the seven custom lmi .deb packages, forced over the repository builds.
+#   3. the eight custom lmi .deb packages, forced over the repository builds.
 #
 # Ordering matters. The Mobian repository has Pin-Priority 700, so a plain
 # "apt install mobian-phosh" would pull the repository phosh/phoc/GSD and
@@ -23,7 +23,7 @@ PIN_LIBNSS3=2:3.110-1+deb13u5
 PIN_LINUXPERF=6.12.115-2
 PIN_TZDATA=2026f-0+deb13u1
 
-CUSTOM_PACKAGES='phosh phosh-common phoc gnome-settings-daemon gnome-settings-daemon-common libcamera0.4 libcamera-ipa'
+CUSTOM_PACKAGES='phosh phosh-common libphosh-0.45-0 phoc gnome-settings-daemon gnome-settings-daemon-common libcamera0.4 libcamera-ipa'
 
 BASE_RUNTIME='
 dbus
@@ -40,6 +40,7 @@ network-manager
 upower
 gnome-clocks
 squeekboard
+gir1.2-gtklayershell-0.1
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-desktop-portal-gnome
@@ -69,7 +70,7 @@ cd "$DEB_DIR"
 sha256sum -c SHA256SUMS
 
 set -- ./*.deb
-[ "$#" -eq 7 ] || { echo "expected 7 custom packages, found $#" >&2; exit 1; }
+[ "$#" -eq 8 ] || { echo "expected 8 custom packages, found $#" >&2; exit 1; }
 
 echo "== apt-get update =="
 apt-get update
@@ -105,7 +106,7 @@ for p in $CUSTOM_PACKAGES; do
     v=$(dpkg-query -W -f='${Version}' "$p" 2>/dev/null || true)
     [ -n "$v" ] || { echo "custom package missing after install: $p" >&2; exit 1; }
     case "$p" in
-        phosh|phosh-common) want='0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1' ;;
+        phosh|phosh-common|libphosh-0.45-0) want='0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1' ;;
         phoc) want='0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1' ;;
         gnome-settings-daemon|gnome-settings-daemon-common) want='48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1' ;;
         libcamera0.4|libcamera-ipa) want='0.4.0-7+lmi4' ;;

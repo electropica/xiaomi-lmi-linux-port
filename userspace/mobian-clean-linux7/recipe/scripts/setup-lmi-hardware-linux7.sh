@@ -40,12 +40,17 @@ chmod 0755 /usr/local/sbin/lmi-geoclue-bss-reseed
 chmod 0755 /usr/local/sbin/provision-account-target.sh
 chmod 0755 /usr/local/sbin/install-flatpaks-target.sh
 chmod 0755 /usr/local/sbin/lmi-usb-pc-guard.py
+chmod 0755 /usr/local/libexec/lmi-osk-hide-button.py
+chmod 0755 /usr/local/libexec/lmi-audio-probe-retry
+chmod 0644 /etc/systemd/user/lmi-osk-hide-button.service
+chmod 0644 /etc/systemd/system/lmi-audio-probe-retry.service
 chmod 0755 /usr/local/bin/lmi-snapshot
 chmod 0644 /usr/local/share/applications/org.gnome.Snapshot.desktop
 chmod 0644 /usr/local/share/applications/gnome-location-panel.desktop
 chmod 0644 /etc/udev/rules.d/70-lmi-dma-heap.rules
 chmod 0644 /usr/share/glib-2.0/schemas/95_lmi-home-drawer.gschema.override
 chmod 0644 /usr/share/glib-2.0/schemas/96_lmi-power.gschema.override
+chmod 0644 /usr/share/glib-2.0/schemas/97_lmi-keyboard.gschema.override
 glib-compile-schemas --strict /usr/share/glib-2.0/schemas
 chmod 0644 /etc/systemd/system/lmi-clean-adsp.service
 chmod 0644 /etc/systemd/system/lmi-linux7-wifi-reprobe.service
@@ -60,11 +65,13 @@ echo "== enabling units offline =="
 # systemctl --root works without a running systemd and creates the same
 # [Install] symlinks a live enable would.
 systemctl --root=/ enable lmi-clean-adsp.service
+systemctl --root=/ enable lmi-audio-probe-retry.service
 systemctl --root=/ enable lmi-linux7-wifi-reprobe.service
 systemctl --root=/ enable lmi-geoclue-bss-reseed.service
 systemctl --root=/ enable lmi-usb-pc-guard.service
 systemctl --root=/ enable phosh-m0.service
 systemctl --root=/ enable ssh.service
+systemctl --root=/ --global enable lmi-osk-hide-button.service
 
 # Current lmi kernel does not provide CONFIG_ZRAM. Prevent generated swap
 # dependencies and the separate zramswap service from delaying boot.

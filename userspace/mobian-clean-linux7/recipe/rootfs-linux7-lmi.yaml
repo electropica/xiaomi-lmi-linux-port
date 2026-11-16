@@ -16,7 +16,7 @@
      there, and the verification step requires it.
    * No systemd-repart, no resize overlay: this image is written into an
      existing fixed-size partition, it must never touch the partition table.
-   * The Mobian metapackages are installed FIRST, then the seven custom .deb
+   * The Mobian metapackages are installed FIRST, then the eight custom .deb
      are force-installed and held. With Pin-Priority 700 the Mobian
      repository would otherwise replace Julien's patched phosh, phoc, GSD
      and libcamera with the repository builds.
@@ -95,7 +95,7 @@ actions:
     command: mkdir -p /var/lib/lmi-image-staging
 
   - action: overlay
-    description: Stage the seven custom lmi Debian packages
+    description: Stage the eight custom lmi Debian packages
     source: overlays/lmi-debs/
     destination: /var/lib/lmi-image-staging/lmi-debs/
 
@@ -109,6 +109,16 @@ actions:
     description: Set up the default user (intentionally locked)
     chroot: true
     script: scripts/setup-user-locked-linux7.sh {{ $username }}
+
+  - action: overlay
+    description: Stage the locally built battery diagnostic packages
+    source: overlays/lmi-battery-debs/
+    destination: /var/lib/lmi-image-staging/lmi-battery-debs/
+
+  - action: run
+    description: Install and enable battery diagnostics
+    chroot: true
+    script: scripts/install-battery-debs-linux7.sh
 
   - action: overlay
     description: Stage the lmi audio routing configuration

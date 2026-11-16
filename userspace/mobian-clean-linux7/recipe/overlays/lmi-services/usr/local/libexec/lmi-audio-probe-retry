@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+# Retry only an unbound VA codec; its failed probe prevents fsgen and the card.
+device=/sys/bus/platform/devices/3370000.codec
+if [ -L "$device/driver" ]; then
+    echo 'audio VA codec already bound'
+    exit 0
+fi
+if [ ! -d "$device" ]; then
+    echo 'audio VA codec absent; not retrying' >&2
+    exit 0
+fi
+echo 3370000.codec > /sys/bus/platform/drivers_probe
+echo 'audio VA codec probe requested'

@@ -36,3 +36,13 @@ The historical quiet-gauge wake filters are not enabled by this change. The curr
 The image configures `CHASSIS=handset` in `/etc/machine-info` and verifies it. GSD disables its desktop automatic-suspend warning for handset chassis; on 15 November the handset had an unset chassis and GSD warnings coincided with repeated display wakeups. After restoring handset chassis, a battery test on 15 November showed no recurring GSD warning or DSI modeset before successful automatic s2idle after about five minutes. The test does not establish that every unsolicited screen wake is fixed: the installed logger reported the screen on at two sampled moments before suspend, and its exact source-to-binary identity was not independently established.
 
 The GeoClue BSS reseed helper counts its two-second sleeps in seconds and has a 300-second systemd startup limit. On 15 November the previous helper exceeded its 180-second limit because each 90-second loop could actually wait 180 seconds. The corrected helper completed successfully in about 91 seconds with no empty-BSS error observed; this validates the timeout path, not GPS reception or geolocation accuracy.
+
+## November 16 recipe changes
+
+The custom package staging directory now requires the three matching `+drawerlayout1` packages (`phosh`, `phosh-common`, and `libphosh-0.45-0`), in addition to phoc, both GSD packages, and both libcamera packages: eight packages in total. Stage the matching locally verified `.deb` files and regenerate `SHA256SUMS`; they are not included in this repository.
+
+Before building, prepare `recipe/overlays/lmi-battery-debs/` with the three packages produced by `userspace/apps/battery-packaging/build-debs.sh` and a `SHA256SUMS` covering them. The image installs battery-logger 0.1.1, battery-viewer 0.1.10 and battery-sleep-boundaries 0.1.0 and enables the logger. The optional sleep hook records only suspend boundaries, not continuous measurements while suspended.
+
+The recipe sets the French keyboard as the system default and enables the manual keyboard-hide button. Existing user preferences override the default. `tools/test-keyboard-recipe.sh` checks unit installation and script syntax, but the updated full image recipe has not yet been built or boot-tested.
+
+On 16 November the sound card was absent because the `3370000.codec` VA macro probe timed out at boot; manually requesting one new probe restored the card and the user confirmed audio after restarting PipeWire. The recipe includes a one-shot retry after ADSP startup, only if that codec is still unbound. Its no-op path was checked on the running phone; recovery at the next boot has not been tested.

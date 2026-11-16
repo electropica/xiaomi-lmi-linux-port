@@ -24,17 +24,18 @@ gnome-settings-daemon|48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1
 gnome-settings-daemon-common|48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1
 libcamera-ipa|0.4.0-7+lmi4
 libcamera0.4|0.4.0-7+lmi4
+libphosh-0.45-0|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1
 phoc|0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1
-phosh|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1
-phosh-common|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1
+phosh|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1
+phosh-common|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1
 LMI_EXACT_PACKAGES
 
 echo "== 2. custom packages are held against the priority 700 repository =="
-for p in phosh phosh-common phoc gnome-settings-daemon gnome-settings-daemon-common libcamera0.4 libcamera-ipa; do
+for p in phosh phosh-common libphosh-0.45-0 phoc gnome-settings-daemon gnome-settings-daemon-common libcamera0.4 libcamera-ipa; do
     dpkg-query -W -f='${Status}\n' "$p" 2>/dev/null | grep -q 'hold ok installed' \
         || fail "$p is not held; the Mobian repository would replace it"
 done
-ok "all seven custom packages are held"
+ok "all eight custom packages are held"
 
 echo "== 3. pinned Debian updates =="
 while IFS='|' read -r package minimum; do
@@ -177,6 +178,26 @@ dpkg-query -W -f='${db:Status-Status}' gnome-calls 2>/dev/null | grep -qx instal
 [ -f /etc/udev/rules.d/70-lmi-dma-heap.rules ] || fail "camera DMA rule missing"
 [ -f /usr/local/share/applications/gnome-location-panel.desktop ] || fail "location settings launcher missing"
 ok "SSH, calls, camera permissions and session defaults present"
+
+echo "== 15. on-screen keyboard =="
+dpkg-query -W -f='${db:Status-Status}' gir1.2-gtklayershell-0.1 2>/dev/null | grep -qx installed || fail "keyboard button dependency missing"
+[ -x /usr/local/libexec/lmi-osk-hide-button.py ] || fail "keyboard hide helper missing"
+[ -L /etc/systemd/user/graphical-session.target.wants/lmi-osk-hide-button.service ] || fail "keyboard hide service not enabled"
+grep -Fq "sources=[('xkb', 'fr')]" /usr/share/glib-2.0/schemas/97_lmi-keyboard.gschema.override || fail "French keyboard default missing"
+ok "French keyboard and hide button installed"
+
+echo "== 16. battery diagnostics =="
+for package in battery-logger battery-viewer battery-sleep-boundaries; do
+    dpkg-query -W -f='${db:Status-Status}' "$package" 2>/dev/null | grep -qx installed || fail "$package missing"
+done
+systemctl --root=/ is-enabled battery-logger.service >/dev/null || fail "battery logger not enabled"
+[ -x /usr/lib/systemd/system-sleep/95-battery-sleep-boundaries ] || fail "sleep boundary hook missing"
+ok "battery diagnostics and sleep boundaries installed"
+
+echo "== 17. audio probe retry =="
+[ -x /usr/local/libexec/lmi-audio-probe-retry ] || fail "audio retry helper missing"
+systemctl --root=/ is-enabled lmi-audio-probe-retry.service >/dev/null || fail "audio retry service not enabled"
+ok "bounded audio probe retry enabled"
 
 echo
 echo "LMI_IMAGE_VERIFIED"

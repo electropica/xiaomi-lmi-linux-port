@@ -1,0 +1,13 @@
+[Unit]
+Description=Retry lmi audio VA codec probe once when necessary
+After=lmi-clean-adsp.service
+Wants=lmi-clean-adsp.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/sleep 10
+ExecStart=/usr/local/libexec/lmi-audio-probe-retry
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target
