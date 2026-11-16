@@ -1,0 +1,18 @@
+[package]
+name = "battery-logger"
+version = "0.1.1"
+edition = "2021"
+description = "Local battery and system diagnostics logger"
+license = "MIT"
+
+[dependencies]
+libc = "0.2"
+csv = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+zbus = "5"
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = true

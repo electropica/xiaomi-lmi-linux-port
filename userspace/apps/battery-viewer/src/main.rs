@@ -368,8 +368,8 @@ fn draw_sleep_chart(cr: &cairo::Context, w: i32, h: i32, data: &[Sample], dark: 
     for pair in data.windows(2) {
         let (xa, xb) = (p.px(pair[0].t), p.px(pair[1].t));
         let width = (xb - xa).max(1.0).min(slot.max(3.0));
-        let interval = pair[0].interval_s.unwrap_or(0.0);
-        let suspended = suspend_seconds(&pair[0]).unwrap_or(0.0);
+        let interval = pair[1].interval_s.unwrap_or(0.0);
+        let suspended = suspend_seconds(&pair[1]).unwrap_or(0.0);
         if interval <= 0.0 {
             continue;
         }
