@@ -4,7 +4,7 @@ base=$(CDPATH= cd -- "$(dirname -- "$0")/../recipe" && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf -- "$tmp"' EXIT
 mkdir -p "$tmp/stage" "$tmp/bin"
-for p in battery-logger_0.1.1_arm64.deb battery-viewer_0.1.10_arm64.deb battery-sleep-boundaries_0.1.0_all.deb; do
+for p in battery-logger_0.1.1_arm64.deb battery-viewer_0.1.12_arm64.deb battery-sleep-boundaries_0.1.0_all.deb; do
     printf '%s\n' "$p" > "$tmp/stage/$p"
 done
 (cd "$tmp/stage" && sha256sum ./*.deb > SHA256SUMS)

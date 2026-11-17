@@ -22,6 +22,8 @@ For a new build, stage the eight exact custom Debian packages and the three batt
 
 The operator built the staged rootfs after updating the unavailable linux-perf pin to `6.12.117-1`. Debos reported `LMI_IMAGE_VERIFIED`, `LMI_IMAGE_CLEANED` and `Recipe done`; a subsequent `xz -t` passed. The resulting `rootfs-arm64-phosh-linux7.tar.xz` has SHA-256 `614d507d2cf4f960bccb711d24443b075ce61bfa44204f4e507cb778da7dbd99`. This is a compressed root filesystem, not a bootable partition image; it has not been installed or boot-tested. Package staging, credentials, userdata, firmware and the built archive are local/private inputs or outputs.
 
+On 17 November the viewer was updated to 0.1.12 after an overnight sleep began before the six-hour display window and was consequently hidden. The new version presents the full sleep boundary summary near the top and labels an overlap with the selected period; it does not invent samples during sleep. The November 16 archive predates this change and still contains 0.1.10; a future build requires the 0.1.12 package.
+
 ## GPU and firmware spot check
 
 The preserved private overlay under `work/storage-resize-20261114/clean-recipe-candidate/overlays/` was compared to the handset on 16 November. All 37 firmware files and all 9 GPU files present in that overlay matched the SHA-256 of the corresponding handset paths. This checks file contents, not whether the overlay includes every file required by the system, symbolic-link topology, permissions or compatibility with another kernel. The private files are not published in Git.

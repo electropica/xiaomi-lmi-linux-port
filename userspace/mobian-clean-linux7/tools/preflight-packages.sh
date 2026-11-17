@@ -37,7 +37,7 @@ check_packages() (
             gnome-settings-daemon|gnome-settings-daemon-common) expected=$gsd ;;
             libcamera0.4|libcamera-ipa) expected='0.4.0-7+lmi4' ;;
             battery-logger) expected='0.1.1' ;;
-            battery-viewer) expected='0.1.10' ;;
+            battery-viewer) expected='0.1.12' ;;
             battery-sleep-boundaries) expected='0.1.0' ;;
             *) echo "Unexpected package: $pkg" >&2; exit 1 ;;
         esac

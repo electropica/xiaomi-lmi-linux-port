@@ -6,10 +6,10 @@ apps=$(dirname "$here")
 out=${1:?output directory required}
 [ "$(dpkg --print-architecture)" = arm64 ] || { echo 'Run on arm64; cross-build is not configured.' >&2; exit 1; }
 grep -qx 'version = "0.1.1"' "$apps/battery-logger/Cargo.toml" || { echo 'Logger version mismatch' >&2; exit 1; }
-grep -qx 'version = "0.1.10"' "$apps/battery-viewer/Cargo.toml" || { echo 'Viewer version mismatch' >&2; exit 1; }
+grep -qx 'version = "0.1.12"' "$apps/battery-viewer/Cargo.toml" || { echo 'Viewer version mismatch' >&2; exit 1; }
 mkdir -p "$out"
 out=$(CDPATH= cd -- "$out" && pwd)
-for name in battery-logger_0.1.1_arm64.deb battery-viewer_0.1.10_arm64.deb battery-sleep-boundaries_0.1.0_all.deb; do
+for name in battery-logger_0.1.1_arm64.deb battery-viewer_0.1.12_arm64.deb battery-sleep-boundaries_0.1.0_all.deb; do
     [ ! -e "$out/$name" ] || { echo "Refusing to overwrite $out/$name" >&2; exit 1; }
 done
 cargo test --release --locked --manifest-path "$apps/battery-logger/Cargo.toml"
@@ -55,7 +55,7 @@ install -d "$stage/viewer/DEBIAN" "$stage/viewer/usr/bin" "$stage/viewer/usr/sha
 install -m 755 "$apps/battery-viewer/target/release/battery-viewer" "$stage/viewer/usr/bin/battery-viewer"
 cat > "$stage/viewer/DEBIAN/control" <<'EOF'
 Package: battery-viewer
-Version: 0.1.10
+Version: 0.1.12
 Architecture: arm64
 Maintainer: Mobian project <mobian@localhost>
 Depends: battery-logger (>= 0.1.1), libc6, libgtk-4-1, libadwaita-1-0, libglib2.0-0t64, libcairo2
@@ -80,7 +80,7 @@ StartupWMClass=org.battery_diag.Viewer
 X-Purism-FormFactor=Workstation;Mobile;
 EOF
 dpkg-deb --build --root-owner-group "$stage/logger" "$out/battery-logger_0.1.1_arm64.deb"
-dpkg-deb --build --root-owner-group "$stage/viewer" "$out/battery-viewer_0.1.10_arm64.deb"
+dpkg-deb --build --root-owner-group "$stage/viewer" "$out/battery-viewer_0.1.12_arm64.deb"
 sh "$apps/battery-sleep-boundaries/package-device.sh" "$out"
-sha256sum "$out/battery-logger_0.1.1_arm64.deb" "$out/battery-viewer_0.1.10_arm64.deb" "$out/battery-sleep-boundaries_0.1.0_all.deb"
+sha256sum "$out/battery-logger_0.1.1_arm64.deb" "$out/battery-viewer_0.1.12_arm64.deb" "$out/battery-sleep-boundaries_0.1.0_all.deb"
 echo BATTERY_PACKAGES_BUILT_NOT_INSTALLED

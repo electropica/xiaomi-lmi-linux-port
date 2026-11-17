@@ -118,7 +118,7 @@ fn last_sleep_pair(records: &[SleepBoundary], cutoff: Option<i64>, now: i64) -> 
                 let boot_valid = start.boot_id.len() == 36 && start.boot_id.chars().enumerate()
                     .all(|(i, c)| if [8, 13, 18, 23].contains(&i) { c == '-' } else { c.is_ascii_hexdigit() });
                 if boot_valid && start.boot_id == record.boot_id && start.t <= record.t && record.t <= now
-                    && cutoff.map_or(true, |c| start.t >= c)
+                    && cutoff.map_or(true, |c| record.t >= c)
                     && elapsed > 0.0 && awake >= 0.0 && suspended > 0.05 && suspended <= elapsed {
                     last = Some((start.clone(), record.clone(), suspended));
                 }
@@ -489,7 +489,12 @@ fn draw_sleep_chart(cr: &cairo::Context, w: i32, h: i32, data: &[Sample], dark: 
         .filter_map(suspend_seconds)
         .fold(0.0_f64, f64::max);
     if max_s <= 0.0 {
-        return text(cr, "Aucune suspension détectée", w as f64 / 2.0, h as f64 / 2.0, 0.5, fg, 0.7);
+        let message = if data.iter().any(|s| suspend_seconds(s).is_some()) {
+            "Veille commencée avant la période : voir le résumé"
+        } else {
+            "Aucune suspension détectée"
+        };
+        return text(cr, message, w as f64 / 2.0, h as f64 / 2.0, 0.5, fg, 0.7);
     }
     let max_minutes = (max_s / 60.0).ceil().max(1.0);
     draw_frame(cr, &p, fg, (0.0, max_minutes, C_SUSPEND), None);
@@ -567,7 +572,11 @@ impl Ui {
         let boundaries = fs::File::open("/var/lib/battery-diag/sleep-boundaries.csv")
             .ok().and_then(|f| parse_boundaries(f).ok()).unwrap_or_default();
         if let Some((start, end, seconds)) = last_sleep_pair(&boundaries, cutoff, now) {
-            self.sleep_summary.set_text(&sleep_pair_text(&start, &end, seconds));
+            let mut text = sleep_pair_text(&start, &end, seconds);
+            if cutoff.is_some_and(|c| start.t < c) {
+                text.push_str("\nVeille commencée avant la période choisie : durée et niveaux affichés pour la veille entière.");
+            }
+            self.sleep_summary.set_text(&text);
         } else {
             self.sleep_summary.set_text("Aucune veille avec bornes complètes sur cette période.");
         }
@@ -965,6 +974,7 @@ fn build_ui(app: &adw::Application) {
     content.append(&seg);
     content.append(&latest);
     content.append(&info);
+    content.append(&section("Dernière veille mesurée", &sleep_summary));
     content.append(&cards);
     content.append(&section("Activité CPU observée", &cpu_summary));
     let cpu_note = gtk::Label::new(Some("Somme partielle sur la période : seuls les deux premiers processus de chaque relevé sont conservés, tâches système comprises. Ce n'est pas une consommation en mAh."));
@@ -987,7 +997,6 @@ fn build_ui(app: &adw::Application) {
     sleep_note.set_wrap(true);
     sleep_note.set_xalign(0.0);
     content.append(&sleep_note);
-    content.append(&section("Dernière veille mesurée", &sleep_summary));
     content.append(&section(
         &format!("Anomalies (> {ANOMALY_W} W, écran éteint)"),
         &list,
@@ -1223,7 +1232,8 @@ post,12345678-1234-1234-1234-123456789abc,2026-11-16T06:05:00+00:00,400,100,79,D
         let text = sleep_pair_text(&start, &end, seconds);
         assert!(text.contains("80 % → 79 %"));
         assert!(text.contains("205 → 202 / 255"));
-        assert!(last_sleep_pair(&rows, Some(start.t + 1), i64::MAX).is_none());
+        assert!(last_sleep_pair(&rows, Some(start.t + 1), i64::MAX).is_some());
+        assert!(last_sleep_pair(&rows, Some(end.t + 1), i64::MAX).is_none());
         let mut changed_boot = rows.clone();
         changed_boot[1].boot_id = "boot2".into();
         assert!(last_sleep_pair(&changed_boot, None, i64::MAX).is_none());
