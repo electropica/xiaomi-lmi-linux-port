@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 cd "${LMI_BATTERY_STAGE_DIR:-/var/lib/lmi-image-staging/lmi-battery-debs}"
-set -- ./battery-logger_0.1.1_arm64.deb ./battery-viewer_0.1.12_arm64.deb ./battery-sleep-boundaries_0.1.0_all.deb
+set -- ./battery-logger_0.1.1_arm64.deb ./battery-viewer_0.1.13_arm64.deb ./battery-sleep-boundaries_0.1.0_all.deb
 for package do
     [ -f "$package" ] || { echo "Missing $package" >&2; exit 1; }
     awk -v name="${package#./}" 'length($1) == 64 && $1 !~ /[^[:xdigit:]]/ { f=$2; sub(/\r$/, "", f); sub(/^\*/, "", f); sub(/^\.\//, "", f); if (f == name) found=1 } END { exit !found }' SHA256SUMS || {

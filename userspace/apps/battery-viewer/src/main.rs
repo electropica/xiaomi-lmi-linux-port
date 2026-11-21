@@ -436,6 +436,28 @@ fn no_data(cr: &cairo::Context, w: i32, h: i32, fg: Rgb) {
     text(cr, "Pas assez de données pour cette période", w as f64 / 2.0, h as f64 / 2.0, 0.5, fg, 0.7);
 }
 
+// Draw only the observed sleep interval and actual boundary values; do not
+// interpolate the battery level while the phone was suspended.
+fn draw_sleep_boundaries(cr: &cairo::Context, p: &Plot, fg: Rgb, start: &SleepBoundary, end: &SleepBoundary) {
+    let left = (start.t as f64).max(p.tmin);
+    let right = (end.t as f64).min(p.tmax);
+    if right <= left { return; }
+    let x0 = p.px(left as i64);
+    let x1 = p.px(right as i64);
+    cr.set_source_rgba(C_SUSPEND.0, C_SUSPEND.1, C_SUSPEND.2, 0.12);
+    cr.rectangle(x0, p.y0, x1 - x0, p.y1 - p.y0);
+    let _ = cr.fill();
+    text(cr, "Veille : mesures aux bornes", (x0 + x1) / 2.0, p.y0 + 14.0, 0.5, fg, 0.8);
+    for record in [start, end] {
+        if (record.t as f64) < p.tmin || (record.t as f64) > p.tmax { continue; }
+        if let Some(level) = record.capacity.filter(|v| (0.0..=100.0).contains(v)) {
+            cr.set_source_rgb(C_BATT.0, C_BATT.1, C_BATT.2);
+            cr.arc(p.px(record.t), p.py(level, 0.0, 100.0), 4.0, 0.0, std::f64::consts::TAU);
+            let _ = cr.fill();
+        }
+    }
+}
+
 fn time_bounds(data: &[Sample], hours: Option<i64>, now: i64) -> Option<(i64, i64)> {
     if let Some(hours) = hours {
         return Some((now - hours * 3600, now));
@@ -455,15 +477,19 @@ fn complete_interval(sample: &Sample, cutoff: Option<i64>) -> bool {
 /// Graphique 1 : batterie (%, axe gauche) et puissance (W, axe droit).
 fn draw_battery_chart(cr: &cairo::Context, w: i32, h: i32, data: &[Sample], dark: bool, hours: Option<i64>, now: i64) {
     let fg = fg_color(dark);
-    if data.len() < 2 {
-        return no_data(cr, w, h, fg);
-    }
-    let (start, end) = time_bounds(data, hours, now).unwrap();
+    let Some((start, end)) = time_bounds(data, hours, now) else { return no_data(cr, w, h, fg) };
+    let sleep = fs::File::open("/var/lib/battery-diag/sleep-boundaries.csv")
+        .ok().and_then(|f| parse_boundaries(f).ok())
+        .and_then(|v| last_sleep_pair(&v, Some(start), end));
+    if data.len() < 2 && sleep.is_none() { return no_data(cr, w, h, fg); }
     let p = Plot::new(w, h, start, end);
     let max_p = data.iter().filter_map(|s| s.power_w).fold(0.0_f64, f64::max);
     let p_hi = ((max_p / 2.0).ceil() * 2.0).max(2.0);
 
     draw_frame(cr, &p, fg, (0.0, 100.0, C_BATT), Some((0.0, p_hi, fg)));
+    if let Some((pre, post, _)) = sleep {
+        draw_sleep_boundaries(cr, &p, fg, &pre, &post);
+    }
     legend(cr, p.x0, 16.0, &[("Batterie %", C_BATT), ("Charge", C_CHARGE), ("Décharge", C_DISCHARGE)], fg);
 
     let cap: Vec<_> = data.iter().filter_map(|s| s.capacity.map(|v| (s.t, v))).collect();
@@ -984,7 +1010,7 @@ fn build_ui(app: &adw::Application) {
     cpu_note.set_xalign(0.0);
     content.append(&cpu_note);
     content.append(&section("Batterie et puissance (W)", &chart1));
-    let power_note = gtk::Label::new(Some("Vert : puissance reçue par la batterie. Orange : puissance fournie par la batterie. En charge, ce n'est pas la consommation totale du téléphone. Les valeurs incertaines et les périodes sans relevé ne sont pas reliées."));
+    let power_note = gtk::Label::new(Some("Vert : puissance reçue. Orange : puissance fournie. Zone teintée : téléphone en veille ; les points sont les mesures disponibles aux bornes. Aucune valeur intermédiaire n'est inventée. En charge, ce n'est pas la consommation totale du téléphone."));
     power_note.add_css_class("caption");
     power_note.add_css_class("dim-label");
     power_note.set_wrap(true);
