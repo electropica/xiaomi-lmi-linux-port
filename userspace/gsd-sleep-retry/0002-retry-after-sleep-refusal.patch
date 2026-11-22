@@ -1,0 +1,140 @@
+--- a/plugins/power/gsd-power-manager.c
++++ b/plugins/power/gsd-power-manager.c
+@@ -225,6 +225,8 @@
+         gboolean                 lmi_quiet_unidle;
+         GsdPowerIdleMode         lmi_idle_mode_before_sleep;
+         gboolean                 lmi_suspend_pending;
++        guint                    lmi_retry_id;
++        guint                    lmi_retry_delay;
+ 
+         guint                    xscreensaver_watchdog_timer_id;
+ 
+@@ -254,6 +256,8 @@
+ static void      engine_device_warning_changed_cb (UpDevice *device, GParamSpec *pspec, GsdPowerManager *manager);
+ static void      do_power_action_type (GsdPowerManager *manager, GsdPowerActionType action_type);
+ static void      lmi_suspend_done_cb (GObject *source_object, GAsyncResult *res, gpointer user_data);
++static void      idle_configure (GsdPowerManager *manager);
++static gboolean  lmi_retry_cb (gpointer user_data);
+ static const gchar *idle_mode_to_string (GsdPowerIdleMode mode);
+ static void      uninhibit_lid_switch (GsdPowerManager *manager);
+ static void      stop_inhibit_lid_switch_timer (GsdPowerManager *manager);
+@@ -1213,7 +1217,12 @@
+         result = g_dbus_proxy_call_finish (G_DBUS_PROXY (source_object), res, &error);
+         manager->lmi_suspend_pending = FALSE;
+ 
+-        if (result != NULL)
++        if (result != NULL) {
++                g_clear_handle_id (&manager->lmi_retry_id, g_source_remove);
++                manager->lmi_retry_delay = 0;
++                return;
++        }
++        if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+                 return;
+ 
+         /* The suspend request was refused. current_idle_mode is still
+@@ -1228,6 +1237,13 @@
+ 
+         if (manager->current_idle_mode == GSD_POWER_IDLE_MODE_SLEEP)
+                 manager->current_idle_mode = manager->lmi_idle_mode_before_sleep;
++
++        /* Retry only through the regular idle policy, after a bounded delay. */
++        if (manager->lmi_retry_id == 0) {
++                manager->lmi_retry_delay = 60;
++                manager->lmi_retry_id = g_timeout_add_seconds (manager->lmi_retry_delay, lmi_retry_cb, manager);
++                g_message ("LMI_SLEEP_RETRY scheduled delay=%u", manager->lmi_retry_delay);
++        }
+ }
+ 
+ static void
+@@ -1980,6 +1996,73 @@
+                 return manager->battery_is_low;
+ }
+ 
++static gboolean
++lmi_sleep_blocked (GVariant *result)
++{
++        GVariantIter *iter = NULL;
++        const gchar *what, *who, *why, *mode;
++        guint32 uid, pid;
++        gboolean blocked = FALSE;
++
++        if (result == NULL || !g_variant_is_of_type (result, G_VARIANT_TYPE ("(a(ssssuu))"))) {
++                blocked = TRUE; /* fail closed when logind is unavailable */
++        } else {
++                g_variant_get (result, "(a(ssssuu))", &iter);
++                while (g_variant_iter_loop (iter, "(&s&s&s&suu)", &what, &who, &why, &mode, &uid, &pid)) {
++                        g_auto(GStrv) kinds = g_strsplit (what, ":", -1);
++                        if ((g_str_equal (mode, "block") || g_str_equal (mode, "block-weak")) &&
++                            g_strv_contains ((const gchar * const *) kinds, "sleep")) {
++                                blocked = TRUE;
++                                break;
++                        }
++                }
++                g_variant_iter_free (iter);
++        }
++        return blocked;
++}
++
++static void
++lmi_retry_inhibitors_done (GObject *source, GAsyncResult *res, gpointer user_data)
++{
++        GsdPowerManager *manager = user_data;
++        g_autoptr(GError) error = NULL;
++        g_autoptr(GVariant) result = NULL;
++        gboolean blocked;
++
++        result = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
++        blocked = lmi_sleep_blocked (result);
++        if (!g_cancellable_is_cancelled (manager->cancellable) &&
++            manager->session_is_active && manager->current_idle_mode != GSD_POWER_IDLE_MODE_NORMAL) {
++                if (blocked || manager->lmi_suspend_pending) {
++                        if (manager->lmi_retry_id == 0) {
++                                manager->lmi_retry_delay = MIN (MAX (manager->lmi_retry_delay, 60) * 2, 300);
++                                manager->lmi_retry_id = g_timeout_add_seconds (manager->lmi_retry_delay, lmi_retry_cb, manager);
++                                g_message ("LMI_SLEEP_RETRY deferred delay=%u", manager->lmi_retry_delay);
++                        }
++                } else {
++                        /* Re-arm the standard idle watch; it checks idle time,
++                         * configured action and session inhibitors itself. */
++                        g_message ("LMI_SLEEP_RETRY rechecking idle policy");
++                        idle_configure (manager);
++                }
++        }
++        g_object_unref (manager);
++}
++
++static gboolean
++lmi_retry_cb (gpointer user_data)
++{
++        GsdPowerManager *manager = user_data;
++        manager->lmi_retry_id = 0;
++        if (!manager->session_is_active || manager->current_idle_mode == GSD_POWER_IDLE_MODE_NORMAL ||
++            manager->logind_proxy == NULL)
++                return G_SOURCE_REMOVE;
++        g_dbus_proxy_call (manager->logind_proxy, "ListInhibitors", NULL,
++                           G_DBUS_CALL_FLAGS_NONE, 10000, manager->cancellable,
++                           lmi_retry_inhibitors_done, g_object_ref (manager));
++        return G_SOURCE_REMOVE;
++}
++
+ static void
+ idle_configure (GsdPowerManager *manager)
+ {
+@@ -2287,6 +2370,8 @@
+ 
+         g_return_if_fail (manager != NULL);
+ 
++        g_clear_handle_id (&manager->lmi_retry_id, g_source_remove);
++
+         if (manager->cancellable != NULL) {
+                 g_cancellable_cancel (manager->cancellable);
+                 g_clear_object (&manager->cancellable);
+@@ -2617,6 +2702,8 @@
+         GsdPowerManager *manager = GSD_POWER_MANAGER (user_data);
+ 
+         g_debug ("idletime reset (%i)", watch_id);
++        g_clear_handle_id (&manager->lmi_retry_id, g_source_remove);
++        manager->lmi_retry_delay = 0;
+         manager->lmi_resume_activity_seen = TRUE;
+ 
+         set_temporary_unidle_on_ac (manager, FALSE);

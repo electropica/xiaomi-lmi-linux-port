@@ -1,0 +1,99 @@
+--- a/plugins/power/gsd-power-manager.c
++++ a/plugins/power/gsd-power-manager.c
+@@ -223,6 +223,8 @@
+         gboolean                 lmi_resume_activity_seen;
+         gboolean                 lmi_skip_normal_illumination;
+         gboolean                 lmi_quiet_unidle;
++        GsdPowerIdleMode         lmi_idle_mode_before_sleep;
++        gboolean                 lmi_suspend_pending;
+ 
+         guint                    xscreensaver_watchdog_timer_id;
+ 
+@@ -251,6 +253,8 @@
+ 
+ static void      engine_device_warning_changed_cb (UpDevice *device, GParamSpec *pspec, GsdPowerManager *manager);
+ static void      do_power_action_type (GsdPowerManager *manager, GsdPowerActionType action_type);
++static void      lmi_suspend_done_cb (GObject *source_object, GAsyncResult *res, gpointer user_data);
++static const gchar *idle_mode_to_string (GsdPowerIdleMode mode);
+ static void      uninhibit_lid_switch (GsdPowerManager *manager);
+ static void      stop_inhibit_lid_switch_timer (GsdPowerManager *manager);
+ static void      sync_lid_inhibitor (GsdPowerManager *manager);
+@@ -1182,14 +1186,48 @@
+                 g_warning ("no systemd support");
+                 return;
+         }
++        if (manager->lmi_suspend_pending) {
++                g_debug ("a suspend request is already in flight, ignoring the new one");
++                return;
++        }
++        manager->lmi_suspend_pending = TRUE;
+         g_dbus_proxy_call (manager->logind_proxy,
+                            "Suspend",
+                            g_variant_new ("(b)", FALSE),
+                            G_DBUS_CALL_FLAGS_NONE,
+                            G_MAXINT,
+-                           NULL,
+-                           dbus_call_log_error,
+-                           "Error calling suspend action");
++                           manager->cancellable,
++                           lmi_suspend_done_cb,
++                           manager);
++}
++
++static void
++lmi_suspend_done_cb (GObject      *source_object,
++                     GAsyncResult *res,
++                     gpointer      user_data)
++{
++        GsdPowerManager *manager = user_data;
++        g_autoptr(GError) error = NULL;
++        g_autoptr(GVariant) result = NULL;
++
++        result = g_dbus_proxy_call_finish (G_DBUS_PROXY (source_object), res, &error);
++        manager->lmi_suspend_pending = FALSE;
++
++        if (result != NULL)
++                return;
++
++        /* The suspend request was refused. current_idle_mode is still
++         * SLEEP, and the "less idle" guard in idle_set_mode() then
++         * swallows every later sleep request, so the device would never
++         * sleep again until real user activity. Restore the mode we came
++         * from without running its side effects: the panel must stay
++         * exactly as it is. */
++        g_warning ("Error calling suspend action: %s; restoring idle mode %s so a later sleep request is not swallowed",
++                   error != NULL ? error->message : "unknown error",
++                   idle_mode_to_string (manager->lmi_idle_mode_before_sleep));
++
++        if (manager->current_idle_mode == GSD_POWER_IDLE_MODE_SLEEP)
++                manager->current_idle_mode = manager->lmi_idle_mode_before_sleep;
+ }
+ 
+ static void
+@@ -1774,6 +1812,11 @@
+                 return;
+         }
+ 
++        /* Remember the mode we are leaving, so a refused suspend can put
++         * the logical state back instead of leaving SLEEP stuck. */
++        if (mode == GSD_POWER_IDLE_MODE_SLEEP)
++                manager->lmi_idle_mode_before_sleep = manager->current_idle_mode;
++
+         manager->current_idle_mode = mode;
+         g_debug ("Doing a state transition: %s", idle_mode_to_string (mode));
+ 
+@@ -1831,6 +1874,14 @@
+                         action_type = g_settings_get_enum (manager->settings,
+                                                            "sleep-inactive-ac-type");
+                 }
++
++                /* These actions never sleep. Keeping the logical SLEEP mode
++                 * without a suspend in flight would let the "less idle"
++                 * guard swallow every later sleep request. */
++                if (action_type == GSD_POWER_ACTION_NOTHING ||
++                    action_type == GSD_POWER_ACTION_BLANK)
++                        manager->current_idle_mode = manager->lmi_idle_mode_before_sleep;
++
+                 do_power_action_type (manager, action_type);
+ 
+         /* turn on screen and restore user-selected brightness level */

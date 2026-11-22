@@ -4,7 +4,7 @@ set -eu
 custom=${1:?usage: preflight-packages.sh CUSTOM_DIR BATTERY_DIR}
 battery=${2:?usage: preflight-packages.sh CUSTOM_DIR BATTERY_DIR}
 phosh='0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1'
-gsd='48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1'
+gsd='48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1+retry2'
 check_dir() (
     cd "$1"
     [ -f SHA256SUMS ] || { echo "Missing SHA256SUMS: $1" >&2; exit 1; }
