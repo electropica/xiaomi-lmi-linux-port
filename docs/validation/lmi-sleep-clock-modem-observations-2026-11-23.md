@@ -55,3 +55,13 @@ can attribute requests to the modem. A missing modem firmware message and a
 historical D3cold error do not prove the modem's present sleep power state.
 Avoid interpreting shared device-tree supplies as proof of a shared physical
 cutoff, or a successful PM callback as proof that a rail was disabled.
+
+An additional offline review maps the archived command-db resource `ldoa5`
+to base address `0x41900`. In the older capture two active-set commands to
+`0x41904` have data values 0 and 1; the trace uses a per-CPU local clock and
+has substantial loss, so their cross-CPU order and completeness are not
+established. The archived device tree associates the corresponding regulator
+with both modem PCIe and UFS PHYs. The commands do not identify which client
+released the regulator, prove its physical voltage, or establish the topology
+of the currently booted DTB. Driver and active-DTB comparison is needed before
+another targeted experiment can attribute a cause.
