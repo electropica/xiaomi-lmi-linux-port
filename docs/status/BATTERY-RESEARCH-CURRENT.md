@@ -1,3 +1,11 @@
+## Battery research update — 23 November 2026
+
+The status below preserves an October checkpoint. For newer handset observations,
+including the temporary clock-flag comparison, calibrated limitations, modem
+callbacks and PCIe clock trace, see the
+[23 November validation](../validation/lmi-sleep-clock-modem-observations-2026-11-23.md).
+No specific sleep-power culprit or autonomy gain has been established.
+
 ## UI follow-up, October 26
 
 searchclose1 is now installed and operator-confirmed for both matching and

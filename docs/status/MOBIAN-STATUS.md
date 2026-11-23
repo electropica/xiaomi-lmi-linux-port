@@ -1,3 +1,14 @@
+## Sleep and audio observations — 23 November 2026
+
+The operator confirmed audible music on a temporary Linux 7 menu boot without
+`clk_ignore_unused`. The diagnostic boot was loaded in RAM and was not flashed.
+Two recent suspend transitions were captured without trace-buffer loss: the
+PCIe modem callbacks returned zero, while a separate trace recorded no calls to
+the selected PCIe clock enable/disable/prepare/unprepare events. These results
+do not establish physical rail state or modem power consumption. A short
+comparison did not establish an autonomy improvement. See the
+[battery validation](../validation/lmi-sleep-clock-modem-observations-2026-11-23.md).
+
 ## Drawer gesture update — 23 November 2026
 
 The `+pulldownbubble1` Phosh package set is installed. Julien reports no current drawer issue and considers it corrected; continued swipe-closure behaviour remains to be documented. The change moves the gesture to the bubble phase; the original cause has not been conclusively established. See [drawer candidate](../../userspace/phosh/drawer-pulldown-bubble/README.md).

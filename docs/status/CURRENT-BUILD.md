@@ -1,3 +1,10 @@
+## Temporary clock diagnostic — 23 November 2026
+
+An isolated menu image without `clk_ignore_unused` was booted in RAM for sleep
+diagnostics. The user confirmed the desktop and audible speaker playback.
+This was not flashed and is not a new permanent build or a proven battery fix.
+See [sleep and modem observations](../validation/lmi-sleep-clock-modem-observations-2026-11-23.md).
+
 ## Snapshot 51 deployed, and the third kernel facility identified — October 28, 2026
 
 The Flatpak deployment of the Snapshot 51 candidate, which failed on the
