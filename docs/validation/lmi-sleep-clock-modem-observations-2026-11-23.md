@@ -65,3 +65,11 @@ with both modem PCIe and UFS PHYs. The commands do not identify which client
 released the regulator, prove its physical voltage, or establish the topology
 of the currently booted DTB. Driver and active-DTB comparison is needed before
 another targeted experiment can attribute a cause.
+
+A subsequent read-only handset inventory lists five consumers of
+`vreg_l5a_0p875`, including PCIe, UFS, USB HS, camera and DSI PHY paths. In
+that awake snapshot the regulator framework reported use count 2, with the
+PCIe and USB HS consumers active and UFS inactive. This is framework state at
+one instant, not a sleep-voltage measurement. Upstream PM callback ordering
+alone cannot identify which of the shared consumers produced the archived
+RPMh command on the patched active kernel.
