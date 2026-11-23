@@ -1,3 +1,7 @@
+## Drawer gesture update — 23 November 2026
+
+The `+pulldownbubble1` Phosh package set is installed. Julien reports no current drawer issue and considers it corrected; continued swipe-closure behaviour remains to be documented. The change moves the gesture to the bubble phase; the original cause has not been conclusively established. See [drawer candidate](../../userspace/phosh/drawer-pulldown-bubble/README.md).
+
 ## Drawer layout validated on the handset — November 15, 2026
 
 The `+drawerlayout1` Phosh candidate is installed and the user confirmed that

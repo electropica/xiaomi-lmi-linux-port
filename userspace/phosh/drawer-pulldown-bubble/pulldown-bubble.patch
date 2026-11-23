@@ -1,0 +1,28 @@
+diff --git a/src/app-grid.c b/src/app-grid.c
+index fc13a04..cd8090d 100644
+--- a/src/app-grid.c
++++ b/src/app-grid.c
+@@ -566,6 +566,4 @@ on_lmi_back_clicked (PhoshAppGrid *self,
+- *   - it watches the application list in the capture phase, so that the
+- *     drawer sees the drag before the list does,
+- *   - as soon as it is clear that the drag is not a pull down, it releases
+- *     the touch sequence again: the list then receives the drag exactly as
+- *     it does without this gesture (measured: 20 of 20 movements reach the
+- *     list in both cases),
++ *   - it watches the application list in the bubble phase, so that the
++ *     list can process the drag before the drawer does,
++ *   - it denies sequences that are not downward drags at the top,
++ *     leaving the list to handle them,
+@@ -627,3 +625 @@ lmi_pull_down_drag_update (GtkGestureDrag *gesture,
+-  /* Not a pull down: give the touch back to the list.  The denial happens
+-   * in the capture phase, before the list's own gesture is called for this
+-   * movement, so the list does not lose anything. */
++  /* Not a pull down: deny this gesture's touch sequence. */
+@@ -661,2 +657,2 @@ lmi_pull_down_gesture_setup (PhoshAppGrid *self)
+-  /* The capture phase lets the drawer look at the drag before the
+-   * application list claims it. */
++  /* The bubble phase lets the drawer look at the drag after the
++   * application list processes it. */
+@@ -664 +660 @@ lmi_pull_down_gesture_setup (PhoshAppGrid *self)
+-                                               GTK_PHASE_CAPTURE);
++                                               GTK_PHASE_BUBBLE);

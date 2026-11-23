@@ -39,7 +39,7 @@ The GeoClue BSS reseed helper counts its two-second sleeps in seconds and has a 
 
 ## November 16 recipe changes
 
-The custom package staging directory now requires the three matching `+drawerlayout1` packages (`phosh`, `phosh-common`, and `libphosh-0.45-0`), in addition to phoc, both GSD packages, and both libcamera packages: eight packages in total. Stage the matching locally verified `.deb` files and regenerate `SHA256SUMS`; they are not included in this repository.
+The custom package staging directory now requires the three matching `+pulldownbubble1` packages (`phosh`, `phosh-common`, and `libphosh-0.45-0`), in addition to phoc, both GSD packages, and both libcamera packages: eight packages in total. Stage the matching locally verified `.deb` files and regenerate `SHA256SUMS`; they are not included in this repository.
 
 Before building, prepare `recipe/overlays/lmi-battery-debs/` with the three packages produced by `userspace/apps/battery-packaging/build-debs.sh` and a `SHA256SUMS` covering them. The image installs battery-logger 0.1.1, battery-viewer 0.1.13 and battery-sleep-boundaries 0.1.0 and enables the logger. The optional sleep hook records only suspend boundaries, not continuous measurements while suspended.
 

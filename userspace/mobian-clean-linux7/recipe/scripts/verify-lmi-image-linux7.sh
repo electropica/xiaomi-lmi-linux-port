@@ -24,10 +24,10 @@ gnome-settings-daemon|48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1+re
 gnome-settings-daemon-common|48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1+retry2
 libcamera-ipa|0.4.0-7+lmi4
 libcamera0.4|0.4.0-7+lmi4
-libphosh-0.45-0|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1
+libphosh-0.45-0|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1+pulldownbubble1
 phoc|0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1
-phosh|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1
-phosh-common|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1
+phosh|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1+pulldownbubble1
+phosh-common|0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1+pulldownbubble1
 LMI_EXACT_PACKAGES
 
 echo "== 2. custom packages are held against the priority 700 repository =="

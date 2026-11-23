@@ -107,7 +107,7 @@ for p in $CUSTOM_PACKAGES; do
     v=$(dpkg-query -W -f='${Version}' "$p" 2>/dev/null || true)
     [ -n "$v" ] || { echo "custom package missing after install: $p" >&2; exit 1; }
     case "$p" in
-        phosh|phosh-common|libphosh-0.45-0) want='0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1' ;;
+        phosh|phosh-common|libphosh-0.45-0) want='0.46.0-3+deb13u1+lmigaugewake3+homedrag8+esrquiet1+drawerscroll1+irqnames1+drawerpreview1+drawersearch1+draweremptysearch1+searchclose1+drawertouchfix1+drawerpreview2+pulldown1+previewdouble1+drawerlayout1+pulldownbubble1' ;;
         phoc) want='0.46.0-1+lmishelldnd1+thumblinear1+thumbrows1+thumbfbo1' ;;
         gnome-settings-daemon|gnome-settings-daemon-common) want='48.1-1+lmiquietgauge3+esrquiet1+irqnames1+sleeprefusal1+retry2' ;;
         libcamera0.4|libcamera-ipa) want='0.4.0-7+lmi4' ;;
