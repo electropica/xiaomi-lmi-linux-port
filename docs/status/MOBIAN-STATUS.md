@@ -1,3 +1,12 @@
+## RTC wake observation — 24 November 2026
+
+A temporary RTC module has supported a guarded 90-second wake, three short
+cycles and twelve 15-minute s2idle cycles on the handset. An experimental
+in-memory time offset avoided the original 1975 system-clock jump when loaded
+after NTP synchronization. Neither the module ABI nor unattended low-battery
+handling is fully qualified, and no persistent installation is claimed. See
+the [RTC and battery validation](../validation/lmi-rtc-wake-battery-2026-11-24.md).
+
 ## Sleep and audio observations — 23 November 2026
 
 The operator confirmed audible music on a temporary Linux 7 menu boot without

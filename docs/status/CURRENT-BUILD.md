@@ -1,3 +1,11 @@
+## Temporary RTC module — 24 November 2026
+
+An experimental, RAM-only RTC module was built and exercised with successful
+short and repeated wake tests. The original RTC epoch is not corrected in
+hardware; the candidate uses a volatile offset and requires trustworthy system
+time before loading. It is not part of a persistent kernel image or recipe.
+See [RTC validation](../validation/lmi-rtc-wake-battery-2026-11-24.md).
+
 ## Temporary clock diagnostic — 23 November 2026
 
 An isolated menu image without `clk_ignore_unused` was booted in RAM for sleep

@@ -1,0 +1,45 @@
+diff --git a/drivers/rtc/rtc-pm8xxx.c b/drivers/rtc/rtc-pm8xxx.c
+--- a/drivers/rtc/rtc-pm8xxx.c
++++ b/drivers/rtc/rtc-pm8xxx.c
+@@ -17,6 +17,7 @@
+ #include <linux/regmap.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
++#include <linux/timekeeping.h>
+ #include <linux/unaligned.h>
+ 
+ #include <asm/byteorder.h>
+@@ -27,6 +28,11 @@
+ #define PM8xxx_RTC_ALARM_ENABLE		BIT(7)
+ 
+ #define NUM_8_BIT_RTC_REGS		0x4
++
++/* Default-on for systems without persistent RTC offset storage. */
++static bool lmi_volatile_offset = true;
++module_param(lmi_volatile_offset, bool, 0444);
++MODULE_PARM_DESC(lmi_volatile_offset, "Use current system time as a volatile RTC offset");
+ 
+ /**
+  * struct pm8xxx_rtc_regs - describe RTC registers per PMIC versions
+@@ -631,6 +637,21 @@
+ 	if (rc)
+ 		return rc;
+ 
++	if (lmi_volatile_offset && !rtc_dd->allow_set_time &&
++	    !rtc_dd->nvmem_cell && !rtc_dd->use_uefi) {
++		u64 now = ktime_get_real_seconds();
++		u32 raw;
++
++		/* Refuse an unset or unrepresentable system clock. */
++		if (now < 1577836800ULL || now > U32_MAX)
++			return -EINVAL;
++		rc = pm8xxx_rtc_read_raw(rtc_dd, &raw);
++		if (rc)
++			return rc;
++		rtc_dd->offset = (u32)now - raw;
++		dev_info(&pdev->dev, "using volatile system-time RTC offset\n");
++	}
++
+ 	platform_set_drvdata(pdev, rtc_dd);
+ 
+ 	rtc_dd->rtc = devm_rtc_allocate_device(&pdev->dev);

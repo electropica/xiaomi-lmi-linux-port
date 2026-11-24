@@ -1,3 +1,11 @@
+## RTC wake and timed sampling — 24 November 2026
+
+Twelve timed RTC wakes succeeded on a temporary module during a three-hour
+battery observation. The 85% start threshold and <25% shutdown have been
+simulated but not tested on-device. The module is not persistently installed;
+its time-offset and ABI limitations remain. See
+[RTC validation](../validation/lmi-rtc-wake-battery-2026-11-24.md).
+
 ## Battery research update — 23 November 2026
 
 The status below preserves an October checkpoint. For newer handset observations,

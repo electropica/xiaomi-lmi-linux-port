@@ -17,7 +17,7 @@ The Linux 7 port boots Mobian from a persistent menu and runs a personalized Pho
 - **A tailored home screen:** favorites, drawer scrolling, search and the requested 300% display scale.
 - **Rear camera and flashlight:** a working camera preview with corrected orientation, plus flashlight control through its app.
 - **Sound and media:** speaker playback was confirmed on the latest temporary Linux 7 test boot; Lollypop playlists were also restored and confirmed on the current installation.
-- **Connectivity and power:** Wi-Fi and USB networking, battery reporting, charging and observed `s2idle` suspend.
+- **Connectivity and power:** Wi-Fi and USB networking, battery reporting, charging, `s2idle` suspend and repeated RTC-timed wakes tested with a temporary driver.
 - **Recovery choices:** a boot menu with Android/LineageOS and recovery paths alongside Mobian.
 
 These are results observed during development, not a guarantee that every mode works on every build. The [current build status](docs/status/CURRENT-BUILD.md) and dated [validation records](docs/validation/) provide the details.
