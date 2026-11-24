@@ -54,3 +54,24 @@ it returned `in use`. Reboot removed the first temporary candidate, but the
 corrected module is not an installed or proven permanent solution. No flash,
 full image rebuild, physical rail change or measured battery improvement is
 claimed.
+
+## Screen behavior on RTC wake
+
+The operator confirmed that the screen really illuminates during the scheduled
+wakes. The battery logger reported `screen_on=1` after each of the twelve RTC
+resumes; Phoc logged DSI modesetting followed by `Turning off` about five to
+six seconds later. These logs are not a measurement of panel luminance or energy.
+
+The installed Phosh binary matches the `pulldownbubble1` package. Its retained
+source invokes the ordinary screen wake on resume unless a narrowly scoped
+quiet-gauge filter qualifies the wake. On the active boot the opt-in was not
+found in the process environment, and the filter's `last_resume_reason` and
+USB-online paths were absent. The existing gauge policy therefore cannot
+qualify these RTC wakes. Timing and code are consistent with the observed screen
+behavior, but the complete display/D-Bus path was not instrumented.
+
+A future RTC-specific quiet policy must distinguish an intentionally owned
+alarm from power-button, touch, USB and simultaneous wake activity, and must
+fail open when that distinction is uncertain. Neither an RTC interrupt count
+alone nor a shared wake-source counter proves exclusive cause. No screen policy
+change has been installed, and no panel-related current saving is established.

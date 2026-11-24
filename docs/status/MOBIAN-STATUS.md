@@ -7,6 +7,11 @@ after NTP synchronization. Neither the module ABI nor unattended low-battery
 handling is fully qualified, and no persistent installation is claimed. See
 the [RTC and battery validation](../validation/lmi-rtc-wake-battery-2026-11-24.md).
 
+The operator confirmed the screen lights during scheduled RTC wakes. Phoc logs
+show display modesetting after each wake and a subsequent off transition; the
+legacy gauge-only quiet-wake policy cannot qualify RTC wakes on this boot. An
+RTC-specific policy is not yet installed or validated.
+
 ## Sleep and audio observations — 23 November 2026
 
 The operator confirmed audible music on a temporary Linux 7 menu boot without
