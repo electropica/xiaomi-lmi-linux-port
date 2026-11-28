@@ -16,8 +16,8 @@ The Linux 7 port boots Mobian from a persistent menu and runs a personalized Pho
 - **A touch-friendly desktop:** display, touchscreen, unlock, gestures, application drawer and GPU rendering.
 - **A tailored home screen:** favorites, drawer scrolling, search and the requested 300% display scale.
 - **Rear camera and flashlight:** a working camera preview with corrected orientation, plus flashlight control through its app.
-- **Sound and media:** speaker playback was confirmed on the latest temporary Linux 7 test boot; Lollypop playlists were also restored and confirmed on the current installation.
-- **Connectivity and power:** Wi-Fi and USB networking, battery reporting, charging, `s2idle` suspend and repeated RTC-timed wakes tested with a temporary driver.
+- **Sound and media:** speaker playback was confirmed on the reconstructed Linux 7 kernel; Lollypop playlists were also restored and confirmed on the current installation.
+- **Connectivity and power:** Wi-Fi and USB networking, battery reporting, charging, `s2idle` suspend and repeated RTC-timed wakes. The tested RTC module is loaded after time synchronization on the current setup.
 - **Recovery choices:** a boot menu with Android/LineageOS and recovery paths alongside Mobian.
 
 These are results observed during development, not a guarantee that every mode works on every build. The [current build status](docs/status/CURRENT-BUILD.md) and dated [validation records](docs/validation/) provide the details.
@@ -25,6 +25,8 @@ These are results observed during development, not a guarantee that every mode w
 ## What we're building next
 
 Current work focuses on reducing standby drain, improving charging and wake-up behavior, advancing modem and GPS support, and bringing the pop-up front camera to Linux 7. An experimental [clean Mobian 7 root filesystem](userspace/mobian-clean-linux7/README.md) has also been built and checked off-device to make future updates and maintenance easier.
+
+The latest [overnight comparison](docs/validation/lmi-sleep-radio-comparison-2026-11-28.md) found an unexpected discharge increase with both radio changes active; a repeat is needed to establish the cause. The [reconstructed-kernel recipe](kernel/experimental/linux7/reconstruction-20261127/README.md) records the current camera, charging and audio changes along with the source-provenance limits.
 
 ## Explore the project
 

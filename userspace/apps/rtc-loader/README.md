@@ -1,0 +1,7 @@
+# Conditional RTC module loader
+
+The handset used an out-of-tree `rtc-pm8xxx` module with a volatile time offset. Short repeated RTC wake tests passed. This service was enabled on the handset and loaded the module after a reboot once system time synchronized. It waits for NTP synchronization and checks the module hash, the kernel identifier advertised on the command line and the baseline RTC control registers before loading. It does not set a persistent PMIC clock or wake the phone on its own.
+
+The module binary is not included. Its source change is documented in [`rtc-volatile-offset-experimental.patch`](../../../kernel/experimental/linux7/patches/rtc-volatile-offset-experimental.patch); the historical module's SHA-256 was `73bc870ded5a61e6c0d382cb73c6bb0a3e55b25fd01db4df253a2ee338958b49`. A matching release string or the command-line identifier does not by itself prove ABI compatibility. Rebuild and qualify the module for the exact kernel before use. The loader intentionally refuses a different kernel/module hash; changing a kernel requires a reviewed rebuild and updated checks. If NTP cannot synchronize, the loader waits rather than assigning an incorrect historical date.
+
+For the tested setup the service expects the module at `/usr/local/lib/lmi-rtc/rtc-pm8xxx.ko` and the Python loader at `/usr/local/lib/lmi-rtc/load.py`. This directory is documentation and source, not an automatic installer or an enabled clean-image overlay.

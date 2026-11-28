@@ -1,3 +1,20 @@
+## Reconstructed kernel and RTC loader — 27–28 November 2026
+
+Menu image `1426e2e8…` was written to `boot` with a Fastboot success response;
+Mobian subsequently started and reported the expected kernel and DTB identifiers.
+An independent post-flash readback and validation of the Android entry for this
+exact image remain outstanding. On the same kernel during temporary boot, the
+user confirmed rear-camera preview, charging indication and short speaker
+playback; intermittent charging indication and audio errors still require work.
+The [reconstructed source checks and build recipe](../../kernel/experimental/linux7/reconstruction-20261127/README.md)
+record the fixes and limits of the source identity.
+
+An RTC module is loaded by an enabled userspace service after time synchronization;
+the loader was observed active after reboot. It remains a separate experimental
+module rather than a built-in kernel driver. See [the loader](../../userspace/apps/rtc-loader/README.md),
+the [overnight battery comparison](../validation/lmi-sleep-radio-comparison-2026-11-28.md),
+and the [USB guard fallback](../validation/lmi-usb-guard-typec-fallback-2026-11-28.md).
+
 ## Temporary RTC module — 24 November 2026
 
 An experimental, RAM-only RTC module was built and exercised with successful

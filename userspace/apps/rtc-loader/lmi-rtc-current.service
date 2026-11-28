@@ -1,0 +1,15 @@
+[Unit]
+Description=Load tested LMI RTC after clock synchronization
+After=network-online.target systemd-time-wait-sync.service
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/lmi-rtc/load.py
+RemainAfterExit=yes
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

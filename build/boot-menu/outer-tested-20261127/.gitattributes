@@ -1,0 +1,3 @@
+* text eol=lf
+warning-fixes/basetools-register-fix.patch -text
+warning-fixes/DevicePathUtilities-warning-candidate.c -text

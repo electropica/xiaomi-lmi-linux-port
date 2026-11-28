@@ -1,0 +1,93 @@
+--- a/sound/soc/codecs/tfa98xx/inc/config.h
++++ b/sound/soc/codecs/tfa98xx/inc/config.h
+@@ -31,7 +31,7 @@
+ #if defined(CONFIG_TRACING) && defined(DEBUG)
+ #define tfa98xx_trace_printk(...) trace_printk(__VA_ARGS__)
+ #else
+-#define tfa98xx_trace_printk(...)
++#define tfa98xx_trace_printk(...) do { } while (0)
+ #endif
+ 
+ #endif /* __CONFIG_LINUX_KERNEL_INC__ */
+--- a/sound/soc/codecs/tfa98xx/src/tfa_dsp.c
++++ b/sound/soc/codecs/tfa98xx/src/tfa_dsp.c
+@@ -13,6 +13,14 @@
+ #include "../inc/tfa.h"
+ #include "../inc/tfa98xx_tfafieldnames.h"
+ #include "../inc/tfa_internal.h"
++
++/* Interfaces used by this driver. */
++enum Tfa98xx_Error tfa98xx_faim_protect(struct tfa_device *tfa, int state);
++enum Tfa98xx_Error tfa98xx_set_osc_powerdown(struct tfa_device *tfa, int state);
++enum Tfa98xx_Error tfa98xx_update_lpm(struct tfa_device *tfa, int state);
++int tfa98xx_powerswitch_is_enabled(struct tfa_device *tfa);
++void tfa2_manual_mtp_cpy(struct tfa_device *tfa, uint16_t reg_row_to_keep,
++			 uint16_t reg_row_to_set, uint8_t row);
+ 
+ #ifdef __KERNEL__
+ #ifdef pr_fmt
+@@ -91,7 +99,7 @@
+ /*
+  * interrupt bit function to clear
+  */
+-int tfa_irq_clear(struct tfa_device *tfa, enum tfa9912_irq bit)
++int tfa_irq_clear(struct tfa_device *tfa, int bit)
+ {
+ 	unsigned char reg;
+ 
+@@ -112,7 +120,7 @@
+ /*
+  * return state of irq or -1 if illegal bit
+  */
+-int tfa_irq_get(struct tfa_device *tfa, enum tfa9912_irq bit)
++int tfa_irq_get(struct tfa_device *tfa, int bit)
+ {
+ 	uint16_t value;
+ 	int reg, mask;
+@@ -131,7 +139,7 @@
+  * interrupt bit function that operates on the shadow regs in the handle
+  */
+ 
+-int tfa_irq_ena(struct tfa_device *tfa, enum tfa9912_irq bit, int state)
++int tfa_irq_ena(struct tfa_device *tfa, int bit, int state)
+ {
+ 	uint16_t value, new_value;
+ 	int reg = 0, mask;
+@@ -206,7 +214,7 @@
+  * interrupt bit function that sets the polarity
+  */
+ 
+-int tfa_irq_set_pol(struct tfa_device *tfa, enum tfa9912_irq bit, int state)
++int tfa_irq_set_pol(struct tfa_device *tfa, int bit, int state)
+ {
+ 	uint16_t value, new_value;
+ 	int reg = 0, mask;
+--- a/sound/soc/codecs/tfa98xx/src/tfa_init.c
++++ b/sound/soc/codecs/tfa98xx/src/tfa_init.c
+@@ -13,6 +13,26 @@
+ #include "../inc/tfa_internal.h"
+ #include "../inc/tfa_container.h"
+ #include "../inc/tfa98xx_tfafieldnames.h"
++
++/* Interfaces used by this driver. */
++int tfa_set_swprofile(struct tfa_device *tfa, unsigned short new_value);
++void set_ops_defaults(struct tfa_device_ops *ops);
++void tfanone_ops(struct tfa_device_ops *ops);
++enum Tfa98xx_Error tfa9912_reg_write(struct tfa_device *tfa,
++				     unsigned char subaddress,
++				     unsigned short value);
++void tfa9912_ops(struct tfa_device_ops *ops);
++void tfa9872_ops(struct tfa_device_ops *ops);
++void tfa9873_ops(struct tfa_device_ops *ops);
++void tfa9874_ops(struct tfa_device_ops *ops);
++void tfa9878_ops(struct tfa_device_ops *ops);
++void tfa9888_ops(struct tfa_device_ops *ops);
++void tfa9896_ops(struct tfa_device_ops *ops);
++void tfa9897_ops(struct tfa_device_ops *ops);
++void tfa9895_ops(struct tfa_device_ops *ops);
++void tfa9891_ops(struct tfa_device_ops *ops);
++void tfa9890_ops(struct tfa_device_ops *ops);
++void tfa9894_ops(struct tfa_device_ops *ops);
+ 
+ /* The CurrentSense4 registers are not in the datasheet */
+ #define TFA98XX_CURRENTSENSE4_CTRL_CLKGATECFOFF (1 << 2)

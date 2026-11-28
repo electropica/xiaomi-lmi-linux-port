@@ -56,6 +56,14 @@ class GuardTest(unittest.TestCase):
             self.assertIsNone(g.child)
             self.assertEqual(g.positives, 0)
 
+    def test_missing_partner_can_use_both_typec_roles(self):
+        sample = dict(self.valid, partner=False, data_role='host [device]', power_role='source [sink]')
+        self.assertTrue(guard.qualifies(sample))
+        for key, value in [('data_role', '[host] device'), ('power_role', '[source] sink'),
+                           ('online', '0'), ('carrier', '0'), ('vbus', '3999999')]:
+            changed = dict(sample, **{key: value})
+            with self.subTest(key=key): self.assertFalse(guard.qualifies(changed))
+
     def test_inhibitor_exit_is_retried_and_shutdown_cleans_up(self):
         first, second = FakeChild(), FakeChild()
         with mock.patch.object(guard.subprocess, 'Popen', side_effect=[first, second]):

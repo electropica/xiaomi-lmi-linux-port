@@ -40,8 +40,11 @@ def qualifies(values):
         vbus = int(values.get('vbus') or '')
     except (TypeError, ValueError):
         return False
+    role_pair = ('[device]' in (values.get('data_role') or '').split()
+                 and '[sink]' in (values.get('power_role') or '').split())
+    partner_or_roles = values.get('partner') is True or role_pair
     return (values.get('online') == '1' and values.get('udc') == 'configured'
-            and values.get('carrier') == '1' and values.get('partner') is True
+            and values.get('carrier') == '1' and partner_or_roles
             and vbus >= MIN_VBUS_UV)
 
 
@@ -51,9 +54,14 @@ def snapshot(root=SYS, held=False):
         'udc': read(root / 'class/udc/a600000.usb/state'),
         'carrier': read(root / 'class/net/usb0/carrier'),
         'partner': (root / 'class/typec/port0-partner').exists(),
+        'data_role': read(root / 'class/typec/port0/data_role'),
+        'power_role': read(root / 'class/typec/port0/power_role'),
     }
     candidate = (values['online'] == '1' and values['udc'] == 'configured'
-                 and values['carrier'] == '1' and values['partner'])
+                 and values['carrier'] == '1'
+                 and (values['partner'] or
+                      ('[device]' in (values['data_role'] or '').split()
+                       and '[sink]' in (values['power_role'] or '').split())))
     values['vbus'] = (read(root / 'bus/iio/devices/iio:device1/in_voltage_usbin_v_input')
                       if candidate or held else None)
     values['vbus_skipped'] = not (candidate or held)

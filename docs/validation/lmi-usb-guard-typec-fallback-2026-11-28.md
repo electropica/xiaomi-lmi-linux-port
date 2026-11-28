@@ -1,0 +1,5 @@
+# USB maintenance guard — 28 November 2026
+
+After a reboot, the handset suspended despite a connected PC. The guard service was running but held no inhibitor: charger `online=1`, gadget `configured`, USB carrier and VBUS near 4.7 V were present, while `/sys/class/typec/port0-partner` was absent. The data and power roles reported device and sink.
+
+The revised guard accepts either the partner node or both explicitly selected device/sink roles, while still requiring online power, a configured USB gadget, carrier, VBUS ≥4 V and two consecutive positive samples. It releases the inhibitor on the first negative sample. The previous file was backed up on the handset; the new service and inhibitor were observed active while connected. Synthetic decision and release tests pass. A physical unplug/replug test and observation on a charge-only source remain outstanding; stale gadget signals on a powered non-PC source could keep the inhibitor active and must be checked. No claim is made that the display stays on.

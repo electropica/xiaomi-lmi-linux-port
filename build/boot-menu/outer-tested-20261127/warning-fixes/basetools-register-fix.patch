@@ -1,0 +1,68 @@
+--- a/Common/edk2/BaseTools/Source/C/VfrCompile/Pccts/h/AParser.cpp
++++ b/Common/edk2/BaseTools/Source/C/VfrCompile/Pccts/h/AParser.cpp
+@@ -472,15 +472,15 @@
+ 	   of elements present in the set.  Assumes
+ 	   that all word bits are used in the set
+ 	*/
+-	register SetWordType *p = a;
+-	register SetWordType *endp = &(a[bsetsize]);
+-	register int degree = 0;
++	SetWordType *p = a;
++	SetWordType *endp = &(a[bsetsize]);
++	int degree = 0;
+ 
+ 	if ( a == NULL ) return 0;
+ 	while ( p < endp )
+ 	{
+-		register SetWordType t = *p;
+-		register SetWordType *b = &(bitmask[0]);
++		SetWordType t = *p;
++		SetWordType *b = &(bitmask[0]);
+ 		do {
+ 			if (t & *b) ++degree;
+ 		} while (++b < &(bitmask[sizeof(SetWordType)*8]));
+@@ -493,14 +493,14 @@
+ void ANTLRParser::
+ edecode(SetWordType *a)
+ {
+-	register SetWordType *p = a;
+-	register SetWordType *endp = &(p[bsetsize]);
+-	register unsigned e = 0;
++	SetWordType *p = a;
++	SetWordType *endp = &(p[bsetsize]);
++	unsigned e = 0;
+ 
+ 	if ( set_deg(a)>1 ) /* MR23 */ printMessage(stderr, " {");
+ 	do {
+-		register SetWordType t = *p;
+-		register SetWordType *b = &(bitmask[0]);
++		SetWordType t = *p;
++		SetWordType *b = &(bitmask[0]);
+ 		do {
+ 			if ( t & *b ) /* MR23 */ printMessage(stderr, " %s", token_tbl[e]);
+ 			e++;
+--- a/Common/edk2/BaseTools/Source/C/VfrCompile/Pccts/h/DLexerBase.cpp
++++ b/Common/edk2/BaseTools/Source/C/VfrCompile/Pccts/h/DLexerBase.cpp
+@@ -193,7 +193,7 @@
+ void DLGLexerBase::
+ replstr(const DLGChar *s) /* MR20 const */
+ {
+-	register DLGChar *l= &_lextext[_bufsize -1];
++	DLGChar *l= &_lextext[_bufsize -1];
+ 
+ 	nextpos = _begexpr;
+ 	if (s){
+--- a/Common/edk2/BaseTools/Source/C/VfrCompile/Pccts/h/DLexer.h
++++ b/Common/edk2/BaseTools/Source/C/VfrCompile/Pccts/h/DLexer.h
+@@ -65,9 +65,9 @@
+ ANTLRTokenType DLGLexer::
+ nextTokenType(void)
+ {
+-	register int state, newstate;
++	int state, newstate;
+ 	/* last space reserved for the null char */
+-	register DLGChar *lastpos;
++	DLGChar *lastpos;
+ 	ANTLRTokenType tk;
+ 
+ skip:

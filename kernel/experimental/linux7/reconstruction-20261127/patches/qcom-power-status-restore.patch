@@ -1,0 +1,178 @@
+--- a/drivers/power/supply/qcom_pm8150b_charger.c
++++ b/drivers/power/supply/qcom_pm8150b_charger.c
+@@ -473,14 +473,15 @@
+ 		return rc;
+ 	}
+ 
+-	if (stat[1] & VBATT_GTET_INHIBIT_BIT) {
+-		*val = POWER_SUPPLY_STATUS_NOT_CHARGING;
+-		return 0;
+-	}
+-
+ 	stat[0] = stat[0] & BATTERY_CHARGER_STATUS_MASK;
+ 	smb5_track_charge_state(chip, stat[0]);
+ 
++	/*
++	 * Check the active charge state first. VBATT_GTET_INHIBIT_BIT in
++	 * STATUS_2 is set whenever VBAT crosses the inhibit threshold, which
++	 * happens normally during taper charging — it must not override an
++	 * active charge state like TAPER_CHARGE.
++	 */
+ 	switch (stat[0]) {
+ 	case TRICKLE_CHARGE:
+ 	case PRE_CHARGE:
+@@ -489,12 +490,16 @@
+ 	case TAPER_CHARGE:
+ 		*val = POWER_SUPPLY_STATUS_CHARGING;
+ 		return rc;
+-	case DISABLE_CHARGE:
+-		*val = POWER_SUPPLY_STATUS_NOT_CHARGING;
+-		return rc;
+ 	case TERMINATE_CHARGE:
+ 	case INHIBIT_CHARGE:
+ 		*val = POWER_SUPPLY_STATUS_FULL;
++		return rc;
++	case DISABLE_CHARGE:
++		if (stat[1] & VBATT_GTET_INHIBIT_BIT) {
++			*val = POWER_SUPPLY_STATUS_FULL;
++			return 0;
++		}
++		*val = POWER_SUPPLY_STATUS_NOT_CHARGING;
+ 		return rc;
+ 	default:
+ 		*val = POWER_SUPPLY_STATUS_UNKNOWN;
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -105,6 +105,7 @@
+ 	struct power_supply *batt_psy;
+ 	struct power_supply_battery_info *batt_info;
+ 	struct power_supply *chg_psy;
++	bool chg_psy_owned;
+ 	int status;
+ 	bool charge_done;
+ 	bool full_latched;
+@@ -887,12 +888,6 @@
+ 	//handle rev 1 too
+ 	temp = (s16)(readval[1] << 8 | readval[0]);
+ 	*val = div_s64((s64)temp * 488281, 1000);
+-
+-	/*
+-	 * PSY API expects charging batteries to report a positive current, which is inverted
+-	 * to what the PMIC reports.
+-	 */
+-	*val = -*val;
+ 
+ 	return 0;
+ }
+@@ -1098,6 +1093,8 @@
+ 		break;
+ 	case POWER_SUPPLY_PROP_CURRENT_NOW:
+ 		ret = chip->ops->get_current(chip, &val->intval);
++		if (!ret)
++			val->intval = -val->intval;
+ 		break;
+ 	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+ 		ret = chip->ops->get_voltage(chip, &val->intval);
+@@ -1281,26 +1278,32 @@
+ 	union power_supply_propval propval;
+ 	int ret;
+ 
++	/* Skip notifications from the battery itself */
++	if (psy == chip->batt_psy)
++		return NOTIFY_OK;
++
++	/*
++	 * Lazily bind to the charger PSY if probe-time lookup missed it due
++	 * to probe ordering.
++	 */
++	if (!chip->chg_psy &&
++	    strcmp(psy->desc->name, "pm8150b-charger") == 0) {
++		chip->chg_psy = psy;
++		chip->chg_psy_owned = false;
++		chip->status = POWER_SUPPLY_STATUS_UNKNOWN;
++	}
++
+ 	if (psy == chip->chg_psy) {
+ 		ret = power_supply_get_property(psy,
+ 				POWER_SUPPLY_PROP_STATUS, &propval);
+ 		if (ret)
+ 			chip->status = POWER_SUPPLY_STATUS_UNKNOWN;
+-
+-		chip->status = propval.intval;
++		else
++			chip->status = propval.intval;
+ 
+ 		power_supply_changed(chip->batt_psy);
+ 
+ 		if (chip->status == POWER_SUPPLY_STATUS_UNKNOWN) {
+-			/*
+-			 * REVISIT: Find better solution or remove current-based
+-			 * status checking once checking is properly implemented
+-			 * in charger drivers
+-
+-			 * Sometimes it take a while for current to stabilize,
+-			 * so signal property change again later to make sure
+-			 * current-based status is properly detected.
+-			 */
+ 			cancel_delayed_work_sync(&chip->status_changed_work);
+ 			schedule_delayed_work(&chip->status_changed_work,
+ 						msecs_to_jiffies(1000));
+@@ -1479,25 +1482,27 @@
+ 		return ret;
+ 	}
+ 
+-	/* Optional: Get charger power supply for status checking */
+-	chip->chg_psy = power_supply_get_by_name("power-supplies");
+-	if (IS_ERR(chip->chg_psy)) {
+-		ret = PTR_ERR(chip->chg_psy);
+-		dev_warn(chip->dev, "Failed to get charger supply: %d\n", ret);
++	/* Try to bind the charger PSY now so we have status immediately.
++	 * If it hasn't probed yet, the notifier will bind lazily on the
++	 * first pm8150b-charger change event.
++	 */
++	chip->chg_psy = power_supply_get_by_name("pm8150b-charger");
++	if (!IS_ERR_OR_NULL(chip->chg_psy))
++		chip->chg_psy_owned = true;
++	else
+ 		chip->chg_psy = NULL;
+-	}
+-
+-	if (chip->chg_psy) {
+-		INIT_DELAYED_WORK(&chip->status_changed_work,
+-			qcom_fg_status_changed_worker);
+-
+-		chip->nb.notifier_call = qcom_fg_notifier_call;
+-		ret = power_supply_reg_notifier(&chip->nb);
+-		if (ret) {
+-			dev_err(chip->dev,
+-				"Failed to register notifier: %d\n", ret);
+-			return ret;
+-		}
++
++	INIT_DELAYED_WORK(&chip->status_changed_work,
++		qcom_fg_status_changed_worker);
++
++	chip->nb.notifier_call = qcom_fg_notifier_call;
++	ret = power_supply_reg_notifier(&chip->nb);
++	if (ret) {
++		dev_err(chip->dev,
++			"Failed to register notifier: %d\n", ret);
++		if (chip->chg_psy && chip->chg_psy_owned)
++			power_supply_put(chip->chg_psy);
++		return ret;
+ 	}
+ 
+ 	return 0;
+@@ -1506,6 +1511,12 @@
+ static void qcom_fg_remove(struct platform_device *pdev)
+ {
+ 	struct qcom_fg_chip *chip = platform_get_drvdata(pdev);
++
++	power_supply_unreg_notifier(&chip->nb);
++	cancel_delayed_work_sync(&chip->status_changed_work);
++
++	if (chip->chg_psy && chip->chg_psy_owned)
++		power_supply_put(chip->chg_psy);
+ 
+ 	power_supply_put_battery_info(chip->batt_psy, chip->batt_info);
+ 
